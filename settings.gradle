@@ -1,0 +1,9 @@
+include ':build-utils'
+include ':build-utils:sql-parser'
+include ':build-utils:db-tools'
+
+include ':gradle-plugins'
+include ':gradle-plugins:gradle-db-plugin'
+
+rootProject.name = 'sktools'
+

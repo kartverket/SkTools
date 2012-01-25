@@ -1,0 +1,3 @@
+apply plugin: 'maven'
+
+project.version = '0.1'

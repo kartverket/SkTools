@@ -1,0 +1,9 @@
+apply plugin: 'maven'
+
+project.version = '1.0'
+
+//evaluationDependsOn(':build-utils:sql-parser')
+
+dependencies {
+    compile project(':build-utils:sql-parser')
+}
