@@ -1,9 +1,10 @@
 apply plugin: 'maven'
+apply plugin: 'groovy'
 
 project.version = '1.0'
 
-//evaluationDependsOn(':build-utils:sql-parser')
-
 dependencies {
     compile project(':build-utils:sql-parser')
+
+    groovy localGroovy()
 }

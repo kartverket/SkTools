@@ -1,9 +1,20 @@
-// Variables to grab from environment
-['COMPUTERNAME', 'PUBLIC_REPO'].each { val ->
-    if (!project.hasProperty(val) && System.getenv(val) != null) {
-        project.setProperty(val, System.getenv(val))
+assert project.gradle.gradleVersion >= '1.0-milestone-7'
+
+buildscript {
+
+    // Variables to grab from environment
+    ['COMPUTERNAME', 'PUBLIC_REPO', 'GRADLE_HOME', 'GROOVY_HOME'].each { val ->
+        if (!project.hasProperty(val) && System.getenv(val) != null) {
+            project.setProperty(val, System.getenv(val))
+        }
     }
+
+    if (!project.hasProperty('PUBLIC_REPO')) {
+        project.setProperty('PUBLIC_REPO', 'http://skrivap92.statkart.no:8001/nexus/content/groups/public/')
+    }
+
 }
+
 
 
 allprojects {
@@ -11,8 +22,6 @@ allprojects {
 
     defaultTasks 'build'
     group = 'no.statkart.sktools'
-
-    publicRepo = rootProject.properties.get('PUBLIC_REPO', 'http://skrivap92.statkart.no:8001/nexus/content/groups/public/')
 
     plugins.whenPluginAdded() {
         if (it instanceof org.gradle.api.plugins.MavenPlugin) {
@@ -36,17 +45,16 @@ allprojects {
 // use. In that respect it serves a role similar to <dependencyManagement> in Maven
 libraries = [
 
+        gradleAPI: files(
+                "${GRADLE_HOME}/lib/gradle-open-api-${project.gradle.gradleVersion}.jar",
+        ),
+
         // Testing
         testng: 'org.testng:testng:6.0.1',
-//        mockito: 'org.mockito:mockito-all:1.8.5',
-//        fest: 'org.easytesting:fest-assert:1.4',
-
-	// Test Report
-        uncommons: 'org.uncommons:reportng:1.1.3',
-	velocity: 'velocity:velocity-dep:1.4',
-
-
+        hsqldb: 'org.hsqldb:hsqldb:2.2.8',
 ]
+
+
 
 def boolean isJavaProject(Project project) {
     return project.subprojects.size() == 0 && !project.name.endsWith('-ear') && !project.name.endsWith('-test')
@@ -54,17 +62,13 @@ def boolean isJavaProject(Project project) {
 
 
 subprojects { Project project ->
-//    apply plugin: 'idea'
     apply plugin: 'project-report'
     apply plugin: 'base'
-
-//    sourceCompatibility = '1.6'
-//    targetCompatibility = '1.6'
 
 
     repositories {
         mavenLocal()
-        mavenRepo name: 'public', urls: publicRepo
+        mavenRepo name: 'public', url: "${rootProject.PUBLIC_REPO}"
     }
 
 
@@ -79,11 +83,7 @@ subprojects { Project project ->
         dependencies {
 
             testCompile libraries.testng
-//            testCompile libraries.mockito
-//            testCompile libraries.fest
 
-            testRuntime libraries.uncommons
-            testRuntime libraries.velocity
         }
 
 
@@ -130,20 +130,26 @@ subprojects { Project project ->
             useTestNG() {
                 excludeGroups('broken')
             }
-//            systemProperties "org.uncommons.reportng.stylesheet": "${project.rootProject.file('all/test/report/reportng-1.1.3/stylesheets/hudsonesque.css')}"
-//            systemProperties "org.uncommons.reportng.title": "${project.name} Report"
 
-            options {
-                listeners << 'org.uncommons.reportng.HTMLReporter'
-                listeners << 'org.uncommons.reportng.JUnitXMLReporter'
-            }
-
-            jvmArgs '-Xmx1024m'
+            jvmArgs '-Xmx512m'
             if (rootProject.hasProperty('test.remote.debug')) {
                 jvmArgs '-Xdebug'
                 jvmArgs '-Xnoagent'
                 jvmArgs '-Xrunjdwp:transport=dt_socket,address=8787,server=y,suspend=y'
             }
+
+            //listening to test execution events
+            beforeTest { descriptor ->
+              logger.lifecycle("Running test: " + descriptor)
+            }
+            onOutput { descriptor, event ->
+                if (event.destination == TestOutputEvent.Destination.StdErr) {
+                    logger.error('' + descriptor + ", error: " + event.message)
+                } else {
+                    logger.info('\t' + event.message)
+                }
+            }
+
         }
     }	
 }
