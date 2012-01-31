@@ -1,4 +1,4 @@
-package no.statkart.sktools.utils.parsers.sql.sql.model;
+package no.statkart.sktools.utils.parsers.sql.model;
 
 /**
  * Interface for alle noder i AST treet

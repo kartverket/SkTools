@@ -1,6 +1,7 @@
-package no.statkart.sktools.utils.parsers.sql.sql;
+package no.statkart.sktools.utils.parsers.sql;
 
-import no.statkart.sktools.utils.parsers.sql.sql.model.Expression;
+import no.statkart.sktools.utils.parsers.sql.model.Expression;
+import org.testng.annotations.Test;
 
 import java.io.LineNumberReader;
 import java.io.StringReader;
@@ -12,6 +13,7 @@ import java.util.List;
  * @author Leif Lislegård
  * @since 0.1
  */
+@Test (enabled = false)
 public class SqlParserTest {
 
 

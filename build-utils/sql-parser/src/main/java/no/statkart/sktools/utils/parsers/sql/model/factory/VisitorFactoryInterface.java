@@ -1,6 +1,6 @@
-package no.statkart.sktools.utils.parsers.sql.sql.model.factory;
+package no.statkart.sktools.utils.parsers.sql.model.factory;
 
-import no.statkart.sktools.utils.parsers.sql.sql.model.ExpressionVisitor;
+import no.statkart.sktools.utils.parsers.sql.model.ExpressionVisitor;
 
 /**
  * Abstract factory funksjoner for oppsett av visitorer.

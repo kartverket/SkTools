@@ -1,7 +1,7 @@
-package no.statkart.sktools.utils.parsers.sql.sql.parser;
+package no.statkart.sktools.utils.parsers.sql.parser;
 
-import no.statkart.sktools.utils.parsers.sql.sql.model.*;
-import no.statkart.sktools.utils.parsers.sql.sql.model.factory.AbstractParserVisitorFactory;
+import no.statkart.sktools.utils.parsers.sql.model.*;
+import no.statkart.sktools.utils.parsers.sql.model.factory.AbstractParserVisitorFactory;
 
 import java.io.IOException;
 import java.io.LineNumberReader;

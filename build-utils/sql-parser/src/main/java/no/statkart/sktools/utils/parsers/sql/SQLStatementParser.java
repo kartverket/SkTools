@@ -1,7 +1,7 @@
-package no.statkart.sktools.utils.parsers.sql.sql;
+package no.statkart.sktools.utils.parsers.sql;
 
-import no.statkart.sktools.utils.parsers.sql.sql.model.*;
-import no.statkart.sktools.utils.parsers.sql.sql.parser.ParserVisitorFactory;
+import no.statkart.sktools.utils.parsers.sql.model.*;
+import no.statkart.sktools.utils.parsers.sql.parser.ParserVisitorFactory;
 
 import java.io.*;
 import java.util.ArrayList;

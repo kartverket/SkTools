@@ -1,4 +1,4 @@
-package no.statkart.sktools.utils.parsers.sql.sql.model.factory;
+package no.statkart.sktools.utils.parsers.sql.model.factory;
 
 import java.io.IOException;
 import java.io.LineNumberReader;
