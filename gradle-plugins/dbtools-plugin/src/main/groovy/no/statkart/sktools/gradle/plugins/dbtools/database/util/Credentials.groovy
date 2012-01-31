@@ -1,11 +1,11 @@
-package no.statkart.sktools.gradle.plugins.dbtools.database
+package no.statkart.sktools.gradle.plugins.dbtools.database.util
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.Project
 
 /**
- * Task som setter username og password dersom ikke allerede angitt som parametere.
+ * Setter username og password dersom ikke allerede angitt som parametere.
  *
  * @author Leif Lislegård
  * @since 1.0

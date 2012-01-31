@@ -4,8 +4,8 @@ import groovy.sql.Sql
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
-import no.statkart.sktools.utils.parsers.sql.sql.SQLStatementParser
-import no.statkart.sktools.utils.parsers.sql.sql.model.Statement
+import no.statkart.sktools.utils.parsers.sql.SQLStatementParser
+import no.statkart.sktools.utils.parsers.sql.model.Statement
 
 /**
  * Task for executing av statements over JDBC.

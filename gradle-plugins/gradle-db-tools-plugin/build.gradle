@@ -1,8 +1,0 @@
-apply plugin: 'maven'
-
-project.version = '1.0'
-
-
-dependencies {
-    compile project(':build-utils:db-tools')
-}

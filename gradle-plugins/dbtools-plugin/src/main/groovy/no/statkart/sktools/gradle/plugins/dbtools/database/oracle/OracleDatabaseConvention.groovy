@@ -1,7 +1,7 @@
 package no.statkart.sktools.gradle.plugins.dbtools.database.oracle
 
 import org.gradle.api.Project
-import no.statkart.sktools.gradle.plugins.dbtools.database.Credentials
+import no.statkart.sktools.gradle.plugins.dbtools.database.util.Credentials
 import org.gradle.api.InvalidUserDataException
 
 /**

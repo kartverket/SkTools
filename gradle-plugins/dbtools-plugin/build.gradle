@@ -1,0 +1,35 @@
+apply plugin: 'maven'
+apply plugin: 'groovy'
+
+project.version = '1.0'
+group = 'no.statkart.sktools.gradle'
+
+
+
+dependencies {
+    compile project(':build-utils:db-tools')
+
+    testCompile libraries.hsqldb
+
+    //std groovy version defined in root project
+//    groovy libraries.groovy
+    groovy localGroovy()
+
+    //gradle api til byggesystemm blir benyttet som std
+    compile gradleApi()
+    //lurer inn gradle api jar for intellij
+    compile libraries.gradleAPI
+
+}
+
+task sourcesJar(type: Jar, dependsOn:classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+    onlyIf { gradle.taskGraph.hasTask(install) || gradle.taskGraph.hasTask(uploadArchives) } //only when published..
+}
+
+
+artifacts {
+    archives sourcesJar
+}
+
