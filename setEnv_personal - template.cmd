@@ -4,10 +4,10 @@
 
 @rem Java, Gradle
 set JAVA_HOME=C:\Program Files\Java\jdk1.6.0_21
-set GRADLE_HOME=C:\bin\gradle-1.0-milestone-4
+set GRADLE_HOME=C:\bin\gradle-1.0-milestone-7
 
 @rem Groovy (optional)
-set GROOVY_HOME=C:\bin\groovy-1.7.10
+set GROOVY_HOME=C:\bin\groovy-1.8.4
 
 
 @rem Definer lokal nexus repo for offline utvikling (optional)
