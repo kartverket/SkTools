@@ -1,37 +1,26 @@
 package no.statkart.sktools.gradle.plugins.dbtools.database.oracle
 
 import org.gradle.api.Project
-import no.statkart.sktools.gradle.plugins.dbtools.database.util.Credentials
+
 import org.gradle.api.InvalidUserDataException
+import no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractDatabaseConvention
+import org.gradle.api.Task
 
 /**
- * Convention object for oracle database
+ * Convention object for Oracle database tools
  *
  * @author Leif Lislegård
  * @since 1.0
  */
-class OracleDatabaseConvention {
+class OracleTasksConvention extends AbstractDatabaseConvention {
 
-    Project project
+    Task importTask
+    Task exportTask
+    Task infoTask
 
-    /**
-     * Prefix for alle tasks for tilknyttet denne konvensjonen
-     */
-    String prefix
+    OracleTasksConvention(Project project, String propertyPrefix) {
 
-    public Credentials credentials
-
-    /** settes via {@link #config(Closure) config closure} definert i prosjekt */
-    public String url
-    /** settes via {@link #config(Closure) config closure} definert i prosjekt */
-    public String driver = 'oracle.jdbc.OracleDriver'
-
-
-    OracleDatabaseConvention(Project project, String propertyPrefix) {
-        this.project = project
-        this.prefix = propertyPrefix
-
-        credentials = new Credentials(project)
+        super(project, propertyPrefix, 'oracle.jdbc.OracleDriver')
 
         url = project.properties[propertyPrefix + 'db_jdbc_url']
         if (project.hasProperty(propertyPrefix + 'db_jdbc_driver')) {
@@ -75,13 +64,13 @@ class OracleDatabaseConvention {
             project.setProperty(propertyPrefix + 'db_oradata06', project.properties[propertyPrefix + 'db_oradata03'])
         }
         if (!project.hasProperty(propertyPrefix + 'db_oradata07')) {
-            project.setProperty(propertyPrefix + 'db_oradata07', project.properties[propertyPrefix + 'db_oradata01'])
+            project.setProperty(propertyPrefix + 'db_oradata07', project.properties[propertyPrefix + 'db_oradata04'])
         }
         if (!project.hasProperty(propertyPrefix + 'db_oradata08')) {
-            project.setProperty(propertyPrefix + 'db_oradata08', project.properties[propertyPrefix + 'db_oradata02'])
+            project.setProperty(propertyPrefix + 'db_oradata08', project.properties[propertyPrefix + 'db_oradata05'])
         }
         if (!project.hasProperty(propertyPrefix + 'db_oradata09')) {
-            project.setProperty(propertyPrefix + 'db_oradata09', project.properties[propertyPrefix + 'db_oradata03'])
+            project.setProperty(propertyPrefix + 'db_oradata09', project.properties[propertyPrefix + 'db_oradata06'])
         }
     }
 
@@ -108,17 +97,11 @@ class OracleDatabaseConvention {
     }
 
 
-    public OracleDatabaseConvention addTasks(String path) {
-        OracleTasks tasks = new OracleTasks(path)
-        tasks.init(project, this)
+    public OracleTasksConvention addTasks(String path) {
+        OracleTasks tasks = new OracleTasks(path, this)
+        tasks.init(project)
         return this
     }
-
-    public def config(Closure closure) {
-        closure.setDelegate(this)
-        closure.resolveStrategy = Closure.DELEGATE_FIRST
-        closure()
-   }
 
 
     // oracle attributes by convention... -->

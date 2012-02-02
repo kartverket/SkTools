@@ -2,68 +2,45 @@ package no.statkart.sktools.gradle.plugins.dbtools.database.oracle
 
 import org.gradle.api.Project
 import no.statkart.sktools.gradle.plugins.dbtools.database.SQLTask
+import no.statkart.sktools.gradle.plugins.dbtools.database.util.DatabaseTasksInterface
+import no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractDatabaseConvention
+import no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractDatabaseTasks
+import org.gradle.api.Task
 
 /**
- * Har til oppgave å definere opp tasks basert på følgende konvensjon:
+ * Tasks for Oracle databases
  *
- *
- * Det vil bli generert opp en task på bakgrunn av hver sql-fil. Prefiks + filnavn dikterer navn på task.
- *
- * Eks: createTablespace.sql med prefix 'db' får da en task mad navn 'db_createTablespace'
  *
  * @author Leif Lislegård
  * @since 1.0
  */
-class OracleTasks {
+class OracleTasks extends AbstractDatabaseTasks<OracleTasksConvention> {
 
-    private final String relativePath
-
-    OracleTasks(String relativePath) {
-        this.relativePath = relativePath
+    OracleTasks(String relativePath, OracleTasksConvention conv) {
+        super(relativePath, conv)
     }
 
 
-    def init(Project project, OracleDatabaseConvention convention) {
-
-        configureTargets(project, 'Database', convention)
-
-        return this
-    }
-
-    private def configureTargets(Project project, String groupString, OracleDatabaseConvention conv) {
-
-        def sourceRoot = new File(project.getProjectDir(), 'src')
-
-        def files = project.fileTree(new File(sourceRoot, relativePath))
-        files.include '**/*.sql'
-        files.each() {
-            File file ->
-
-            project.task([type: SQLTask, dependsOn: ['buildSQL']], conv.prefix + file.name.substring(0, file.name.length() - 4)) {
-                group = groupString
-                convention = conv
-                sqlFile = new File(project.getBuildDir(), file.getAbsolutePath().replace(sourceRoot.getAbsolutePath(), ''))
-            }
-        }
-
-    }
 
 
-    public static void addDefaultTools(Project project, String groupString, OracleDatabaseConvention conv) {
+    public static void addDefaultTools(String groupString, OracleTasksConvention conv) {
 
-        project.task([type: OracleImportTask], "${conv.prefix}Import") {
+        Project project = conv.project
+
+        conv.importTask = project.task([type: OracleImportTask], "${conv.prefix}Import") {
             group = groupString
             convention = conv
             description = 'Import av dump via Oracles eget verktøy'
         }
 
-        project.task([type: OracleExportTask], "${conv.prefix}Export") {
+
+        conv.exportTask = project.task([type: OracleExportTask], "${conv.prefix}Export") {
             group = groupString
             convention = conv
             description = 'Export av dump via Oracles eget verktøy'
         }
 
-        project.task("${conv.prefix}Info") {
+        conv.infoTask = project.task("${conv.prefix}Info") {
             group = groupString
             description = 'Viser gjeldende konfigurasjon'
 

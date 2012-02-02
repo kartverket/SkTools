@@ -3,12 +3,7 @@ package no.statkart.sktools.gradle.plugins.dbtools.database
 import org.gradle.api.Project
 import org.gradle.api.Plugin
 
-import org.apache.commons.lang.NotImplementedException
 import org.gradle.api.tasks.Copy
-import no.statkart.sktools.gradle.plugins.dbtools.database.oracle.OracleTasks
-import no.statkart.sktools.gradle.plugins.dbtools.database.oracle.OracleDatabaseConvention
-import java.sql.Driver
-import java.sql.DriverManager
 
 import org.apache.tools.ant.filters.ReplaceTokens
 import org.gradle.api.logging.LogLevel
@@ -17,22 +12,44 @@ import org.gradle.api.logging.LogLevel
  * Gradle plugin for database-moduler.
  *
  * <p>
- *     <code>apply plugin: no.statkart.matrikkel.build.utils.gradle.plugins.database.DatabasePlugin</code> kobler inn denne pluginen.
- * <p>
+ * <h5>Bruksanvisning</h5>
+ *
+ * <pre>
+ *   <code>
+
+apply plugin: 'sktools-dbtools-plugin'
+
+//see {@link DbtoolsConvention#configureDatabasePlugin(Closure) }
+configureDatabasePlugin {
+
+    ...
+
+}
+
+ *   </code>
+ * </pre>
  *     En modul kan betjene flere databaser samtidig. Disse blir satt opp via egne *Convention instanser.
  *
  *     @see DbtoolsConvention
  */
 class DbtoolsPlugin implements Plugin<Project>  {
 
+    DbtoolsConvention convention
+
+
     def void apply(Project project) {
-        project.convention.plugins.db = new DbtoolsConvention(project)
-        configureTaskBuildSQL(project, 'buildSQL', 'Filtrerer og bygger *.sql filer')
+        convention = new DbtoolsConvention(project)
+        project.convention.plugins.db = convention
+
+        convention.buildSQLTask = configureTaskBuildSQL(project, 'buildSQL', 'Filtrerer og bygger *.sql filer')
     }
 
 
+    /**
+     * todo: endre slik at sql script ligger relativt til prosjekt (og ikke src katalog)
+     */
     private def configureTaskBuildSQL(Project project, String name, String description) {
-        project.task([type: Copy, description: description], name) {
+        return project.task([type: Copy, description: description], name) {
 //            group = groupString
 
             from('src') {

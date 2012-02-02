@@ -138,10 +138,15 @@ subprojects { Project project ->
                 jvmArgs '-Xrunjdwp:transport=dt_socket,address=8787,server=y,suspend=y'
             }
 
+
             //listening to test execution events
-            beforeTest { descriptor ->
-              logger.lifecycle("Running test: " + descriptor)
+            afterTest { descriptor, result  ->
+              logger.lifecycle("Executing: ${descriptor.className}.${descriptor.name} \t\t: ${result}" )
+              if (result.resultType.name() == 'FAILURE') {
+                  logger.error("${result.exception}")
+              }
             }
+
             onOutput { descriptor, event ->
                 if (event.destination == TestOutputEvent.Destination.StdErr) {
                     logger.error('' + descriptor + ", error: " + event.message)

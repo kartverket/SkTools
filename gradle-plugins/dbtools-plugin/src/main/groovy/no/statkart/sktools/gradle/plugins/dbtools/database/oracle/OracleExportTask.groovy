@@ -29,7 +29,7 @@ class OracleExportTask extends DefaultTask {
 
     @Optional
     @Input
-    OracleDatabaseConvention convention
+    OracleTasksConvention convention
 
 
 
