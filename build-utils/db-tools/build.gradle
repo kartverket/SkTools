@@ -6,5 +6,5 @@ project.version = '1.0'
 dependencies {
     compile project(':build-utils:sql-parser')
 
-    groovy localGroovy()
+    groovy libraries.groovy
 }

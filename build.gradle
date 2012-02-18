@@ -45,9 +45,7 @@ allprojects {
 // use. In that respect it serves a role similar to <dependencyManagement> in Maven
 libraries = [
 
-        gradleAPI: files(
-                "${GRADLE_HOME}/lib/gradle-open-api-${project.gradle.gradleVersion}.jar",
-        ),
+        groovy: dependencies.localGroovy(),
 
         // Testing
         testng: 'org.testng:testng:6.0.1',
