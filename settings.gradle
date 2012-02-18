@@ -1,6 +1,7 @@
 include ':build-utils'
 include ':build-utils:sql-parser'
 include ':build-utils:db-tools'
+include ':build-utils:wsdocgen'
 
 include ':gradle-plugins'
 include ':gradle-plugins:dbtools-plugin'
@@ -9,6 +10,7 @@ include ':gradle-plugins:ideaextensions-plugin'
 include ':gradle-plugins:weblogic-wsclient-plugin'
 include ':gradle-plugins:weblogic-wswar-plugin'
 include ':gradle-plugins:webstart-plugin'
+include ':gradle-plugins:wsdocgen-plugin'
 
 
 
