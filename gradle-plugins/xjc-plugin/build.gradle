@@ -13,8 +13,7 @@ dependencies {
     //gradle api til byggesystemm blir benyttet som std
     compile gradleApi()
 
-    //todo: compile time avhengighet også i koden vil sikkre mot feil.
-    compile project(':build-utils:wsdocgen')
+    runtime project(':build-utils:xjc-plugins')
 
 }
 
