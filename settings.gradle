@@ -4,6 +4,8 @@ include ':build-utils:db-tools'
 
 include ':gradle-plugins'
 include ':gradle-plugins:dbtools-plugin'
+include ':gradle-plugins:filterproperties-plugin'
+
 
 rootProject.name = 'sktools'
 
