@@ -52,7 +52,8 @@ libraries = [
         hsqldb: 'org.hsqldb:hsqldb:2.2.8',
 ]
 
-
+//tools.jar for JDK
+libraries.'tools.jar' = files("${System.getenv('JAVA_HOME')}/lib/tools.jar").stopExecutionIfEmpty() //JAVA_HOME ikke satt??
 
 def boolean isJavaProject(Project project) {
     return project.subprojects.size() == 0 && !project.name.endsWith('-ear') && !project.name.endsWith('-test')
