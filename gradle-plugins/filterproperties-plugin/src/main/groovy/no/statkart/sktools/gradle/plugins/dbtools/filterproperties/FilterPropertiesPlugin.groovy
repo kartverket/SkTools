@@ -1,13 +1,16 @@
-package no.statkart.gradle.filterpropertiesplugin
+package no.statkart.sktools.gradle.plugins.dbtools.filterproperties
 
 import org.gradle.api.Plugin
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.Project
 import java.util.Map.Entry
-import no.statkart.gradle.util.GradleUtil
-import org.apache.tools.ant.filters.ReplaceTokens
+import no.statkart.sktools.gradle.plugins.dbtools.filterproperties.util.GradleUtil
 
 /**
+ * todo: dokumentasjon
+ *
+ *
+ * @since 1.0
  * @author Thor Åge Eldby
  */
 class FilterPropertiesPlugin implements Plugin<Project> {
@@ -42,7 +45,7 @@ class FilterPropertiesPlugin implements Plugin<Project> {
                         project.copy {
                             from(unfilteredPropertiesDir)
                             into(filteredResourcesDir)
-                            filter(ReplaceTokens, tokens: convention.properties)
+                            filter(org.apache.tools.ant.filters.ReplaceTokens, tokens: convention.properties)
                         }
                         project.ant.touch() { fileset(dir: filteredResourcesDir)}
                     }
@@ -53,16 +56,5 @@ class FilterPropertiesPlugin implements Plugin<Project> {
                 GradleUtil.makeIdeaShowBuildDirectory(project)
             }
         }
-    }
-
-}
-
-class FilterPropertiesConvention {
-    Map<String, String> resources = [main: 'src/main/unfilteredResources', test: 'src/test/unfilteredResources']
-    Map<String, String> properties = Collections.emptyMap()
-
-    def statKartFilterProperties(Closure closure) {
-        closure.delegate = this
-        closure()
     }
 }

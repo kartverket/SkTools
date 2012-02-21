@@ -1,4 +1,4 @@
-package no.statkart.gradle.util
+package no.statkart.sktools.gradle.plugins.dbtools.filterproperties.util
 
 import org.gradle.api.Project
 
