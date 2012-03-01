@@ -21,14 +21,31 @@ import java.util.StringTokenizer;
  * <p/>
  * En kan parameterisere navn for {@link #LIST_METHOD getter metode}.
  * <p/>
+ * En kan også parameterisere navn for {@link #BASE_CLASS superklasse for lister}. <nr />
+ * Eksempel implementasjon av felles liste klasse:
+ * <code><pre>
+
+import java.util.Iterator;
+import javax.xml.bind.annotation.XmlTransient;
+
+
+&#64XmlTransient
+public abstract class ListTestIterable<T> implements Iterable<T> {
+
+    abstract public java.util.List<T> _getList();
+
+
+    public Iterator<T> iterator() {
+        return _getList().iterator();
+    }
+
+}
+
+ *</pre></code>
+ * <p/>
  * Det forutsettes at byggesystem kopierer inn kildekode for ListAdapter.java - se i config katalog for denne.
  * <p/>
  * <p/>
- * NB: Per versjon 2.1 av XJC fungerer ikke generering av import av klasser med generics erasure.
- * Se {@link #applyListAdapter(com.sun.codemodel.JClass, com.sun.tools.xjc.outline.ClassOutline, com.sun.tools.xjc.outline.Outline) applyListAdapter(...)}
- * <p/>
- * Dette kan løses ved å post-prosessere generert kildekode. En kan enkelt regeg replace
- * {@code (import .*\.ListIterable)&lt;[^&lt;&gt;]+&gt;;} med {@code $1}
  *
  * @author Leif Lislegård
  * @since 1.1 - May 2011
@@ -61,7 +78,7 @@ public class ListGenPlugin extends com.sun.tools.xjc.Plugin {
 
     @Override
     public String getUsage() {
-        return "Genererer liste klasser for taggede klasser. \n";
+        return "Genererer liste klasser for klasser ihht til konvensjon. \n";
     }
 
     /**
@@ -88,29 +105,38 @@ public class ListGenPlugin extends com.sun.tools.xjc.Plugin {
     /**
      * Parser konfigurerbare parametere ifra byggesystem.
      * <p/>
-     * Gyldige parametere er
+     * Gyldige parametere er -listgen [[medthod=value] || [baseClass=value]]
      */
     @Override
-    public int parseArgument(Options opt, String[] args, int idx) throws BadCommandLineException, IOException {
-        if (args[idx].startsWith("-listgen")) {
-            StringTokenizer tokenizer = new StringTokenizer(args[idx], ":=");
-            tokenizer.nextToken();
-            while (tokenizer.hasMoreTokens()) {
-                String token = tokenizer.nextToken(":");
+    public int parseArgument(Options opt, String[] args, int i) throws BadCommandLineException, IOException {
+        //holder styr på antall parametere parset
+        int j = 0;
 
-                if (token.equals("method")) {
-                    LIST_METHOD = tokenizer.nextToken();
+        if (args[i].startsWith("-listgen")) {
+            j++;
 
-                } else if (token.equals("baseClass")) {
-                    BASE_CLASS = tokenizer.nextToken();
+            //parser evtentuelle properties
+            while(args.length > i + j && !args[i + j].startsWith("-")) {
+                StringTokenizer tokenizer = new StringTokenizer(args[i + j], "=");
+                if (tokenizer.countTokens() == 2) {
+                    String token = tokenizer.nextToken();
+                    if (token.equalsIgnoreCase("method")) {
+                        LIST_METHOD = tokenizer.nextToken();
 
+                    } else if (token.equalsIgnoreCase("baseClass")) {
+                        BASE_CLASS = tokenizer.nextToken();
+
+                    } else {
+                        throw new BadCommandLineException("Ukjent parameter: '" + token + "'");
+                    }
                 } else {
-                    throw new BadCommandLineException("Ukjent parameter: '" + token + "'");
+                    throw new BadCommandLineException("Feil ved parsing av parameter. Forventet syntaks: <navn>=<verdi>");
                 }
+                j++;
             }
-            return 1;
         }
-        return 0;
+        System.out.println("return " + j);
+        return j;
     }
 
     @Override
@@ -125,12 +151,15 @@ public class ListGenPlugin extends com.sun.tools.xjc.Plugin {
         try {
             for (ClassOutline classOutline : outline.getClasses()) {
 
+                //vi benytter ikke denne tagen i schema-definisjonen.... men påfører endringer per konvensjon.
                 CPluginCustomization c = classOutline.target.getCustomizations().find(NS, "listgen");
                 if (c != null) { // customization found for this class outline
                     c.markAsAcknowledged();
                 }
 
-                if (classOutline.target.getSqueezedName().endsWith("List")) { // customization found for this class outline
+
+                //alle klasser som ender på 'List' får per konvensjon påført endringer.
+                if (classOutline.target.getSqueezedName().endsWith("List")) {
 
                     JClass listAdapter = null;
                     listAdapter = outline.getCodeModel().ref(BASE_CLASS);
