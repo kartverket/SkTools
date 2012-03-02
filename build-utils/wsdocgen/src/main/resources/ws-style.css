@@ -1,0 +1,58 @@
+/*                                                                                                                    */
+/* Standard style cheet for dokumentasjon                                                                             */
+/*                                                                                                                    */
+/* Denne kan ekempelvis kopieres ut og nås i ANT via:                                                                 */
+/*                                                                                                                    */
+/*            <javaresource name="ws-style.css">                                                                      */
+/*                <classpath refid="build.apt.class.path.refs" />                                                     */
+/*            </javaresource>                                                                                         */
+
+html {
+    margin : 0;
+    padding : 0;
+}
+
+body {
+    background-color: #ffffff;
+    color: #000000;
+    left: 15px;
+    font-family: Verdana, sans-serif;
+    width: 100ex;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 3em 6em
+}
+
+h3 {
+    font-size: 24;
+    font-weight: bold;
+    font-family: Garamond, serif;
+}
+
+
+h4 {
+    font-size: 20;
+    font-weight: bold;
+}
+
+h5 {
+    font-size: 16;
+    font-weight: bold;
+}
+
+div#header {
+    margin-bottom: 3em;
+    border:0.1ex solid black;
+    padding: 3em 2ex;
+}
+
+div#hoved {
+    border:0.1ex solid black;
+    margin-top: 3ex;
+}
+
+div.metode {
+    border-bottom:0.1ex solid gray;
+    padding: 3em 2ex;
+}
+
