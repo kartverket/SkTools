@@ -1,0 +1,12 @@
+apply plugin: 'groovy'
+
+//blir ikke eskponert
+//all testkode skal ligge i src/main sourceSet
+description = "Intern modul for felles test-logikk."
+
+dependencies {
+    groovy libraries.groovy
+
+    //gradle api til byggesystemm blir benyttet som std
+    compile gradleApi()
+}

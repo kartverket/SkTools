@@ -4,5 +4,13 @@ apply plugin: 'groovy'
 project.version = '0.1'
 
 dependencies {
+
+    //testing...
+
+    //groovy only for testing
     groovy libraries.groovy
+
+    testCompile project(':build-utils:test-utils')
 }
+
+

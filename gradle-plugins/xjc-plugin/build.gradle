@@ -15,6 +15,8 @@ dependencies {
 
     runtime project(':build-utils:xjc-plugins')
 
+    //test
+    testCompile project(':build-utils:test-utils')
 }
 
 task sourcesJar(type: Jar, dependsOn:classes) {

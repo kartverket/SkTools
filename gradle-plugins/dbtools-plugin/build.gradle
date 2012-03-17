@@ -17,6 +17,9 @@ dependencies {
     //gradle api til byggesystemm blir benyttet som std
     compile gradleApi()
 
+    //test
+    testCompile project(':build-utils:test-utils')
+
 }
 
 task sourcesJar(type: Jar, dependsOn:classes) {

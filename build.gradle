@@ -3,7 +3,7 @@ assert project.gradle.gradleVersion >= '1.0-milestone-7'
 buildscript {
 
     // Variables to grab from environment
-    ['COMPUTERNAME', 'PUBLIC_REPO', 'GRADLE_HOME', 'GROOVY_HOME'].each { val ->
+    ['COMPUTERNAME', 'PUBLIC_REPO', 'GRADLE_HOME', 'GROOVY_HOME', 'WEBLOGIC_HOME'].each { val ->
         if (!project.hasProperty(val) && System.getenv(val) != null) {
             project.setProperty(val, System.getenv(val))
         }
@@ -55,6 +55,22 @@ libraries = [
 //tools.jar for JDK
 libraries.'tools.jar' = files("${System.getenv('JAVA_HOME')}/lib/tools.jar").stopExecutionIfEmpty() //JAVA_HOME ikke satt??
 
+//weblogic
+libraries.weblogic = fileTree(dir:"${WEBLOGIC_HOME}", includes:[
+        'wlserver_10.3/server/lib/weblogic.jar',
+        'wlserver_10.3/server/lib/webservices.jar',
+        'wlserver_10.3/server/lib/wljmsclient.jar',
+        'modules/javax.annotation_*.jar/',
+        'modules/javax.ejb_3*.jar',
+        'modules/javax.interceptor_*.jar',
+        'modules/javax.servlet_*.jar',
+        'modules/javax.transaction_*.jar',
+        'modules/com.bea.core.transaction_*.jar',
+        'modules/com.bea.core.datasource*.jar',
+        'modules/glassfish.jaxws.rt*.jar',
+]).stopExecutionIfEmpty() //feilsituasjon dersom WEBLOGIC_HOME ikke er riktig satt
+
+
 def boolean isJavaProject(Project project) {
     return project.subprojects.size() == 0 && !project.name.endsWith('-ear') && !project.name.endsWith('-test')
 }
@@ -82,7 +98,6 @@ subprojects { Project project ->
         dependencies {
 
             testCompile libraries.testng
-
         }
 
 
