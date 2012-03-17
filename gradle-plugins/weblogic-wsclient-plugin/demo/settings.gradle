@@ -1,0 +1,4 @@
+include ':war1'
+
+rootProject.name = 'demo'
+
