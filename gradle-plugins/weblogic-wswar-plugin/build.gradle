@@ -1,7 +1,7 @@
 apply plugin: 'maven'
 apply plugin: 'groovy'
 
-project.version = '1.0'
+project.version = '1.1'
 group = 'no.statkart.sktools.gradle'
 
 
@@ -12,6 +12,11 @@ dependencies {
 
     //gradle api til byggesystemm blir benyttet som std
     compile gradleApi()
+    compile project(':gradle-plugins:weblogic-plugin')
+
+    //test
+    testCompile project(':build-utils:test-utils')
+    testRuntime libraries.'tools.jar'
 
 }
 
