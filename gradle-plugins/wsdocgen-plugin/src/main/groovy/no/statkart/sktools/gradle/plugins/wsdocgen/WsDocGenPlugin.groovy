@@ -4,11 +4,23 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.internal.artifacts.publish.ArchivePublishArtifact
-import org.gradle.api.plugins.JavaPlugin
-import org.gradle.api.tasks.bundling.Jar
+
+import org.gradle.api.plugins.JavaBasePlugin
+import org.gradle.api.tasks.SourceTask
+import org.gradle.api.tasks.ConventionValue
+import org.gradle.api.plugins.Convention
+import org.gradle.api.internal.IConventionAware
+import org.gradle.api.plugins.JavaPluginConvention
+import org.gradle.api.tasks.SourceSet
+import org.gradle.api.tasks.bundling.Zip
+import org.gradle.api.artifacts.Configuration
+import org.gradle.api.initialization.dsl.ScriptHandler
+import org.gradle.util.GUtil
+
+import org.gradle.api.GradleException
 
 /**
- * todo: dokumentasjon
+ * Dokumentasjon-generering av WSBean.java - JAX-WS implemntasjon på server.
  *
  *
  * @since 1.0
@@ -16,38 +28,138 @@ import org.gradle.api.tasks.bundling.Jar
  */
 class WsDocGenPlugin implements Plugin<Project> {
 
+    final public static String CONVENTION_NAME = 'wsdoc'
+    final public static String CONFIGURATION_NAME = 'wsdoc'
+    final public static String GEN_TASK_NAME = String.format(WsDocGenConvention.GEN_TASK_NAME_PATTERN, '')
+    final public static String ARCHIVE_TASK_NAME = 'packWsDoc'
+
+
     @Override
     void apply(Project project) {
-        WsDocGenPluginConvention convention = new WsDocGenPluginConvention()
-        project.convention.plugins.wsdlDoc = convention
-        project.plugins.apply(JavaPlugin.class);
-        String configurationName = 'docWsdlDoc'
-        File wsdlDocDir = project.file('build/docs/wsdldoc')
-        Task generateWsdlDocTask = project.task('generateWsdlDoc') {
-            project.afterEvaluate {
-                if (it.state.failure == null) {
-                    inputs.dir convention.sourceDir
-                }
+        project.apply plugin: JavaBasePlugin.class
+
+        final WsDocGenConvention wsDocGenConvention = new WsDocGenConvention(project)
+        project.convention.plugins.put(WsDocGenPlugin.CONVENTION_NAME, wsDocGenConvention);
+
+        final Configuration configuration = createConfiguration(project)
+
+        //creates the task
+        Task genWsDocTask = project.task(WsDocGenPlugin.GEN_TASK_NAME)
+
+
+        configureArchives(wsDocGenConvention)
+
+        //setting defaults if not already configured
+        project.afterEvaluate {
+            setConventionalDefaults(wsDocGenConvention)
+            addTasks(wsDocGenConvention, project.getTasks().getByName(WsDocGenPlugin.GEN_TASK_NAME))
+        }
+    }
+
+
+    private Configuration createConfiguration(Project project) {
+
+        //Trenger denne classpathen for innkobling av {@link no.statkart.grunnbok.tools.docgen.ws.WebserviceAnnotationProcessorFactory}
+        return project.configurations.add(WsDocGenPlugin.CONFIGURATION_NAME).setTransitive(false).setDescription('Webservice documentation artifact');
+    }
+
+    /**
+     * Legger til evt defaultverdier.
+     *
+     * Dersom ikke noen konfigurasjon angis, opprettes en tom {@link Group} med standard verdier.
+     */
+    private static setConventionalDefaults(WsDocGenConvention wsDocGenConvention) {
+        final Project project = wsDocGenConvention.project
+
+        if (wsDocGenConvention.groups.isEmpty()) {
+            wsDocGenConvention.docGroup {}
+        }
+
+        if (wsDocGenConvention.sourceSetName == null) {
+            JavaPluginConvention javaConvention = project.getConvention().getPlugins().get("java");
+            SortedMap<String, SourceSet> sourceSetMap = javaConvention.getSourceSets().getAsMap();
+
+            if (sourceSetMap.isEmpty()) {
+                throw new GradleException('No source set found for plugin ' + WsDocGenPlugin.class.getSimpleName());
             }
-            outputs.dir wsdlDocDir
-            doLast {
-                wsdlDocDir.mkdirs()
-                ant.apt(factory: 'no.statkart.grunnbok.tools.docgen.ws.WebserviceAnnotationProcessorFactory',
-                        srcdir: convention.sourceDir,
-                        destdir: wsdlDocDir,
-                        compile: false,
-                        debug: true,
-                        classpath: convention.classpath.asPath) {
-                    option(name: 'LookupPath', value: convention.lookupPath)
-                    include(name: convention.includePattern)
-                }
+            //defaults to 'main' source set - or the first one found.
+            SourceSet sourceSet = sourceSetMap.containsKey(SourceSet.MAIN_SOURCE_SET_NAME) ? sourceSetMap.get(SourceSet.MAIN_SOURCE_SET_NAME) : sourceSetMap.values().iterator().next();
+            wsDocGenConvention.sourceSetName = sourceSet.getName();
+        }
+
+        wsDocGenConvention.groups.each {
+            if (it.includes == null) {
+                it.include('**/*Bean.java')
+            }
+            if (it.targetDir == null) {
+                it.targetPath("${project.buildDirName}/${wsDocGenConvention.sourceSetName}/docs/wsdoc")
             }
         }
-        Task packWsdlDocTask = project.task('packWsdldoc', type: Jar, dependsOn: generateWsdlDocTask) {
-            classifier = configurationName
-            from wsdlDocDir
+
+        Configuration configuration = project.configurations.getByName(WsDocGenPlugin.CONFIGURATION_NAME)
+
+        //default classpath for apt task - benytter jar dependency for hvor denne pluginen befinner seg
+        if (configuration.getDependencies().isEmpty()) {
+            project.getDependencies().add(WsDocGenPlugin.CONFIGURATION_NAME, wsDocGenConvention.project.buildscript.configurations.getByName(ScriptHandler.CLASSPATH_CONFIGURATION).getAsFileTree())
         }
-        project.configurations.add(configurationName).setTransitive(false).setDescription('Javadoc artifact').addArtifact(new ArchivePublishArtifact(packWsdlDocTask))
+
+    }
+
+    private static void addTasks(final WsDocGenConvention wsDocGenConvention, Task genWsDocTask) {
+        final Project project = wsDocGenConvention.project
+
+        String genWsDocTaskNameForSourceSet = String.format(WsDocGenConvention.GEN_TASK_NAME_PATTERN, GUtil.toCamelCase(wsDocGenConvention.sourceSetName))
+        wsDocGenConvention.genDocTaskName = genWsDocTaskNameForSourceSet
+
+
+        JavaPluginConvention javaConvention = project.getConvention().getPlugins().get("java");
+        final SourceSet sourceSet = javaConvention.getSourceSets().getByName(wsDocGenConvention.sourceSetName)
+
+
+        SourceTask task = (SourceTask) project.task(type: WsDocGenTask.class, genWsDocTaskNameForSourceSet)
+
+        //setting conventional properties
+        task.getConventionMapping().with {
+            map("defaultSource", new ConventionValue() { //tildeler en ikke dynamisk default verdi
+                public Object getValue(Convention conventionManager, IConventionAware conventionAwareObject) {
+                    return sourceSet.getAllJava();  //default source
+                }
+            });
+            map("groups", new ConventionValue() {
+                public Object getValue(Convention conventionManager, IConventionAware conventionAwareObject) {
+                    return wsDocGenConvention.groups;
+                }
+            });
+            map("classpath", new ConventionValue() {
+                public Object getValue(Convention conventionManager, IConventionAware conventionAwareObject) {
+                    return project.project.getConfigurations().getByName(WsDocGenPlugin.CONFIGURATION_NAME).getAsFileTree();
+                }
+            });
+        }
+
+        wsDocGenConvention.groups.each {
+            task.outputs.dir(it.targetDir);
+        }
+
+        genWsDocTask.dependsOn(genWsDocTaskNameForSourceSet)
+
+
+    }
+
+
+    private static void configureArchives(final WsDocGenConvention wsDocGenConvention) {
+        final Project project = wsDocGenConvention.project
+
+
+        Zip zip = (Zip) project.task(type: Zip, ARCHIVE_TASK_NAME)
+        zip.setClassifier(WsDocGenPlugin.CONFIGURATION_NAME)
+        zip.doFirst {
+            from(getProject().getTasks().getByName(wsDocGenConvention.genDocTaskName)) //legger dynamiskt til alle definerte output kataloger for 'genWsDocTask'
+        }
+
+        ArchivePublishArtifact artifact = new ArchivePublishArtifact(zip)
+        project.getConfigurations().getByName(WsDocGenPlugin.CONFIGURATION_NAME).getArtifacts().add(artifact);
+
     }
 
 

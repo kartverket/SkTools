@@ -1,7 +1,7 @@
 apply plugin: 'maven'
 apply plugin: 'groovy'
 
-project.version = '1.0'
+project.version = '1.1'
 group = 'no.statkart.sktools.gradle'
 
 
@@ -13,8 +13,10 @@ dependencies {
     //gradle api til byggesystemm blir benyttet som std
     compile gradleApi()
 
-    //todo: compile time avhengighet også i koden vil sikkre mot feil.
     compile project(':build-utils:wsdocgen')
+
+    //test
+    testCompile project(':build-utils:test-utils')
 
 }
 
