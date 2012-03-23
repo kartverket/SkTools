@@ -7,4 +7,7 @@ dependencies {
     compile project(':build-utils:sql-parser')
 
     groovy libraries.groovy
+
+    testCompile project(':build-utils:test-utils')
+
 }
