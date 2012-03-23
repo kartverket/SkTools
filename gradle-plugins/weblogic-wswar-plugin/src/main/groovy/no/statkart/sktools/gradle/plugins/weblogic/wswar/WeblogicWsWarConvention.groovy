@@ -6,6 +6,7 @@ import org.gradle.api.tasks.SourceSet
 import no.statkart.sktools.gradle.plugins.weblogic.WeblogicBasePlugin
 import org.gradle.api.internal.artifacts.dependencies.DefaultSelfResolvingDependency
 import org.gradle.api.plugins.JavaPluginConvention
+import org.gradle.util.ConfigureUtil
 
 /**
  * Konvensjon for plugin.
@@ -41,8 +42,10 @@ class WeblogicWsWarConvention {
      * @since 1.1
      */
     def sourceSet(Closure closure) {
-        closure.delegate = getSourceSet()
-        closure()
+        ConfigureUtil.configure(closure, getSourceSet());
+//        closure.delegate = getSourceSet()
+//        closure()
+        return this
     }
 
 

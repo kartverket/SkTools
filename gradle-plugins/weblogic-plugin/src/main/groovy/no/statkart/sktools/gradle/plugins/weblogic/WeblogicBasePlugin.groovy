@@ -8,6 +8,7 @@ import org.gradle.api.Action
 import org.gradle.api.tasks.ConventionValue
 import org.gradle.api.plugins.Convention
 import org.gradle.api.internal.IConventionAware
+import org.gradle.api.artifacts.Configuration
 
 /**
  * Setter opp {@link org.gradle.api.artifacts.Configuration} for weblogic clsaspath.
@@ -24,14 +25,13 @@ class WeblogicBasePlugin implements Plugin<ProjectInternal> {
     void apply(ProjectInternal project) {
         JavaBasePlugin javaBasePlugin = project.getPlugins().apply(JavaBasePlugin.class);
 
-
-
-        project.getConfigurations().add(WeblogicBasePlugin.WEBLOGIC_CONFIGURATION_NAME).setVisible(false).setTransitive(false).
-                setDescription("The weblogic libraries to be used for this war project.");
-
+        createConfiguration(project);
         configureCompileDefaults(project);
-//        configureSourceSetDefaults(project, javaBasePlugin);
 
+    }
+
+    private Configuration createConfiguration(ProjectInternal project) {
+        project.getConfigurations().add(WEBLOGIC_CONFIGURATION_NAME).setVisible(false).setTransitive(false).setDescription("The weblogic libraries to be used for this project.")
     }
 
     private void configureCompileDefaults(final Project project) {
@@ -50,9 +50,4 @@ class WeblogicBasePlugin implements Plugin<ProjectInternal> {
         });
     }
 
-//    private void configureConfigurations(Project project) {
-//        project.getConfigurations().getByName(JavaPlugin.COMPILE_CONFIGURATION_NAME).extendsFrom(
-//                project.getConfigurations().getByName(WeblogicBasePlugin.WEBLOGIC_CONFIGURATION_NAME)
-//        );
-//    }
 }

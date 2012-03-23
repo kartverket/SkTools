@@ -4,6 +4,7 @@ import org.gradle.api.Project
 
 /**
  * Convention og standard verdier.
+ * Se {@code ideaExtensions(Closure)} for konfigurasjon.
  *
  *
  * @since 1.0

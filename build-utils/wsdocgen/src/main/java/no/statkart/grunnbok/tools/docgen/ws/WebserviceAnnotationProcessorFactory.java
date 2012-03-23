@@ -15,29 +15,31 @@ import static com.sun.mirror.util.DeclarationVisitors.getDeclarationScanner;
  * Genererer dokumentasjon av java web-services (JAX-WS) via en apt-plugin
  * - Eksempel på bruk via ant:
  *
- *
-      <path id="build.apt.class.path.refs">
-           <pathelement path="${build.classes.dir}" />
-           <path refid="weblogic.classpath"/>
-       </path>
+ *<code><pre>
+      
+      &lt;path id="build.apt.class.path.refs">
+         &lt;pathelement path="${wsdocgen.jar}" />
+         &lt;pathelement path="${tools.jar}" />
+       &lt;/path>
 
-       <apt srcdir="src"
+       &lt;apt srcdir="src"
             destdir="${jws.docs.dir}"
             debug="on"
             compile="false"
             classpathref="build.apt.class.path.refs"
             factory="no.statkart.grunnbok.tools.docgen.ws.WebserviceAnnotationProcessorFactory"
             >
-           <option name="LookupPath" value="/dokumentasjon/fast/main/wsdomain/lookup" />
-           <option name="LookupParameter" value="ns" />
-           <include name="*.java"/>
-       </apt>
+           &lt;option name="LookupPath" value="/dokumentasjon/fast/main/wsdomain/lookup" />
+           &lt;include name="&#42;&#42;/*WSBean.java"/>
+       &lt;/apt>
+ 
+ 
+ *</pre></code>
  *
  *
  * Parametere
  * <ul>
- *  <li>LookupPath bestemmer url for oppslag av dokumentasjon</li>
- *  <li>LookupParameter bestemmer navn for parameter som inneholder namespace for typen. Standard verdi er "ns"</li>
+ *  <li>{@code LookupPath} bestemmer url for oppslag av javadoc dokumentasjon</li>
  * </ul>
  *
  * @author Leif Lislegård
@@ -49,7 +51,9 @@ public class WebserviceAnnotationProcessorFactory implements AnnotationProcessor
     private static final Collection<String> supportedAnnotations = Collections.unmodifiableCollection(Arrays.asList("*"));
 
     // No supported options
-    private static final Collection<String> supportedOptions = Collections.emptySet();
+    private static final Collection<String> supportedOptions = Collections.unmodifiableCollection(
+            Arrays.asList("-ALookupPath")
+    );
 
 
     public Collection<String> supportedAnnotationTypes() {
@@ -79,7 +83,7 @@ public class WebserviceAnnotationProcessorFactory implements AnnotationProcessor
 
                 for (Map.Entry<String, String> entry : env.getOptions().entrySet()) {
 
-                    //somehow the values are concatened to the keys... looks like a bug in ant somehow
+                    //somehow the values are concatened to the keys... seems like like there might be bug in ant.
 
                     if (entry.getKey().startsWith("-ALookupPath=")) {
                         visitor.setLookupPath(entry.getKey().substring("-ALookupPath=".length()));

@@ -40,7 +40,16 @@ public class PrintWebServiceDocumentationVisitor extends SimpleDeclarationVisito
     private PrintWriter out;
     private Map<String, List<MethodDeclaration>> eksponerteMetoder;
 
-    private String lookupPath = "..";
+    /**
+     * Plassering av javadoc for linking av dokumentasjon.
+     * <p>
+     *     Eksempel verdi kan være {@code "../index.html"} eller til en annen path som sammenfaller
+     *     med en evt konfigurasjon av en webmodul (web.xml)
+     * <p>
+     * <p>
+     * Fungerer med javadoc generert av java versjoner 1.5 eller nyere.
+     */
+    private String lookupPath = null;
 
     public PrintWebServiceDocumentationVisitor(Filer filer) {
         this.filer = filer;
@@ -67,8 +76,9 @@ public class PrintWebServiceDocumentationVisitor extends SimpleDeclarationVisito
 
             out.println("<html>\n<head>\n<title>");
             out.println(serviceName);
-            out.println("</title>\n<META http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">");
-            out.println("<link type=\"text/css\" href=\"ws-style.css\" rel=\"stylesheet\">");
+            out.println("</title>");
+            out.println(" <META http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />");
+            out.println(" <link type=\"text/css\" href=\"ws-style.css\" rel=\"stylesheet\" />");
             out.println("</head>");
             out.println("<body>\n");
 
@@ -106,11 +116,11 @@ public class PrintWebServiceDocumentationVisitor extends SimpleDeclarationVisito
 
 
             out.println("<h5>Metoder</h5>");
-            out.println("<ol>");
+            out.println("<ul>");
             for (String metodeNavn : eksponerteMetoder.keySet()) {
                 out.println(" <li><a href=\"#" + metodeNavn + "\">" + metodeNavn + "</a></li>");
             }
-            out.println("</ol>");
+            out.println("</ul>");
 
             out.println("</div>");
             out.println("<div id=\"hoved\">");
@@ -127,7 +137,7 @@ public class PrintWebServiceDocumentationVisitor extends SimpleDeclarationVisito
                 printMethodDeclaration(methodDeclaration.getSimpleName(), webServiceAnnotation.targetNamespace());
             }
 
-            out.println("</div></body>");
+            out.println("</div></body></html>");
         } catch (IOException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
@@ -142,9 +152,9 @@ public class PrintWebServiceDocumentationVisitor extends SimpleDeclarationVisito
 
             out.println("<div class=\"metode\">");
 
-            out.print("<h4 class=\"metode\"><a name=\"" + methodName + "\">");
+            out.print("<h4 class=\"metode\"><a name=\"" + methodName + "\" />");
             out.print(methodName);
-            out.println("</a></h4>");
+            out.println("</h4>");
 
             MethodDeclaration methodDeclaration = null;
             for (MethodDeclaration declaration : methodDeclarations) {
@@ -166,7 +176,7 @@ public class PrintWebServiceDocumentationVisitor extends SimpleDeclarationVisito
                 out.println("<h5 class=\"dokumentasjon\">Dokumentasjon</h5>");
                 out.print("<p>");
                 out.print(comments.get("doc"));
-                out.println("</p>");
+                out.print("</p>\n");
             }
 
 
@@ -190,8 +200,10 @@ public class PrintWebServiceDocumentationVisitor extends SimpleDeclarationVisito
                     String retName = "return";
                     String ns = targetNamespace;
 
-                    WebResult annotation = methodDeclaration.getAnnotation(WebResult.class);
+                    //slår opp annotasjon på deklarasjon av impementerende klasse (skal ligge først i lista)
+                    WebResult annotation = methodDeclarations.get(0).getAnnotation(WebResult.class);
                     if (annotation != null) {
+//                        System.out.println("found annotation for method: " + methodName);
                         if (annotation.targetNamespace() != null && !annotation.targetNamespace().trim().isEmpty()) {
                             ns = annotation.targetNamespace();
                         }
@@ -203,7 +215,7 @@ public class PrintWebServiceDocumentationVisitor extends SimpleDeclarationVisito
                     out.print("<li>");
                     printName(retName, ns, false);
                     out.print(" : ");
-                    printName(getSimpleClassName(returnTypeMirror), findObjectNamespace(returnTypeMirror), true);
+                    printName(getSimpleClassName(returnTypeMirror), annotation != null ? annotation.targetNamespace() : findObjectNamespace(returnTypeMirror), true);
 
                     String returnDoc = comments.get("return");
                     if (returnDoc != null) {
@@ -263,14 +275,17 @@ public class PrintWebServiceDocumentationVisitor extends SimpleDeclarationVisito
     private String findObjectNamespace(TypeMirror returnTypeMirror) {
         String objectNS = null;
         Class<?> clazz = getClazz(returnTypeMirror);
-        if (TypesMap.TYPES.containsKey(clazz)) {
-            return TypesMap.TYPES.get(clazz).getNamespaceURI();
+        if (clazz != null) {
+            if (TypesMap.TYPES.containsKey(clazz)) {
+                return TypesMap.TYPES.get(clazz).getNamespaceURI();
+            }
+            XmlSchema xmlSchemaAnnotation = clazz.getPackage().getAnnotation(XmlSchema.class);
+            if (xmlSchemaAnnotation != null) {
+                objectNS = xmlSchemaAnnotation.namespace();
+            }
         }
-        XmlSchema xmlSchemaAnnotation = clazz.getPackage().getAnnotation(XmlSchema.class);
-        if (xmlSchemaAnnotation != null) {
-            objectNS = xmlSchemaAnnotation.namespace();
-        } else {
-            System.out.println("WARNING: namespace ikke definert for klasse " + clazz.getName());
+        if (objectNS == null) {
+            System.err.println("WARNING: namespace ikke definert for type " + returnTypeMirror.toString());
         }
         return objectNS;
     }
@@ -281,8 +296,8 @@ public class PrintWebServiceDocumentationVisitor extends SimpleDeclarationVisito
      */
     private String getSimpleClassName(TypeMirror returnTypeMirror) {
 
+        //forsøker å finne navn via klasse.
         Class clazz = getClazz(returnTypeMirror);
-
         if (clazz != null) {
             //sjekker om mapping finnes for standard typer
             for (Map.Entry<Class, QName> entry : TypesMap.TYPES.entrySet()) {
@@ -292,11 +307,25 @@ public class PrintWebServiceDocumentationVisitor extends SimpleDeclarationVisito
             }
 
             return clazz.getSimpleName();
-
         }
+
+        //forsøker  å finne navn via deklarasjon
+        if (returnTypeMirror instanceof DeclaredType) {
+            DeclaredType declaredType = (DeclaredType) returnTypeMirror;
+            TypeDeclaration declaration = declaredType.getDeclaration();
+            if (declaration != null) {
+                return declaration.getSimpleName();
+            }
+        }
+
         return null;
     }
 
+    /**
+     * klasser finnes enten som deklarerte typer, eller som klasser som kan slås opp via classpath.
+     *
+     * @retun {@code null} dersom klasse ikke kunne finnes via classpath
+     */
     private Class getClazz(TypeMirror returnTypeMirror) {
         class ClassNameVisitor implements TypeVisitor {
             Class clazz;
@@ -308,7 +337,7 @@ public class PrintWebServiceDocumentationVisitor extends SimpleDeclarationVisito
                         try {
                             clazz = Class.forName(name);
                         } catch (ClassNotFoundException e) {
-                            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                            ;//klasse finnes ikke på classpath
                         }
                     }
                 }
@@ -447,24 +476,28 @@ public class PrintWebServiceDocumentationVisitor extends SimpleDeclarationVisito
         ArrayList<String> wsMetoder = new ArrayList<String>();
 
         ArrayList<MethodDeclaration> methods = new ArrayList<MethodDeclaration>();
+        ArrayList<InterfaceType> interfaces = new ArrayList<InterfaceType>();
 
-        ClassDeclaration typeDecl = impltypeDecl.getSuperclass().getDeclaration();
-        while (typeDecl != null) {
+
+        //finner aller metoder + interfaces
+        ClassDeclaration typeDecl = impltypeDecl;
+        while (!typeDecl.getQualifiedName().equals(Object.class.getName())) {
             methods.addAll(typeDecl.getMethods());
-//            ClassType superclass = impltypeDecl.getSuperclass();
-            ClassType superclass = typeDecl.getSuperclass();
-            System.out.println("Superclass = " + superclass.getClass().getName());
-            typeDecl = superclass.getDeclaration();
-            System.out.println("Typedecl = " + typeDecl.getQualifiedName());
-            if (typeDecl == null || typeDecl.getQualifiedName().equalsIgnoreCase(Object.class.getName())) {
+            interfaces.addAll(typeDecl.getSuperinterfaces());
+
+            if (typeDecl.getSuperclass() != null ) {
+                typeDecl = typeDecl.getSuperclass().getDeclaration();
+            } else {
                 break;
             }
         }
 
-        for (InterfaceType interfaceType : impltypeDecl.getSuperinterfaces()) {
+        //løper igjennom alle interfaces og henter også disee metodene
+        for (InterfaceType interfaceType : interfaces) {
             methods.addAll(interfaceType.getDeclaration().getMethods());
         }
 
+        //løper igjennom alle metodene
         for (MethodDeclaration methodDeclaration : methods) {
             String methodName = methodDeclaration.getSimpleName();
             metoder.add(methodName);
@@ -474,17 +507,23 @@ public class PrintWebServiceDocumentationVisitor extends SimpleDeclarationVisito
             }
         }
 
-        if (wsMetoder.isEmpty()) {
-            Collections.sort(metoder);
-        }
-        Collections.sort(wsMetoder);
+        return metodenavnEllerWsMetodenavn(metoder, wsMetoder, methods);
+
+    }
+
+    private Map<String, List<MethodDeclaration>> metodenavnEllerWsMetodenavn(ArrayList<String> metoder, ArrayList<String> wsMetoder, ArrayList<MethodDeclaration> methods) {
         Map<String, List<MethodDeclaration>> map = new LinkedHashMap<String, List<MethodDeclaration>>();
 
-        ArrayList<String> valgteMetoder = !wsMetoder.isEmpty() ? wsMetoder : metoder;
+        Collections.sort(metoder);
+        Collections.sort(wsMetoder);
+
+        //populerer map
+        ArrayList<String> valgteMetoder = wsMetoder.isEmpty() ? metoder : wsMetoder;
         for (String name : valgteMetoder) {
             map.put(name, new ArrayList<MethodDeclaration>());
         }
 
+        //populerer hvert metodenavn med alle funnede MethodDeclorations
         for (MethodDeclaration method : methods) {
             List<MethodDeclaration> methodDeclarationList = map.get(method.getSimpleName());
             if (methodDeclarationList != null) {
@@ -535,12 +574,12 @@ public class PrintWebServiceDocumentationVisitor extends SimpleDeclarationVisito
 
     private void printName(String navn, String ns, boolean link) {
         boolean endA = false;
-        if (ns != null && !ns.isEmpty()) {
+        if (lookupPath != null && ns != null && !ns.isEmpty()) {
             if (link && ns.contains("statkart")) {
                 endA = true;
                 out.print("<a href=\"");
                 out.print(lookupPath);
-                out.print("index.html?");
+                out.print("?");
                 out.print(getJavadocURL(ns, navn));
                 out.println("\">");
             }
@@ -563,7 +602,6 @@ public class PrintWebServiceDocumentationVisitor extends SimpleDeclarationVisito
 
         => "no/statkart/grunnbok/borett/info/wsapi/exception/ServiceException.html"
      */
-
     private String getJavadocURL(String ns, String classs) {
         try {
             URL url = new URL(ns);
@@ -611,10 +649,10 @@ public class PrintWebServiceDocumentationVisitor extends SimpleDeclarationVisito
                     }
 
                 } else if (!token.trim().isEmpty()) {
-                    sb.append(token).append("<br>");
+                    sb.append(token).append("<br />");
                 }
             }
-            comments.put("doc", sb.toString());
+            comments.put("doc", sb.toString().trim());
         }
         return comments;
     }

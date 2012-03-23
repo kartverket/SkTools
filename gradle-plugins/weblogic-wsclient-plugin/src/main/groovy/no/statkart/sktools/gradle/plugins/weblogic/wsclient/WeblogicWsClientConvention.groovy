@@ -11,12 +11,15 @@ import org.apache.commons.lang.builder.EqualsBuilder
 
 /**
  *
+ *
+ * ps. bruk av transient felter for å styre hva som ikke skal persisteres ved gradles beregning av up to date ved depends on.
+ *
  * @since 1.1
  * @author Leif Lislegård
  */
 class WeblogicWsClientConvention {
-    protected final Project project
-    protected final SourceSet sourceSet
+    protected final transient Project project
+    protected final transient SourceSet sourceSet
 
     protected final Collection<WebServiceConfig> webService = new ArrayList<WebServiceConfig>()
     protected File genDir
@@ -85,7 +88,7 @@ class WebServiceConfig implements Serializable {
 
     protected String name;
     protected FileCollection schemaFiles;
-    protected Dependency dependency;
+    protected transient Dependency dependency;
     protected PatternSet matching;
     protected ExceptionConfig exception;
 
@@ -162,12 +165,12 @@ class WebServiceConfig implements Serializable {
      * Optional samling av exception til felles pakke
      */
     public WebServiceConfig exceptionReusePackage(String packageOrPath) {
-        getException().packageOrPathString = packageOrPath;
+        getOrCreateException().packageOrPathString = packageOrPath;
         return this
     }
 
 
-    private ExceptionConfig getException() {
+    private ExceptionConfig getOrCreateException() {
         if (exception == null) {
             exception = new ExceptionConfig(this);
         }

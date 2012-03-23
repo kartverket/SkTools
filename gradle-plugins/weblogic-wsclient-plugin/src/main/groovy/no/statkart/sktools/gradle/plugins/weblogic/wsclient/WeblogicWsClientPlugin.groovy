@@ -59,13 +59,13 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
         //task for henting av schema filer
         Task provideSchema = createCollectSchemaTask(project, 'collectSchemaIfNotSpecified').dependsOn(
                 project.configurations.getByName(Dependency.DEFAULT_CONFIGURATION),     //dependencier blir registrert til 'default'.
-        )
+        );
 
         //task for generering av client source
         Task genClientTask = createGenClientTask(wsClientConvention, sourceSet).dependsOn(
                 provideSchema.name,
                 project.getConfigurations().getByName(WeblogicBasePlugin.WEBLOGIC_CONFIGURATION_NAME), //tvinger rekompilering ved endring i classpath + weblogic jar filer.
-        )
+        );
 
         genClientTask.getConventionMapping().map("defaultSource", new ConventionValue() {
             public Object getValue(Convention conventionManager, IConventionAware conventionAwareObject) {
@@ -74,7 +74,9 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
         })
 
         //hekter inn genClient ved kjøring av 'resources' task.
-        Task processWeblogicResources = project.tasks.getByName(WeblogicWsClientPlugin.PROCESS_WEBLOGIC_RESOURCES_TASK_NAME).dependsOn(WeblogicWsClientPlugin.GEN_CLIENT_TASK_NAME);
+        Task processWeblogicResources = project.tasks.getByName(WeblogicWsClientPlugin.PROCESS_WEBLOGIC_RESOURCES_TASK_NAME).dependsOn(
+                WeblogicWsClientPlugin.GEN_CLIENT_TASK_NAME,
+        );
 
         //task for artifakt
         Task archiveWsClient = configureArchives(wsClientConvention, sourceSet)
@@ -125,7 +127,7 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
                         UnionFileCollection resolvedFiles = new UnionFileCollection()
 
                         Collection<File> warFiles = wsClientConvention.project.configurations.getByName(Dependency.DEFAULT_CONFIGURATION).files(webservice.dependency).findAll {
-                            it.name().toLowerCase().endsWith(".war")
+                            it.getName().toLowerCase().endsWith(".war")
                         }
 
                         warFiles.each { File file ->

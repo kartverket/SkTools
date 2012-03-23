@@ -47,10 +47,10 @@ configureDatabasePlugin {
  *
  */
 public class DbtoolsConvention {
-    private final Project project;
+    final Project project;
     private final Set<String> loadedDrivers = new HashSet<String>();
 
-    public final Map<String, ?> env = new HashMap<String, Object>()
+    final Map<String, ?> env = new HashMap<String, Object>()
 
     Task buildSQLTask
 
