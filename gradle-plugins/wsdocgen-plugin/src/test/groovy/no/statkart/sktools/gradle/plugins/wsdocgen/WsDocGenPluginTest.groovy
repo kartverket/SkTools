@@ -27,8 +27,8 @@ class WsDocGenPluginTest {
         project.apply plugin: 'sktools-wsdocgen-plugin'
 
 
-        assert project.convention.plugins.wsDoc != null
-        Assert.assertTrue(project.convention.plugins.wsDoc instanceof WsDocGenConvention)
+        assert project.convention.plugins.wsdoc != null
+        Assert.assertTrue(project.convention.plugins.wsdoc instanceof WsDocGenConvention)
 
     }
 
