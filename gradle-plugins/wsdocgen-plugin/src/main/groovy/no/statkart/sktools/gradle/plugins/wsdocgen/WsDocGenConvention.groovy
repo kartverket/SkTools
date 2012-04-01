@@ -15,6 +15,7 @@ import org.apache.commons.lang.builder.EqualsBuilder
  * @author Leif Lislegård
  */
 class WsDocGenConvention implements Serializable {
+    private final static long serialVersionUID = 1L;
     final static protected transient String GEN_TASK_NAME_PATTERN = "Gen%sWsDoc"
     final transient Project project
 
@@ -80,6 +81,7 @@ class WsDocGenConvention implements Serializable {
  * @since 1.1
  */
 class Group implements Serializable {
+    private final static long serialVersionUID = 1L;
     final transient Project project
     final transient WsDocGenConvention convention
 

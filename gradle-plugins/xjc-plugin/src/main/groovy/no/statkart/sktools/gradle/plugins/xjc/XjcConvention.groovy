@@ -15,6 +15,7 @@ import org.apache.commons.lang.builder.EqualsBuilder
  * @author Leif Lislegård
  */
 class XjcConvention implements Serializable {
+    private final static long serialVersionUID = 1L;
     final transient Project project
 
     protected final List<Schema> schema = new ArrayList<Schema>()
@@ -112,6 +113,8 @@ class XjcConvention implements Serializable {
  * @author Leif Lislegård
  */
 class Schema implements Serializable {
+    private final static long serialVersionUID = 1L;
+
     /*
      * For lovlige parametere se {@link com.sun.tools.xjc.addon.statkart.ListGenPlugin#parseArgument(com.sun.tools.xjc.Options, String[], int)
      */
