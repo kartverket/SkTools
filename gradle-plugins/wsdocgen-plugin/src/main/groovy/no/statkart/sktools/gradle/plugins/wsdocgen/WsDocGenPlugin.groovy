@@ -18,6 +18,7 @@ import org.gradle.api.initialization.dsl.ScriptHandler
 import org.gradle.util.GUtil
 
 import org.gradle.api.GradleException
+import org.gradle.api.internal.file.UnionFileCollection
 
 /**
  * Dokumentasjon-generering av WSBean.java - JAX-WS implemntasjon på server.
@@ -132,7 +133,10 @@ class WsDocGenPlugin implements Plugin<Project> {
             });
             map("classpath", new ConventionValue() {
                 public Object getValue(Convention conventionManager, IConventionAware conventionAwareObject) {
-                    return project.project.getConfigurations().getByName(WsDocGenPlugin.CONFIGURATION_NAME).getAsFileTree();
+                    return new UnionFileCollection(
+                            project.getConfigurations().getByName(WsDocGenPlugin.CONFIGURATION_NAME),
+                            project.getRootProject().getBuildscript().getConfigurations().getByName('classpath').filter {File file -> file.getPath().contains('sktools')}
+                    ).getAsFileTree()
                 }
             });
         }

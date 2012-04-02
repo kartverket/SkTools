@@ -39,11 +39,11 @@ class WsDocGenTask extends SourceTask {
             group.targetDir.mkdirs()
 
             def attributes = [
-                    factory: no.statkart.grunnbok.tools.docgen.ws.WebserviceAnnotationProcessorFactory.class.getName(),
+                    factory: "no.statkart.grunnbok.tools.docgen.ws.WebserviceAnnotationProcessorFactory",
                     destdir: group.targetDir,
                     compile: false,
                     debug: true,
-//                    includeantruntime: false,
+                    includeantruntime: false,
                     classpathref: ANT_CLASS_PATH_ID,
                     sourcepath: "",
             ]
@@ -80,10 +80,10 @@ class WsDocGenTask extends SourceTask {
 
 
     private void createAntClassPath(AntBuilder ant, Iterable classpath, String id) {
-        logger.debug('Defining Ant classpath id={}', id)
+        logger.info('Defining Ant classpath id={}', id)
         ant.path(id: id) {
             classpath.each {
-                logger.debug("\t{} += {}", id, it)
+                logger.info("\t{} += {}", id, it)
                 pathelement(location: it)
             }
         }
