@@ -7,8 +7,11 @@ import org.gradle.api.Task
 import org.testng.Assert
 import org.gradle.api.ProjectState
 import org.gradle.api.internal.project.ProjectInternal
+import org.gradle.api.tasks.util.PatternSet
+import org.gradle.api.internal.artifacts.dependencies.DefaultSelfResolvingDependency
 
 /**
+ * Hjelpemetoder til bruk i testing
  *
  * @author Leif Lislegård
  */
@@ -120,6 +123,20 @@ class ProjectHelper {
     }
 
     /**
+     * @return sortert liste av gradle jars
+     */
+    public synchronized List<File> getGradleJars() {
+        if (gradleJars == null) {
+            DefaultSelfResolvingDependency dependency = (DefaultSelfResolvingDependency) project.getDependencies().gradleApi()
+            Collection<File> files = dependency.getSource().getAsFileTree().matching(new PatternSet(includes: ['**/*gradle-*.jar'])).getFiles()
+            gradleJars = new ArrayList<File>(files)
+            Collections.sort(gradleJars)
+        }
+        return gradleJars
+    }
+    private static List<File> gradleJars = null;
+
+    /**
      * Setter {@code WEBLOGIC_HOME} property for prosjekt
      */
     ProjectHelper defineWEBLOGIC_HOME() {
@@ -141,6 +158,9 @@ class ProjectHelper {
      * Beregner en weblogic classpath for weblogic jar avhengigheter.
      */
     FileCollection getWeblogicClasspath() {
+        if (!project.hasProperty('WEBLOGIC_HOME')) {
+            defineWEBLOGIC_HOME()
+        }
         return project.fileTree(dir: "${project.WEBLOGIC_HOME}", includes: [
                     'wlserver_10.3/server/lib/weblogic.jar',
                     'wlserver_10.3/server/lib/webservices.jar',

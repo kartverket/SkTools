@@ -45,11 +45,11 @@ import org.gradle.api.plugins.BasePlugin
  */
 class WeblogicWsWarPlugin implements Plugin<Project> {
 
-    final static CONVENTION_NAME = 'weblogicWsWar'
-    final static WEBLOGIC_SOURCE_SET_NAME = 'weblogic'
-    final static WEBLOGIC_WAR_TASK_NAME = 'weblogicWar'
-    final static COMPILE_WEBLOGIC_TASK_NAME = 'compileWeblogicJava'
-    final static PROCESS_WEBLOGIC_RESOURCES_TASK_NAME = 'processWeblogicResources'
+    public static final String CONVENTION_NAME = 'weblogicWsWar'
+    public static final String WEBLOGIC_SOURCE_SET_NAME = 'weblogic'
+    public static final String WEBLOGIC_WAR_TASK_NAME = 'weblogicWar'
+    public static final String COMPILE_WEBLOGIC_TASK_NAME = 'compileWeblogicJava'
+    public static final String PROCESS_WEBLOGIC_RESOURCES_TASK_NAME = 'processWeblogicResources'
 
     @Override
     void apply(Project project) {

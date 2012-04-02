@@ -5,6 +5,7 @@ import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.plugins.ide.idea.IdeaPlugin
 import no.statkart.sktools.gradle.testutils.ProjectHelper
+import org.gradle.api.plugins.WarPlugin
 
 /**
  * Verktøy for bygging av gradle test prosjekter.
@@ -91,6 +92,13 @@ class GradleProjectBuilder<T extends GradleProjectBuilder> {
     public T applyIdeaPlugin() {
         closures.add {
             apply plugin: IdeaPlugin
+        }
+        return this
+    }
+
+    public T applyWarPlugin() {
+        closures.add {
+            apply plugin: WarPlugin
         }
         return this
     }

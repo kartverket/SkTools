@@ -1,7 +1,7 @@
 apply plugin: 'maven'
 apply plugin: 'groovy'
 
-project.version = '1.0'
+project.version = '1.1'
 group = 'no.statkart.sktools.gradle'
 
 
@@ -13,16 +13,14 @@ dependencies {
     //gradle api til byggesystemm blir benyttet som std
     compile gradleApi()
 
+//NB: legg gradleApi() til classpath for bruk i prosjekter
+
+//    runtime 'commons-io:commons-io:1.4@jar'
+//    runtime 'commons-codec:commons-codec:1.2@jar'
+
+    //test
+    testCompile project(':build-utils:test-utils')
+
 }
 
-task sourcesJar(type: Jar, dependsOn:classes) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-    onlyIf { gradle.taskGraph.hasTask(install) || gradle.taskGraph.hasTask(uploadArchives) } //only when published..
-}
-
-
-artifacts {
-    archives sourcesJar
-}
 

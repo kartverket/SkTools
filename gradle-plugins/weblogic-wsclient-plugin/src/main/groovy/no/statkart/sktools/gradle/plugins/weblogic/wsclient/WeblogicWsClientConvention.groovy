@@ -84,6 +84,7 @@ class WeblogicWsClientConvention {
  * @since 1.1
  */
 class WebServiceConfig implements Serializable {
+    private final static long serialVersionUID = 1L;
     private final WeblogicWsClientConvention convention;
 
     protected String name;
@@ -193,6 +194,7 @@ class WebServiceConfig implements Serializable {
  * @since 1.1
  */
 class ExceptionConfig implements Serializable {
+    private final static long serialVersionUID = 1L;
     private final WebServiceConfig convention;
 
     protected String packageOrPathString

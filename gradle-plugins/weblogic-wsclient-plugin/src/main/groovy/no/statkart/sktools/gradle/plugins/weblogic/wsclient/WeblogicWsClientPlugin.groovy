@@ -37,12 +37,12 @@ import java.util.concurrent.Callable
  */
 class WeblogicWsClientPlugin implements Plugin<Project> {
 
-    final static CONVENTION_NAME = 'weblogicWsClient'
-    final static WEBLOGIC_SOURCE_SET_NAME = 'weblogic'
-    final static GEN_CLIENT_TASK_NAME = 'genWeblogicWsClient'
-    final static PROCESS_WEBLOGIC_RESOURCES_TASK_NAME = 'processWeblogicResources'
-    final static COMPILE_WEBLOGIC_TASK_NAME = 'compileWeblogicJava'
-    final static WEBLOGIC_JAR_TASK_NAME = 'weblogicJar'
+    public static final String CONVENTION_NAME = 'weblogicWsClient'
+    public static final String WEBLOGIC_SOURCE_SET_NAME = 'weblogic'
+    public static final String GEN_CLIENT_TASK_NAME = 'genWeblogicWsClient'
+    public static final String PROCESS_WEBLOGIC_RESOURCES_TASK_NAME = 'processWeblogicResources'
+    public static final String COMPILE_WEBLOGIC_TASK_NAME = 'compileWeblogicJava'
+    public static final String WEBLOGIC_JAR_TASK_NAME = 'weblogicJar'
 
     @Override
     void apply(Project project) {

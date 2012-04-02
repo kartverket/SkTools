@@ -1,131 +1,242 @@
 package no.statkart.sktools.gradle.plugins.webstart
 
-import groovy.util.slurpersupport.GPathResult
-import groovy.xml.MarkupBuilder
-import groovy.xml.StreamingMarkupBuilder
-import groovy.xml.XmlUtil
-import no.statkart.sktools.gradle.plugins.webstart.util.DependencyUtil
+import org.apache.commons.io.FileUtils
+import org.gradle.api.Action
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.plugins.JavaPlugin
-
-import org.gradle.api.logging.LogLevel
-import no.statkart.sktools.gradle.plugins.webstart.util.FileUtil
+import org.gradle.api.artifacts.dsl.DependencyHandler
+import org.gradle.api.internal.ConventionMapping
+import org.gradle.api.internal.ConventionTask
+import org.gradle.api.internal.IConventionAware
+import org.gradle.api.plugins.BasePlugin
+import org.gradle.api.plugins.Convention
+import org.gradle.api.plugins.WarPlugin
+import org.gradle.api.tasks.ConventionValue
+import org.gradle.api.tasks.bundling.War
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 /**
- * todo: dokumentasjon
+ * For generering av webstart klienter og distribusjoner. <br />
+ * Har funksjonalitet for generering av jnlp-filer, jar-ressurser, signering og enkel war distribuering.
+ * <p><p>
  *
+ * <h3>War</h3>
+ * For enkel war distribusjon kan man konfigurere opp pluginen via {@link WebstartConvention#warTasks }. <br>
+ * Se forøvrigt {@link WebstartPlugin#integrateWithWars(Project, WebstartConvention)} hvordan dette kan gjøres.
+ *
+ * <h5>Dependencies</h5>
+ * For hver klient kan man legge til dependencies. Disse blir lagt t
+ *
+ * <h3></h3>
+ *
+ * <h3></h3>
+ *
+ *
+ * <h3></h3>
  *
  * @since 1.0
  * @author Thor Åge Eldby
  */
 class WebstartPlugin implements Plugin<Project> {
+    private static Logger logger = LoggerFactory.getLogger(WebstartPlugin.class)
 
-    final static CONVENTION_NAME = 'webstart'
-    final static CONFIGURATION_NAME = 'webstart'
+    public static final String CONVENTION_NAME = 'webstart'
+    public static final String CONFIGURATION_NAME = 'webstart'
+    public static final String GEN_WEBSTART_TASK_NAME = 'genWebstart'
+    /**
+     * @see JnlpServletWarTask
+     */
+    public static final String JNLP_SERVLET_JARS_TASK_NAME = 'webstartJnlpServletJars'
 
     @Override
     void apply(Project project) {
-        WebstartPluginConvention convention = new WebstartPluginConvention()
-        project.convention.plugins.put(CONVENTION_NAME, convention)
-        project.plugins.apply(JavaPlugin.class);
-        Configuration moduleConfiguration = project.configurations.add(CONFIGURATION_NAME).setDescription("Classpath for jars to be included in webstart application");
-        project.task('webstart') {
-            project.afterEvaluate {
-                project.configurations.webstart.each { inputs.file it }
-                if (it.state.failure == null) {
-                    String dir = convention.targetDir
-                    new File(dir).mkdirs()
-                    outputs.dir(dir)
-                }
+        project.plugins.apply(BasePlugin.class);
+
+        final WebstartConvention webstartConvention = new WebstartConvention(project)
+        project.getConvention().getPlugins().put(CONVENTION_NAME, webstartConvention)
+
+        final Configuration webstartConfiguration = project.configurations.add(CONFIGURATION_NAME).setDescription("Classpath for jars to be included in all webstart applications (common)");
+
+        WebstartTask genWebstartTask = project.getTasks().add(WebstartPlugin.GEN_WEBSTART_TASK_NAME, WebstartTask.class)
+        genWebstartTask.setGroup(WarPlugin.WEB_APP_GROUP)
+        genWebstartTask.dependsOn(webstartConfiguration)
+
+        project.getTasks().add(WebstartPlugin.JNLP_SERVLET_JARS_TASK_NAME, JnlpServletWarTask.class);
+
+        configureConventionalValuesForGenWebstartTask(project, webstartConvention)
+
+        project.afterEvaluate(new Action<Project>() {
+            public void execute(Project configuredProject) {
+                configureConventionDefaults(configuredProject, webstartConvention)
+                configureGenWebstartTask(configuredProject, webstartConvention)
+                integrateWithWars(project, webstartConvention)
             }
-            doLast {
-                def files = project.configurations.webstart
-                if (convention.includeSelfJar) {
-                    files = files.files + project.jar.archivePath
-                }
-                signAllJars(project, new File(convention.targetDir, 'lib'), files)
-                createJnlp(new File(convention.targetDir, convention.jnlpFileName), convention.jnlpTranslation, files)
-                createVersionXml(new File(convention.targetDir, 'lib/version.xml'), files)
-            }
-        }.dependsOn(moduleConfiguration).dependsOn(JavaPlugin.JAR_TASK_NAME)
+        });
+
+
     }
 
-    private def signAllJars(Project project, File signedJarsOutputDir, def files) {
-        File keystoreFile = FileUtil.copyOutResourceTemporary(getClass(), 'kodesignering.jks')
-        String keystorePassword = 'SagZ45_p1'
-        String alias = 'statenskartverk'
+    /**
+     * Integrasjon med {@link War} og {@code WarPlugin}
+     */
+    private void integrateWithWars(final Project project, final WebstartConvention webstartConvention) {
+        if (webstartConvention.hasWarTasks()) {
+            boolean allTasks = webstartConvention.warTasks.isEmpty()
+            Task jnlpServletJarsTask = project.getTasks().getByName(WebstartPlugin.JNLP_SERVLET_JARS_TASK_NAME);
 
-        files.each { unsignedJarFileName ->
-            File signedJarFileName = new File(signedJarsOutputDir, unsignedJarFileName.name)
-            project.logger.info("Signing ${signedJarFileName}...")
-            project.ant.copy(file: unsignedJarFileName, tofile: signedJarFileName)
-            project.ant.exec(executable: 'jarsigner', failonerror: true) {
-                if (project.logger.isEnabled(LogLevel.INFO)) {
-                    arg(value: '-verbose')
+            //configuring war tasks
+            project.tasks.withType(War) { War warTask ->
+                if (allTasks || webstartConvention.warTasks.contains(warTask.getName())) {
+
+                    //adding jnlp servlet jars
+                    warTask.classpath(jnlpServletJarsTask)
+                    warTask.dependsOn(WebstartPlugin.JNLP_SERVLET_JARS_TASK_NAME)
+
+                    //adding files generated from webstart task
+                    warTask.from(project.tasks.getByName(WebstartPlugin.GEN_WEBSTART_TASK_NAME))
                 }
-                arg(value: '-keystore')
-                arg(value: keystoreFile)
-                arg(value: '-storepass')
-                arg(value: keystorePassword)
-                arg(value: signedJarFileName)
-                arg(value: alias)
             }
         }
     }
 
+    /**
+     * Assigning default values to convention (if not already set by user)
+     */
+    private void configureConventionDefaults(final Project project, final WebstartConvention webstartConvention) {
 
-    private def createJnlp(File jnlpFile, Closure translation, def files) {
-        jnlpFile.parentFile.mkdirs()
-        GPathResult xml = new XmlSlurper().parse(getClass().getResourceAsStream('template.jnlp'))
-        xml.resources.appendNode {
-            files.each { dep ->
-                jar(href: "lib/$dep.name", version: DependencyUtil.getArtifactVersion(dep))
+        webstartConvention.clients.each { WebstartClientConfiguration clientConfiguration ->
+
+            if (clientConfiguration.outputDir == null) {
+                clientConfiguration.outputPath(project.getBuildDirName() + "/generated/webstart");
             }
-        }
-        // Reslurping to see changes
-        xml = new XmlSlurper().parseText(writeXmlToString(xml))
-        translation(xml)
-        writeXml(jnlpFile, xml)
-    }
 
-    private String writeXmlToString(GPathResult xml) {
-        StringWriter writer = new StringWriter()
-        writeXml(writer, xml)
-        writer.toString()
-    }
+            if (clientConfiguration.jnlpFilePath == null) {
+                clientConfiguration.jnlpFile("${project.name}.jnlp");
+            }
 
-    private def writeXml(File jnlpFile, GPathResult xml) {
-        def writer = new OutputStreamWriter(new FileOutputStream(jnlpFile), 'UTF-8')
-        writeXml(writer, xml)
-        writer.close()
-    }
 
-    private def writeXml(Writer writer, GPathResult xml) {
-        XmlUtil.serialize(new StreamingMarkupBuilder().bind {
-            mkp.yield xml
-        }, writer)
-    }
+            JnlpConfiguration jnlp = clientConfiguration.jnlp()
+            jnlp.with() {
+                if (title == null) {
+                    title("${project.name} v${project.version}".toString());
+                }
+                if (description == null) {
+                    description("");
+                    WebstartPlugin.logger.warn("Description missing from ${clientConfiguration.getJnlpFile()}");
+                }
+                if (vendor == null) {
+                    vendor("Statens Kartverk");
+                    WebstartPlugin.logger.debug("Assigning default value for vendor (${vendor})");
+                }
 
-    private def createVersionXml(File versionXmlFile, def files) {
-        versionXmlFile.parentFile.mkdirs()
-        FileWriter writer = new FileWriter(versionXmlFile)
-        def xml = new MarkupBuilder(writer)
-        xml.'jnlp-versions' {
-            files.each { dep ->
-                resource {
-                    pattern {
-                        name(dep.name)
-                        'version-id'(DependencyUtil.getArtifactVersion(dep))
+                if (!hasApplication()) {
+                    WebstartPlugin.logger.error("Application not set!")
+                } else if (getApplication().mainClass == null) {
+                    WebstartPlugin.logger.error("Application.manClass not set!")
+                }
+
+                if (resources.collect() {it.jarDependencies}.isEmpty()) {
+                    WebstartPlugin.logger.error("No resources defined for ${clientConfiguration.getJnlpFile()}!");
+                }
+
+                if (resources.isEmpty()) {
+                    resources {}    //adding a empty resource when no one exists
+                }
+
+                if (resources.collectMany() {it.runtimes}.isEmpty()) {
+                    WebstartPlugin.logger.error("No runtimes defined. Assigning default runtime, not recomended for production deployment!");
+                    resources.each { ResourcesConfiguration resourcesConfiguration ->
+                        resourcesConfiguration.runtime().version("1.6+").href("http://java.sun.com/products/autodl/j2se").xmx("512");
                     }
-                    xml.file(dep.name)
                 }
+
+                resources.each {
+                    if (it.libPath == null) {
+                        it.libPath('lib');
+                    }
+
+                    //legger alle deklarerte dependencies til 'webstart' konfigurasjon.
+                    DependencyHandler dependencyHandler = project.getDependencies();
+                    it.jarDependencies.getDependencies().each {
+                        dependencyHandler.add(WebstartPlugin.CONFIGURATION_NAME, it);
+                    }
+
+                    //setter jnlp.versionEnabled=true
+                    //Dette er funksjonalitet introdusert i java 6u10
+                    // - for dokumentasjon, søk etter "Avoiding Unnecessary Update Checks JNLP"
+                    it.systemProperties('jnlp.versionEnabled': true)
+                }
+
             }
         }
-        writer.close()
+
     }
 
+    /**
+     * Registrerer output og depends on basert på konfigurasjon.
+     */
+    private void configureGenWebstartTask(final Project project, final WebstartConvention webstartConvention) {
+        Task genWebstartTask = project.getTasks().getByName(WebstartPlugin.GEN_WEBSTART_TASK_NAME);
+        webstartConvention.clients.each {
+            Configuration configuration = project.getConfigurations().getByName(WebstartPlugin.CONFIGURATION_NAME)
+            genWebstartTask.dependsOn(configuration)
+
+            //registrerer output slik at enhver tukling med disse filer vil trigge ny bygging.
+            genWebstartTask.outputs.dir(it.outputDir)
+        }
+
+    }
+
+
+    private configureConventionalValuesForGenWebstartTask(final Project project, final WebstartConvention webstartConvention) {
+        project.tasks.withType(WebstartTask.class).all{ ConventionTask task ->
+            ConventionMapping conventionMapping = task.getConventionMapping()
+
+            /** {@link WebstartTask#clients} **/
+            conventionMapping.map("clients", new ConventionValue() {
+                public Object getValue(Convention conventionManager, IConventionAware conventionAwareObject) {
+                    return webstartConvention.clients
+                }
+            });
+
+            /** {@link WebstartTask#keystoreFile} **/
+            conventionMapping.map("keystoreFile", new ConventionValue() {
+                File tempFile = null;
+
+                public Object getValue(Convention conventionManager, IConventionAware conventionAwareObject) {
+                    if (project.hasProperty('webstart.sign.keystore')) {
+                        return project.file(project.hasProperty('webstart.keystore'))
+                    } else {
+                        if (tempFile == null) {
+                            tempFile = File.createTempFile("kodesignering", "jks")
+                            tempFile.deleteOnExit()
+                            FileUtils.copyURLToFile(getClass().getResource("kodesignering.jks"), tempFile)
+                        }
+                        return tempFile
+                    }
+                }
+            });
+
+            /** {@link WebstartTask#alias} **/
+            conventionMapping.map("alias", new ConventionValue() {
+                public Object getValue(Convention conventionManager, IConventionAware conventionAwareObject) {
+                    project.getProperties().get('webstart.sign.alias', 'statenskartverk')
+                }
+            });
+
+            /** {@link WebstartTask#password} **/
+            conventionMapping.map("password", new ConventionValue() {
+                public Object getValue(Convention conventionManager, IConventionAware conventionAwareObject) {
+                    project.getProperties().get('webstart.sign.password', 'SagZ45_p1')
+                }
+            });
+
+
+        }
+    }
 
 }
 

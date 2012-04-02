@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jnlp spec="6.0+" codebase="$$codebase" href="">
+<jnlp spec="1.5+" codebase="$$codebase" href="">
     <information>
         <title></title>
         <vendor></vendor>
@@ -10,22 +10,8 @@
     <security>
         <all-permissions/>
     </security>
+
     <update check="always" policy="always"/>
 
-    <resources>
-        <j2se version="1.6.0_20+" href="http://java.sun.com/products/autodl/j2se" initial-heap-size="64m" max-heap-size="256m"/>
 
-        <property name="jnlp.versionEnabled" value="true"/>
-
-        <property name="generic.client.name" value=""/>
-        <property name="generic.client.serverUrl" value=""/>
-        <property name="generic.client.port" value=""/>
-        <property name="generic.client.protocol" value="https"/>
-
-        <property name="generic.client.username" value=""/>
-        <property name="generic.client.password" value=""/>
-
-    </resources>
-
-    <application-desc main-class=""/>
 </jnlp>
