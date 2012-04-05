@@ -11,7 +11,7 @@ import org.gradle.api.tasks.OutputDirectory
 
 /**
  * Eksekverer XJC task via ant.
- * Kobler inn evt plugin funksjonalitet i hht konfigurasjon av convention. Se {@link no.statkart.sktools.gradle.plugins.xjc.model.XjcOptions } for detaljer.
+ * Kobler inn evt plugin funksjonalitet i hht konfigurasjon av convention. Se {@link no.statkart.sktools.gradle.plugins.xjc.Schema#xjcOptions } for detaljer.
  *
  * <p>
  * Følgende plugin funksjonalitet er implementert:

@@ -7,6 +7,8 @@ import org.testng.Assert
 import no.statkart.sktools.gradle.testutils.ProjectHelper
 import no.statkart.sktools.gradle.testutils.builder.XjcProjectBuilder
 import no.statkart.sktools.gradle.testutils.filewriter.XjcTestutilFilewriter
+import org.gradle.api.plugins.JavaBasePlugin
+import org.gradle.api.plugins.JavaPluginConvention
 
 /**
  * Test av {@link XjcPlugin}
@@ -159,6 +161,13 @@ class XjcPluginTest {
 
         //config
         projectHelper.configureProject {
+
+            //registrerer et source sett via javabase plugin
+            apply plugin:JavaBasePlugin.class
+            sourceSets {
+                mysource
+            }
+
             xjc {
 
                 sourceSetName 'mysource'
@@ -169,13 +178,13 @@ class XjcPluginTest {
                 }
                 schema {
                     path project.file('src/main/xsd')
-                    includes '**/*.xsd'
+                    includes '*.xsd'
                     withListAdapter
                 }
                 schema {
                     path "${project.buildDir}/../src/main/xsd"
-                    includes '**/*.xsd'
-                    includes '**/*.xml'
+                    includes '*.xsd'
+                    includes '*.xml'
 
                     withGrunnbokDoc
                     withListAdapter 'someAdapter.fqn'
@@ -207,9 +216,9 @@ class XjcPluginTest {
 
         //tester schema.includes (default verdi er '**/*.xsd')
         (0..2).each {
-            assert convention.schema[it].includes.contains('**/*.xsd');
+            assert convention.schema[it].includes.contains('*.xsd');
         }
-        assert convention.schema[2].includes.contains('**/*.xml');
+        assert convention.schema[2].includes.contains('*.xml');
 
 
         //tester schema.withGrunnbokDoc

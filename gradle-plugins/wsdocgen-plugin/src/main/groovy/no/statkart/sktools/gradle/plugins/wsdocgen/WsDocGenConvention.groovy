@@ -5,7 +5,7 @@ import org.gradle.api.Project
 import org.apache.commons.lang.builder.EqualsBuilder
 
 /**
- * Kan konfigureres oppt til å dokumentere valgfritt sourceSet via {@link #sourceSetName}
+ * Kan konfigureres oppt til å dokumentere valgfritt sourceSet via {@link WsDocGenConvention#sourceSetName}
  *
  * Det legges opp til at man kan genere dokumentasjon for flere samlinger av servicer, disse grupperes og må da selv tildeles targetPaths.
  *

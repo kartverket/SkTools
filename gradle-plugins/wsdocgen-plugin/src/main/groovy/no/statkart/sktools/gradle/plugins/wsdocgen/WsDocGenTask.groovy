@@ -43,7 +43,7 @@ class WsDocGenTask extends SourceTask {
                     destdir: group.targetDir,
                     compile: false,
                     debug: true,
-                    includeantruntime: false,
+                    includeantruntime: true,
                     classpathref: ANT_CLASS_PATH_ID,
                     sourcepath: "",
             ]
