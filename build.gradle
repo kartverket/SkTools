@@ -99,24 +99,33 @@ subprojects { Project project ->
         }
 
 
+        project.filterProperties = [:]
+
+        project.afterEvaluate {
+            if (filterProperties.isEmpty())
+            project.properties.entrySet().collectEntries(filterProperties) {(it.value instanceof String) ? new MapEntry(it.key, it.value) : [:]}
+        }
+
 
         ['main', 'test'].each { String scope ->
-            def unfilteredPropertiesDir = project.file("src/${scope}/resources.filtered")
-            def filteredResourcesDir = project.file("${project.buildDirName}/generated/${scope}/resources")
+            def unfilteredPropertiesDir = project.file("src/${scope}/resources-filter")
+            def filteredResourcesDir = project.file("gen/${scope}/resources")
 
             def scopeName = scope.replaceFirst(".") {it[0].toUpperCase()}
 
             if (unfilteredPropertiesDir.isDirectory()) {
                 def filterTask = task("filter${scopeName}Resources") {
                     inputs.dir(unfilteredPropertiesDir)
-                    inputs.properties(filterProperties)
+
+                    @org.gradle.api.tasks.Input
+                    Map<String, Object> filterProperties = project.filterProperties
                     outputs.dir(filteredResourcesDir)
                     doLast {
                         delete(filteredResourcesDir);
                         copy {
-                            from(unfilteredPropertiesDir)
                             into(filteredResourcesDir)
-//                            filter(ReplaceTokens, tokens: filterProperties)
+                            from(unfilteredPropertiesDir)
+                            filter(org.apache.tools.ant.filters.ReplaceTokens, tokens: filterProperties)
                         }
                         ant.touch() { fileset(dir: filteredResourcesDir)}
                     }
@@ -125,7 +134,7 @@ subprojects { Project project ->
                 project.processResources.dependsOn filterTask
 
                 def createDirTask = task("createFilteredResourceDir", type: Directory) { dir = filteredResourcesDir }
-                project.tasks.ideaModule.dependsOn createDirTask
+                project.tasks.ideaModule.dependsOn createDirTask, filterTask
             }
         }
 
