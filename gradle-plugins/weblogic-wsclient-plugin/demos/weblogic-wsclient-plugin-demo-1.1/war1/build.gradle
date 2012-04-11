@@ -1,0 +1,26 @@
+apply plugin: 'java'
+apply plugin: 'sktools-weblogic-wswar-plugin'
+
+description = "Web modul med webservice implementasjon"
+
+dependencies {
+    weblogic libraries.weblogic
+    weblogicCompile project.files("${JAVA_HOME}/lib/tools.jar").stopExecutionIfEmpty() //JAVA_HOME ikke satt??
+    weblogicCompile project(path: project.path, configuration:'runtime')
+}
+
+
+
+//innkobling av plugin jar filer for gradle byggesystem
+buildscript {
+
+    repositories {
+        //bruker kun lokale filer her da dette er et demo prosjekt...
+        mavenLocal()
+        mavenRepo name: 'public', url: "${project.PUBLIC_REPO}"
+    }
+
+    dependencies {
+        classpath 'no.statkart.sktools.gradle:weblogic-wswar-plugin:1.1'
+    }
+}

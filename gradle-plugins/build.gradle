@@ -4,3 +4,39 @@ project.version = '1.0'
 group = 'no.statkart.sktools.gradle'
 
 dependsOnChildren()
+
+
+//todo: lage en 'samlepom' av samtlige plugins
+
+
+task(dependsOn:'testDemos', 'test') {}
+
+//task som eksekverer alle demo-prosjekter som evt måtte finnes
+task('testDemos') {
+
+    childProjects.values().each { Project childProject ->
+        dependsOn(childProject.tasks.findByName('test'))
+
+    }
+
+    doLast {
+        println 'Running demos..'
+        int i = 0
+        childProjects.values().each { Project childProject ->
+            File demoDir = childProject.file("demos/${childProject.name}-demo-${childProject.version}")
+            if (demoDir.exists()) {
+                i++
+                println '..executing demo in ' + project.relativePath(demoDir)
+                StartParameter sp = new StartParameter()
+                sp.setCurrentDir(demoDir)
+//                sp.setTaskNames(['clean', 'runDemo'])
+                sp.setTaskNames(['runDemo'])
+                GradleLauncher.newInstance(sp).run().rethrowFailure();
+            } else {
+                println "..no demo found for ${childProject.getPath()}"
+            }
+        }
+        println "\n${i} demos executed!"
+    }
+}
+

@@ -1,0 +1,49 @@
+group = 'no.statkart.sktools.gradle.plugins.weblogic-wsclient-plugin.demos'
+
+// build a map of the dependency artifacts to use. Allows centralized definition of the versions of artifacts to use
+libraries = [:]
+
+//tools.jar for JDK
+libraries.'tools.jar' = files("${System.getenv('JAVA_HOME')}/lib/tools.jar").stopExecutionIfEmpty() //JAVA_HOME ikke satt??
+
+libraries.weblogic =  fileTree(dir:"${WEBLOGIC_HOME}", includes:[
+        'wlserver_10.3/server/lib/weblogic.jar',
+        'wlserver_10.3/server/lib/webservices.jar',
+        'wlserver_10.3/server/lib/wljmsclient.jar',
+        'modules/javax.annotation_*.jar/',
+        'modules/javax.ejb_3*.jar',
+        'modules/javax.interceptor_*.jar',
+        'modules/javax.servlet_*.jar',
+        'modules/javax.transaction_*.jar',
+        'modules/com.bea.core.transaction_*.jar',
+        'modules/com.bea.core.datasource*.jar',
+        'modules/glassfish.jaxws.rt*.jar',
+]).stopExecutionIfEmpty() //feilsituasjon dersom WEBLOGIC_HOME ikke er riktig satt
+
+
+
+//innkobling av plugin jar filer for gradle byggesystem
+buildscript {
+    rootProject.version = '1.1'
+
+    // Variables to grab from environment + defaults
+    ['WEBLOGIC_HOME', 'COMPUTERNAME', 'PUBLIC_REPO', 'JAVA_HOME'].each { val ->
+        if (!rootProject.hasProperty(val) && System.getenv(val) != null) {
+            rootProject.setProperty(val, System.getenv(val))
+        }
+    }
+    project.setProperty('PUBLIC_REPO', project.properties.get('PUBLIC_REPO', 'http://skrivap92.statkart.no:8001/nexus/content/groups/public/'))
+
+    repositories {
+        //bruker kun lokale filer her da dette er et demo prosjekt...
+        mavenLocal()
+
+        mavenRepo name: 'public', url: "${project.PUBLIC_REPO}"
+
+    }
+
+    dependencies {
+        classpath "no.statkart.sktools.gradle:weblogic-wsclient-plugin:${version}"
+    }
+
+}

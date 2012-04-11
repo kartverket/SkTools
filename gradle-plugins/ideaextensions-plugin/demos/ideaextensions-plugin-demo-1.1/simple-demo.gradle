@@ -1,0 +1,34 @@
+
+apply plugin: 'sktools-ideaextensions-plugin'
+apply plugin: 'groovy'
+
+sourceCompatibility = '1.6'
+targetCompatibility = '1.6'
+
+ideaExtensions {
+    masks += '*.tmp'
+    vcs 'Perforce'
+}
+
+
+tasks.idea.dependsOn task('genSpamfiler') {
+    project.file('config').mkdirs()
+    project.file('config/myconfig.tmp').createNewFile()
+    project.file('config/myconfig2.properties').createNewFile()
+    project.file('gradle.log').createNewFile()
+
+}
+
+task runDemo {
+    dependsOn 'testMasks'
+    dependsOn 'testVCS'
+}
+
+
+task testMasks(dependsOn:':idea') << {
+    assert file("${project.name}.iws").text.contains('mask="*.tmp"')
+}
+
+task testVCS(dependsOn:':idea') << {
+    assert file("${project.name}.ipr").text.contains('vcs="Perforce"')
+}
