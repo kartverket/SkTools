@@ -42,6 +42,7 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
     public static final String GEN_CLIENT_TASK_NAME = 'genWeblogicWsClient'
     public static final String PROCESS_WEBLOGIC_RESOURCES_TASK_NAME = 'processWeblogicResources'
     public static final String COMPILE_WEBLOGIC_TASK_NAME = 'compileWeblogicJava'
+    public static final String WEBLOGIC_CLASSES_TASK_NAME = 'weblogicClasses'
     public static final String WEBLOGIC_JAR_TASK_NAME = 'weblogicJar'
 
     @Override
@@ -84,13 +85,11 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
                 WeblogicWsClientPlugin.GEN_CLIENT_TASK_NAME,
         );
 
-        //hekter inn buildWeblogic for 'assemble'
-        Task assemble = project.tasks.getByName(BasePlugin.ASSEMBLE_TASK_NAME).dependsOn(
-                'buildWeblogic',
-        );
 
         //task for artifakt
-        Task archiveWsClient = configureArchives(wsClientConvention, sourceSet)
+        Task archiveWsClient = configureArchives(wsClientConvention, sourceSet).dependsOn(
+                WeblogicWsClientPlugin.WEBLOGIC_CLASSES_TASK_NAME,
+        )
 
 
         project.afterEvaluate {

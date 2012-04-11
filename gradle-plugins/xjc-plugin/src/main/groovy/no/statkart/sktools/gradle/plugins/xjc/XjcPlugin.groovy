@@ -23,8 +23,8 @@ import org.gradle.api.tasks.SourceTask
  *
  * Se dokumentasjon for <i>xjc-plugins<i> modul for bruk av evt utvidelser.
  * <ul>
- *  <li>{@link GrunnbokDocPlugin}
- *  <li>{@link ListGenPlugin}
+ *  <li>{@link com.sun.tools.xjc.addon.statkart.GrunnbokDocPlugin}
+ *  <li>{@link com.sun.tools.xjc.addon.statkart.ListGenPlugin}
  * </ul>
  *
  * @since 1.0

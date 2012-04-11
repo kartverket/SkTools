@@ -71,7 +71,7 @@ class WsDocGenPluginTest {
         assert convention != null
 
         assert convention.sourceSetName == 'main'
-        assert convention.genDocTaskName == "GenMainWsDoc"
+        assert convention.genDocTaskName == "genMainWsDoc"
 
         assert convention.groups.size() == 1
         assert convention.groups[0].includes == ['**/*Bean.java']

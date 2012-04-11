@@ -14,7 +14,7 @@ dependencies {
     compile gradleApi()
     runtime 'commons-lang:commons-lang:2.6@jar'
 
-    runtime project(':build-utils:xjc-plugins')
+    compile project(':build-utils:xjc-plugins')
 
     //test
     testCompile project(':build-utils:test-utils')

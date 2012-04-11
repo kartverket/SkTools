@@ -23,7 +23,7 @@ import org.gradle.api.plugins.BasePlugin
  *
  * <p>
  * Dersom JavaPlugin er aktivert vil det arves ifra main.java konfigurasjonen.
- *  - Dette vil da si at alle dependincies for main vil bli arvet og lagt på weblogic sin.
+ *  - Dette vil da si at alle dependencies for main vil bli arvet og lagt på weblogic sin.
  *
  * <p>
  * Pluginen konfigurerer opp konfigurasjoner og task med navn ihht standard javalpugin konvensjon. Se bla {@link SourceSet}.
@@ -37,7 +37,7 @@ import org.gradle.api.plugins.BasePlugin
  * </ul>
  *
  *
- * <p> todo: finne ut hvordan en fikser classpath fro evt main koblet 'main' dependency
+ * <p> todo: finne ut hvordan en fikser dependency/classpath for evt koblet 'main' sourceSet
  *
  * @since 1.0
  * @author Thor Åge Eldby
@@ -50,6 +50,7 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
     public static final String WEBLOGIC_WAR_TASK_NAME = 'weblogicWar'
     public static final String COMPILE_WEBLOGIC_TASK_NAME = 'compileWeblogicJava'
     public static final String PROCESS_WEBLOGIC_RESOURCES_TASK_NAME = 'processWeblogicResources'
+    public static final String WEBLOGIC_CLASSES_TASK_NAME = 'weblogicClasses'
 
     @Override
     void apply(Project project) {
@@ -67,22 +68,11 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
 
         Task compileTask = configureCompileTask(project, sourceSet).dependsOn(
                 project.getConfigurations().getByName(sourceSet.getCompileConfigurationName()), //tvinger rekompilering ved endring i classpath (feks dersom weblogic classpath endrer seg)
-//                new Callable() {
-//                    public Object call() throws Exception {
-//                        return project.getConfigurations().getByName(no.statkart.sktools.gradle.plugins.weblogic.WeblogicBasePlugin.WEBLOGIC_CONFIGURATION_NAME).getExtendsFrom().collectAll {it.getBuildArtifacts()}   //tvinger ekeskvering av evt dependencies sine bygge-tasks
-//                    }
-//                }
-        )
-
-        //hekter inn tasks i dependency graph
-        project.tasks.getByName(JavaBasePlugin.BUILD_TASK_NAME).dependsOn(
-                WeblogicWsWarPlugin.COMPILE_WEBLOGIC_TASK_NAME, //same as {@code sourceSet.getCompileJavaTaskName()}
-                WeblogicWsWarPlugin.PROCESS_WEBLOGIC_RESOURCES_TASK_NAME, //same as {@code sourceSet.getProcessResourcesTaskName()}
         )
 
         //task for bygging av war artifakt
         Task war = configureArchives(javaConvention, sourceSet).dependsOn(
-                WeblogicWsWarPlugin.COMPILE_WEBLOGIC_TASK_NAME, //same as {@code sourceSet.getCompileJavaTaskName()}
+                WeblogicWsWarPlugin.WEBLOGIC_CLASSES_TASK_NAME,
         )
 
 
