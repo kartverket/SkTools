@@ -1,13 +1,13 @@
 package no.statkart.sktools.gradle.plugins.dbtools.database
 
 import org.gradle.api.Project
-import org.apache.commons.lang.NotImplementedException
 import no.statkart.sktools.gradle.plugins.dbtools.database.oracle.OracleTasksConvention
 import no.statkart.sktools.gradle.plugins.dbtools.database.oracle.OracleTasks
 import java.sql.Driver
 import java.sql.DriverManager
 import org.gradle.api.Task
 import no.statkart.sktools.gradle.plugins.dbtools.database.hsqldb.HsqldbTasksConvention
+import org.gradle.api.GradleException
 
 /**
  * Pluginen kan konfigureres til å håndtere flere ulike databaser og flere instanser av denne.
@@ -131,7 +131,7 @@ configureDatabasePlugin {
             return addHsqldbToolset(prefix, path, closure)
 
         } else {
-            throw new NotImplementedException("Ukjent verktøyset/database")
+            throw new GradleException("Ukjent verktøyset/database")
         }
     }
 

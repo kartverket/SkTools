@@ -19,11 +19,10 @@ import org.gradle.api.artifacts.Configuration
  */
 class WeblogicBasePlugin implements Plugin<ProjectInternal> {
 
-    final static WEBLOGIC_CONFIGURATION_NAME = 'weblogic'
+    public static final String WEBLOGIC_CONFIGURATION_NAME = 'weblogic';
 
     @Override
     void apply(ProjectInternal project) {
-        JavaBasePlugin javaBasePlugin = project.getPlugins().apply(JavaBasePlugin.class);
 
         createConfiguration(project);
         configureCompileDefaults(project);
@@ -37,7 +36,6 @@ class WeblogicBasePlugin implements Plugin<ProjectInternal> {
     private void configureCompileDefaults(final Project project) {
         project.getTasks().withType(WeblogicTaskInterface.class, new Action<WeblogicTaskInterface>() {
             public void execute(WeblogicTaskInterface compile) {
-
                 //setter weblogicClasspath property som conventional value.
                 // Dvs at følgende default verdier blir brukt dersom ikke property eksplisitt blir satt (null)
                 compile.getConventionMapping().map("weblogicClasspath", new ConventionValue() {

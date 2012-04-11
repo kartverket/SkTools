@@ -10,6 +10,7 @@ import org.testng.Assert
 import org.testng.annotations.Test
 import org.gradle.api.plugins.BasePlugin
 import no.statkart.sktools.gradle.testutils.filewriter.WeblogicWsWarTestutilFilewriter
+import org.gradle.api.Task
 
 /**
  * Test  av {@link WeblogicWsClientPlugin}-funksjonalitet.
@@ -174,6 +175,34 @@ class WeblogicWsClientPluginTest {
         assert taskDependencies.contains(BasePlugin.ASSEMBLE_TASK_NAME)
 
     }
+
+    /**
+     * Tester weblogicClasspath
+     */
+    @Test
+    void testWeblogicClasspath() {
+
+        //forks a new project in a temp folder
+        ProjectHelper projectHelper = WeblogicWsClientProjectBuilder.builder().applyWsClientPlugin(false).build()
+
+        File someJarFile = projectHelper.project.file('weblogic.jar')
+
+        projectHelper.configureProject {
+            dependencies {
+                weblogic files(someJarFile)
+            }
+        }
+
+
+        Task task = projectHelper.project.tasks.getByName(WeblogicWsClientPlugin.GEN_CLIENT_TASK_NAME)
+
+        assert task.weblogicClasspath.files.contains(someJarFile)
+
+
+
+    }
+
+
 
     /**
      * Tester at man kan legge til ekstra java klasser

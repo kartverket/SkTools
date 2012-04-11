@@ -1,0 +1,65 @@
+apply plugin: 'java'
+
+repositories {
+    mavenLocal()    //anntar at en allerede har installert dependencies til lokal maven repo
+    mavenCentral()
+}
+
+
+dependencies {
+    runtime 'no.statkart.sktools:xjc-plugins:1.1'
+}
+
+
+outputPath = 'build/gen/java'
+sourcePath = 'src/main/schema'
+
+ant.taskdef(name: 'xjc', classname: 'com.sun.tools.xjc.XJCTask', classpath: configurations.runtime.asPath) //need xjc-plugins.jar in classpath
+
+
+//oppretter gradle task
+task('xjcTest') {
+    logging.captureStandardError LogLevel.ERROR
+
+    doLast {
+        //oppretter mapper for gen kode + ant defgen
+        ant.mkdir(dir: outputPath)
+
+        //xjc ant task
+        ant.xjc(destDir: outputPath, extension: true) {
+            schema(dir: sourcePath, includes: '**/*.xsd')
+            arg(line: "-grunnbokDoc no.statkart.sktools.test no.statkart.sktools.annen.pakke")
+        }
+    }
+
+}
+
+task('testListgenPluginWithBaseClass') {
+    logging.captureStandardError LogLevel.ERROR
+
+    doLast {
+        //oppretter mapper for gen kode + ant defgen
+        ant.mkdir(dir: outputPath)
+
+        //kjører xjc task
+        ant.xjc(destDir: outputPath, extension: true) {
+            schema(dir: sourcePath, includes: '**/*.xsd')
+            arg(line: '-listgen baseClass=some.implementation.ListTestIterable')
+        }
+    }
+}
+
+task('testListgenPlugin') {
+    logging.captureStandardError LogLevel.ERROR
+
+    doLast {
+        //oppretter mapper for gen kode + ant defgen
+        ant.mkdir(dir: outputPath)
+
+        //kjører xjc task
+        ant.xjc(destDir: outputPath, extension: true) {
+            schema(dir: sourcePath, includes: '**/*.xsd')
+            arg(line: '-listgen')
+        }
+    }
+}

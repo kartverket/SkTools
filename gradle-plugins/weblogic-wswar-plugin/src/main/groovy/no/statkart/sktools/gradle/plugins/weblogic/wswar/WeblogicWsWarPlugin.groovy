@@ -53,7 +53,8 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
 
     @Override
     void apply(Project project) {
-        project.apply plugin: WeblogicBasePlugin
+        project.apply plugin: JavaBasePlugin.class
+        project.apply plugin: WeblogicBasePlugin.class
 
         JavaPluginConvention javaConvention = project.getConvention().getPlugins().get("java");
 
@@ -140,8 +141,7 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
     /**
      * Konfigurerer avhengigheter slik at <br/>
      * <ul>
-     *  <li><code>weblogicCompile</code> arver ifra <code>weblogicCompile</code>
-     *  <li><code>weblogicCompile</code> arver ifra <code>ccompile</code> (dersom definert).
+     *  <li><code>weblogicCompile</code> arver ifra <code>compile</code> (dersom definert).
      *  <li><code>weblogicRuntime</code> arver ifra <code>runtime</code> (dersom definert).
      * </ul>
      */
@@ -152,8 +152,6 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
         Configuration weblogicConfiguration = project.getConfigurations().getByName(WeblogicBasePlugin.WEBLOGIC_CONFIGURATION_NAME);
         Configuration weblogicCompileConfiguration = project.getConfigurations().getByName(weblogicSourceSet.getCompileConfigurationName());
         Configuration weblogicRuntimeConfiguration = project.getConfigurations().getByName(weblogicSourceSet.getRuntimeConfigurationName());
-
-        weblogicCompileConfiguration.extendsFrom(weblogicConfiguration);    //compile arver ifra weblogic konfigurasjon/dependency
 
 
         SourceSet mainSourceSet = javaConvention.getSourceSets().findByName(SourceSet.MAIN_SOURCE_SET_NAME);

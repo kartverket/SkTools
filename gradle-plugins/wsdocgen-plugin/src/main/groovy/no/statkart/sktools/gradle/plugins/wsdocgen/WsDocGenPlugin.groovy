@@ -19,6 +19,9 @@ import org.gradle.util.GUtil
 
 import org.gradle.api.GradleException
 import org.gradle.api.internal.file.UnionFileCollection
+import org.gradle.api.file.FileCollection
+import org.gradle.api.artifacts.Dependency
+import org.gradle.api.internal.file.collections.SimpleFileCollection
 
 /**
  * Dokumentasjon-generering av WSBean.java - JAX-WS implemntasjon på server.
@@ -133,10 +136,7 @@ class WsDocGenPlugin implements Plugin<Project> {
             });
             map("classpath", new ConventionValue() {
                 public Object getValue(Convention conventionManager, IConventionAware conventionAwareObject) {
-                    return new UnionFileCollection(
-                            project.getConfigurations().getByName(WsDocGenPlugin.CONFIGURATION_NAME),
-                            project.getRootProject().getBuildscript().getConfigurations().getByName('classpath').filter {File file -> file.getPath().contains('sktools')}
-                    ).getAsFileTree()
+                    return new UnionFileCollection(findPluginClasspath(project), project.getConfigurations().getByName(WsDocGenPlugin.CONFIGURATION_NAME)).getAsFileTree();
                 }
             });
         }
@@ -147,7 +147,20 @@ class WsDocGenPlugin implements Plugin<Project> {
 
         genWsDocTask.dependsOn(genWsDocTaskNameForSourceSet)
 
+    }
 
+    private static FileCollection findPluginClasspath(final Project project) {
+        FileCollection returnedFileCollection = project.getBuildscript().getConfigurations().getByName(ScriptHandler.CLASSPATH_CONFIGURATION);
+
+        [project, project.getRootProject()].each {
+            Configuration buildConfiguration = it.getBuildscript().getConfigurations().getByName(ScriptHandler.CLASSPATH_CONFIGURATION);
+
+            Dependency pluginDependency = buildConfiguration.dependencies.find {Dependency dependency -> dependency.getGroup() == 'no.statkart.sktools.gradle' && dependency.getName() == 'wsdocgen-plugin'};
+            if  (pluginDependency != null) {
+                returnedFileCollection = new SimpleFileCollection(buildConfiguration.files(pluginDependency));
+            }
+        }
+        return returnedFileCollection;
     }
 
 

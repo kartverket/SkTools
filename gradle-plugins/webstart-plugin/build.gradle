@@ -12,11 +12,10 @@ dependencies {
 
     //gradle api til byggesystemm blir benyttet som std
     compile gradleApi()
+    runtime 'commons-lang:commons-lang:2.6@jar'
+    runtime 'commons-io:commons-io:1.4@jar'
+    runtime 'commons-codec:commons-codec:1.2@jar'
 
-//NB: legg gradleApi() til classpath for bruk i prosjekter
-
-//    runtime 'commons-io:commons-io:1.4@jar'
-//    runtime 'commons-codec:commons-codec:1.2@jar'
 
     //test
     testCompile project(':build-utils:test-utils')

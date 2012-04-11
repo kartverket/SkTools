@@ -9,6 +9,7 @@ class WeblogicWsWarProjectBuilder<T extends WeblogicWsWarProjectBuilder> extends
 
 
     private boolean setWeblogicClasspath
+    private boolean addToolsJar
 
 
     public static WeblogicWsWarProjectBuilder<WeblogicWsWarProjectBuilder> builder() {
@@ -18,6 +19,7 @@ class WeblogicWsWarProjectBuilder<T extends WeblogicWsWarProjectBuilder> extends
 
     public T withWeblogicClasspath() {
         setWeblogicClasspath = true
+        addToolsJar = true
         closures.add {
             projectHelper.defineWEBLOGIC_HOME()
         }
@@ -40,6 +42,12 @@ class WeblogicWsWarProjectBuilder<T extends WeblogicWsWarProjectBuilder> extends
             closures.add {
                 //set dependency
                 dependencies.weblogic projectHelper.weblogicClasspath
+            }
+        }
+        if (addToolsJar) {
+            closures.add {
+                //set dependency
+                dependencies.weblogicCompile files("${System.getenv('JAVA_HOME')}/lib/tools.jar").stopExecutionIfEmpty() //JAVA_HOME ikke satt??
             }
         }
         return this

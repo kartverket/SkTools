@@ -1,0 +1,55 @@
+apply plugin: 'java'
+
+repositories {
+    mavenLocal()    //anntar at en allerede har installert dependencies til lokal maven repo
+    mavenCentral()
+}
+
+
+dependencies {
+    compile files("${System.getenv('JAVA_HOME')}/lib/tools.jar").stopExecutionIfEmpty() //JAVA_HOME ikke satt??
+    runtime 'no.statkart.sktools:wsdocgen:0.3'
+}
+
+
+outputPath = 'build/gen/wsdoc'
+sourcePath = 'src/main/java'
+
+
+
+task('testDefaultConfiguration') {
+    doLast {
+        ant.mkdir(dir: outputPath)
+
+        ant.apt(factory: no.statkart.grunnbok.tools.docgen.ws.WebserviceAnnotationProcessorFactory.class.name,
+                srcdir: sourcePath,
+                destdir: outputPath,
+                compile: false,
+                debug: true,
+                includeantruntime: false,
+                classpath: configurations.runtime.asPath, //need wsdocgen.jar in classpath
+        ) {
+            include(name: '**/*WSBean.java')
+        }
+    }
+}
+
+task('testLookupPath') {
+    doLast {
+        ant.mkdir(dir: outputPath)
+
+        ant.apt(factory: 'no.statkart.grunnbok.tools.docgen.ws.WebserviceAnnotationProcessorFactory',
+                srcdir: sourcePath,
+                destdir: outputPath,
+                compile: false,
+                debug: true,
+                includeantruntime: false,
+                classpath: configurations.runtime.asPath, //need wsdocgen.jar in classpath
+        ) {
+            option(name: 'LookupPath', value: '../javadoc/index.html')
+            include(name: '**/*WSBean.java')
+        }
+    }
+}
+
+

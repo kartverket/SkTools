@@ -367,11 +367,6 @@ class WeblogicWsWarPluginTest {
             return file
         }
 
-        File weblogicWarFile = rootProject.file('build/libs/testproject-weblogic.war').with { File file ->
-            assert weblogicArtifacts.contains(file)
-            assert !mainArtifacts.contains(file)    //forventer ikke at konfigurasjon for runtime kjenner dette artifaktet.
-            return file
-        }
 
         //sjekker at artifakt ifra 'main' blir med på classpath
         assert rootProject.tasks['compileWeblogicJava'].classpath.contains(mainJarFile)

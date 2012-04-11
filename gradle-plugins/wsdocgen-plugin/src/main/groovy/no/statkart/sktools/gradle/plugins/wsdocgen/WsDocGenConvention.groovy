@@ -16,7 +16,7 @@ import org.apache.commons.lang.builder.EqualsBuilder
  */
 class WsDocGenConvention implements Serializable {
     private final static long serialVersionUID = 1L;
-    final static protected transient String GEN_TASK_NAME_PATTERN = "Gen%sWsDoc"
+    final static protected transient String GEN_TASK_NAME_PATTERN = "gen%sWsDoc"
     final transient Project project
 
     protected final List<Group> groups = new ArrayList<Group>()
@@ -28,6 +28,7 @@ class WsDocGenConvention implements Serializable {
 
 
     //blir dynamisk satt av Plugin
+    //todo: faktorere denne bort
     protected String genDocTaskName
 
     WsDocGenConvention(Project project) {

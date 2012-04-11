@@ -96,7 +96,7 @@ class WeblogicJaxWsClientCompilerTest {
         ProjectHelper wsWarProjectHelper = WeblogicWsWarProjectBuilder.builder().applyWsWarPlugin(true).withName("wswar").withParent(rootProject).applyJavaPlugin().build()
         wsWarProjectHelper.configureProject() {
             dependencies {
-                weblogic project(path: project.path, configuration: 'runtime')    //
+                weblogicCompile project(path: project.path, configuration: 'runtime')    //
             }
         }
 

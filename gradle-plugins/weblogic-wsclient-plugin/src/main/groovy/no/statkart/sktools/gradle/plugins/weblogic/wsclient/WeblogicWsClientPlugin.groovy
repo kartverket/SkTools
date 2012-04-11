@@ -46,6 +46,7 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
 
     @Override
     void apply(Project project) {
+        project.apply plugin: JavaBasePlugin.class;
         project.apply plugin: WeblogicBasePlugin.class;
 
         JavaPluginConvention javaConvention = project.getConvention().getPlugins().get("java");
@@ -78,16 +79,26 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
                 WeblogicWsClientPlugin.GEN_CLIENT_TASK_NAME,
         );
 
+        //hekter inn genClient ved kjøring av 'compile' task.
+        Task compileWeblogicResources = project.tasks.getByName(WeblogicWsClientPlugin.COMPILE_WEBLOGIC_TASK_NAME).dependsOn(
+                WeblogicWsClientPlugin.GEN_CLIENT_TASK_NAME,
+        );
+
+        //hekter inn buildWeblogic for 'assemble'
+        Task assemble = project.tasks.getByName(BasePlugin.ASSEMBLE_TASK_NAME).dependsOn(
+                'buildWeblogic',
+        );
+
         //task for artifakt
         Task archiveWsClient = configureArchives(wsClientConvention, sourceSet)
 
 
         project.afterEvaluate {
             //output for task blir lagt til java-sourceSet
-            sourceSet.getJava().srcDirs(wsClientConvention.getGenDir())
+            sourceSet.getJava().srcDirs(project.tasks.getByName(WeblogicWsClientPlugin.GEN_CLIENT_TASK_NAME).destinationDir)
 
             //output for task blir lagt til resources
-            sourceSet.getResources().srcDirs(wsClientConvention.getGenDir())
+            sourceSet.getResources().srcDirs(project.tasks.getByName(WeblogicWsClientPlugin.GEN_CLIENT_TASK_NAME).destinationDir)
         }
 
 
@@ -208,8 +219,8 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
     private SourceSet configureSourceSet(final JavaPluginConvention javaConvention) {
         SourceSet sourceSet = javaConvention.getSourceSets().add(WeblogicWsClientPlugin.WEBLOGIC_SOURCE_SET_NAME) //legger til nytt sourcesett
 
-        sourceSet.getJava().exclude('*.class')
-        sourceSet.getResources().exclude('*.class').exclude('*.java')
+        sourceSet.getJava().exclude('**/*.class')
+        sourceSet.getResources().exclude('**/*.class').exclude('**/*.java')
 
         return sourceSet;
     }
