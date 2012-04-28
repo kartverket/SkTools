@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://java.sun.com/xml/ns/javaee" version="2.5" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
+
+    <display-name>Gradle WebStart Demo</display-name>
+
+    <distributable/>
+
+    <servlet>
+        <servlet-name>JnlpDownloadServlet</servlet-name>
+        <servlet-class>jnlp.sample.servlet.JnlpDownloadServlet</servlet-class>
+
+        <init-param>
+            <param-name>logLevel</param-name>
+            <param-value>DEBUG</param-value>
+            <!--<param-value>ERROR</param-value>-->
+        </init-param>
+
+        <init-param>
+            <param-name>logPath</param-name>
+            <param-value>jnlpservlet-simple-webstart-app.log</param-value>
+        </init-param>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>JnlpDownloadServlet</servlet-name>
+        <url-pattern>/lib/*</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <!-- for evt macro/property expansions -->
+        <servlet-name>JnlpDownloadServlet</servlet-name>
+        <url-pattern>*.jnlp</url-pattern>
+    </servlet-mapping>
+
+    <mime-mapping>
+        <extension>jar</extension>
+        <mime-type>application/x-java-archive</mime-type>
+    </mime-mapping>
+    <mime-mapping>
+        <extension>jnlp</extension>
+        <mime-type>application/x-java-jnlp-file</mime-type>
+    </mime-mapping>
+    <mime-mapping>
+        <extension>jardiff</extension>
+        <mime-type>application/x-java-archive-diff</mime-type>
+    </mime-mapping>
+
+    <!--<welcome-file-list>-->
+    <!--<welcome-file>some.jnlp</welcome-file>-->
+    <!--</welcome-file-list>-->
+
+
+</web-app>

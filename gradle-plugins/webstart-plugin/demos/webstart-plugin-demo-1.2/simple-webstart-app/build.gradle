@@ -1,0 +1,105 @@
+apply plugin: 'war'
+apply plugin: 'sktools-webstart-plugin'
+
+description = 'Demonstrates how to make a simple webstart war module.'
+
+
+webstart {
+    warTasks
+    client {
+        signJars true
+        jnlpFile 'client1-signed.jnlp'
+        jnlp {
+            title 'Client1 - signed'
+            description 'Demonstrates signing of jars'
+            application.mainClass 'WebstartTester'
+            resources {
+                jars {
+                    project(path: ':echo-client')
+                }
+                javaRuntime '1.6+', '64m', '64m'    //means any rt with version 1.6 or greater
+            }
+        }
+    }
+    client {
+        signJars false
+        jnlpFile 'client1-unsigned.jnlp'
+        jnlp {
+            title 'Client1 - unsigned'
+            description 'Demonstrates signing of jars'
+            application.mainClass 'WebstartTester'
+            resources {
+                jars {
+                    project(path: ':echo-client')
+                }
+                javaRuntime '1.6+', '64m', '64m'    //means any rt with version 1.6 or greater
+            }
+        }
+    }
+    client {
+        signJars true
+        jnlpFile 'runtimes-demo.jnlp'
+        jnlp {
+            title 'Demo - multiple runtimes'
+            description 'Demonstrates declaration of several runtimes'
+            application.mainClass 'WebstartTester'
+            resources {
+                jars {
+                    project(path: ':echo-client')
+                }
+                javaRuntime '1.5.0_14', '128m', '256m'
+                javaRuntime '1.5.0_15 1.6.0_20', '128m', '256m'   //means the newest rt found among one in this list
+                javaRuntime '1.6+', '64m', '64m'    //means any rt with version 1.6 or greater
+
+            }
+        }
+    }
+    client {
+        signJars true
+        jnlpFile 'properties.jnlp'
+        jnlp {
+            title 'Demo - passing properties'
+            description 'Demonstrates how to pass on properties to the application'
+            resources {
+                jars {
+                    project(path: ':echo-client')
+                }
+                runtime {   //means any rt with version 1.6 or greater
+                    version '1.6+'
+                    xms '128m'
+                    xmx '256m'
+                    vmArgs '-verbose -enableassertions'
+                }
+
+                systemProperties myProp1: 'test', myProp2: 'test2'
+                systemProperties myProp3: 'test3'
+            }
+            resources {
+                systemProperties myProp4: 'test4'
+                systemProperties myProp5: 'test5'
+            }
+            application.mainClass 'WebstartTester'
+
+        }
+    }
+}
+
+
+
+task runDemo {
+    dependsOn 'testGenWebstart'
+    dependsOn 'testClean'
+}
+
+task testGenWebstart(dependsOn:'genWebstart') << {
+    assert file('build/generated/webstart/client1-signed.jnlp').exists()
+    assert file('build/generated/webstart/client1-unsigned.jnlp').exists()
+    assert file('build/generated/webstart/runtimes-demo.jnlp').exists()
+    assert file('build/generated/webstart/properties.jnlp').exists()
+    assert file('build/generated/webstart/lib/version.xml').exists()
+    assert Arrays.asList(file('build/generated/webstart/lib').listFiles()).findAll {it.name.contains 'echo-client'}.size() == 2 //forventer en signert og en usingert jar
+}
+
+task testClean(dependsOn:['testGenWebstart', 'clean']) << {
+    println 'todo'
+}
