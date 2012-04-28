@@ -11,9 +11,6 @@ import org.gradle.api.internal.project.ProjectInternal;
 import org.gradle.api.file.FileTreeElement;
 import org.gradle.api.specs.Spec;
 import org.gradle.api.internal.ConventionMapping;
-import org.gradle.api.plugins.Convention;
-import org.gradle.api.internal.IConventionAware;
-import org.gradle.api.tasks.ConventionValue;
 import org.gradle.api.plugins.JavaBasePlugin;
 
 import java.util.concurrent.Callable;
@@ -115,13 +112,13 @@ public class FilterPropertiesPlugin implements Plugin<ProjectInternal> {
                 filterResourcesTask.setDescription(String.format("Filters the %s unfiltered resources.", sourceSet.getName()));
                 ConventionMapping conventionMapping = filterResourcesTask.getConventionMapping();
 
-                conventionMapping.map("defaultSource", new ConventionValue() {
-                    public Object getValue(Convention convention, IConventionAware conventionAwareObject) {
+                conventionMapping.map("defaultSource", new Callable<Object>() {
+                    public Object call() throws Exception {
                         return filterResourcesSourceSet.getUnfilteredResources();
                     }
                 });
-                conventionMapping.map("destinationDir", new ConventionValue() {
-                    public Object getValue(Convention convention, IConventionAware conventionAwareObject) {
+                conventionMapping.map("destinationDir", new Callable<Object>() {
+                    public Object call() throws Exception {
                         return project.file(String.format("gen/src/%s/resources", sourceSet.getName()));
                     }
                 });

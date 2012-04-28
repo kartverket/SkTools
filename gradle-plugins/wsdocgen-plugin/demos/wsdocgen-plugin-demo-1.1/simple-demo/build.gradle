@@ -21,7 +21,7 @@ task runDemo {
 
 }
 
-task testGenWsDoc(dependsOn:'GenWsDoc') << {
+task testGenWsDoc(dependsOn:'genWsDoc') << {
     assert file('build/main/docs/wsdoc/ws-style.css').exists()
     assert !file('build/main/docs/wsdoc/ws-style.css').text.contains('null')
     assert file('build/main/docs/wsdoc/TestService.html').exists()
