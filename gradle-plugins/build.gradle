@@ -9,11 +9,22 @@ dependsOnChildren()
 //todo: lage en 'samlepom' av samtlige plugins
 
 
-task(dependsOn:'testDemos', 'test') {}
+task test(dependsOn:'testDemos') {}
+tasks.clean.dependsOn('cleanDemos')
+
+//closure som collecter alle demo-prosjekter som evt måtte finnes
+groovy.lang.Closure findDemoDirs = { project ->
+    return project.childProjects.values().collectMany { Project childProject ->
+        File demoDir = childProject.file("demos/${childProject.name}-demo-${childProject.version}")
+        if (!demoDir.exists()) println "..no demo found for ${childProject.getPath()}"
+        return demoDir.exists() ? [demoDir] : []
+    }
+}
 
 //task som eksekverer alle demo-prosjekter som evt måtte finnes
 task('testDemos') {
 
+    //adding depends on makes the demos run last
     childProjects.values().each { Project childProject ->
         dependsOn(childProject.tasks.findByName('test'))
 
@@ -21,22 +32,37 @@ task('testDemos') {
 
     doLast {
         println 'Running demos..'
-        int i = 0
-        childProjects.values().each { Project childProject ->
-            File demoDir = childProject.file("demos/${childProject.name}-demo-${childProject.version}")
-            if (demoDir.exists()) {
-                i++
-                println '..executing demo in ' + project.relativePath(demoDir)
-                StartParameter sp = new StartParameter()
-                sp.setCurrentDir(demoDir)
+        int i=0
+        findDemoDirs(project).each { File demoDir ->
+            i++
+            println '..executing demo in ' + project.relativePath(demoDir)
+            StartParameter sp = new StartParameter()
+            sp.setCurrentDir(demoDir)
 //                sp.setTaskNames(['clean', 'runDemo'])
-                sp.setTaskNames(['runDemo'])
-                GradleLauncher.newInstance(sp).run().rethrowFailure();
-            } else {
-                println "..no demo found for ${childProject.getPath()}"
-            }
+            sp.setTaskNames(['runDemo'])
+            GradleLauncher.newInstance(sp).run().rethrowFailure();
         }
         println "\n${i} demos executed!"
+    }
+}
+
+//task som cleaner demo-prosjekter som evt måtte finnes
+task('cleanDemos') {
+
+    //adding depends on makes the demos run last
+    childProjects.values().each { Project childProject ->
+        dependsOn(childProject.tasks.findByName('clean'))
+    }
+
+    doLast {
+        println 'Cleaning demos..'
+        findDemoDirs(project).each { File demoDir ->
+            println '..cleaning demo ' + project.relativePath(demoDir)
+            StartParameter sp = new StartParameter()
+            sp.setCurrentDir(demoDir)
+            sp.setTaskNames(['clean'])
+            GradleLauncher.newInstance(sp).run().rethrowFailure();
+        }
     }
 }
 
