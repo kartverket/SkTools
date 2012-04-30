@@ -3,7 +3,6 @@ apply plugin: 'maven'
 project.version = '1.0'
 group = 'no.statkart.sktools.gradle'
 
-dependsOnChildren()
 
 
 //todo: lage en 'samlepom' av samtlige plugins
@@ -26,7 +25,8 @@ task('testDemos') {
 
     //adding depends on makes the demos run last
     childProjects.values().each { Project childProject ->
-        dependsOn(childProject.tasks.findByName('test'))
+        dependsOn("${childProject.path}:test")
+        dependsOn("${childProject.path}:install")
 
     }
 
@@ -51,7 +51,7 @@ task('cleanDemos') {
 
     //adding depends on makes the demos run last
     childProjects.values().each { Project childProject ->
-        dependsOn(childProject.tasks.findByName('clean'))
+        dependsOn("${childProject.path}:clean")
     }
 
     doLast {

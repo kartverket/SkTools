@@ -1,0 +1,32 @@
+apply plugin: 'java'
+apply plugin: 'sktools-wsdocgen-plugin'
+
+
+wsDoc {
+  docGroup {
+      targetPath 'build/main/docs/wsdoc' //default
+      include '**/*WSBean.java'          //default
+      lookupPath '../../domain/javadoc'  //valgfri funksjonalitet
+  }
+}
+
+dependencies {
+    wsdoc libraries['tools.jar']
+}
+
+
+task runDemo {
+    dependsOn 'testGenWsDoc'
+    dependsOn 'testClean'
+
+}
+
+task testGenWsDoc(dependsOn:'genWsDoc') << {
+    assert file('build/main/docs/wsdoc/ws-style.css').exists()
+    assert !file('build/main/docs/wsdoc/ws-style.css').text.contains('null')
+    assert file('build/main/docs/wsdoc/TestService.html').exists()
+}
+
+task testClean(dependsOn:['testGenWsDoc', 'clean']) << {
+    println 'todo'
+}
