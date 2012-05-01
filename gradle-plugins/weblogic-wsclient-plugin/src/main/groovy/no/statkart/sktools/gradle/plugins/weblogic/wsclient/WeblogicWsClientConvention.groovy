@@ -73,6 +73,7 @@ class WeblogicWsClientConvention {
     /**
      * @depricated since 1.0 - bruk heller {@link #weblogicWsClient(Closure)}.
      */
+    @Deprecated
     def wsClient(Closure closure) {
         println 'wsClient(Closure) is now depricated - use weblogicWsClient(Closure) instead!'
         return weblogicWsClient(closure)
@@ -163,6 +164,25 @@ class WebServiceConfig implements Serializable {
         //legger baseWar til 'default' configuration - dette for at man senere kan lese ut innhold i war fil..
         baseWar = convention.project.dependencies.add(Dependency.DEFAULT_CONFIGURATION, notation)
     }
+
+    /**
+     * @deprecated since 1.2
+     */
+    @Deprecated
+    public WebServiceConfig dependency(Closure dependencyNotatonClosure) {
+        println 'dependency(*) is now depricated - use baseWar(*) instead!'
+        return baseWar(dependencyNotatonClosure)
+    }
+
+    /**
+     * @deprecated since 1.2
+     */
+    @Deprecated
+    public void dependency(Object notation) {
+        println 'dependency(*) is now depricated - use baseWar(*) instead!'
+        baseWar(notation)
+    }
+
 
     /**
      * Optional samling av exception til felles pakke
