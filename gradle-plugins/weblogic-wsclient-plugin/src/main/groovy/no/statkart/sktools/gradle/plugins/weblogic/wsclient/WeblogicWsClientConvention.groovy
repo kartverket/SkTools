@@ -89,7 +89,7 @@ class WebServiceConfig implements Serializable {
 
     protected String name;
     protected FileCollection schemaFiles;
-    protected transient Dependency dependency;
+    protected transient Dependency baseWar;
     protected PatternSet matching;
     protected ExceptionConfig exception;
 
@@ -123,7 +123,7 @@ class WebServiceConfig implements Serializable {
     }
 
     /**
-     * Optional spesifisering av wsdl filer dersom en ønsker overstyring av default verdier.
+     * Alternativ spesifisering av wsdl filer dersom en ønsker overstyring av default verdier.
      *
      * @see Project#files(Object... paths)
      */
@@ -138,7 +138,7 @@ class WebServiceConfig implements Serializable {
     }
 
     /**
-     * Optional spesifisering av wsdl filer dersom en ønsker overstyring av default verdier.
+     * Alternativ spesifisering av wsdl filer dersom en ønsker overstyring av default verdier.
      */
     public WebServiceConfig schemaFiles(Closure closure) {
         closure.setDelegate(convention) //eksponerer med dette bla convention sin 'project' property
@@ -148,18 +148,20 @@ class WebServiceConfig implements Serializable {
 
 
     /**
-     * Legger til en dependency der {@code dependencyNotation} er på formen beskrevet i {@link org.gradle.api.artifacts.dsl.DependencyHandler}
+     * Bestemmer hvor wsdl schema befinner seg. Benytt denne evt sammen med {@link #matching} for filtrerinv av schema-filer.
+     *
+     * Legger til en baseWar der {@code dependencyNotation} er på formen beskrevet i {@link org.gradle.api.artifacts.dsl.DependencyHandler}
      */
-    public WebServiceConfig dependency(Closure dependencyNotatonClosure) {
+    public WebServiceConfig baseWar(Closure dependencyNotatonClosure) {
         dependencyNotatonClosure.delegate = convention.project.getDependencies()
-        dependency(dependencyNotatonClosure())
+        baseWar(dependencyNotatonClosure())
         return this
     }
 
 
-    public void dependency(Object notation) {
-        //legger til som default dependency - dette for at man senere kan lese ut war fil..
-        dependency = convention.project.dependencies.add(Dependency.DEFAULT_CONFIGURATION, notation)
+    public void baseWar(Object notation) {
+        //legger baseWar til 'default' configuration - dette for at man senere kan lese ut innhold i war fil..
+        baseWar = convention.project.dependencies.add(Dependency.DEFAULT_CONFIGURATION, notation)
     }
 
     /**

@@ -1,7 +1,7 @@
 group = 'no.statkart.sktools.gradle.plugins.webstart-plugin.demos'
 
 // build a map of the dependency artifacts to use. Allows centralized definition of the versions of artifacts to use
-libraries = [:]
+project.ext.set('libraries', [:])
 
 //weblogic
 libraries.weblogic = fileTree(dir:project.WEBLOGIC_HOME, includes:[
@@ -19,27 +19,27 @@ libraries.weblogic = fileTree(dir:project.WEBLOGIC_HOME, includes:[
 ]).stopExecutionIfEmpty() //feilsituasjon dersom WEBLOGIC_HOME ikke er riktig satt
 
 
-assert gradle.gradleVersion >= '1.0-milestone-7'
+assert gradle.gradleVersion == '1.0' || gradle.gradleVersion >= '1.0-rc-2'
 
 buildscript {
-    rootProject.version = '1.1'
+    rootProject.version = '1.2'
 
     // Variables to grab from environment + defaults
     ['WEBLOGIC_HOME', 'COMPUTERNAME', 'PUBLIC_REPO'].each { val ->
-        if (!rootProject.hasProperty(val) && System.getenv(val) != null) {
-            rootProject.setProperty(val, System.getenv(val))
+        if (!rootProject.ext.has(val) && System.getenv(val) != null) {
+            rootProject.ext.set(val, System.getenv(val))
         }
     }
 
-    project.setProperty('HOSTNAME', project.properties.get('HOSTNAME', "${project.COMPUTERNAME}.${System.getenv('USERDNSDOMAIN').toLowerCase()}"))
-    project.setProperty('PUBLIC_REPO', project.properties.get('PUBLIC_REPO', 'http://skrivap92.statkart.no:8001/nexus/content/groups/public/'))
+    project.ext.set('HOSTNAME', project.properties.get('HOSTNAME', "${COMPUTERNAME}.${System.getenv('USERDNSDOMAIN').toLowerCase()}"))
+    project.ext.set('PUBLIC_REPO', project.properties.get('PUBLIC_REPO', 'http://skrivap92.statkart.no:8001/nexus/content/groups/public/'))
 
     //repository for plugin + jar filer for byggesystem
     repositories {
         //bruker lokale filer her da dette er et demo prosjekt...
         mavenLocal()
 
-        mavenRepo name: 'public', url: "${project.PUBLIC_REPO}"
+        mavenRepo name: 'public', url: PUBLIC_REPO
     }
 
     //innkobling av plugin jar filer for gradle byggesystem

@@ -19,6 +19,8 @@ tasks.idea.dependsOn task('genSpamfiler') {
 
 }
 
+tasks.clean.dependsOn 'cleanIdea' //cleans out generated idea files
+
 task runDemo {
     dependsOn 'testMasks'
     dependsOn 'testVCS'

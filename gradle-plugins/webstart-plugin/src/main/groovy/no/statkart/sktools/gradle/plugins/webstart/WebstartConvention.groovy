@@ -166,6 +166,7 @@ class JnlpConfiguration implements Serializable {
     protected String vendor;
     protected String description;
     protected String homepage = null; //optional
+    protected String version = null; //optional
 
     protected ApplicationConfiguration application = null;  //might be null
     protected final List<ResourcesConfiguration> resources = new ArrayList<ResourcesConfiguration>();
@@ -193,6 +194,14 @@ class JnlpConfiguration implements Serializable {
 
     public JnlpConfiguration homepage(String homepage) {
         this.homepage = homepage;
+        return this;
+    }
+
+    /**
+     * Version for the jnlp file/application.
+     */
+    public JnlpConfiguration version(Object version) {
+        this.version = version.toString();
         return this;
     }
 

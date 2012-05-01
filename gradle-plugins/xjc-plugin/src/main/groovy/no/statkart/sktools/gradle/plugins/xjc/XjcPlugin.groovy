@@ -7,15 +7,13 @@ import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.file.FileCollection
 import org.gradle.api.initialization.dsl.ScriptHandler
-import org.gradle.api.internal.IConventionAware
 import org.gradle.api.internal.file.UnionFileCollection
 import org.gradle.api.internal.file.collections.SimpleFileCollection
-import org.gradle.api.plugins.Convention
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.plugins.JavaPluginConvention
-import org.gradle.api.tasks.ConventionValue
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceTask
+import java.util.concurrent.Callable
 
 /**
  * Genererer JAXB java klasser basert på <code>*.xsd<code> filer. <br />
@@ -105,23 +103,23 @@ class XjcPlugin implements Plugin<Project> {
 
     private configureConventionalValuesForXjcTask(final Project project, final XjcConvention xjcConvention) {
         project.tasks.getByName(XJC_TASK_NAME).getConventionMapping().with {
-            map("defaultSource", new ConventionValue() { //tildeler en ikke dynamisk default verdi
-                public Object getValue(Convention conventionManager, IConventionAware conventionAwareObject) {
+            map("defaultSource", new Callable() {
+                public Object call() {
                     return project.files(xjcConvention.schema.collect {it.dir}).getAsFileTree();  //default source
                 }
             });
-            map("schemas", new ConventionValue() {
-                public Object getValue(Convention conventionManager, IConventionAware conventionAwareObject) {
+            map("schemas", new Callable() {
+                public Object call() {
                     return xjcConvention.schema;
                 }
             });
-            map("outputDirectory", new ConventionValue() {
-                public Object getValue(Convention conventionManager, IConventionAware conventionAwareObject) {
+            map("outputDirectory", new Callable() {
+                public Object call() {
                     return xjcConvention.targetDir;
                 }
             });
-            map("classpath", new ConventionValue() {
-                public Object getValue(Convention conventionManager, IConventionAware conventionAwareObject) {
+            map("classpath", new Callable() {
+                public Object call() {
                     //merge plugins dependencies with jaxb, putting jaxb first in classpath for optional override.
                     return new UnionFileCollection(project.getConfigurations().getByName(XjcPlugin.JAXB_CONFIGURATION_NAME), findPluginClasspath(project));
                 }

@@ -9,14 +9,12 @@ import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.dsl.DependencyHandler
 import org.gradle.api.internal.ConventionMapping
 import org.gradle.api.internal.ConventionTask
-import org.gradle.api.internal.IConventionAware
 import org.gradle.api.plugins.BasePlugin
-import org.gradle.api.plugins.Convention
 import org.gradle.api.plugins.WarPlugin
-import org.gradle.api.tasks.ConventionValue
 import org.gradle.api.tasks.bundling.War
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.util.concurrent.Callable
 
 /**
  * For generering av webstart klienter og distribusjoner. <br />
@@ -110,7 +108,7 @@ class WebstartPlugin implements Plugin<Project> {
         webstartConvention.clients.each { WebstartClientConfiguration clientConfiguration ->
 
             if (clientConfiguration.outputDir == null) {
-                clientConfiguration.outputPath(project.getBuildDirName() + "/generated/webstart");
+                clientConfiguration.outputPath(project.relativePath(project.buildDir) + "/generated/webstart");
             }
 
             if (clientConfiguration.jnlpFilePath == null) {
@@ -130,6 +128,10 @@ class WebstartPlugin implements Plugin<Project> {
                 if (vendor == null) {
                     vendor("Statens Kartverk");
                     WebstartPlugin.logger.debug("Assigning default value for vendor (${vendor})");
+                }
+                if (version == null) {
+                    version(project.getVersion());
+                    WebstartPlugin.logger.debug("Assigning default value for version (${version})");
                 }
 
                 if (!hasApplication()) {
@@ -196,17 +198,17 @@ class WebstartPlugin implements Plugin<Project> {
             ConventionMapping conventionMapping = task.getConventionMapping()
 
             /** {@link WebstartTask#clients} **/
-            conventionMapping.map("clients", new ConventionValue() {
-                public Object getValue(Convention conventionManager, IConventionAware conventionAwareObject) {
+            conventionMapping.map("clients", new Callable() {
+                public Object call() {
                     return webstartConvention.clients
                 }
             });
 
             /** {@link WebstartTask#keystoreFile} **/
-            conventionMapping.map("keystoreFile", new ConventionValue() {
+            conventionMapping.map("keystoreFile", new Callable() {
                 File tempFile = null;
 
-                public Object getValue(Convention conventionManager, IConventionAware conventionAwareObject) {
+                public Object call() {
                     if (project.hasProperty('webstart.sign.keystore')) {
                         return project.file(project.hasProperty('webstart.keystore'))
                     } else {
@@ -221,15 +223,15 @@ class WebstartPlugin implements Plugin<Project> {
             });
 
             /** {@link WebstartTask#alias} **/
-            conventionMapping.map("alias", new ConventionValue() {
-                public Object getValue(Convention conventionManager, IConventionAware conventionAwareObject) {
+            conventionMapping.map("alias", new Callable() {
+                public Object call() {
                     project.getProperties().get('webstart.sign.alias', 'statenskartverk')
                 }
             });
 
             /** {@link WebstartTask#password} **/
-            conventionMapping.map("password", new ConventionValue() {
-                public Object getValue(Convention conventionManager, IConventionAware conventionAwareObject) {
+            conventionMapping.map("password", new Callable() {
+                public Object call() {
                     project.getProperties().get('webstart.sign.password', 'SagZ45_p1')
                 }
             });

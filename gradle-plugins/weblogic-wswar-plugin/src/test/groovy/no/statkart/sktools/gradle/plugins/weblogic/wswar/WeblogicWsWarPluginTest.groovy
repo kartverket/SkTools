@@ -327,6 +327,9 @@ class WeblogicWsWarPluginTest {
             dependencies {
                 //dette er muligens en knotete måte å deklarere det på..
                 weblogicCompile project(path: ':', configuration: 'runtime')   // rootProject.path == ':'
+
+                //felles bibliotek
+                compile files('lib/common.jar')
             }
 
         }
@@ -356,12 +359,12 @@ class WeblogicWsWarPluginTest {
             assert rootProject.tasks['processResources'].source.contains(it)    //forventer tilgang til ressurser for processResources
         }
 
-        //henter ut definerte artifakter
-        FileCollection weblogicArtifacts = rootProject.getConfigurations().getByName('weblogicRuntime').getAllArtifactFiles()
-        FileCollection mainArtifacts = rootProject.getConfigurations().getByName('runtime').getAllArtifactFiles()
+        //henter ut filer for configurations
+        Iterable<File> weblogicArtifacts = rootProject.getConfigurations().getByName('weblogicRuntime').getFiles()
+        Iterable<File> mainArtifacts = rootProject.getConfigurations().getByName('runtime').getFiles()
 
         //tester kjente artifakter
-        File mainJarFile = rootProject.file('build/libs/testproject.jar').with { File file ->
+        File mainJarFile = rootProject.file('lib/common.jar').with { File file ->
             assert weblogicArtifacts.contains(file)
             assert mainArtifacts.contains(file)
             return file

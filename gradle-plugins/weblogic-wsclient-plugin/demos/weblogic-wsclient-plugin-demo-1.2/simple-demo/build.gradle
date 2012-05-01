@@ -8,7 +8,7 @@ dependencies {
 weblogicWsClient {
     webService {
         name 'client1'
-        dependency { project(path:':war1', configuration:'weblogic') }
+        baseWar { project(path:':war1', configuration:'weblogic') }
     }
 }
 

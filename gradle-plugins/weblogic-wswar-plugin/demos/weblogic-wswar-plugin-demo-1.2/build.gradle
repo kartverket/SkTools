@@ -1,7 +1,7 @@
 group = 'no.statkart.sktools.gradle.plugins.weblogic-wswar-plugin.demos'
 
 // build a map of the dependency artifacts to use. Allows centralized definition of the versions of artifacts to use
-libraries = [:]
+project.ext.set('libraries', [:])
 
 //tools.jar for JDK
 libraries.'tools.jar' = files("${System.getenv('JAVA_HOME')}/lib/tools.jar").stopExecutionIfEmpty() //JAVA_HOME ikke satt??
@@ -22,25 +22,26 @@ libraries.weblogic =  fileTree(dir:"${WEBLOGIC_HOME}", includes:[
 
 
 
-assert gradle.gradleVersion >= '1.0-milestone-7'
+assert gradle.gradleVersion == '1.0' || gradle.gradleVersion >= '1.0-rc-2'
 
 //innkobling av plugin jar filer for gradle byggesystem
 buildscript {
-    rootProject.version = '1.1'
+    rootProject.version = '1.2'
 
     // Variables to grab from environment + defaults
     ['WEBLOGIC_HOME', 'COMPUTERNAME', 'PUBLIC_REPO'].each { val ->
-        if (!rootProject.hasProperty(val) && System.getenv(val) != null) {
-            rootProject.setProperty(val, System.getenv(val))
+        if (!rootProject.ext.has(val) && System.getenv(val) != null) {
+            rootProject.ext.set(val, System.getenv(val))
         }
     }
-    project.setProperty('PUBLIC_REPO', project.properties.get('PUBLIC_REPO', 'http://skrivap92.statkart.no:8001/nexus/content/groups/public/'))
+
+    project.ext.set('PUBLIC_REPO', project.properties.get('PUBLIC_REPO', 'http://skrivap92.statkart.no:8001/nexus/content/groups/public/'))
 
     repositories {
         //bruker kun lokale filer her da dette er et demo prosjekt...
         mavenLocal()
 
-//        mavenRepo name: 'public', url: "${project.PUBLIC_REPO}"
+//        mavenRepo name: 'public', url: PUBLIC_REPO
 
     }
     dependencies {

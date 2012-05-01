@@ -17,10 +17,10 @@ buildscript {
     repositories {
         //bruker kun lokale filer her da dette er et demo prosjekt...
         mavenLocal()
-        mavenRepo name: 'public', url: "${project.PUBLIC_REPO}"
+        mavenRepo name: 'public', url: PUBLIC_REPO
     }
 
     dependencies {
-        classpath 'no.statkart.sktools.gradle:weblogic-wswar-plugin:1.1'
+        classpath 'no.statkart.sktools.gradle:weblogic-wswar-plugin:1.2'
     }
 }

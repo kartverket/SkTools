@@ -2,33 +2,24 @@ package no.statkart.sktools.gradle.plugins.weblogic.wsclient
 
 import org.gradle.api.AntBuilder
 import org.gradle.api.file.FileCollection
-import org.gradle.api.internal.tasks.compile.JavaCompiler
 import org.gradle.api.tasks.WorkResult
-import org.gradle.api.tasks.compile.CompileOptions
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.gradle.api.internal.file.collections.SimpleFileCollection
 import org.gradle.api.tasks.util.PatternSet
 import org.apache.commons.io.FileUtils
 import org.gradle.api.file.FileTree
+import no.statkart.sktools.gradle.plugins.weblogic.compile.DefaultWeblogicCompileSpec
 
 /**
  * Steg for kompilering av JAX-WS stubber for klient basert på wsdl filer.
  *
  * @author Leif Lislegård
  */
-class WeblogicJaxWsClientCompiler implements JavaCompiler {
-    private static Logger logger = LoggerFactory.getLogger(WeblogicJaxWsClientCompiler)
-
+class WeblogicJaxWsClientCompiler implements org.gradle.api.internal.tasks.compile.Compiler<DefaultWeblogicCompileSpec>, Serializable {
+    private static final Logger logger = LoggerFactory.getLogger(WeblogicJaxWsClientCompiler.class)
     private static final String WEBLOGIC_CLASSPATH_ID = "weblogic_classpath_id"
 
-    FileCollection source;
-    File destinationDir;
-    String sourceCompatibility;
-    String targetCompatibility;
-    CompileOptions compileOptions = new CompileOptions();
-
-    Iterable<File> weblogicClasspath;
     AntBuilder ant;
     Collection<WebServiceConfig> webServices;
 
@@ -38,45 +29,25 @@ class WeblogicJaxWsClientCompiler implements JavaCompiler {
     //todo: xmlcatalog
 
 
-    WeblogicJaxWsClientCompiler() {
-        //setting defaults for this compiler.
-        compileOptions.setFork(true)
-        compileOptions.setListFiles(true)
-        compileOptions.setVerbose(logger.isDebugEnabled())
-        compileOptions.setFailOnError(true) //defaults to true
-        //compileOptions.setCompiler('javac1.6')
-    }
 
-    void setDependencyCacheDir(File dir) {
-        // don't care
-    }
-
-    void setClasspath(Iterable<File> classpath) {
-        // don't care - see weblogicClasspath instead
-    }
-
-
-
-
-
-
-    WorkResult execute() {
+    @Override
+    WorkResult execute(DefaultWeblogicCompileSpec spec) {
 
         ant.setProperty('build.compiler', 'modern')
-        if (getSourceCompatibility() != null) {
-            ant.setProperty('ant.build.javac.source', getSourceCompatibility())
+        if (spec.sourceCompatibility != null) {
+            ant.setProperty('ant.build.javac.source', spec.sourceCompatibility)
         }
-        if (getTargetCompatibility() != null) {
-            ant.setProperty('ant.build.javac.target', getTargetCompatibility())
+        if (spec.targetCompatibility != null) {
+            ant.setProperty('ant.build.javac.target', spec.targetCompatibility)
         }
 
-        createAntClassPath(ant, weblogicClasspath, WEBLOGIC_CLASSPATH_ID)
+        createAntClassPath(ant, spec.weblogicClasspath, WEBLOGIC_CLASSPATH_ID)
 
         ant.taskdef(name: 'clientgen', classname: 'weblogic.wsee.tools.anttasks.ClientGenTask', classpathref: WEBLOGIC_CLASSPATH_ID)
 
         def attributes = [
                 wsdl: null,
-                destdir: destinationDir,
+                destdir: spec.destinationDir,
                 type: 'JAXWS',
                 includeantruntime: false,
         ]
@@ -93,12 +64,18 @@ class WeblogicJaxWsClientCompiler implements JavaCompiler {
 
         //attributes.catalog //todo: teste ut denne
 
-        attributes += compileOptions.optionMap()
+        attributes += spec.compileOptions.optionMap()
+
+        if (attributes.encoding) {
+            attributes.srcEncoding = attributes.encoding
+            attributes.destEncoding = attributes.encoding
+            attributes.remove('encoding')
+        }
 
         webServices.each { WebServiceConfig webService ->
 
-            FileCollection oldFiles = new SimpleFileCollection(new SimpleFileCollection(destinationDir).getAsFileTree().getFiles())
-            FileCollection newFiles = new SimpleFileCollection(destinationDir).minus(oldFiles)
+            FileCollection oldFiles = new SimpleFileCollection(new SimpleFileCollection(spec.destinationDir).getAsFileTree().getFiles())
+            FileCollection newFiles = new SimpleFileCollection(spec.destinationDir).minus(oldFiles)
 
             //genererer en og en webService modul..
             FileTree fileTree = webService.schemaFiles.getAsFileTree()
@@ -121,14 +98,18 @@ class WeblogicJaxWsClientCompiler implements JavaCompiler {
 
             if (webService.exception != null) {
                 logger.info("Reusing exceptions for module ${webService}")
-                reuseExceptions(destinationDir, newFiles, webService.exception, ant)
+                reuseExceptions(spec.destinationDir, newFiles, webService.exception, ant)
             }
 
         }
 
-        return { destinationDir.list().size() > 0 } as WorkResult
+        return { spec.destinationDir.list().size() > 0 } as WorkResult
     }
 
+    /**
+     * Samler alle exceptions for services til felles pakke.
+     * Dette da vi ønsker at den genererte klientkoden skal gjenspeile strukturen til serveren, samt at man ønsker å gjenbruke exception klassene.
+     */
     protected static void reuseExceptions(File genSourceDir, FileCollection files, ExceptionConfig exceptionConfig, AntBuilder ant) {
         String packageString = exceptionConfig.packageOrPathString.replace('/', '.').replace('\\', '.')
         FileTree javaFiles = files.getAsFileTree().matching(new PatternSet(includes: ['**/*.java']))

@@ -1,7 +1,7 @@
 apply plugin: 'maven'
 apply plugin: 'groovy'
 
-project.version = '1.0'
+project.version = '1.2'
 group = 'no.statkart.sktools.gradle'
 
 

@@ -14,6 +14,7 @@ import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.TaskAction
 import no.statkart.sktools.gradle.plugins.webstart.util.FileHashIdent
 import org.gradle.api.internal.ConventionTask
+import org.gradle.api.internal.file.FileResolver
 
 /**
  *
@@ -70,7 +71,7 @@ class WebstartTask extends ConventionTask {
             jarsForResources = copyFiles(jarsForResources, clientConfiguration, digest);
 
             //genererer og skriver ned jnlp-fil
-            createJnlp(clientConfiguration, jarsForResources);
+            createJnlp(clientConfiguration, jarsForResources, getProject().fileResolver);
 
             //generering av version.xml
             appendVersionXml(clientConfiguration, jarsForResources);
@@ -253,17 +254,17 @@ class WebstartTask extends ConventionTask {
      *
      * Filen blir delvis basert på template og delvis bygget opp i koden via {@link groovy.util.Node}.
      */
-    static protected File createJnlp(WebstartClientConfiguration client, Map<ResourcesConfiguration, Collection<File>> jarsForResources) {
+    static protected File createJnlp(WebstartClientConfiguration client, Map<ResourcesConfiguration, Collection<File>> jarsForResources, FileResolver fileResolver) {
         File jnlpFile = client.getJnlpFile()
         JnlpConfiguration jnlp = client.jnlp
 
         jnlpFile.parentFile.mkdirs()
-        BaseDirFileResolver filePathResolver = new BaseDirFileResolver(client.outputDir)
+        FileResolver filePathResolver = fileResolver.withBaseDir(client.outputDir)
 
         Node jnlpNode = new XmlParser().parse(WebstartTask.class.getResourceAsStream('template.jnlp'))
 
         jnlpNode.attributes().put('href', client.jnlpFilePath)
-        jnlpNode.attributes().put('version', '1.1')
+        jnlpNode.attributes().put('version', jnlp.version)
 
         Node informationNode = jnlpNode.information[0]
         informationNode.title[0].value = jnlp.title

@@ -4,10 +4,10 @@
 
 @rem Java, Gradle
 set JAVA_HOME=C:\Program Files\Java\jdk1.6.0_21
-set GRADLE_HOME=C:\bin\gradle-1.0-milestone-7
+set GRADLE_HOME=C:\bin\gradle-1.0-rc-2
 
 @rem Groovy (optional)
-set GROOVY_HOME=C:\bin\groovy-1.8.4
+rem set GROOVY_HOME=C:\bin\groovy-1.8.6
 
 @rem Set Weblogic
 set WEBLOGIC_HOME=C:\bea_wls10.3.1

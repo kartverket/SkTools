@@ -7,9 +7,6 @@ import org.gradle.api.internal.artifacts.publish.ArchivePublishArtifact
 
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.tasks.SourceTask
-import org.gradle.api.tasks.ConventionValue
-import org.gradle.api.plugins.Convention
-import org.gradle.api.internal.IConventionAware
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.bundling.Zip
@@ -22,6 +19,7 @@ import org.gradle.api.internal.file.UnionFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.internal.file.collections.SimpleFileCollection
+import java.util.concurrent.Callable
 
 /**
  * Dokumentasjon-generering av WSBean.java - JAX-WS implemntasjon på server.
@@ -96,7 +94,7 @@ class WsDocGenPlugin implements Plugin<Project> {
                 it.include('**/*Bean.java')
             }
             if (it.targetDir == null) {
-                it.targetPath("${project.buildDirName}/${wsDocGenConvention.sourceSetName}/docs/wsdoc")
+                it.targetPath("${project.relativePath(project.buildDir)}/${wsDocGenConvention.sourceSetName}/docs/wsdoc")
             }
         }
 
@@ -124,18 +122,18 @@ class WsDocGenPlugin implements Plugin<Project> {
 
         //setting conventional properties
         task.getConventionMapping().with {
-            map("defaultSource", new ConventionValue() { //tildeler en ikke dynamisk default verdi
-                public Object getValue(Convention conventionManager, IConventionAware conventionAwareObject) {
+            map("defaultSource", new Callable() {   //tildeler en dynamisk default verdi
+                public Object call() {
                     return sourceSet.getAllJava();  //default source
                 }
             });
-            map("groups", new ConventionValue() {
-                public Object getValue(Convention conventionManager, IConventionAware conventionAwareObject) {
+            map("groups", new Callable() {
+                public Object call() {
                     return wsDocGenConvention.groups;
                 }
             });
-            map("classpath", new ConventionValue() {
-                public Object getValue(Convention conventionManager, IConventionAware conventionAwareObject) {
+            map("classpath", new Callable() {
+                public Object call() {
                     return new UnionFileCollection(findPluginClasspath(project), project.getConfigurations().getByName(WsDocGenPlugin.CONFIGURATION_NAME)).getAsFileTree();
                 }
             });

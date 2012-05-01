@@ -252,7 +252,7 @@ class WebstartPluginTest {
 
 
         Configuration configuration = project.getConfigurations().getByName(WebstartPlugin.CONFIGURATION_NAME)
-        Set<Dependency> allDependencies = configuration.getDependencies().getAll()
+        Set<Dependency> allDependencies = configuration.getDependencies()
 
         //sjekker at alle dependencies er registrert til webstart konfigurasjon
         convention.clients[0].jnlp.resources.each { ResourcesConfiguration resources ->

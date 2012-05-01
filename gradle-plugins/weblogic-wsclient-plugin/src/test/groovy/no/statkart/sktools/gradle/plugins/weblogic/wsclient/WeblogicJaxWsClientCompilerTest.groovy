@@ -13,6 +13,7 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.util.PatternSet
 import no.statkart.sktools.gradle.testutils.filewriter.WeblogicWsWarTestutilFilewriter
 import org.gradle.api.internal.file.UnionFileCollection
+import no.statkart.sktools.gradle.plugins.weblogic.compile.DefaultWeblogicCompileSpec
 
 /**
  * Tester implementasjon av {@link WeblogicJaxWsClientCompiler}
@@ -58,17 +59,18 @@ class WeblogicJaxWsClientCompilerTest {
         //konfigurerer compiler
         WeblogicJaxWsClientCompiler compiler = new WeblogicJaxWsClientCompiler()
         compiler.ant = rootProject.createAntBuilder()
-        compiler.setWeblogicClasspath(wsWarProjectHelper.project.configurations.getByName('weblogic'))
-        compiler.setDestinationDir(rootProject.buildDir)
-        compiler.source = rootProject.files('somedir')
-
         compiler.webServices = [new WebServiceConfig(null)].each { WebServiceConfig webServiceConfig ->
             webServiceConfig.schemaFiles = new UnionFileCollection(someDirFiles, additionalFiles)
 
         }
+        DefaultWeblogicCompileSpec compileSpec = new DefaultWeblogicCompileSpec()
+        compileSpec.setWeblogicClasspath(wsWarProjectHelper.project.configurations.getByName('weblogic'))
+        compileSpec.setDestinationDir(rootProject.buildDir)
+        compileSpec.source = rootProject.files('somedir')
+
 
         //eksekverer
-        compiler.execute()
+        compiler.execute(compileSpec)
 
         //tester at enkelte filer er generert
         rootProjectHelper.assertFileExists('build/META-INF/wsdls/TestServiceWS.wsdl')
@@ -115,16 +117,18 @@ class WeblogicJaxWsClientCompilerTest {
         //konfigurerer compiler
         WeblogicJaxWsClientCompiler compiler = new WeblogicJaxWsClientCompiler()
         compiler.ant = rootProject.createAntBuilder()
-        compiler.setWeblogicClasspath(wsWarProjectHelper.project.configurations.getByName('weblogic'))
-        compiler.setDestinationDir(rootProject.buildDir)
-        compiler.source = schemaFiles
         compiler.webServices = [new WebServiceConfig(null)].each { WebServiceConfig webServiceConfig ->
                 webServiceConfig.schemaFiles = schemaFiles
                 webServiceConfig.exceptionReusePackage('no.statkart.test.exceptiondemo01.common')
         }
 
+        DefaultWeblogicCompileSpec compileSpec = new DefaultWeblogicCompileSpec()
+        compileSpec.setWeblogicClasspath(wsWarProjectHelper.project.configurations.getByName('weblogic'))
+        compileSpec.setDestinationDir(rootProject.buildDir)
+        compileSpec.source = schemaFiles
+
         //eksekverer
-        compiler.execute()
+        compiler.execute(compileSpec)
 
 
 

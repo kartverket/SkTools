@@ -204,7 +204,7 @@ class ProjectHelper {
         return assertFileExistsInBuildDir(path, '', testClosure)
     }
     public File assertFileExistsInBuildDir(String path, String message, Closure testClosure = null) {
-        File file = project.file(project.getBuildDirName() + '/' + path)
+        File file = project.file(project.relativePath(project.buildDir) + '/' + path)
         if (!file.exists()) {
             Assert.fail("Forventet at filen ${path} finnes. ${message}")
         }

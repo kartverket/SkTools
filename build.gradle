@@ -1,15 +1,15 @@
-assert gradle.gradleVersion == '1.0' || gradle.gradleVersion >= '1.0-milestone-7'
+assert gradle.gradleVersion == '1.0' || gradle.gradleVersion >= '1.0-rc-2'
 
 buildscript {
 
     // Variables to grab from environment
     ['COMPUTERNAME', 'PUBLIC_REPO', 'GRADLE_HOME', 'GROOVY_HOME', 'WEBLOGIC_HOME'].each { val ->
-        if (!project.hasProperty(val) && System.getenv(val) != null) {
-            project.setProperty(val, System.getenv(val))
+        if (!project.ext.has(val) && System.getenv(val) != null) {
+            project.ext.set(val, System.getenv(val))
         }
     }
 
-    project.setProperty('PUBLIC_REPO', project.properties.get('PUBLIC_REPO', 'http://skrivap92.statkart.no:8001/nexus/content/groups/public/'))
+    project.ext.set('PUBLIC_REPO', project.properties.get('PUBLIC_REPO', 'http://skrivap92.statkart.no:8001/nexus/content/groups/public/'))
 
 }
 
@@ -41,14 +41,14 @@ allprojects {
 
 // build a map of the dependency artifacts to use. Allows centralized definition of the versions of artifacts to
 // use. In that respect it serves a role similar to <dependencyManagement> in Maven
-libraries = [
+project.ext.set('libraries', [
 
         groovy: dependencies.localGroovy(),
 
         // Testing
         testng: 'org.testng:testng:6.0.1@jar',
         hsqldb: 'org.hsqldb:hsqldb:2.2.8',
-]
+])
 
 //tools.jar for JDK
 libraries.'tools.jar' = files("${System.getenv('JAVA_HOME')}/lib/tools.jar").stopExecutionIfEmpty() //JAVA_HOME ikke satt??
@@ -100,11 +100,11 @@ subprojects { Project project ->
         }
 
 
-        project.filterProperties = [:]
+        project.ext.set('filterProperties', [:])
 
         project.afterEvaluate {
-            if (filterProperties.isEmpty())
-            project.properties.entrySet().collectEntries(filterProperties) {(it.value instanceof String) ? new MapEntry(it.key, it.value) : [:]}
+            if (project.ext.filterProperties.isEmpty())
+            project.properties.entrySet().collectEntries(project.ext.filterProperties) {(it.value instanceof String) ? new MapEntry(it.key, it.value) : [:]}
         }
 
 
@@ -134,8 +134,11 @@ subprojects { Project project ->
                 project.sourceSets."$scope".resources.srcDir filteredResourcesDir
                 project.processResources.dependsOn filterTask
 
-                def createDirTask = task("createFilteredResourceDir", type: Directory) { dir = filteredResourcesDir }
-                project.tasks.ideaModule.dependsOn createDirTask, filterTask
+                project.tasks.ideaModule.dependsOn filterTask
+                project.tasks.ideaModule.doFirst {
+                    println "...mkdir ${project.relativePath(filteredResourcesDir)}"
+                    project.mkdir(filteredResourcesDir)
+                }
             }
         }
 

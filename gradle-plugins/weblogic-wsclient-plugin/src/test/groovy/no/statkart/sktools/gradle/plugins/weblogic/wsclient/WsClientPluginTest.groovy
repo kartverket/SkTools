@@ -51,15 +51,15 @@ class WeblogicWsClientPluginTest {
             weblogicWsClient {
                 webService {
                     name 'example1'
-                    dependency { 'org.organisation:someproject:1.1' }
+                    baseWar { 'org.organisation:someproject:1.1' }
                 }
                 webService {
                     name 'example2'
-                    dependency 'org.organisation:someproject:1.1'
+                    baseWar 'org.organisation:someproject:1.1'
                     exceptionReusePackage 'reduce.to.this.pkg'
                 }
                 webService {
-                    dependency "org.organisation:someproject:1.1"
+                    baseWar "org.organisation:someproject:1.1"
                     schemaFiles project.files('some.wsdl', 'some.xsd')
                 }
                 webService {
@@ -81,12 +81,12 @@ class WeblogicWsClientPluginTest {
         assert convention.genDir == wsClientProject.file('gen/weblogic/wsclient')
         assert convention.webService[1].exception.packageOrPathString != null
 
-        //tester dependency
+        //tester baseWar
         (0..2).each {
-            assert convention.webService[it].dependency instanceof org.gradle.api.artifacts.Dependency
-            assert convention.webService[it].dependency.version == '1.1'
-            assert convention.webService[it].dependency.name == 'someproject'
-            assert convention.webService[it].dependency.group == 'org.organisation'
+            assert convention.webService[it].baseWar instanceof org.gradle.api.artifacts.Dependency
+            assert convention.webService[it].baseWar.version == '1.1'
+            assert convention.webService[it].baseWar.name == 'someproject'
+            assert convention.webService[it].baseWar.group == 'org.organisation'
         }
 
         //tester schema files
@@ -126,7 +126,7 @@ class WeblogicWsClientPluginTest {
         wsClientProjectHelper.configureProject {
             weblogicWsClient {
                 webService {
-                    dependency { project([path: ':wswar', configuration: 'weblogic']) }
+                    baseWar { project([path: ':wswar', configuration: 'weblogic']) }
                 }
             }
         }

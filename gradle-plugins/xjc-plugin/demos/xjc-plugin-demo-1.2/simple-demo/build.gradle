@@ -16,7 +16,7 @@ task runDemo {
     dependsOn 'testClean'
 }
 
-task testXjcGenerate(dependsOn:'processResources') << {
+task testXjcGenerate(dependsOn:'compileJava') << {
     assert file('gen/main/java/no/statkart/sktools/test/SimpleType.java').exists()
 }
 

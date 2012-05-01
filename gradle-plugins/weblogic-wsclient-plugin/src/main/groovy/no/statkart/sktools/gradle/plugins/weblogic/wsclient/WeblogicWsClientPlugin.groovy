@@ -16,7 +16,6 @@ import org.gradle.api.tasks.bundling.Jar
 import org.gradle.api.internal.artifacts.publish.ArchivePublishArtifact
 import org.gradle.api.internal.plugins.DefaultArtifactPublicationSet
 
-import org.gradle.api.tasks.ConventionValue
 import org.gradle.api.plugins.Convention
 import org.gradle.api.internal.IConventionAware
 import org.gradle.api.artifacts.Dependency
@@ -26,6 +25,7 @@ import org.gradle.api.internal.file.UnionFileCollection
 import org.gradle.api.internal.ConventionMapping
 
 import java.util.concurrent.Callable
+import org.gradle.api.internal.ConventionTask
 
 /**
  * Legger til et java source sett med navn {@code 'weblogic'} (se {@link WeblogicWsClientPlugin#WEBLOGIC_SOURCE_SET_NAME})
@@ -64,13 +64,13 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
         );
 
         //task for generering av client source
-        Task genClientTask = createGenClientTask(wsClientConvention, sourceSet).dependsOn(
+        ConventionTask genClientTask = createGenClientTask(wsClientConvention, sourceSet).dependsOn(
                 provideSchema.name,
                 project.getConfigurations().getByName(WeblogicBasePlugin.WEBLOGIC_CONFIGURATION_NAME), //tvinger rekompilering ved endring i classpath + weblogic jar filer.
         );
 
-        genClientTask.getConventionMapping().map("defaultSource", new ConventionValue() {
-            public Object getValue(Convention conventionManager, IConventionAware conventionAwareObject) {
+        genClientTask.conventionMapping("defaultSource", new Callable() {
+            public Object call() {
                 return provideSchema.getOutputs().getFiles().getAsFileTree();  //default source er hva provideSchema task genererer
             }
         })
@@ -131,12 +131,12 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
                     if (webservice.schemaFiles != null) {
                         //dersom schemaFiles er angitt benyttes denne
 
-                    } else if (webservice.dependency != null) {
-                        //dersom dependency er gitt, beregnes schema filer ifra dependency war filer
+                    } else if (webservice.baseWar != null) {
+                        //dersom baseWar er gitt, beregnes schema filer ifra baseWar war filer
 
                         UnionFileCollection resolvedFiles = new UnionFileCollection()
 
-                        Collection<File> warFiles = wsClientConvention.project.configurations.getByName(Dependency.DEFAULT_CONFIGURATION).files(webservice.dependency).findAll {
+                        Collection<File> warFiles = wsClientConvention.project.configurations.getByName(Dependency.DEFAULT_CONFIGURATION).files(webservice.baseWar).findAll {
                             it.getName().toLowerCase().endsWith(".war")
                         }
 
@@ -147,7 +147,7 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
                         //oppdaterer convention
                         webservice.schemaFiles = resolvedFiles
                     } else {
-                        throw new GradleException("Enten shamaFiles eller dependency må anngis i ${WeblogicWsClientPlugin.class.simpleName}-convention")
+                        throw new GradleException("Enten shamaFiles eller baseWar må anngis i ${WeblogicWsClientPlugin.class.simpleName}-convention")
                     }
 
                     getOutputs().files(webservice.schemaFiles) //registrerer output for task
@@ -191,7 +191,7 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
      *
      * TaskOutput blir lagt til som javasource for sourceSet. NB: denne FileCollection kan kun inneholde Dirs (ikke filer osv.)
      */
-    private Task createGenClientTask(final WeblogicWsClientConvention wsClientConvention, final SourceSet sourceSet) {
+    private ConventionTask createGenClientTask(final WeblogicWsClientConvention wsClientConvention, final SourceSet sourceSet) {
         final Project project = wsClientConvention.project
 
         AbstractCompile compileTask = (AbstractCompile) project.task(type: WeblogicGenClientTask.class, WeblogicWsClientPlugin.GEN_CLIENT_TASK_NAME)
@@ -199,13 +199,13 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
         compileTask.setGroup(BasePlugin.BUILD_GROUP);
 
         ConventionMapping conventionMapping = compileTask.getConventionMapping();
-        conventionMapping.map("classpath", new ConventionValue() {
-            public Object getValue(Convention convention, IConventionAware conventionAwareObject) {
+        conventionMapping.map("classpath", new Callable() {
+            public Object call() {
                 return sourceSet.getCompileClasspath();
             }
         });
-        conventionMapping.map("destinationDir", new ConventionValue() {
-            public Object getValue(Convention convention, IConventionAware conventionAwareObject) {
+        conventionMapping.map("destinationDir", new Callable() {
+            public Object call() {
                 return wsClientConvention.getGenDir()
             }
         });

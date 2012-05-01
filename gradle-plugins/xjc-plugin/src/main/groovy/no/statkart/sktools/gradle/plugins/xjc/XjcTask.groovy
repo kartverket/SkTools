@@ -70,7 +70,7 @@ class XjcTask extends SourceTask {
                 }
             }
 
-           antTaks = null; //debug point
+            assert true; //debug point
         }
 
     }
