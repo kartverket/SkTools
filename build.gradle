@@ -21,8 +21,8 @@ allprojects {
     defaultTasks 'build'
     group = 'no.statkart.sktools'
 
-    plugins.whenPluginAdded() {
-        if (it instanceof org.gradle.api.plugins.MavenPlugin) {
+    afterEvaluate {
+        if (plugins.hasPlugin('maven')) {
             uploadArchives.repositories.mavenDeployer {
                 if (!version.contains("SNAPSHOT")) {
                     repository(url: uri(properties.get('REPO_UPLOAD_RELEASES', 'http://skrivap92.statkart.no:8001/nexus/content/repositories/releases/'))) {
