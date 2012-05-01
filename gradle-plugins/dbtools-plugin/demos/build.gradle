@@ -3,6 +3,9 @@ assert project.gradle.gradleVersion >= '1.0-milestone-4'
 
 
 buildscript {
+    project.version = rootProject.getProperty('version')
+    if (project.version == Project.DEFAULT_VERSION) project.version = '1.0-SNAPSHOT' //nb - dersom ikke default version er satt riktig så blir kjøring ifra demo-katalog feil..
+
     rootProject.setProperty('PUBLIC_REPO', 'http://skrivap92.statkart.no:8001/nexus/content/groups/public/')
 
     repositories {
@@ -15,7 +18,7 @@ buildscript {
         mavenLocal()
     }
     dependencies {
-        classpath 'no.statkart.sktools.gradle:dbtools-plugin:1.0'
+        classpath "no.statkart.sktools.gradle:dbtools-plugin:${version}"
     }
 }
 

@@ -22,3 +22,16 @@ include ':gradle-plugins:xjc-plugin'
 
 rootProject.name = 'sktools'
 
+// release/SNAPSHOT versioning
+gradle.projectsLoaded { Gradle g ->
+    if (!startParameter.taskNames.contains('release')) {
+        g.rootProject.allprojects {
+            it.afterEvaluate {
+                if (it.version != org.gradle.api.Project.DEFAULT_VERSION) it.version += "-SNAPSHOT"
+            }
+        }
+    } else {
+        startParameter.taskNames.remove('release')
+        println 'Configuring build for release!'
+    }
+}

@@ -5,7 +5,8 @@ assert gradle.gradleVersion == '1.0' || gradle.gradleVersion >= '1.0-milestone-7
 
 //innkobling av plugin jar filer for gradle byggesystem
 buildscript {
-    rootProject.version = '1.1'
+    project.version = rootProject.getProperty('version')
+    if (project.version == Project.DEFAULT_VERSION) project.version = '1.1-SNAPSHOT' //nb - dersom ikke default version er satt riktig så blir kjøring ifra demo-katalog feil..
 
     // Variables to grab from environment + defaults
     ['WEBLOGIC_HOME', 'COMPUTERNAME', 'PUBLIC_REPO', 'JAVA_HOME'].each { val ->
