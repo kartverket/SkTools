@@ -1,3 +1,4 @@
+apply plugin: 'java'
 apply plugin: 'maven'
 
 project.version = '1.2'
@@ -5,10 +6,17 @@ group = 'no.statkart.sktools.gradle'
 
 
 
-//todo: SKIF-154: lage en 'samlepom' av samtlige plugins
+dependencies {
+
+    //'samlepom' av samtlige plugins [SKIF-154]
+    project.childProjects.values().each {
+        runtime it
+    }
+}
 
 
-task test(dependsOn:'testDemos') {}
+
+tasks.test.dependsOn('testDemos')
 tasks.clean.dependsOn('cleanDemos')
 
 //closure som collecter alle demo-prosjekter som evt måtte finnes
