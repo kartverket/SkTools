@@ -1,0 +1,150 @@
+package no.statkart.sktools.gradle.plugins.filterproperties.extention;
+
+import org.gradle.api.GradleException;
+import org.gradle.api.Project;
+import org.gradle.api.logging.Logger;
+import org.gradle.api.logging.Logging;
+import org.gradle.api.plugins.ExtraPropertiesExtension;
+
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+/**
+ * Extention for enkel håndtering av properties i prosjekter. Denne kan utvide Gradle sin DSL.
+ *
+ * @author Leif Lislegård
+ * @since 1.2
+ */
+public class PropertyUtils {
+    private static final Logger LOG = Logging.getLogger(PropertyUtils.class);
+    static final Pattern SUBSTITUTION_PATTERN = Pattern.compile("\\$\\{([^\\}]+)\\}");
+
+    private final Project project;
+    private boolean strict;
+
+    public PropertyUtils(Project project) {
+        this.project = project;
+        strict = project != project.getRootProject();   //root kan ha properties som ikke er expandet.
+    }
+
+
+    /**
+     * Leser inn properties ifra fil
+     * @param path fil. Samme som {@link Project#file(Object)}
+     * @return properties lest ifra fil
+     */
+    public Map<String, ?> fromFile(Object path) throws IOException {
+        File file = project.file(path);
+        Properties props = new Properties();
+        props.load(new FileReader(file));
+
+        return (Map) props;
+    }
+
+    /**
+     * Legger properties til prosjektet.
+     * @param propertiess properties som ønskes satt på prosjektet
+     */
+    public void assignPropertiesToProject(Map<String, ?>... propertiess) {
+        ExtraPropertiesExtension ext = project.getExtensions().getExtraProperties();
+
+        for (Map<String, ?> properties : propertiess) {
+            for (Map.Entry<String, ?> entry : properties.entrySet()) {
+                ext.set(entry.getKey(), entry.getValue());
+            }
+        }
+    }
+
+
+    /**
+     * Ekspanderer alle properties registrert for prosjektet.
+     * <p/>
+     * Dersom {@link #strict} så vil exception kastes dersom ikke alle properties kunne resolves.
+     */
+    public void expandProjectProperties() {
+        LOG.debug("expanding properties for project {}", project.getPath());
+        LOG.debug("strict mode is {}", strict);
+
+        Matcher matcher = null; //felles matcher instans
+
+        //plukker ut interessange properties
+        HashMap<String, String> props = new HashMap<String, String>();
+        for (Map.Entry<String, ?> entry : project.getProperties().entrySet()) {
+            Object value = entry.getValue();
+            if (value instanceof CharSequence) {
+                matcher = (matcher == null) ? SUBSTITUTION_PATTERN.matcher((CharSequence) value) : matcher.reset((CharSequence) value);
+                if (matcher.find()) {
+                    props.put(entry.getKey(), entry.getValue().toString());
+                }
+            }
+        }
+
+        if (props.isEmpty()) {
+            return; // no properties to expand
+        }
+
+        //expanderer props
+        while (true) {
+            LinkedHashMap<String, Object> unresolvedProperties = new LinkedHashMap<String, Object>();
+            HashMap<String, Object> resolvedProperties = new HashMap<String, Object>();
+
+            for (Map.Entry<String, String> entry : props.entrySet()) {
+                String value = entry.getValue();
+                matcher = (matcher == null) ? SUBSTITUTION_PATTERN.matcher(value) : matcher.reset(value);
+
+                StringBuffer expandedValue = null; //null if substitution is unresolved
+
+                if (matcher.find()) {
+                    do {
+                        if (expandedValue == null) expandedValue = new StringBuffer();
+                        String propertyName = matcher.group(1);
+                        String replacement = null;
+                        if (resolvedProperties.containsKey(propertyName)) {
+                            replacement = resolvedProperties.get(propertyName).toString();
+                        } else if (project.hasProperty(propertyName)) {
+                            replacement = project.getProperties().get(propertyName).toString();
+                        } else {
+                            unresolvedProperties.put(entry.getKey(), value);
+                            expandedValue = null;
+                            break;  //unresolved
+                        }
+                        matcher.appendReplacement(expandedValue, Matcher.quoteReplacement(replacement));
+                    } while (matcher.find());
+
+                    if (expandedValue != null) {
+                        matcher.appendTail(expandedValue);
+                        resolvedProperties.put(entry.getKey(), expandedValue.toString());
+                    }
+                }
+
+            }
+
+            if (resolvedProperties.isEmpty()) {
+                if (unresolvedProperties.isEmpty()) {
+                    break; //alt resolvet
+                } else {
+                    if (strict) {
+                        String msg = String.format("Unable to resolve top-level properties: %s \n due to unresolved references to: %s", unresolvedProperties.keySet(), unresolvedProperties.values());
+                        LOG.error(msg);
+                        throw new GradleException(msg);
+                    }
+                }
+            }
+
+            //oppdaterer resolved properties til prosjektet
+            for (Map.Entry<String, Object> entry : resolvedProperties.entrySet()) {
+                project.setProperty(entry.getKey(), entry.getValue());
+                props.put(entry.getKey(), entry.getValue().toString());
+            }
+        }
+    }
+
+
+}

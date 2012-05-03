@@ -1,0 +1,16 @@
+apply plugin: 'sktools-filterproperties-plugin'
+
+propertyUtils.with {
+    assignPropertiesToProject fromFile('build-user.properties')
+}
+
+
+task runDemo {
+    assert project.properties.expandedValue == '${testValue} ${testValue}'
+
+    propertyUtils.expandProjectProperties()
+
+    assert project.properties.expandedValue == 'myValue myValue'
+}
+
+

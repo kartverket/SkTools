@@ -1,5 +1,6 @@
 package no.statkart.sktools.gradle.plugins.filterproperties;
 
+import no.statkart.sktools.gradle.plugins.filterproperties.extention.PropertyUtils;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -25,6 +26,9 @@ import java.util.concurrent.Callable;
 * <p/>
 * Ressursfiler får filtrert inn konfigurerte properties på formen <b>@propertynavn@</b>.
 *
+ * <p>
+ * Det blir også registrert en extension som utvider DSLen med 'propertyUtils' instans. Se {@link PropertyUtils}
+ *
 * @author Thor Åge Eldby
 * @author Leif Lislegård
 * @since 1.0
@@ -33,6 +37,8 @@ public class FilterPropertiesPlugin implements Plugin<ProjectInternal> {
 
     public final static String CONVENTION_NAME = "filterProperties";
     public final static String FILTER_MAIN_RESOURCES_TASK_NAME = "filterResources";
+    public final static String PROPERTY_UTILS_EXTENTION_NAME = "propertyUtils";
+
     /**
      * Ihht {@link FilterResourcesSourceSet#FILTER_RESOURCES_TASK_NAME_PATTERN}
      */
@@ -55,6 +61,8 @@ public class FilterPropertiesPlugin implements Plugin<ProjectInternal> {
                 setConventionalDefaults(filterPropertiesConvention);
             }
         });
+
+        project.getExtensions().add(PROPERTY_UTILS_EXTENTION_NAME, new PropertyUtils(project));
 
     }
 
