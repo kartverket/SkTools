@@ -186,7 +186,7 @@ class Schema implements Serializable {
     private Map grunnbokDoc(Map params) {
         Map map = xjcOptions.get(GRUNNBOK_DOC);
         if (map == null) {
-            xjcOptions.put(GRUNNBOK_DOC, map = new HashMap(params))
+            xjcOptions.put(GRUNNBOK_DOC, map = new LinkedHashMap(params))
         } else {
             map.putAll(params);
         }
@@ -194,6 +194,27 @@ class Schema implements Serializable {
     }
 
 
+    def getWithSkDoc() {
+        skDoc([:]);
+    }
+
+    def getWithSkDoc(Map params) {
+        skDoc(params);
+    }
+
+    //ikke eskponert
+    private Map skDoc(Map params) {
+
+        // Gjennbruker grunnbokDoc-implementasjon her inntill annen dokumentasjonsgenerering er på plass
+        // see {@link #GRUNNBOK_DOC}
+
+        HashMap grunnbokDocParams = new LinkedHashMap();
+        if (params.containsKey('from')) {
+            grunnbokDocParams.put('from', params.get('from'));
+            grunnbokDocParams.put('to', params.get('to'));
+        }
+        grunnbokDoc(grunnbokDocParams);
+    }
 
 
     Schema path(Object path) {
