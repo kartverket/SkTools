@@ -53,7 +53,7 @@ class DbtoolsPlugin implements Plugin<Project>  {
 //            group = groupString
 
             from('src') {
-                include = '**/sql/**/*.sql'
+                include '**/*.sql'
             }
 
             destinationDir = project.buildDir

@@ -5,6 +5,8 @@ import org.gradle.api.Project
 import org.gradle.api.InvalidUserDataException
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractDatabaseConvention
 import org.gradle.api.Task
+import org.gradle.api.plugins.ExtensionContainer
+import org.gradle.api.plugins.ExtraPropertiesExtension
 
 /**
  * Convention object for Oracle database tools
@@ -19,58 +21,57 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
     Task infoTask
 
     OracleTasksConvention(Project project, String propertyPrefix) {
-
         super(project, propertyPrefix, 'oracle.jdbc.OracleDriver')
 
+        ExtraPropertiesExtension ext = project.getExtensions().getExtraProperties()
+        
         url = project.properties[propertyPrefix + 'db_jdbc_url']
-        if (project.hasProperty(propertyPrefix + 'db_jdbc_driver')) {
-            driver = project.properties[propertyPrefix + 'db_jdbc_driver']
-        }
+        driver = ext.getProperties().get(propertyPrefix + 'db_jdbc_driver', this.driver)
 
         /**
          * passord er det samme som brukernavn dersom uspesifisert
          */
-        if (!project.hasProperty(propertyPrefix + 'db_password')) {
-            project.setProperty(propertyPrefix + 'db_password', project.properties[propertyPrefix + 'db_username'])
+        if (!ext.has(propertyPrefix + 'db_password')) {
+            ext.set(propertyPrefix + 'db_password', ext.get(propertyPrefix + 'db_username'))
             project.logger.info "setting property ${propertyPrefix + 'db_password'} to ${project.properties[propertyPrefix + 'db_password']}"
         }
 
         /**
          * schema er det samme som brukernavn dersom uspesifisert
          */
-        if (!project.hasProperty(propertyPrefix + 'db_schema')) {
-            project.setProperty(propertyPrefix + 'db_schema', project.properties[propertyPrefix + 'db_username'])
+        if (!ext.has(propertyPrefix + 'db_schema')) {
+            ext.set(propertyPrefix + 'db_schema', ext.get(propertyPrefix + 'db_username'))
             project.logger.info "setting property ${propertyPrefix + 'db_schema'} to ${project.properties[propertyPrefix + 'db_schema']}"
         }
 
 
         //oradataNN settes enten til standard verdi, eller til hva som er angitt i oradata
-        if (!project.hasProperty(propertyPrefix + 'db_oradata01')) {
-            project.setProperty(propertyPrefix + 'db_oradata01', project.hasProperty('db_oradata') ? project.db_oradata : 'F:\\Oradata')
+        if (!ext.has(propertyPrefix + 'db_oradata01')) {
+            ext.set(propertyPrefix + 'db_oradata01', ext.getProperties().get('db_oradata', 'F:\\Oradata'))
         }
-        if (!project.hasProperty(propertyPrefix + 'db_oradata02')) {
-            project.setProperty(propertyPrefix + 'db_oradata02', project.hasProperty('db_oradata') ? project.db_oradata : 'G:\\Oradata')
+        if (!ext.has(propertyPrefix + 'db_oradata02')) {
+            ext.set(propertyPrefix + 'db_oradata02', ext.getProperties().get('db_oradata', 'G:\\Oradata'))
         }
-        if (!project.hasProperty(propertyPrefix + 'db_oradata03')) {
-            project.setProperty(propertyPrefix + 'db_oradata03', project.hasProperty('db_oradata') ? project.db_oradata : 'J:\\Oradata')
+        if (!ext.has(propertyPrefix + 'db_oradata03')) {
+            ext.set(propertyPrefix + 'db_oradata03', ext.getProperties().get('db_oradata', 'J:\\Oradata'))
         }
-        if (!project.hasProperty(propertyPrefix + 'db_oradata04')) {
-            project.setProperty(propertyPrefix + 'db_oradata04', project.properties[propertyPrefix + 'db_oradata01'])
+        if (!ext.has(propertyPrefix + 'db_oradata04')) {
+            ext.set(propertyPrefix + 'db_oradata04', ext.get(propertyPrefix + 'db_oradata01'))
         }
-        if (!project.hasProperty(propertyPrefix + 'db_oradata05')) {
-            project.setProperty(propertyPrefix + 'db_oradata05', project.properties[propertyPrefix + 'db_oradata02'])
+        if (!ext.has(propertyPrefix + 'db_oradata05')) {
+            ext.set(propertyPrefix + 'db_oradata05', ext.get(propertyPrefix + 'db_oradata02'))
         }
-        if (!project.hasProperty(propertyPrefix + 'db_oradata06')) {
-            project.setProperty(propertyPrefix + 'db_oradata06', project.properties[propertyPrefix + 'db_oradata03'])
+        if (!ext.has(propertyPrefix + 'db_oradata06')) {
+            ext.set(propertyPrefix + 'db_oradata06', ext.get(propertyPrefix + 'db_oradata03'))
         }
-        if (!project.hasProperty(propertyPrefix + 'db_oradata07')) {
-            project.setProperty(propertyPrefix + 'db_oradata07', project.properties[propertyPrefix + 'db_oradata04'])
+        if (!ext.has(propertyPrefix + 'db_oradata07')) {
+            ext.set(propertyPrefix + 'db_oradata07', ext.get(propertyPrefix + 'db_oradata04'))
         }
-        if (!project.hasProperty(propertyPrefix + 'db_oradata08')) {
-            project.setProperty(propertyPrefix + 'db_oradata08', project.properties[propertyPrefix + 'db_oradata05'])
+        if (!ext.has(propertyPrefix + 'db_oradata08')) {
+            ext.set(propertyPrefix + 'db_oradata08', ext.get(propertyPrefix + 'db_oradata05'))
         }
-        if (!project.hasProperty(propertyPrefix + 'db_oradata09')) {
-            project.setProperty(propertyPrefix + 'db_oradata09', project.properties[propertyPrefix + 'db_oradata06'])
+        if (!ext.has(propertyPrefix + 'db_oradata09')) {
+            ext.set(propertyPrefix + 'db_oradata09', ext.get(propertyPrefix + 'db_oradata06'))
         }
     }
 
@@ -107,16 +108,16 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
     // oracle attributes by convention... -->
 
     public String getUsername() {
-        return project.property(prefix + 'db_username')
+        return project.getExtensions().getExtraProperties().get(prefix + 'db_username')
     }
     public String getHost() {
-        return project.property(prefix + 'db_host')
+        return project.getExtensions().getExtraProperties().get(prefix + 'db_host')
     }
     public String getPort() {
-        return project.property(prefix + 'db_port')
+        return project.getExtensions().getExtraProperties().get(prefix + 'db_port')
     }
     public String getSid() {
-        return project.property(prefix + 'db_sid')
+        return project.getExtensions().getExtraProperties().get(prefix + 'db_sid')
     }
 
     public String getTns() {
