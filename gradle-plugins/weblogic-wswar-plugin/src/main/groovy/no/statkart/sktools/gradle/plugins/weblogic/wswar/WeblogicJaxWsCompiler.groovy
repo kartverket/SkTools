@@ -8,6 +8,7 @@ import org.gradle.api.tasks.util.PatternSet
 import org.gradle.api.file.FileTree
 import org.gradle.api.internal.file.FileResolver
 import no.statkart.sktools.gradle.plugins.weblogic.compile.DefaultWeblogicCompileSpec
+import org.gradle.api.file.FileCollection
 
 /**
  * Steg for kompilering av JAX-WS implementasjon for server.
@@ -54,6 +55,11 @@ class WeblogicJaxWsCompiler implements org.gradle.api.internal.tasks.compile.Com
         logger.info ('Calling jwsc with attributes = ' + attributes)
 
         def antTask = ant.jwsc(attributes) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Adding 'sourcepath' -> \n${spec.source.asFileTree.files.join('\n')}")
+            }
+            spec.source.addToAntBuilder(ant, 'sourcepath', FileCollection.AntType.MatchingTask)
+
             //todo: context path skal kunne konfigureres (muligens ved deply/pakking av ear?)
             // - dette for å støtte deploymenter som ikke er exploded
             module(name: warName, contextpath: 'notimportantsincewethrowawaytheear', explode: true) {
