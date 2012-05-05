@@ -39,13 +39,14 @@ public class FilterPropertiesConvention {
 
 
     public void setProperties(Map<String, Object> propertiesToFilter) {
-        properties = new HashMap<String, Object>(propertiesToFilter);
+        if (properties != null) properties.clear();
+        properties(propertiesToFilter);
     }
 
 
     public void properties(Map<String, Object> propertiesToFilter) {
         if (properties == null) {
-            setProperties(propertiesToFilter);
+            properties = new HashMap<String, Object>(propertiesToFilter);
         } else {
             properties.putAll(propertiesToFilter);
         }
@@ -58,9 +59,9 @@ public class FilterPropertiesConvention {
     public Map<String, Object> projectProperties() {
         HashMap<String, Object> filteredProjectProperties = new HashMap<String, Object>();
         for (Map.Entry<String, ?> entry : project.getProperties().entrySet()) {
-            if (entry.getValue() instanceof String) {
-                filteredProjectProperties.put(entry.getKey(), entry.getValue());
-           }
+            if (entry.getValue() instanceof CharSequence) {
+                filteredProjectProperties.put(entry.getKey(), entry.getValue().toString());
+            }
         }
         return filteredProjectProperties;
     }

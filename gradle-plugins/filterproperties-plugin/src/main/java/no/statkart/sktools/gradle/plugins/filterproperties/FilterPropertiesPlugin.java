@@ -5,8 +5,10 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.internal.HasConvention;
+import org.gradle.api.internal.plugins.ProcessResources;
 import org.gradle.api.plugins.BasePlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
+import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.Action;
 import org.gradle.api.internal.project.ProjectInternal;
@@ -15,6 +17,7 @@ import org.gradle.api.specs.Spec;
 import org.gradle.api.internal.ConventionMapping;
 import org.gradle.api.plugins.JavaBasePlugin;
 
+import java.util.Collections;
 import java.util.concurrent.Callable;
 
 /**
@@ -54,39 +57,16 @@ public class FilterPropertiesPlugin implements Plugin<ProjectInternal> {
         project.getConvention().getPlugins().put(CONVENTION_NAME, filterPropertiesConvention);
 
 
-        configureSourceSetDefaults(project);
-        configureFilterResourcesTaskDefaults(filterPropertiesConvention);
-
         project.afterEvaluate(new Action<Project>() {
             public void execute(Project project) {
                 setConventionalDefaults(filterPropertiesConvention);
             }
         });
 
+        configureSourceSetDefaults(project, filterPropertiesConvention);
+
         project.getExtensions().add(PROPERTY_UTILS_EXTENTION_NAME, new PropertyUtils(project));
 
-    }
-
-    private void configureFilterResourcesTaskDefaults(final FilterPropertiesConvention convention) {
-        convention.project.getTasks().withType(FilterResourcesTask.class, new Action<FilterResourcesTask>() {
-            public void execute(final FilterResourcesTask task) {
-                //setter conventional verdi
-                task.getConventionMapping().map("properties", new Callable<Object>() {
-                    public Object call() throws Exception {
-                        return convention.getProperties();
-                    }
-                });
-
-                //legger til clean
-                Task cleanTask = task.getProject().getTasks().getByName(BasePlugin.CLEAN_TASK_NAME)
-                        .doFirst(new Action<Task>() {
-                            public void execute(Task cleanTask) {
-                                cleanTask.getLogger().info("Deleting directory " + task.getDestinationDir());
-                                cleanTask.getProject().delete(task.getDestinationDir());
-                            }
-                        });
-            }
-        });
     }
 
     /**
@@ -96,13 +76,13 @@ public class FilterPropertiesPlugin implements Plugin<ProjectInternal> {
         Project project = filterPropertiesConvention.project;
 
         if (filterPropertiesConvention.properties == null) {
-            filterPropertiesConvention.properties(filterPropertiesConvention.projectProperties());
+            filterPropertiesConvention.properties = filterPropertiesConvention.projectProperties();
         }
 
     }
 
 
-    private void configureSourceSetDefaults(final ProjectInternal project) {
+    private void configureSourceSetDefaults(final ProjectInternal project, final FilterPropertiesConvention convention) {
         //for hvert source sett som finnes/blir lagt til
         project.getConvention().getPlugin(JavaPluginConvention.class).getSourceSets().all(new Action<SourceSet>() {
             public void execute(final SourceSet sourceSet) {
@@ -121,43 +101,54 @@ public class FilterPropertiesPlugin implements Plugin<ProjectInternal> {
                 });
 
 
-                final String filterResourcesTaskName = filterResourcesSourceSet.getFilterResourcesTaskName();
-                FilterResourcesTask filterResourcesTask = project.getTasks().add(filterResourcesTaskName, FilterResourcesTask.class);
-                filterResourcesTask.setDescription(String.format("Filters the %s resources for filtering.", sourceSet.getName()));
-                ConventionMapping conventionMapping = filterResourcesTask.getConventionMapping();
+                //legger filtrert output til resources source set - verdien er lazy, dvs at den blir hentet runtime hver gang en beregner filer for resources sourcesett.
+                // Med andre ord så tillater dette at man har byttet ut tasken med noe annet i mellomtiden...
+                sourceSet.getResources().srcDir(new Callable() {
+                    public Object call() throws Exception {
+                        return filterResourcesSourceSet.getFilterResourcesOutputDir();
+                    }
+                });
 
-                conventionMapping.map("defaultSource", new Callable<Object>() {
+                final String filterResourcesTaskName = filterResourcesSourceSet.getFilterResourcesTaskName();
+
+                //hekter inn task for filtering
+                project.getTasks().getByName(sourceSet.getProcessResourcesTaskName()).dependsOn(filterResourcesTaskName);
+
+                //legger til clean
+                project.getTasks().getByName(BasePlugin.CLEAN_TASK_NAME).doFirst(new Action<Task>() {
+                    public void execute(Task cleanTask) {
+                        cleanTask.getLogger().info("Deleting directory " + filterResourcesSourceSet.outputPath);
+                        cleanTask.getProject().delete(filterResourcesSourceSet.getFilterResourcesOutputDir());
+                    }
+                });
+
+
+                //oppretter copy task for filtrering...
+                final ProcessResources filterResourcesTask = project.getTasks().add(filterResourcesTaskName, ProcessResources.class);
+                filterResourcesTask.setDescription(String.format("Filters the %s resources for filtering.", sourceSet.getName()));
+
+                filterResourcesTask.from(new Callable<Object>() {
                     public Object call() throws Exception {
                         return filterResourcesSourceSet.getFilterResources();
                     }
                 });
-                conventionMapping.map("destinationDir", new Callable<Object>() {
+                filterResourcesTask.into(new Callable<Object>() {
                     public Object call() throws Exception {
                         return filterResourcesSourceSet.getFilterResourcesOutputDir();
                     }
                 });
 
 
-                //legger filtrert output til resources source set - verdien er lazy, dvs at den blir hentet runtime hver gang en beregner filer for resources sourcesett.
-                // Med andre ord så tillater dette at man har byttet ut tasken med noe annet i mellomtiden...
-                sourceSet.getResources().srcDir(new Callable() {
-                    public Object call() throws Exception {
-                        FilterResourcesTask task = (FilterResourcesTask) project.getTasks().getByName(filterResourcesTaskName);
-                        return task.getDestinationDir();
-                    }
-                });
-
-
-                //hekter inn task for filtering
-                project.getTasks().getByName(sourceSet.getProcessResourcesTaskName()).dependsOn(filterResourcesTaskName);
-
-
-                //default verdier for filterResoruces source set
                 project.afterEvaluate(new Action<Object>() {
                     public void execute(Object o) {
+                        //default verdier for filterResoruces source set
                         if (filterResourcesSourceSet.outputPath == null) {
                             filterResourcesSourceSet.filterResourcesOutput(String.format("gen/%s/resources", filterResourcesSourceSet.name));
                         }
+
+                        //registrerre properties til task
+                        filterResourcesTask.getInputs().properties(convention.getProperties());
+                        filterResourcesTask.filter(Collections.singletonMap("tokens", convention.getProperties()), org.apache.tools.ant.filters.ReplaceTokens.class);
                     }
                 });
             }
