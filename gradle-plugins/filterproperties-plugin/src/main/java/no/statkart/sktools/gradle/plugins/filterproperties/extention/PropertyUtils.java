@@ -46,12 +46,13 @@ public class PropertyUtils {
     public Map<String, ?> fromFile(Object... path) throws IOException {
         Properties props = new Properties();
         for (Object o : path) {
-            File file = project.file(path);
+            File file = project.file(o);
             props.load(new FileReader(file));
         }
 
         return (Map) props;
     }
+
 
     /**
      * Legger properties til prosjektet.
