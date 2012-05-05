@@ -36,14 +36,19 @@ public class PropertyUtils {
 
 
     /**
-     * Leser inn properties ifra fil
+     * Leser inn properties ifra fil.
+     *
+     * Merk at dersom samme property blir lest inn flere ganger så er det den siste parameteriserte filen som har presedens.
+     *
      * @param path fil. Samme som {@link Project#file(Object)}
      * @return properties lest ifra fil
      */
-    public Map<String, ?> fromFile(Object path) throws IOException {
-        File file = project.file(path);
+    public Map<String, ?> fromFile(Object... path) throws IOException {
         Properties props = new Properties();
-        props.load(new FileReader(file));
+        for (Object o : path) {
+            File file = project.file(path);
+            props.load(new FileReader(file));
+        }
 
         return (Map) props;
     }
