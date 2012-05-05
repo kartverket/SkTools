@@ -20,9 +20,9 @@ task runDemo {
 
 
 task testFilterResources(dependsOn:'filterResources') << {
-    assert file('gen/src/main/resources/someFile.txt').exists()
-    file('gen/src/main/resources/someFile.txt').text.contains("version=@version@")
-    file('gen/src/main/resources/someFile.txt').text.contains("testValue=myValue")
+    assert file('gen/main/resources/someFile.txt').exists()
+    assert file('gen/main/resources/someFile.txt').text.contains("version=@version@")
+    assert file('gen/main/resources/someFile.txt').text.contains("testValue=myValue")
 }
 
 task testClean(dependsOn: ['testFilterResources', 'clean']) << {

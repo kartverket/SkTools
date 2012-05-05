@@ -3,6 +3,8 @@ package no.statkart.sktools.gradle.plugins.filterproperties;
 import groovy.lang.Closure;
 import org.gradle.api.file.SourceDirectorySet;
 
+import java.io.File;
+
 /**
  * @since 1.1
  * @author Leif Lislegård
@@ -16,7 +18,7 @@ public interface FilterResourcesSourceSet {
      *
      * @return the resources. Never returns null.
      */
-    SourceDirectorySet getUnfilteredResources();
+    SourceDirectorySet getFilterResources();
 
     /**
      * Configures the FilteredResource source for this set.
@@ -28,6 +30,20 @@ public interface FilterResourcesSourceSet {
      */
     FilterResourcesSourceSet filterResources(Closure configureClosure);
 
+
+    /**
+     * Configures the path for filtered resources output.
+     *
+     * @since 1.2 - SKIF-173
+     * @return this
+     */
+    FilterResourcesSourceSet filterResourcesOutput(Object path);
+
+    /**
+     * @since 1.2 - SKIF-173
+     * @return output dir for filtered resources
+     */
+    File getFilterResourcesOutputDir();
 
     String getFilterResourcesTaskName();
 }

@@ -9,35 +9,38 @@ import org.gradle.api.tasks.SourceSet;
 import org.gradle.util.ConfigureUtil;
 import org.gradle.util.GUtil;
 
+import java.io.File;
+
 /**
  * @since 1.1
  * @author Leif Lislegård
  */
 public class DefaultFilterResourcesSourceSet implements FilterResourcesSourceSet {
-    private final SourceDirectorySet unfilteredResources;
-    private final String name;
+    final String name;
+    final SourceDirectorySet filterResources;
+    final FileResolver fileResolver;
+    Object outputPath;
 
 
     public DefaultFilterResourcesSourceSet(String name, FileResolver fileResolver) {
         this.name = name;
         String displayName = String.format("%s Unfiltered Resources", GUtil.toWords(StringUtils.capitalize(name)));
-        unfilteredResources = new DefaultSourceDirectorySet(displayName, fileResolver);
-
+        this.filterResources = new DefaultSourceDirectorySet(displayName, fileResolver);
+        this.fileResolver = fileResolver;
     }
 
-    public SourceDirectorySet getUnfilteredResources() {
-        return unfilteredResources;
+    public SourceDirectorySet getFilterResources() {
+        return filterResources;
     }
 
 
     /**
-     * todo: dersom man ønsker å bygge inn støtte for konfigurering av slike source må dette implementeres.
-     * Den beste måten er trolig å registrere en FilterResourcesSourceSetManager som holder styr på hvilke {@link FilterResourcesSourceSet} som er blitt registrert.
-     * Denne kan registreres via {@code Project#getConvention().getPlugins().put("filterResources", filterResourcesSourceSetManager)}
+     * SKIF-173 - konfigurering av source set via denne
      *
+     * {@inheritDoc}
      */
     public FilterResourcesSourceSet filterResources(Closure configureClosure) {
-        ConfigureUtil.configure(configureClosure, getUnfilteredResources());
+        ConfigureUtil.configure(configureClosure, getFilterResources());
         return this;
     }
 
@@ -51,5 +54,14 @@ public class DefaultFilterResourcesSourceSet implements FilterResourcesSourceSet
      */
     private String getTaskBaseName() {
         return name.equals(SourceSet.MAIN_SOURCE_SET_NAME) ? "" : GUtil.toCamelCase(name);
+    }
+
+    public FilterResourcesSourceSet filterResourcesOutput(Object path) {
+        this.outputPath = path;
+        return this;
+    }
+
+    public File getFilterResourcesOutputDir() {
+        return fileResolver.resolve(outputPath);
     }
 }

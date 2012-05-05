@@ -4,6 +4,7 @@ import no.statkart.sktools.gradle.plugins.filterproperties.extention.PropertyUti
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
+import org.gradle.api.internal.HasConvention;
 import org.gradle.api.plugins.BasePlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.SourceSet;
@@ -105,37 +106,43 @@ public class FilterPropertiesPlugin implements Plugin<ProjectInternal> {
         //for hvert source sett som finnes/blir lagt til
         project.getConvention().getPlugin(JavaPluginConvention.class).getSourceSets().all(new Action<SourceSet>() {
             public void execute(final SourceSet sourceSet) {
-                final FilterResourcesSourceSet filterResourcesSourceSet = new DefaultFilterResourcesSourceSet(sourceSet.getName(), project.getFileResolver());
-                filterResourcesSourceSet.getUnfilteredResources().srcDir(String.format("src/%s/unfilteredResources", sourceSet.getName()));
+                //oppretter source set-utvidelse for filtrerte ressurser
+                final DefaultFilterResourcesSourceSet filterResourcesSourceSet = new DefaultFilterResourcesSourceSet(sourceSet.getName(), project.getFileResolver());
+                //hekter inn utvidelse på source settet
+                ((HasConvention) sourceSet).getConvention().getPlugins().put("filterResources", filterResourcesSourceSet);    // SKIF-173
 
+                filterResourcesSourceSet.getFilterResources().srcDir(String.format("src/%s/filterResources", sourceSet.getName()));
+
+                //trekker ifra evt filer som evt også befinner seg i 'resources'
                 sourceSet.getResources().getFilter().exclude(new Spec<FileTreeElement>() {
                     public boolean isSatisfiedBy(FileTreeElement element) {
-                        return filterResourcesSourceSet.getUnfilteredResources().contains(element.getFile());
+                        return filterResourcesSourceSet.getFilterResources().contains(element.getFile());
                     }
                 });
 
 
-                String filterResourcesTaskName = filterResourcesSourceSet.getFilterResourcesTaskName();
+                final String filterResourcesTaskName = filterResourcesSourceSet.getFilterResourcesTaskName();
                 FilterResourcesTask filterResourcesTask = project.getTasks().add(filterResourcesTaskName, FilterResourcesTask.class);
-                filterResourcesTask.setDescription(String.format("Filters the %s unfiltered resources.", sourceSet.getName()));
+                filterResourcesTask.setDescription(String.format("Filters the %s resources for filtering.", sourceSet.getName()));
                 ConventionMapping conventionMapping = filterResourcesTask.getConventionMapping();
 
                 conventionMapping.map("defaultSource", new Callable<Object>() {
                     public Object call() throws Exception {
-                        return filterResourcesSourceSet.getUnfilteredResources();
+                        return filterResourcesSourceSet.getFilterResources();
                     }
                 });
                 conventionMapping.map("destinationDir", new Callable<Object>() {
                     public Object call() throws Exception {
-                        return project.file(String.format("gen/src/%s/resources", sourceSet.getName()));
+                        return filterResourcesSourceSet.getFilterResourcesOutputDir();
                     }
                 });
 
 
                 //legger filtrert output til resources source set - verdien er lazy, dvs at den blir hentet runtime hver gang en beregner filer for resources sourcesett.
+                // Med andre ord så tillater dette at man har byttet ut tasken med noe annet i mellomtiden...
                 sourceSet.getResources().srcDir(new Callable() {
                     public Object call() throws Exception {
-                        FilterResourcesTask task = (FilterResourcesTask) project.getTasks().getByName(filterResourcesSourceSet.getFilterResourcesTaskName());
+                        FilterResourcesTask task = (FilterResourcesTask) project.getTasks().getByName(filterResourcesTaskName);
                         return task.getDestinationDir();
                     }
                 });
@@ -144,6 +151,15 @@ public class FilterPropertiesPlugin implements Plugin<ProjectInternal> {
                 //hekter inn task for filtering
                 project.getTasks().getByName(sourceSet.getProcessResourcesTaskName()).dependsOn(filterResourcesTaskName);
 
+
+                //default verdier for filterResoruces source set
+                project.afterEvaluate(new Action<Object>() {
+                    public void execute(Object o) {
+                        if (filterResourcesSourceSet.outputPath == null) {
+                            filterResourcesSourceSet.filterResourcesOutput(String.format("gen/%s/resources", filterResourcesSourceSet.name));
+                        }
+                    }
+                });
             }
         });
     }
