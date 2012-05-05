@@ -41,9 +41,7 @@ class GradleProjectBuilder<T extends GradleProjectBuilder> {
     public ProjectHelper build() {
         //forks a new project in a temp folder
         projectHelper = new ProjectHelper(builder.build())
-        projectProperties?.each {
-            projectHelper.project.setProperty(it.key, it.value)
-        }
+        projectHelper.setProjectProperties(projectProperties)
         closures.each {
             it.delegate = projectHelper.project
             it()

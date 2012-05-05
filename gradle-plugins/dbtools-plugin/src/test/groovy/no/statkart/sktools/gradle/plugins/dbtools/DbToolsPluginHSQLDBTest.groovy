@@ -70,8 +70,8 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
 
 
         // STEG 2 - konfigurering av plugin
-        project.setProperty 'username', username
-        project.setProperty 'password', password
+        project.ext.setProperty 'username', username
+        project.ext.setProperty 'password', password
 
         project.apply plugin:'sktools-dbtools-plugin'
 

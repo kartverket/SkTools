@@ -64,12 +64,12 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
         );
 
         //task for generering av client source
-        ConventionTask genClientTask = createGenClientTask(wsClientConvention, sourceSet).dependsOn(
+        ConventionTask genClientTask = (ConventionTask) createGenClientTask(wsClientConvention, sourceSet).dependsOn(
                 provideSchema.name,
                 project.getConfigurations().getByName(WeblogicBasePlugin.WEBLOGIC_CONFIGURATION_NAME), //tvinger rekompilering ved endring i classpath + weblogic jar filer.
         );
 
-        genClientTask.conventionMapping("defaultSource", new Callable() {
+        genClientTask.conventionMapping("source", new Callable() {
             public Object call() {
                 return provideSchema.getOutputs().getFiles().getAsFileTree();  //default source er hva provideSchema task genererer
             }

@@ -122,7 +122,7 @@ class WsDocGenPlugin implements Plugin<Project> {
 
         //setting conventional properties
         task.getConventionMapping().with {
-            map("defaultSource", new Callable() {   //tildeler en dynamisk default verdi
+            map("source", new Callable() {   //tildeler en dynamisk default verdi
                 public Object call() {
                     return sourceSet.getAllJava();  //default source
                 }

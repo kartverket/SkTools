@@ -103,7 +103,7 @@ class XjcPlugin implements Plugin<Project> {
 
     private configureConventionalValuesForXjcTask(final Project project, final XjcConvention xjcConvention) {
         project.tasks.getByName(XJC_TASK_NAME).getConventionMapping().with {
-            map("defaultSource", new Callable() {
+            map("source", new Callable() {
                 public Object call() {
                     return project.files(xjcConvention.schema.collect {it.dir}).getAsFileTree();  //default source
                 }

@@ -9,6 +9,7 @@ import org.gradle.api.ProjectState
 import org.gradle.api.internal.project.ProjectInternal
 import org.gradle.api.tasks.util.PatternSet
 import org.gradle.api.internal.artifacts.dependencies.DefaultSelfResolvingDependency
+import org.gradle.api.plugins.ExtraPropertiesExtension
 
 /**
  * Hjelpemetoder til bruk i testing
@@ -32,11 +33,12 @@ class ProjectHelper {
         return execute(project.tasks[taskName])
     }
 
-    private void execute(Task task) {
+    private Task execute(Task task) {
         if (task.state.executed) return;
         task.getTaskDependencies().getDependencies(task).each {execute(it)}
         println "..executing task ${task.path}"
         task.execute()
+        task
     }
 
     /**
@@ -96,10 +98,14 @@ class ProjectHelper {
     /**
      * Sets properties on project
      */
-    void setProjectProperties(Map properties) {
-        properties.each {
-            project.setProperty(it.key, it.value);
+    void setProjectProperties(Map<String, ?> properties) {
+        properties?.each {
+            getExt().set(it.key, it.value);
         }
+    }
+
+    ExtraPropertiesExtension getExt() {
+        return project.getExtensions().getExtraProperties()
     }
 
     /**
@@ -141,8 +147,8 @@ class ProjectHelper {
      */
     ProjectHelper defineWEBLOGIC_HOME() {
         ['WEBLOGIC_HOME'].each { val ->
-            if (!project.hasProperty(val) && System.getenv(val) != null) {
-                project.setProperty(val, System.getenv(val))
+            if (!project.ext.hat(val) && System.getenv(val) != null) {
+                project.ext.set(val, System.getenv(val))
             }
         }
         if (!project.hasProperty('WEBLOGIC_HOME')) {
