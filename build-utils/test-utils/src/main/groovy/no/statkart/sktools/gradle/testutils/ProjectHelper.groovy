@@ -96,11 +96,16 @@ class ProjectHelper {
     }
 
     /**
-     * Sets properties on project
+     * Setter properties på prosjektet.
+     * Dersom prosjektet ikke allerede har propertyen, så legges den til ext.properties
      */
     void setProjectProperties(Map<String, ?> properties) {
         properties?.each {
-            getExt().set(it.key, it.value);
+            if (project.hasProperty(it.key)) {
+                project.setProperty(it.key, it.value)
+            } else {
+                getExt().set(it.key, it.value);
+            }
         }
     }
 
@@ -147,7 +152,7 @@ class ProjectHelper {
      */
     ProjectHelper defineWEBLOGIC_HOME() {
         ['WEBLOGIC_HOME'].each { val ->
-            if (!project.ext.hat(val) && System.getenv(val) != null) {
+            if (!project.ext.has(val) && System.getenv(val) != null) {
                 project.ext.set(val, System.getenv(val))
             }
         }
