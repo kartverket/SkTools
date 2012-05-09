@@ -126,6 +126,13 @@ class PropertyUtilsTest {
         ]
         propertyUtils.expandProperties(myProps)
         Assert.assertEquals(myProps['heiarop'], 'hallosann! hallosann! sann!', "Forventet value")
+
+        //demonstrerer expanding med rekursiv key
+        myProps = [
+                hei: '${hei}',
+        ]
+        propertyUtils.expandProperties(myProps)
+        Assert.assertEquals(myProps['hei'], 'heisann!', "Forventet value")
     }
 
 

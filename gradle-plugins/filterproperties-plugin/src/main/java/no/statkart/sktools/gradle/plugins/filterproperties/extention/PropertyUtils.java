@@ -141,6 +141,13 @@ public class PropertyUtils {
     }
 
 
+    /**
+     * TODO: Løse problem med sirkulære property referanser.
+     * Annta at props har følgende verdier:
+     * key1=${key2}
+     * key2=${key3}
+     * key3=${key1}
+     */
     private void expandPropertiesImpl(boolean strict, Map<String, String> props) {
         LOG.debug("strict mode is {}", strict);
 
@@ -165,10 +172,11 @@ public class PropertyUtils {
                     do {
                         if (expandedValue == null) expandedValue = new StringBuffer();
                         String propertyName = matcher.group(1);
+                        boolean isSame = propertyName.equals(entry.getKey());
                         String replacement = null;
-                        if (resolvedProperties.containsKey(propertyName)) {
+                        if (!isSame && resolvedProperties.containsKey(propertyName)) {
                             replacement = resolvedProperties.get(propertyName).toString();
-                        } else if (props.containsKey(propertyName)) {
+                        } else if (!isSame && props.containsKey(propertyName)) {
                             replacement = props.get(propertyName).toString();
                         } else if (project.hasProperty(propertyName)) {
                             replacement = project.getProperties().get(propertyName).toString();
