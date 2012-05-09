@@ -33,7 +33,7 @@ public class FilterPropertiesConvention {
     /**
      * Konfigurasjon av convention skjer her.
      */
-    public Object filteredProperties(Closure closure) {
+    public Object filterProperties(Closure closure) {
         closure.setDelegate(this); 
         return closure.call();
     }
@@ -69,14 +69,22 @@ public class FilterPropertiesConvention {
     }
 
 
+    /**
+     * @depricated since 1.2 - bruk heller {@link #filterProperties(Closure)}.
+     */
+    @Deprecated
+    public Object filteredProperties(Closure closure) {
+        logDeprecation("filteredProperties(Closure)", "filterProperties(Closure)");
+        return filterProperties(closure);
+    }
 
     /**
-     * @depricated since 1.0 - bruk heller {@link #filteredProperties(Closure)}.
+     * @depricated since 1.0 - bruk heller {@link #filterProperties(Closure)}.
      */
     @Deprecated
     public Object statKartFilterProperties(Closure closure) {
-        logDeprecation("statKartFilterProperties(Closure)", "filteredProperties(Closure)");
-        return filteredProperties(closure);
+        logDeprecation("statKartFilterProperties(Closure)", "filterProperties(Closure)");
+        return filterProperties(closure);
     }
 
     private static void logDeprecation(String oldSyntax, String newSyntax) {
