@@ -3,7 +3,7 @@ apply plugin: 'java'
 
 
 
-filteredProperties {
+filterProperties {
     properties testValue: 'myValue',
             'otherProperty': 'value'
 

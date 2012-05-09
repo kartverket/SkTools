@@ -8,8 +8,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Konvensjon av plugin.
- * Se {@link #filteredProperties(Closure)} for konfigurasjon av convention.
+ * Konvensjon for plugin.
+ * Se {@link #filterProperties(Closure)} for konfigurasjon.
  *
  * <p>
  * <p>

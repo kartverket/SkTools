@@ -42,7 +42,7 @@ class FilterPropertiesPluginTest {
         projectHelper.initializeProject()
 
         projectHelper.configureProject {
-            filteredProperties {
+            filterProperties {
                 properties = [singleProperty:'singleValue']
             }
         }
@@ -53,7 +53,7 @@ class FilterPropertiesPluginTest {
 
 
         projectHelper.configureProject {
-            filteredProperties {
+            filterProperties {
                 properties = propertyUtils.projectProperties()
                 properties 'singleProperty': 'singleValue'
             }
@@ -114,7 +114,7 @@ class FilterPropertiesPluginTest {
         projectHelper.setProjectProperties([myProperty1:'testValue'])
 
         projectHelper.configureProject {
-            filteredProperties {
+            filterProperties {
                 properties projectProperties()
                 properties myProperty1: 'overidenValue',
                         'name': 'overidenName'
