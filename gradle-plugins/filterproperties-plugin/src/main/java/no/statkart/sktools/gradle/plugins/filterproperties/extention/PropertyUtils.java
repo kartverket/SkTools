@@ -35,19 +35,35 @@ public class PropertyUtils {
     }
 
 
+
+    /**
+     * Convenient way of retrieving project properties
+     */
+    public Map<String, Object> projectProperties() {
+        HashMap<String, Object> filteredProjectProperties = new HashMap<String, Object>();
+        for (Map.Entry<String, ?> entry : project.getProperties().entrySet()) {
+            if (entry.getValue() instanceof CharSequence) {
+                filteredProjectProperties.put(entry.getKey(), entry.getValue().toString());
+            }
+        }
+        return filteredProjectProperties;
+    }
+
     /**
      * Leser inn properties ifra fil.
      *
      * Merk at dersom samme property blir lest inn flere ganger så er det den siste parameteriserte filen som har presedens.
      *
-     * @param path fil. Samme som {@link Project#file(Object)}
-     * @return properties lest ifra fil
+     * @param path Samme som {@link Project#file(Object)}.
+     * @return properties lest ifra fil(er), eller tomt map dersom ingen filer funnet.
      */
     public Map<String, ?> fromFile(Object... path) throws IOException {
         Properties props = new Properties();
         for (Object o : path) {
             File file = project.file(o);
-            props.load(new FileReader(file));
+            if (file.exists()) {
+                props.load(new FileReader(file));
+            }
         }
 
         return (Map) props;
@@ -71,13 +87,18 @@ public class PropertyUtils {
 
     /**
      * Ekspanderer alle properties registrert for prosjektet.
+     */
+    public void expandProjectProperties() {
+        expandProjectProperties(strict);
+    }
+    /**
+     * Ekspanderer alle properties registrert for prosjektet.
      * <p/>
      * Dersom {@link #strict} så vil exception kastes dersom ikke alle properties kunne resolves.
      */
-    public void expandProjectProperties() {
+    public void expandProjectProperties(boolean strict) {
         LOG.debug("expanding properties for project {}", project.getPath());
-        LOG.debug("strict mode is {}", strict);
-
+        ExtraPropertiesExtension ext = project.getExtensions().getExtraProperties();
         Matcher matcher = null; //felles matcher instans
 
         //plukker ut interessange properties
@@ -91,6 +112,39 @@ public class PropertyUtils {
                 }
             }
         }
+        expandPropertiesImpl(strict, props);
+
+        for (Map.Entry<String, ?> entry : props.entrySet()) {
+            //oppdaterer ext properties, eller property for prosjekt
+            if (ext.has(entry.getKey())) {
+                ext.set(entry.getKey(), entry.getValue());
+            } else {
+                project.setProperty(entry.getKey(), entry.getValue());
+            }
+        }
+
+    }
+
+    /**
+     * Ekspanderer alle properties. Verdier vil bli forsøkt søkt opp via parameterisert sett så via prosjektet.
+     * @param properties properties som skal ekspanderes
+     * @throws GradleException dersom {@link #strict} og ikke alle properties kunne expandes
+     */
+    public void expandProperties(Map properties) throws GradleException {
+        LOG.debug("expanding custom properties on project {}", project.getPath());
+        expandPropertiesImpl(strict, properties);
+    }
+
+    public void expandProperties(Map properties, boolean strict) throws GradleException {
+        LOG.debug("expanding custom properties on project {}", project.getPath());
+        expandPropertiesImpl(strict, properties);
+    }
+
+
+    private void expandPropertiesImpl(boolean strict, Map<String, String> props) {
+        LOG.debug("strict mode is {}", strict);
+
+        Matcher matcher = null; //felles matcher instans
 
         if (props.isEmpty()) {
             return; // no properties to expand
@@ -114,6 +168,8 @@ public class PropertyUtils {
                         String replacement = null;
                         if (resolvedProperties.containsKey(propertyName)) {
                             replacement = resolvedProperties.get(propertyName).toString();
+                        } else if (props.containsKey(propertyName)) {
+                            replacement = props.get(propertyName).toString();
                         } else if (project.hasProperty(propertyName)) {
                             replacement = project.getProperties().get(propertyName).toString();
                         } else {
@@ -146,7 +202,7 @@ public class PropertyUtils {
 
             //oppdaterer resolved properties til prosjektet
             for (Map.Entry<String, Object> entry : resolvedProperties.entrySet()) {
-                project.setProperty(entry.getKey(), entry.getValue());
+                LOG.debug("...expanding property {} -> {}", entry.getKey(), entry.getValue());
                 props.put(entry.getKey(), entry.getValue().toString());
             }
         }

@@ -39,6 +39,8 @@ class FilterPropertiesPluginTest {
         ProjectHelper projectHelper = FilterPropertiesProjectBuilder.builder().applyJavaPlugin().applyFilterPropertiesPlugin().build()
         FilterPropertiesConvention convention = (FilterPropertiesConvention) projectHelper.project.convention.plugins.get(FilterPropertiesPlugin.CONVENTION_NAME)
 
+        projectHelper.initializeProject()
+
         projectHelper.configureProject {
             filteredProperties {
                 properties = [singleProperty:'singleValue']
@@ -52,7 +54,7 @@ class FilterPropertiesPluginTest {
 
         projectHelper.configureProject {
             filteredProperties {
-                properties = projectProperties()
+                properties = propertyUtils.projectProperties()
                 properties 'singleProperty': 'singleValue'
             }
         }

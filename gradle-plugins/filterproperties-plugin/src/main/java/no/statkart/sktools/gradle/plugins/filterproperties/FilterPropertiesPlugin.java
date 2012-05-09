@@ -56,27 +56,27 @@ public class FilterPropertiesPlugin implements Plugin<ProjectInternal> {
         final FilterPropertiesConvention filterPropertiesConvention = new FilterPropertiesConvention(project);
         project.getConvention().getPlugins().put(CONVENTION_NAME, filterPropertiesConvention);
 
+        final PropertyUtils propertyUtils = new PropertyUtils(project);
+        project.getExtensions().add(PROPERTY_UTILS_EXTENTION_NAME, propertyUtils);
 
         project.afterEvaluate(new Action<Project>() {
             public void execute(Project project) {
-                setConventionalDefaults(filterPropertiesConvention);
+                setConventionalDefaults(filterPropertiesConvention, propertyUtils);
             }
         });
 
         configureSourceSetDefaults(project, filterPropertiesConvention);
-
-        project.getExtensions().add(PROPERTY_UTILS_EXTENTION_NAME, new PropertyUtils(project));
 
     }
 
     /**
      * Setter default verdier etter at all annen konfigurasjon er gjort.
      */
-    private void setConventionalDefaults(FilterPropertiesConvention filterPropertiesConvention) {
+    private void setConventionalDefaults(FilterPropertiesConvention filterPropertiesConvention, PropertyUtils propertyUtils) {
         Project project = filterPropertiesConvention.project;
 
         if (filterPropertiesConvention.properties == null) {
-            filterPropertiesConvention.properties = filterPropertiesConvention.projectProperties();
+            filterPropertiesConvention.properties = propertyUtils.projectProperties();
         }
 
     }

@@ -1,6 +1,7 @@
 package no.statkart.sktools.gradle.plugins.filterproperties;
 
 import groovy.lang.Closure;
+import no.statkart.sktools.gradle.plugins.filterproperties.extention.PropertyUtils;
 import org.gradle.api.Project;
 
 import java.util.HashMap;
@@ -55,15 +56,12 @@ public class FilterPropertiesConvention {
 
     /**
      * Convenient way of retrieving project properties in config clause
+     * @deprecated since 1.2
      */
+    @Deprecated
     public Map<String, Object> projectProperties() {
-        HashMap<String, Object> filteredProjectProperties = new HashMap<String, Object>();
-        for (Map.Entry<String, ?> entry : project.getProperties().entrySet()) {
-            if (entry.getValue() instanceof CharSequence) {
-                filteredProjectProperties.put(entry.getKey(), entry.getValue().toString());
-            }
-        }
-        return filteredProjectProperties;
+        logDeprecation("projectProperties()", String.format("project.%s.projectProperties()", FilterPropertiesPlugin.PROPERTY_UTILS_EXTENTION_NAME));
+        return ((PropertyUtils)project.getExtensions().getByName(FilterPropertiesPlugin.PROPERTY_UTILS_EXTENTION_NAME)).projectProperties();
     }
 
     Map<String, Object> getProperties() {
