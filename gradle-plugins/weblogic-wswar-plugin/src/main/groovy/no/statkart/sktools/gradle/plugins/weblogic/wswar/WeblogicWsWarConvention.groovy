@@ -33,6 +33,7 @@ class WeblogicWsWarConvention {
      * @since 1.0
      */
     def weblogicWsWar(Closure closure) {
+        closure.setResolveStrategy(Closure.DELEGATE_FIRST);
         closure.delegate = this
         closure()
     }

@@ -41,13 +41,6 @@ class ProjectHelper {
         task
     }
 
-    /**
-     * Delegates closure to project
-     */
-    def project(Closure closure) {
-        closure.delegate =  project
-        closure()
-    }
 
     ProjectHelper configureProject(Closure closure) {
         project.configure(project, closure);
@@ -69,6 +62,7 @@ class ProjectHelper {
     static ProjectHelper build(Project project, Closure closure) {
         ProjectHelper projectHelper = new ProjectHelper(project)
         if (closure) {
+            closure.setResolveStrategy(Closure.DELEGATE_FIRST);
             closure.setDelegate(project)
             closure()
         }

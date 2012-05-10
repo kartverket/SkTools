@@ -42,6 +42,7 @@ class WebstartConvention implements Serializable {
      * </ul>
      */
     def webstart(Closure closure) {
+        closure.setResolveStrategy(Closure.DELEGATE_FIRST);
         closure.delegate = this
         closure.run()
     }

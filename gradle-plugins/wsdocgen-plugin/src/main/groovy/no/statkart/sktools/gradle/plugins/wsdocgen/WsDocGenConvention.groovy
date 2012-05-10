@@ -40,6 +40,7 @@ class WsDocGenConvention implements Serializable {
      * @since 1.0
      */
     def wsDoc(Closure closure) {
+        closure.setResolveStrategy(Closure.DELEGATE_FIRST);
         closure.delegate = this
         closure()
     }

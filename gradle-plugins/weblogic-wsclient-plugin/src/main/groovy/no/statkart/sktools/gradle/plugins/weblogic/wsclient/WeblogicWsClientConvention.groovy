@@ -35,6 +35,7 @@ class WeblogicWsClientConvention {
      * @since 1.0
      */
     def weblogicWsClient(Closure closure) {
+        closure.setResolveStrategy(Closure.DELEGATE_FIRST);
         closure.delegate = this
         closure()
     }
@@ -66,6 +67,7 @@ class WeblogicWsClientConvention {
      * @since 1.1
      */
     def sourceSet(Closure closure) {
+        closure.setResolveStrategy(Closure.DELEGATE_FIRST);
         closure.delegate = sourceSet
         closure()
     }
@@ -109,6 +111,7 @@ class WebServiceConfig implements Serializable {
     }
 
     protected WebServiceConfig configure(Closure closure) {
+        closure.setResolveStrategy(Closure.DELEGATE_FIRST);
         closure.delegate = this
         closure()
         setDefaults()
@@ -154,6 +157,7 @@ class WebServiceConfig implements Serializable {
      * Legger til en baseWar der {@code dependencyNotation} er på formen beskrevet i {@link org.gradle.api.artifacts.dsl.DependencyHandler}
      */
     public WebServiceConfig baseWar(Closure dependencyNotatonClosure) {
+        dependencyNotatonClosure.setResolveStrategy(Closure.DELEGATE_FIRST);
         dependencyNotatonClosure.delegate = convention.project.getDependencies()
         baseWar(dependencyNotatonClosure())
         return this

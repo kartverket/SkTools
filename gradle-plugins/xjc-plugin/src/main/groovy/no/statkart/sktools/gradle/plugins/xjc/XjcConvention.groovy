@@ -40,6 +40,7 @@ class XjcConvention implements Serializable {
      * Configuration closure for this plugin
      */
     def xjc(Closure closure) {
+        closure.setResolveStrategy(Closure.DELEGATE_FIRST);
         closure.delegate = this
         closure()
     }

@@ -68,6 +68,7 @@ public class DbtoolsConvention {
      * </ul>
      */
     void configureDatabasePlugin(Closure closure) {
+        closure.setResolveStrategy(Closure.DELEGATE_FIRST);
         closure.delegate = this
         closure()
 

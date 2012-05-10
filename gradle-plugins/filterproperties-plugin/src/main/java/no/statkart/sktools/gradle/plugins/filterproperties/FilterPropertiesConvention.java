@@ -34,7 +34,8 @@ public class FilterPropertiesConvention {
      * Konfigurasjon av convention skjer her.
      */
     public Object filterProperties(Closure closure) {
-        closure.setDelegate(this); 
+        closure.setResolveStrategy(Closure.DELEGATE_FIRST);
+        closure.setDelegate(this);
         return closure.call();
     }
 

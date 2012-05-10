@@ -36,6 +36,7 @@ class IdeaExtensionsConvention {
      * Konfigurasjon-closure av plugin.
      */
     def ideaExtensions(Closure closure) {
+        closure.setResolveStrategy(Closure.DELEGATE_FIRST);
         closure.delegate = this
         closure()
     }
