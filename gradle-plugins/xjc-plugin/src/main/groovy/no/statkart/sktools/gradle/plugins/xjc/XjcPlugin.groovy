@@ -78,9 +78,10 @@ class XjcPlugin implements Plugin<Project> {
         //legger genererte java filer til source set
         sourceSet.getJava().srcDir(xjcConvention.targetDir)
 
-        //legger til source slik at de kan bli plukket opp av dokumentajonsverktøy, kildekode distribusjon mm
-        SourceTask xjcTask = project.getTasks().getByName(XjcPlugin.XJC_TASK_NAME)
-        sourceSet.getAllSource().srcDir(xjcTask)
+        //legger til kildekode slik at de kan bli plukket opp av dokumentajonsverktøy, kildekode distribusjon mm
+        xjcConvention.schema.each {
+            if (it.dir) sourceSet.getAllSource().srcDir(it.dir)
+        }
 
         return sourceSet;
     }

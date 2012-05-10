@@ -9,6 +9,7 @@ import no.statkart.sktools.gradle.testutils.builder.XjcProjectBuilder
 import no.statkart.sktools.gradle.testutils.filewriter.XjcTestutilFilewriter
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.plugins.JavaPluginConvention
+import org.gradle.api.tasks.SourceSet
 
 /**
  * Test av {@link XjcPlugin}
@@ -233,8 +234,36 @@ class XjcPluginTest {
 
     }
 
+    /**
+     * SKIF-171
+     * Regresjonsstester feil funnet i MAT-9900 der ideaModule task feiler pga feil oppsett av {@link org.gradle.api.tasks.SourceSet
+     */
+    @Test
+    void testSourceSetAllSourceConfiguration() {
+
+        //forks a new project in a temp folder
+        ProjectHelper projectHelper = XjcProjectBuilder.builder().applyXjcPlugin().build()
+
+        //config
+        projectHelper.configureProject {
+            apply plugin: 'idea'
+
+            xjc {
+                schema {
+                    path 'src/main/xsd'
+                }
+            }
+        }
+
+        projectHelper.initializeProject()
+
+        Project project = projectHelper.project
+        XjcConvention convention = project.getConvention().getPlugins().get(XjcPlugin.CONVENTION_NAME);
 
 
+        SourceSet sourceSet = project.convention.plugins.java.sourceSets.main
+        sourceSet.allSource.srcDirs.contains project.file('src/main/xsd')
+    }
 
 
 }
