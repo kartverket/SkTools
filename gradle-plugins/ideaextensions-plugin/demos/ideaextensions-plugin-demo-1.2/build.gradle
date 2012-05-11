@@ -1,8 +1,13 @@
-group = 'no.statkart.sktools.gradle.plugins.filterproperties-plugin.demos'
+group = 'no.statkart.sktools.gradle.plugins.ideaextensions-plugin.demos'
 
 allprojects {
     defaultTasks 'clean', 'runDemo'
 }
+
+
+//legger simple demo her da idea prosjektet blir generert ifra rota
+apply from:'rootproject.gradle'
+
 
 assert gradle.gradleVersion == '1.0' || gradle.gradleVersion >= '1.0-rc-2'
 
@@ -24,12 +29,11 @@ buildscript {
         //bruker kun lokale filer her da dette er et demo prosjekt...
         mavenLocal()
 
-        mavenRepo name: 'public', url: PUBLIC_REPO
+//        mavenRepo name: 'public', url: PUBLIC_REPO
 
     }
 
     dependencies {
-        classpath "no.statkart.sktools.gradle:filterproperties-plugin:${version}"
         classpath "no.statkart.sktools.gradle:ideaextensions-plugin:${version}"
     }
 

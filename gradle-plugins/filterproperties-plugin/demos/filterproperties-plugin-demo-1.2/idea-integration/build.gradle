@@ -1,0 +1,27 @@
+apply plugin: 'sktools-filterproperties-plugin'
+apply plugin: 'sktools-ideaextensions-plugin'
+apply plugin: 'java'
+
+
+
+
+
+task runDemo {
+    dependsOn 'testFilterResourcesAsSourceFolders'
+}
+
+tasks.clean.dependsOn('cleanIdea')
+
+task testFilterResourcesAsSourceFolders(dependsOn:['ideaModule']) << {
+    file("${project.name}.iml").text.with { fileContents ->
+        [
+                'gen/main/resources',
+                'gen/test/resources',
+        ].each {
+            assert fileContents.contains(it) //forventer at iml fil inneholder filstier
+        }
+
+    }
+
+}
+

@@ -1,9 +1,7 @@
-include ':simple-demo'
-include ':custom-properties'
-include ':build-user-demo'
-include ':idea-integration'
+include ':foldergeneration'
 
-rootProject.name = 'filterproperties-demos'
+
+rootProject.name = 'ideaextentions-demo'
 
 
 

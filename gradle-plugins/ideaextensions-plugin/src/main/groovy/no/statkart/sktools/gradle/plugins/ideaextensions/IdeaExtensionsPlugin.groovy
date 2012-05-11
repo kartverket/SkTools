@@ -6,7 +6,7 @@ import no.statkart.sktools.gradle.plugins.ideaextensions.util.FileUtil
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
-import org.gradle.plugins.ide.idea.IdeaPlugin
+import org.gradle.api.plugins.JavaPluginConvention
 
 /**
  * Modifiserer iws og ipr filer for IntelliJ
@@ -18,6 +18,8 @@ import org.gradle.plugins.ide.idea.IdeaPlugin
  *   <li>Aktiverer Perforce som default.
  * </ul>
  *
+ * Dersom plugin er aktiv for modul/subprosjekt så genereres det opp tomme mapper for alle sourceSets. [SKIF-178]
+ *  - Dette gjør da at {@link org.gradle.api.tasks.SourceSet main og test sourceSet} får tagget alle source katalogene sine i IntelliJ prosjektet, selv om de er tomme.
  *
  * @since 1.0
  * @author Thor Åge Eldby
@@ -34,8 +36,8 @@ class IdeaExtensionsPlugin implements Plugin<Project> {
         IdeaExtensionsConvention convention = new IdeaExtensionsConvention(project)
         project.convention.plugins."${CONVENTION_NAME}" = convention
 
-        project.tasks.idea.doLast {
-            if (project == project.getRootProject()) {
+        if (project.parent == null) { //root
+            project.tasks.idea.doLast {
 
                 FileUtil.modifyXmlFile(project.file("${project.name}.iws")) { xml ->
                     addIgnoreMasksAndPaths(xml, convention)
@@ -45,7 +47,20 @@ class IdeaExtensionsPlugin implements Plugin<Project> {
                     addVcsMappings(xml, convention)
                 }
             }
+
+        } else { //ikke root
+            project.tasks.ideaModule.doFirst {
+                //SKIF-178: oppretter kataloger for alle sourceSet
+                it.project.getConvention().getPlugin(JavaPluginConvention.class).sourceSets.each {
+                    it.getAllSource().srcDirs.each {
+                        println "..creating folder ${project.relativePath(it)}"
+                        project.mkdir(it)
+                    }
+                }
+            }
         }
+
+
     }
 
     /**
