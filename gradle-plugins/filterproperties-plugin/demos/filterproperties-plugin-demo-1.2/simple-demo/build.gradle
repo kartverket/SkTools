@@ -7,7 +7,6 @@ apply plugin: 'java'
 
 task runDemo {
     dependsOn 'testFilterResources'
-    dependsOn 'testClean'
 }
 
 
@@ -17,7 +16,3 @@ task testFilterResources(dependsOn:'filterResources') << {
     file('gen/main/resources/someFile.txt').text.contains("testValue=@testValue@")
 }
 
-task testClean(dependsOn:['testFilterResources', 'clean']) << {
-    println 'todo'
-//    assert !file('gen/src/main/resources').exists()
-}
