@@ -1,0 +1,58 @@
+/******************************************************************************************************************** **
+ * Demonstrasjon av gradle måten å strukturere opp kildekoden på
+ ******************************************************************************************************************** */
+
+apply plugin: 'java'
+
+
+
+
+/******************************************************************************************************************** **
+ * Diverse tasker som tester og demonstrerer implementasjonen
+ ******************************************************************************************************************** */
+
+task demo() {
+    description = 'Kjører en enkel demo for å teste funksjonaliteten'
+    dependsOn 'clean'
+    dependsOn 'assertResources'
+    dependsOn 'assertJavaSource'
+    dependsOn 'printSourceSets'
+}
+
+
+task assertJavaSource(dependsOn:compileJava) << {
+    def sourceSet = project.convention.plugins.java.sourceSets.main
+
+    assert sourceSet.java.srcDirs == files('src/main/java').files
+    assert sourceSet.java.contains(file('src/main/java/dummy.java'))
+
+    assert sourceSet.output.classesDir == file('build/classes/main')
+    assert sourceSet.output.asFileTree.contains(file('build/classes/main/Dummy.class'))
+}
+
+task assertResources(dependsOn:processResources) << {
+    def sourceSet = project.convention.plugins.java.sourceSets.main
+
+    assert sourceSet.resources.srcDirs == files('src/main/resources').files
+    assert sourceSet.resources.contains(file('src/main/resources/main.txt'))
+
+    assert sourceSet.output.resourcesDir == file('build/resources/main')
+    assert sourceSet.output.asFileTree.contains(file('build/resources/main/main.txt'))
+
+}
+
+
+task printSourceSets() << {
+    logger.info "SourceSets defined: "
+    project.convention.plugins.java.sourceSets.each { s ->
+        ['java', 'allJava', 'resources', 'filterResources', 'groovy', 'allGroovy', 'allSource'].each { id ->
+            try {
+                def prefix = "${s.name}.${id}"
+                s."$id".srcDirs.each { println "$prefix <- ".padLeft(prefix.size() + 5, ' ') + project.relativePath(it); prefix = prefix.replaceAll(/./, ' ')  }
+                println()
+            } catch (MissingPropertyException mpe) {
+                assert true //ok her
+            }
+        }
+    }
+}

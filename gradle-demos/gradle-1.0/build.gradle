@@ -1,0 +1,25 @@
+assert gradle.gradleVersion > '1.0-rc'
+
+task runDemos() {
+    description = 'Eksekverer demoer for alle prosjekter som finnes i subkataloger'
+
+    int i = 0
+    doLast {
+        println "${i} demoer eksekvert!"
+    }
+    doFirst {
+        projectDir.listFiles().each {
+            if (!it.name.startsWith('.') && it.isDirectory()) {
+                StartParameter sp = new StartParameter()
+                sp.currentDir = it
+                sp.taskNames = ['demo']
+                sp.projectProperties << gradle.startParameter.projectProperties
+                GradleLauncher.newInstance(sp).run().rethrowFailure();
+
+                i++
+            }
+        }
+    }
+
+
+}

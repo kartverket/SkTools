@@ -1,0 +1,98 @@
+/******************************************************************************************************************** **
+ * Demonstrerer hvordan man kan implementere overstyring av bygge-properties
+ * ala hvordan en er vant med det ifra matrikkelen.
+ *
+ * Projsektet samt underprosjetenes properties blir overstyrt av properties
+ * fra filen 'user.properties' dersom denne finnes.
+ ******************************************************************************************************************** */
+
+
+Properties userProperties = new Properties()
+
+if (file('user.properties').exists()) {
+    file('user.properties').withReader() {
+        userProperties.load(it)
+    }
+    println "userProperties=${userProperties}"
+    println "overloadedProperties=${gradle.startParameter.projectProperties}"
+
+    //gir presedens til properties angitt på kommandolinjen
+    userProperties << gradle.startParameter.projectProperties
+}
+
+
+allprojects {
+    //setter alle user-properties til subprosjekter
+    userProperties.each { key, value ->
+        if (hasProperty(key)) {
+            setProperty(key, value)
+        } else {
+            ext.set(key, value)
+        }
+    }
+}
+
+
+/******************************************************************************************************************** **
+ * Diverse tasker som tester og demonstrerer implementasjonen
+ ******************************************************************************************************************** */
+
+
+task demo() {
+
+    doLast {
+        description = 'Kjører en enkel demo for å teste funksjonaliteten'
+
+        forkGradle(['assertDefaultProperty'])
+        forkGradle(['assertPropertyOverride'], [myProperty:'overridden!'])
+
+        println '\n\nOppretter user.properties ...\n\n'
+        project.file('user.properties').withPrintWriter {
+            it.println 'myProperty=user configured!'
+        }
+
+        forkGradle(['assertUserProperties'])
+        forkGradle(['assertPropertyOverride'], [myProperty:'overridden!'])
+    }
+
+    doFirst {
+        //tidy
+        project.delete('user.properties')
+    }
+}
+
+
+allprojects { project ->
+    //legger til task for testing at user property er tilgjengeliggjort
+    project.task('assertUserProperties') << {
+        println "\tmyProperty=${myProperty}"
+        assert project.myProperty == 'user configured!'
+    }
+
+    project.task('assertDefaultProperty') << {
+        println "\tmyProperty=${myProperty}"
+        assert project.myProperty == 'default value!'
+    }
+
+    project.task('assertPropertyOverride') << {
+        println "\tmyProperty=${myProperty}"
+        assert project.myProperty == 'overridden!'
+    }
+
+}
+
+
+
+/******************************************************************************************************************** **
+ * Hjelpemetode for forking av gradle eksekveringer
+ * Kun relevant for testing...
+ ******************************************************************************************************************** */
+void forkGradle(List tasks, Map props = [:]) {
+    StartParameter sp = gradle.startParameter.newInstance()
+    sp.taskNames = tasks
+    sp.projectProperties = props
+    GradleLauncher.newInstance(sp).run().rethrowFailure();
+}
+
+
+
