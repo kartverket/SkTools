@@ -26,7 +26,29 @@ public class DependencyHelper implements Iterable<Dependency>, Serializable {
         this.dependencyHandler = project.getDependencies();
     }
 
+    public Object library(Object notation) {
+        if (notation instanceof List) {
+            List<Dependency> retur = new ArrayList<Dependency>();
+            for (Object o : (List) notation) {
+                retur.add(doAdd(o, null));
+            }
+            return retur;
+        } else {
+            return doAdd(notation, null);
+        }
+    }
 
+    public Object library(Object notation, Closure configureClosure) {
+        if (notation instanceof List) {
+            List<Dependency> retur = new ArrayList<Dependency>();
+            for (Object o : (List) notation) {
+                retur.add(doAdd(o, configureClosure));
+            }
+            return retur;
+        } else {
+            return doAdd(notation, configureClosure);
+        }
+    }
 
     public Dependency files(Object... paths) {
         return doAdd(project.files(paths), null);
@@ -43,6 +65,7 @@ public class DependencyHelper implements Iterable<Dependency>, Serializable {
     public Dependency module(Object notation) {
         return doAdd(dependencyHandler.module(notation), null);
     }
+
     public Dependency module(Object notation, Closure configureClosure) {
         return doAdd(dependencyHandler.module(notation, configureClosure), null);
     }
