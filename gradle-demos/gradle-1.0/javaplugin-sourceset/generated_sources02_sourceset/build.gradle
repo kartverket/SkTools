@@ -61,7 +61,7 @@ task generateSpecialSource { Task it ->
 
     project.tasks.clean.doLast {
         println "sletter generert kildekode ./gen"
-        delete(file('gen'))
+        project.delete('gen')
     }
 
     project.tasks.compileSpecialJava.dependsOn(it).source 'gen/special/java'

@@ -1,0 +1,13 @@
+//settings per modul
+
+apply plugin: 'idea'
+
+idea.module {
+  // Bruker ulik byggekatelog for Gradle og IDEA
+  inheritOutputDirs = false
+  outputDir = file('build/idea/main')
+  testOutputDir = file('build/idea/test')
+
+  downloadSources = false
+  downloadJavadoc = false
+}

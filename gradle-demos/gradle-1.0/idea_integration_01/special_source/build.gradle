@@ -1,0 +1,134 @@
+/******************************************************************************************************************** **
+ * Demonstrasjon av bruk av ekstra ressurser ala jasper rapportmaler
+ *
+ *
+ ******************************************************************************************************************** */
+
+apply plugin: 'java'
+
+sourceSets {
+
+    jasper {
+// har implementert noe understøttende jasper spesifik kode, ligger her i std java source dir
+//        java.srcDirs = []
+    }
+
+    main {
+
+        //registrerer disse outputene på main slik at disse blir med i jar fil.. merk at builtBy er optional og gjør at tasken blir kalt ved 'idea', 'jar' ol
+        output.dir(jasper.output.resourcesDir, builtBy: jasper.processResourcesTaskName)
+    }
+
+}
+
+
+configurations {
+    myNiftyLibs {
+        description = "Konfigurasjon som inneholder alle kjekke bibliotek vi bruker"
+    }
+
+    jasperCompile {
+        extendsFrom myNiftyLibs //legger til noen libs som runtime dependency
+    }
+
+}
+
+
+
+dependencies {
+    myNiftyLibs 'commons-lang:commons-lang:2.6@jar'
+}
+
+/**
+ * Erstatter resources task for jasper sourceset
+ *
+ * En kan evt benytte configuration til å legge til dependencies for evt bibliotek. Benytt da compileClasspath for sourceset.
+ */
+project.task(sourceSets.jasper.processResourcesTaskName, overwrite:true, type:Copy) {
+    from sourceSets.jasper.resources.srcDirs
+    into sourceSets.jasper.output.resourcesDir
+
+    //eksemplifiserer ved å genererer noen kopi-filer med annet navn
+    rename { "${it}-generatedCopy" }
+
+
+    doLast {
+        println "Example implementation executed!"
+    }
+
+    project.tasks.gen.dependsOn(it)
+}
+
+
+
+
+/******************************************************************************************************************** **
+ * Diverse tasker som tester og demonstrerer implementasjonen
+ ******************************************************************************************************************** */
+
+task demo(dependsOn:'clean') {
+    description = 'Kjører en enkel demo for å teste funksjonaliteten'
+
+    doLast {
+
+        println 'Printer sourceSets definisjon...'
+        forkGradle(['printSourceSets'])
+
+        println 'Tester IntelliJ integrasjon før build...'
+        forkGradle(['cleanIdea'])
+        forkGradle(['ideaModule', 'assertIdeaModule'])
+
+        println 'Tester IntelliJ integrasjon etter build...'
+        forkGradle(['cleanIdea', 'build'])
+        forkGradle(['ideaModule', 'assertIdeaModule'])
+
+    }
+}
+
+
+
+task assertIdeaModule() << {
+
+    file("${project.name}.iml").text.with {
+
+        assert it.contains('<sourceFolder url="file://$MODULE_DIR$/src/main/java')
+        assert it.contains('<sourceFolder url="file://$MODULE_DIR$/src/jasper/java')
+        assert it.contains('<sourceFolder url="file://$MODULE_DIR$/src/test/java')
+
+        assert it.contains('<root url="file://$MODULE_DIR$/build/resources/main')
+
+        assert it.contains('commons-lang-2.6.jar!')  //forventer at denne ligger som runtime avhengighet
+
+    }
+
+}
+
+
+task printSourceSets() << {
+    logger.info "SourceSets defined: "
+    project.convention.plugins.java.sourceSets.each { s ->
+        ['java', 'allJava', 'resources', 'filterResources', 'groovy', 'allGroovy', 'allSource'].each { id ->
+            try {
+                def prefix = "${s.name}.${id}"
+                s."$id".srcDirs.each { println "$prefix <- ".padLeft(prefix.size() + 5, ' ') + project.relativePath(it); prefix = prefix.replaceAll(/./, ' ')  }
+                println()
+            } catch (MissingPropertyException mpe) {
+                assert true //ok her
+            }
+        }
+    }
+}
+
+
+/******************************************************************************************************************** **
+ * Hjelpemetode for forking av gradle eksekveringer
+ * Kun relevant for testing...
+ ******************************************************************************************************************** */
+void forkGradle(List tasks, Map props = [:]) {
+    StartParameter sp = gradle.startParameter.newInstance()
+    sp.taskNames = tasks
+    sp.projectProperties = props
+    GradleLauncher.newInstance(sp).run().rethrowFailure();
+}
+
+

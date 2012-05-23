@@ -30,8 +30,10 @@ sourceSets {
 }
 
 dependencies {
-    compile project.configurations.specialRuntime   //byggeavhengighet i gradle
     compile project(path:project.path, configuration:'specialRuntime')  //compile time avhengighet i gradle
+
+    //fells byggeavhengighet for konfigurasjon i gradle (substituerer dependsOn for alle byggetasks)
+    compile project.configurations.specialRuntime
 }
 
 
@@ -61,10 +63,12 @@ task generateSpecialSource { Task it ->
 
     project.tasks.clean.doLast {
         println "sletter generert kildekode ./gen"
-        delete(file('gen'))
+        project.delete('gen')
     }
 
-    project.tasks.compileSpecialJava.dependsOn(it).source 'gen/special/java'
+    def compileTask = project.tasks.compileSpecialJava
+    compileTask.dependsOn(it)
+    compileTask.source 'gen/special/java'
 }
 
 

@@ -1,0 +1,4 @@
+include ':multiple-source_set'
+include ':multiple-configurations'
+include ':special_source'
+

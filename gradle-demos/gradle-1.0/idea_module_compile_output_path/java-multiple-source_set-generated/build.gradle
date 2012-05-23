@@ -1,0 +1,140 @@
+/******************************************************************************************************************** **
+ * Demonstrasjon av bruk av multiple source sets og generert (filtrert) kildekode
+ *
+ * For IntelliJ så benytter man her gradle sin anbefalte måte å generere ressurser på.
+ *  Se org.gradle.api.tasks.SourceSetOutput.dir(Map<String, Object>, Object)
+ *  - outputkataloger for genererte ressurser blir lagt til classpath i IntelliJ
+ *
+ *
+ *  PS:
+ *  Merk at ved taskene idea og ideaModule så vil det trigge generering av kode. (i dette eksemplet generateOtherGeneratedSource, compileOtherJava og processOtherResources)
+ *  Ved feil så vil da ikke iml for fil modulen, eller etterfølgende moduler, generes.
+ *  En vil dog allikevel få opp et IntelliJ prosjekt.
+ *
+ *  PS2:
+ *  Ved innkobling av kildekode for generert kildekode så virker ikke code completion mm.
+ ******************************************************************************************************************** */
+
+apply plugin: 'java'
+
+
+sourceSets {
+    other {
+        allJava.srcDir 'gen/special/java'
+    }
+
+    main {
+        java.srcDir 'src/main/java2'
+        resources.srcDir 'src/main/resources2'
+
+
+        other.each { sourceSet ->
+            output.dir(sourceSet.output.classesDir, builtBy:sourceSet.compileJavaTaskName)
+            output.dir(sourceSet.output.resourcesDir, builtBy:sourceSet.processResourcesTaskName)
+        }
+
+//       allSource.source other.allSource
+        println "registrered output.dirs: ${project.sourceSets.main.output.dirs.files}"
+
+    }
+
+}
+
+
+//taks generating some sourcecode
+task generateOtherGeneratedSources(){ Task it ->
+    doLast {
+        def generated = project.file("gen/special/java/GeneratedSpecial.java")
+        generated.parentFile.mkdirs()
+        generated.text = 'class GeneratedSpecial { }'
+    }
+
+    project.tasks.clean.doLast {
+        println "deleting generated code ./gen"
+        project.delete('gen')
+    }
+
+    def compileTask = project.tasks.compileOtherJava.dependsOn(it)
+    compileTask.source 'gen/special/java' //delegerer kompilering av generert kode til denne tasken
+
+    project.tasks.gen.dependsOn(compileTask)
+
+}
+
+
+/******************************************************************************************************************** **
+ * Diverse tasker som tester og demonstrerer implementasjonen
+ ******************************************************************************************************************** */
+
+task demo(dependsOn:'clean') {
+    description = 'Kjører en enkel demo for å teste funksjonaliteten'
+
+    doLast {
+
+        println 'Printer sourceSets definisjon...'
+        forkGradle(['printSourceSets'])
+
+        println 'Tester IntelliJ integrasjon før build...'
+        forkGradle(['cleanIdea'])
+        forkGradle(['ideaModule', 'assertIdeaModule'])
+
+        println 'Tester IntelliJ integrasjon etter build...'
+        forkGradle(['cleanIdea', 'build'])
+        forkGradle(['ideaModule', 'assertIdeaModule'])
+
+    }
+}
+
+
+
+task assertIdeaModule() << {
+
+
+    file("${project.name}.iml").text.with {
+
+        assert it.contains('$MODULE_DIR$/src/main/java')
+        assert it.contains('$MODULE_DIR$/src/main/java2')
+        assert it.contains('$MODULE_DIR$/src/main/resources2')
+        assert it.contains('$MODULE_DIR$/src/main/resources')
+        assert it.contains('$MODULE_DIR$/src/test/java')
+
+        assert !it.contains('$MODULE_DIR$/src/other/resources')
+        assert !it.contains('$MODULE_DIR$/src/other/java')
+
+        assert it.contains('$MODULE_DIR$/build/classes/other')
+        assert it.contains('$MODULE_DIR$/build/resources/other')
+
+
+    }
+
+}
+
+
+task printSourceSets() << {
+    logger.info "SourceSets defined: "
+    project.convention.plugins.java.sourceSets.each { s ->
+        ['java', 'allJava', 'resources', 'filterResources', 'groovy', 'allGroovy', 'allSource'].each { id ->
+            try {
+                def prefix = "${s.name}.${id}"
+                s."$id".srcDirs.each { println "$prefix <- ".padLeft(prefix.size() + 5, ' ') + project.relativePath(it); prefix = prefix.replaceAll(/./, ' ')  }
+                println()
+            } catch (MissingPropertyException mpe) {
+                assert true //ok her
+            }
+        }
+    }
+}
+
+
+/******************************************************************************************************************** **
+ * Hjelpemetode for forking av gradle eksekveringer
+ * Kun relevant for testing...
+ ******************************************************************************************************************** */
+void forkGradle(List tasks, Map props = [:]) {
+    StartParameter sp = gradle.startParameter.newInstance()
+    sp.taskNames = tasks
+    sp.projectProperties = props
+    GradleLauncher.newInstance(sp).run().rethrowFailure();
+}
+
+

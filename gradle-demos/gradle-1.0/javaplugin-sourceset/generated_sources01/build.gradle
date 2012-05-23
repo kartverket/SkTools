@@ -58,7 +58,7 @@ task generateSpecialSource {
 
     project.tasks.clean.doLast {
         println "sletter generert kildekode ./gen"
-        delete(file('gen'))
+        project.delete('gen')
     }
 }
 

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Gradle Integration" default="all" basedir="..">
+
+    <target name="all" depends="matrikkel.all">
+        <echoproperties description="debug"/>
+    </target>
+
+    <target name="matrikkel.all" depends="matrikkel.resources, matrikkel.gen"/>
+
+    <target name="matrikkel.gen" description="Holder ressurser ifra Gradle bygg i synch">
+        <exec executable="${GRADLE_HOME}/bin/gradle.bat">
+            <arg line="gen --stacktrace"/>
+        </exec>
+    </target>
+
+    <target name="matrikkel.resources" description="Syncer opp filtrerte ressurser">
+        <exec executable="${GRADLE_HOME}/bin/gradle.bat">
+            <arg line="resources --stacktrace"/>
+        </exec>
+    </target>
+
+
+</project>

@@ -1,0 +1,115 @@
+/******************************************************************************************************************** **
+ * Demonstrasjon av bruk av multiple source sets
+ *
+ * For IntelliJ så blir source sets redusert til main for all statisk kode
+ ******************************************************************************************************************** */
+
+apply plugin: 'java'
+
+
+sourceSets {
+    other {
+    }
+
+    main {
+        java.srcDir 'src/main/java2'
+        resources.srcDir 'src/main/resources2'
+    }
+}
+
+
+//project.tasks.gen.dependsOn('otherClasses') //project.sourceSets.other.classesTaskName
+//project.tasks.gen.dependsOn('processResources', 'processTestResources')
+
+//resuserer alle source sets for idea (NB! Denne metoden ødeligger sourceSettene og må KUN brukes til idea* tasks)
+tasks.ideaModule.doFirst {
+    def mainSourceSet = project.sourceSets.findByName("main")
+    def testSourceSet = project.sourceSets.findByName("test")
+
+    project.sourceSets.findAll{!['main', 'test'].contains(it.name)}.each {
+
+        mainSourceSet?.java?.source it.java
+        mainSourceSet?.allJava?.source it.allJava
+        mainSourceSet?.resources?.source it.resources
+
+        mainSourceSet?.compileClasspath += it.compileClasspath
+        testSourceSet?.compileClasspath += it.compileClasspath
+
+        mainSourceSet?.runtimeClasspath += it.runtimeClasspath
+        testSourceSet?.runtimeClasspath += it.runtimeClasspath
+    }
+
+    //todo: evt sjekk på at andre tasks ikke blir kjørt
+}
+
+
+/******************************************************************************************************************** **
+ * Diverse tasker som tester og demonstrerer implementasjonen
+ ******************************************************************************************************************** */
+
+task demo(dependsOn:'clean') {
+    description = 'Kjører en enkel demo for å teste funksjonaliteten'
+
+    doLast {
+
+        println 'Printer sourceSets definisjon...'
+        forkGradle(['printSourceSets'])
+
+        println 'Tester IntelliJ integrasjon før build...'
+        forkGradle(['cleanIdea'])
+        forkGradle(['ideaModule', 'assertIdeaModule'])
+
+        println 'Tester IntelliJ integrasjon etter build...'
+        forkGradle(['cleanIdea', 'build'])
+        forkGradle(['ideaModule', 'assertIdeaModule'])
+
+    }
+}
+
+
+
+task assertIdeaModule() << {
+
+    file("${project.name}.iml").text.with {
+
+        assert it.contains('$MODULE_DIR$/src/main/java')
+        assert it.contains('$MODULE_DIR$/src/main/java2')
+        assert it.contains('$MODULE_DIR$/src/main/resources2')
+        assert it.contains('$MODULE_DIR$/src/main/resources')
+        assert it.contains('$MODULE_DIR$/src/other/resources')
+        assert it.contains('$MODULE_DIR$/src/other/java')
+        assert it.contains('$MODULE_DIR$/src/test/java')
+
+    }
+
+}
+
+
+task printSourceSets() << {
+    logger.info "SourceSets defined: "
+    project.convention.plugins.java.sourceSets.each { s ->
+        ['java', 'allJava', 'resources', 'filterResources', 'groovy', 'allGroovy', 'allSource'].each { id ->
+            try {
+                def prefix = "${s.name}.${id}"
+                s."$id".srcDirs.each { println "$prefix <- ".padLeft(prefix.size() + 5, ' ') + project.relativePath(it); prefix = prefix.replaceAll(/./, ' ')  }
+                println()
+            } catch (MissingPropertyException mpe) {
+                assert true //ok her
+            }
+        }
+    }
+}
+
+
+/******************************************************************************************************************** **
+ * Hjelpemetode for forking av gradle eksekveringer
+ * Kun relevant for testing...
+ ******************************************************************************************************************** */
+void forkGradle(List tasks, Map props = [:]) {
+    StartParameter sp = gradle.startParameter.newInstance()
+    sp.taskNames = tasks
+    sp.projectProperties = props
+    GradleLauncher.newInstance(sp).run().rethrowFailure();
+}
+
+

@@ -1,0 +1,55 @@
+/******************************************************************************************************************** **
+ * Demonstrasjon av IntelliJ integrasjon i Gradle ved bruk av "module compile output path"
+ *
+ *
+ ******************************************************************************************************************** */
+
+
+allprojects {
+    apply plugin: 'idea'
+
+    idea.module {
+      // Bruker ulik byggekatelog for Gradle og IDEA
+      inheritOutputDirs = false
+      outputDir = file('build/idea/main')
+      testOutputDir = file('build/idea/test')
+
+      downloadSources = false
+      downloadJavadoc = false
+    }
+
+}
+
+
+
+
+
+subprojects {
+
+    task('gen') { task ->
+        description = "Genererer kildekode for alle sourceSets"
+    }
+
+    task('resources', dependsOn:'gen') { task ->
+        description = "Genererer ressurser for alle sourceSets"
+    }
+
+}
+
+
+evaluationDependsOnChildren()   //lar children legge til java plugin etter behov
+
+
+subprojects {
+
+    def resourcesTask = tasks.resources
+    project.convention.plugins.java?.sourceSets?.all {
+        resourcesTask.dependsOn it.processResourcesTaskName
+    }
+
+}
+
+
+task demo() {
+    description = 'Kjører en enkel demo for å teste funksjonaliteten'
+}

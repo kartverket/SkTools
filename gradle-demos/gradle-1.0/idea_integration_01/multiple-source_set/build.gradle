@@ -1,0 +1,97 @@
+/******************************************************************************************************************** **
+ * Demonstrasjon av bruk av multiple source sets
+ *
+ * For IntelliJ så blir all java kildekode markert som source, mens ressurser blir linket inn via library-dependencies
+ ******************************************************************************************************************** */
+
+apply plugin: 'java'
+
+
+sourceSets {
+    other {
+    }
+
+    main {
+        java.srcDir 'src/main/java2'
+        resources.srcDir 'src/main/resources2'
+    }
+}
+
+
+/******************************************************************************************************************** **
+ * Diverse tasker som tester og demonstrerer implementasjonen
+ ******************************************************************************************************************** */
+
+task demo(dependsOn:'clean') {
+    description = 'Kjører en enkel demo for å teste funksjonaliteten'
+
+    doLast {
+
+        println 'Printer sourceSets definisjon...'
+        forkGradle(['printSourceSets'])
+
+        println 'Tester IntelliJ integrasjon før build...'
+        forkGradle(['cleanIdea'])
+        forkGradle(['ideaModule', 'assertIdeaModule'])
+
+        println 'Tester IntelliJ integrasjon etter build...'
+        forkGradle(['cleanIdea', 'build'])
+        forkGradle(['ideaModule', 'assertIdeaModule'])
+
+    }
+}
+
+
+
+task assertIdeaModule() << {
+
+    file("${project.name}.iml").text.with {
+
+        assert it.contains('<sourceFolder url="file://$MODULE_DIR$/src/main/java')
+        assert it.contains('<sourceFolder url="file://$MODULE_DIR$/src/main/java2')
+        assert !it.contains('<sourceFolder url="file://$MODULE_DIR$/src/main/resources2')
+        assert !it.contains('<sourceFolder url="file://$MODULE_DIR$/src/main/resources')
+        assert !it.contains('<sourceFolder url="file://$MODULE_DIR$/src/other/resources')
+        assert it.contains('<sourceFolder url="file://$MODULE_DIR$/src/other/java')
+        assert it.contains('<sourceFolder url="file://$MODULE_DIR$/src/test/java')
+
+        assert it.contains('<root url="file://$MODULE_DIR$/build/resources/main')
+            assert it.contains('<root url="file://$MODULE_DIR$/src/main/resources2')
+            assert it.contains('<root url="file://$MODULE_DIR$/src/main/resources')
+
+        assert it.contains('<root url="file://$MODULE_DIR$/build/resources/other')
+            assert it.contains('<root url="file://$MODULE_DIR$/src/other/resources')
+
+    }
+
+}
+
+
+task printSourceSets() << {
+    logger.info "SourceSets defined: "
+    project.convention.plugins.java.sourceSets.each { s ->
+        ['java', 'allJava', 'resources', 'filterResources', 'groovy', 'allGroovy', 'allSource'].each { id ->
+            try {
+                def prefix = "${s.name}.${id}"
+                s."$id".srcDirs.each { println "$prefix <- ".padLeft(prefix.size() + 5, ' ') + project.relativePath(it); prefix = prefix.replaceAll(/./, ' ')  }
+                println()
+            } catch (MissingPropertyException mpe) {
+                assert true //ok her
+            }
+        }
+    }
+}
+
+
+/******************************************************************************************************************** **
+ * Hjelpemetode for forking av gradle eksekveringer
+ * Kun relevant for testing...
+ ******************************************************************************************************************** */
+void forkGradle(List tasks, Map props = [:]) {
+    StartParameter sp = gradle.startParameter.newInstance()
+    sp.taskNames = tasks
+    sp.projectProperties = props
+    GradleLauncher.newInstance(sp).run().rethrowFailure();
+}
+
+
