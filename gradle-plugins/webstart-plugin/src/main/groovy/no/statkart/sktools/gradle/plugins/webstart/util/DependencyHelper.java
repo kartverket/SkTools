@@ -4,6 +4,7 @@ import groovy.lang.Closure;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
+import org.gradle.util.GUtil;
 
 import java.io.Serializable;
 import java.util.*;
@@ -26,28 +27,43 @@ public class DependencyHelper implements Iterable<Dependency>, Serializable {
         this.dependencyHandler = project.getDependencies();
     }
 
-    public Object library(Object notation) {
-        if (notation instanceof List) {
-            List<Dependency> retur = new ArrayList<Dependency>();
-            for (Object o : (List) notation) {
-                retur.add(doAdd(o, null));
-            }
-            return retur;
-        } else {
-            return doAdd(notation, null);
-        }
+    /**
+     * Legger til dependency via gradle notation. <br />
+     * Enkeltstående notations kan ha en optional Closure for konfigurasjon.
+     *
+     * @since 1.2
+     */
+    public Dependency library(Object notation, Closure configureClosure) {
+        return library(Arrays.asList(notation, configureClosure));
     }
 
-    public Object library(Object notation, Closure configureClosure) {
-        if (notation instanceof List) {
-            List<Dependency> retur = new ArrayList<Dependency>();
-            for (Object o : (List) notation) {
-                retur.add(doAdd(o, configureClosure));
-            }
-            return retur;
-        } else {
-            return doAdd(notation, configureClosure);
+    /**
+     * @since 1.2
+     */
+    public Dependency library(Object... notations) {
+        return library(GUtil.collectionize(notations));
+    }
+
+    /**
+     * Legger til dependencies via gradle notation. <br />
+     * Kun enkeltstående notations kan ha en optional Closure for konfigurasjon.
+     *
+     * Utfører tilsvarende logikk som {@link org.gradle.api.internal.artifacts.dsl.dependencies.DefaultDependencyHandler#methodMissing(String, Object)}
+     *
+     * @since 1.2
+     */
+    public Dependency library(Collection notationArgs) {
+        Object[] normalizedArgs = notationArgs.toArray();
+
+        if (normalizedArgs.length == 2 && normalizedArgs[1] instanceof Closure) {
+            return doAdd(normalizedArgs[0], (Closure) normalizedArgs[1]);
+        } else if (normalizedArgs.length == 1) {
+            return doAdd(normalizedArgs[0], (Closure) null);
         }
+        for (Object notation : normalizedArgs) {
+            doAdd(notation, null);
+        }
+        return null;
     }
 
     public Dependency files(Object... paths) {

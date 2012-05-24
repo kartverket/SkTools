@@ -4,6 +4,7 @@ import no.statkart.sktools.gradle.plugins.webstart.util.DependencyHelper
 import org.apache.commons.lang.builder.EqualsBuilder
 import org.gradle.api.GradleException
 import org.gradle.api.Project
+import org.gradle.api.artifacts.Dependency
 
 /**
  *
@@ -303,6 +304,22 @@ class ResourcesConfiguration implements Serializable {
 
     public DependencyHelper jars(Closure closure) {
         return jarDependencies.configure(closure);
+    }
+
+    /**
+     * @see DependencyHelper#library(Object, Closure)
+     * @since 1.2
+     */
+    public Dependency jars(Object notation, Closure notationConfigClosure) {
+        return jarDependencies.library(notation, notationConfigClosure);
+    }
+
+    /**
+     * @see DependencyHelper#library(Object...)
+     * @since 1.2
+     */
+    public Dependency jars(Object... notations) {
+        return jarDependencies.library(notations);
     }
 
     /**
