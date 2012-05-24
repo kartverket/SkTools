@@ -1,0 +1,32 @@
+apply plugin: 'maven'
+apply plugin: 'groovy'
+
+project.version = '1.2'
+group = 'no.statkart.sktools.gradle'
+
+
+dependencies {
+    //std groovy version defined in root project
+    groovy libraries.groovy
+
+    //gradle api til byggesystemm blir benyttet som std
+    compile gradleApi()
+
+
+    compile project(':gradle-plugins:weblogic-plugin')
+
+    //test
+    testCompile project(':build-utils:test-utils')
+
+}
+
+task sourcesJar(type: Jar, dependsOn:classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+    onlyIf { gradle.taskGraph.hasTask(install) || gradle.taskGraph.hasTask(uploadArchives) } //only when published..
+}
+
+
+artifacts {
+    archives sourcesJar
+}
