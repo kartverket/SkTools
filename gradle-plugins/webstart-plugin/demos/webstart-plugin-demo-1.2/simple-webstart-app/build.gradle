@@ -63,7 +63,7 @@ webstart {
             title 'Demo - passing properties'
             description 'Demonstrates how to pass on properties to the application'
             resources {
-                jars project(path: ':echo-client')
+                jars project(':echo-client')
 
                 runtime {   //means any rt with version 1.6 or greater
                     version '1.6+'
