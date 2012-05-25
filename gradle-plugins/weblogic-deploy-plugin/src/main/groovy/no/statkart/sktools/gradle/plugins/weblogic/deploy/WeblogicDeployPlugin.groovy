@@ -72,6 +72,7 @@ class WeblogicDeployTask extends AbstractWeblogicDeployTask {
 
 class WeblogicUndeployTask extends AbstractWeblogicDeployTask {
     public boolean failOnError = false
+    public boolean graceful = false
 
     @Override
     void taskAction() {
@@ -84,7 +85,7 @@ class WeblogicUndeployTask extends AbstractWeblogicDeployTask {
                 password: weblogicServerConfiguration.password,
                 adminurl: weblogicServerConfiguration.url,
                 targets: weblogicServerConfiguration.targets,
-                graceful: true,
+                graceful: graceful,
                 verbose: true,
                 failonerror: failOnError
         )
