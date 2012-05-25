@@ -88,10 +88,11 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
         war.setDescription("Assembles a war archive containing the main classes.");
         war.setClassifier(WeblogicWsWarPlugin.WEBLOGIC_SOURCE_SET_NAME)
         war.setGroup(BasePlugin.BUILD_GROUP);
-        war.from(sourceSet.getOutput()) {
+        war.from(new File(sourceSet.getOutput().classesDir, "${project.name}.war")) {
             exclude 'WEB-INF/web.xml'
             exclude '**/*.java'
         }
+        war.from(sourceSet.getOutput().resourcesDir)
         war.getMetaInf().from(new Callable() {
             public Object call() throws Exception {
                 return javaConvention.getMetaInf();
