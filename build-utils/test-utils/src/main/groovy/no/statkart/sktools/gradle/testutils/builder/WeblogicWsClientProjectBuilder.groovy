@@ -9,6 +9,7 @@ class WeblogicWsClientProjectBuilder<T extends WeblogicWsClientProjectBuilder> e
 
 
     private boolean setWeblogicClasspath
+    private boolean addToolsJar
 
 
     public static WeblogicWsClientProjectBuilder<WeblogicWsClientProjectBuilder> builder() {
@@ -18,6 +19,7 @@ class WeblogicWsClientProjectBuilder<T extends WeblogicWsClientProjectBuilder> e
 
     public T withWeblogicClasspath() {
         setWeblogicClasspath = true
+        addToolsJar = true     //SKIF-191: weblogic 10.3.5 eller nyerer avhenger av tools.jar på classpath
         closures.add {
             projectHelper.defineWEBLOGIC_HOME()
         }
@@ -40,6 +42,12 @@ class WeblogicWsClientProjectBuilder<T extends WeblogicWsClientProjectBuilder> e
             closures.add {
                 //set dependency
                 dependencies.weblogic projectHelper.weblogicClasspath
+            }
+        }
+        if (addToolsJar) {
+            closures.add {
+                //sets dependency
+                dependencies.weblogic projectHelper.toolsJar
             }
         }
         return this

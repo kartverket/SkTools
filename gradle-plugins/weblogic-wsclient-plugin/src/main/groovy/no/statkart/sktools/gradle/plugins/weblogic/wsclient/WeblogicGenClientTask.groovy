@@ -12,6 +12,7 @@ import org.gradle.api.tasks.WorkResult
 import org.gradle.api.tasks.compile.AbstractCompile
 import org.gradle.api.tasks.compile.CompileOptions
 import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.InputFiles
 
 /**
  * Task for generering av weblogic webservice klient
@@ -111,7 +112,16 @@ class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInter
         this.weblogicClasspath = weblogicClasspath;
     }
 
+    @InputFiles
     public FileCollection getWeblogicClasspath() {
         return weblogicClasspath;
     }
+
+    @InputFiles
+    @Optional
+    FileCollection getClasspath() { //markerer denne som optional
+        return super.getClasspath() ? super.getClasspath() : getProject().files()
+    }
+
+
 }

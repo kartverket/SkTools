@@ -12,13 +12,16 @@ import org.gradle.api.file.FileTree
 import no.statkart.sktools.gradle.plugins.weblogic.compile.DefaultWeblogicCompileSpec
 
 /**
- * Steg for kompilering av JAX-WS stubber for klient basert på wsdl filer.
+ * Steg for kodegenerering av JAX-WS stubber for klienter basert på wsdl filer.
+ *
+ * NB: For Weblogic 10.3.5 biblioteker (eller nyere?) så må tools.jar ligge med på classpath
  *
  * @author Leif Lislegård
  */
 class WeblogicJaxWsClientCompiler implements org.gradle.api.internal.tasks.compile.Compiler<DefaultWeblogicCompileSpec>, Serializable {
     private static final Logger logger = LoggerFactory.getLogger(WeblogicJaxWsClientCompiler.class)
     private static final String WEBLOGIC_CLASSPATH_ID = "weblogic_classpath_id"
+    private static final String WEBLOGIC_WSCLIENT_CLASSPATH_ID = "weblogic_wsclient_classpath_id"
 
     AntBuilder ant;
     Collection<WebServiceConfig> webServices;
@@ -42,6 +45,8 @@ class WeblogicJaxWsClientCompiler implements org.gradle.api.internal.tasks.compi
         }
 
         createAntClassPath(ant, spec.weblogicClasspath, WEBLOGIC_CLASSPATH_ID)
+        createAntClassPath(ant, spec.classpath, WEBLOGIC_WSCLIENT_CLASSPATH_ID)
+
 
         ant.taskdef(name: 'clientgen', classname: 'weblogic.wsee.tools.anttasks.ClientGenTask', classpathref: WEBLOGIC_CLASSPATH_ID)
 
@@ -50,6 +55,7 @@ class WeblogicJaxWsClientCompiler implements org.gradle.api.internal.tasks.compi
                 destdir: spec.destinationDir,
                 type: 'JAXWS',
                 includeantruntime: false,
+                // kodegenerering avhenger kun av providede weblogic klasser. Definerer derfor ingen eksplisitt classpath.
         ]
 
         /**

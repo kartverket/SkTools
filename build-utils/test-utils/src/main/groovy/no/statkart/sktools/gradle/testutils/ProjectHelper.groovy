@@ -181,6 +181,13 @@ class ProjectHelper {
             ]).stopExecutionIfEmpty() //feilsituasjon dersom WEBLOGIC_HOME ikke er riktig satt
     }
 
+    /**
+     * Henter ut tools.jar ifra JDK funnet via env variabler
+     */
+    FileCollection getToolsJar() {
+        return project.files("${System.getenv('JAVA_HOME')}/lib/tools.jar").stopExecutionIfEmpty() //JAVA_HOME ikke satt??
+    }
+
     public File assertFileNotExists(String path, Closure testClosure = null) {
         return assertFile(path, '', testClosure, false);
     }

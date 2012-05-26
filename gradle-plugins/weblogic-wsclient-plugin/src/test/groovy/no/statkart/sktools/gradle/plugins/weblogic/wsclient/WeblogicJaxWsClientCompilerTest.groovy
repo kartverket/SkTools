@@ -64,7 +64,7 @@ class WeblogicJaxWsClientCompilerTest {
 
         }
         DefaultWeblogicCompileSpec compileSpec = new DefaultWeblogicCompileSpec()
-        compileSpec.setWeblogicClasspath(wsWarProjectHelper.project.configurations.getByName('weblogic'))
+        compileSpec.setWeblogicClasspath(rootProjectHelper.weblogicClasspath + rootProjectHelper.toolsJar)
         compileSpec.setDestinationDir(rootProject.buildDir)
         compileSpec.source = rootProject.files('somedir')
 
@@ -123,7 +123,7 @@ class WeblogicJaxWsClientCompilerTest {
         }
 
         DefaultWeblogicCompileSpec compileSpec = new DefaultWeblogicCompileSpec()
-        compileSpec.setWeblogicClasspath(wsWarProjectHelper.project.configurations.getByName('weblogic'))
+        compileSpec.setWeblogicClasspath(rootProjectHelper.weblogicClasspath + rootProjectHelper.toolsJar)
         compileSpec.setDestinationDir(rootProject.buildDir)
         compileSpec.source = schemaFiles
 

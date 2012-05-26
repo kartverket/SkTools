@@ -199,11 +199,7 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
         compileTask.setGroup(BasePlugin.BUILD_GROUP);
 
         ConventionMapping conventionMapping = compileTask.getConventionMapping();
-        conventionMapping.map("classpath", new Callable() {
-            public Object call() {
-                return sourceSet.getCompileClasspath();
-            }
-        });
+        //setter ikke classpath da denne ikke trengs
         conventionMapping.map("destinationDir", new Callable() {
             public Object call() {
                 return wsClientConvention.getGenDir()

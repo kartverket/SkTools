@@ -46,8 +46,8 @@ class WeblogicWsWarProjectBuilder<T extends WeblogicWsWarProjectBuilder> extends
         }
         if (addToolsJar) {
             closures.add {
-                //set dependency
-                dependencies.weblogicCompile files("${System.getenv('JAVA_HOME')}/lib/tools.jar").stopExecutionIfEmpty() //JAVA_HOME ikke satt??
+                //sets dependency
+                dependencies.weblogic projectHelper.toolsJar
             }
         }
         return this
