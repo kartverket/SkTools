@@ -101,7 +101,7 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
 
         ArchivePublishArtifact artifact = new ArchivePublishArtifact(war)
         project.getExtensions().getByType(DefaultArtifactPublicationSet.class).addCandidate(artifact);
-        project.getConfigurations().getByName(WeblogicBasePlugin.WEBLOGIC_CONFIGURATION_NAME).getArtifacts().add(artifact);
+        project.getArtifacts().add(WeblogicBasePlugin.WEBLOGIC_CONFIGURATION_NAME, artifact);
 
         return war;
     }

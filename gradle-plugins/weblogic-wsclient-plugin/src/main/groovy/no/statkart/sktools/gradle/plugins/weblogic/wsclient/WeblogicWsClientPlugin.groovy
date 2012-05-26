@@ -180,7 +180,6 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
 
         ArchivePublishArtifact artifact = new ArchivePublishArtifact(jar);
         project.getExtensions().getByType(DefaultArtifactPublicationSet.class).addCandidate(artifact);
-        project.getConfigurations().getByName(WeblogicBasePlugin.WEBLOGIC_CONFIGURATION_NAME).getArtifacts().add(artifact);
         project.getArtifacts().add(WeblogicBasePlugin.WEBLOGIC_CONFIGURATION_NAME, artifact);
         return jar;
     }

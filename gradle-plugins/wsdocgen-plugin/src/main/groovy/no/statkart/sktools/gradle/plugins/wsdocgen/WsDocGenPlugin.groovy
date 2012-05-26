@@ -173,7 +173,7 @@ class WsDocGenPlugin implements Plugin<Project> {
         }
 
         ArchivePublishArtifact artifact = new ArchivePublishArtifact(zip)
-        project.getConfigurations().getByName(WsDocGenPlugin.CONFIGURATION_NAME).getArtifacts().add(artifact);
+        project.getArtifacts().add(WsDocGenPlugin.CONFIGURATION_NAME, artifact);
 
     }
 
