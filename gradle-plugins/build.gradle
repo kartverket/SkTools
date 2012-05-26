@@ -17,7 +17,6 @@ dependencies {
 
 
 tasks.test.dependsOn('testDemos')
-tasks.clean.dependsOn('cleanDemos')
 
 //closure som collecter alle demo-prosjekter som evt måtte finnes
 groovy.lang.Closure findDemoDirs = { project ->
@@ -29,7 +28,7 @@ groovy.lang.Closure findDemoDirs = { project ->
 }
 
 //task som eksekverer alle demo-prosjekter som evt måtte finnes
-task('testDemos') {
+task('testDemos', dependsOn:'cleanDemos') {
 
 
     //kjøring av tester før kjøring av demos
