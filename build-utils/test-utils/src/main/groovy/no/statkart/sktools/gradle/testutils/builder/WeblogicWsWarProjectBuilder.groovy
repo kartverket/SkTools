@@ -41,7 +41,7 @@ class WeblogicWsWarProjectBuilder<T extends WeblogicWsWarProjectBuilder> extends
         if (setWeblogicClasspath) {
             closures.add {
                 //set dependency
-                dependencies.weblogicProvided projectHelper.weblogicClasspath
+                dependencies.weblogic projectHelper.weblogicClasspath
             }
         }
         if (addToolsJar) {
