@@ -39,4 +39,6 @@ if  not "%GROOVY_HOME%"=="" set PATH=%PATH%;%GROOVY_HOME%\bin
 
 @REM echo PATH=%PATH%
 
+@gradle --version
+
 :exit
