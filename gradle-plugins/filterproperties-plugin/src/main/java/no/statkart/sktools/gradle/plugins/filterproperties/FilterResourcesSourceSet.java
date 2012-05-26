@@ -31,19 +31,6 @@ public interface FilterResourcesSourceSet {
     FilterResourcesSourceSet filterResources(Closure configureClosure);
 
 
-    /**
-     * Configures the path for filtered resources output.
-     *
-     * @since 1.2 - SKIF-173
-     * @return this
-     */
-    FilterResourcesSourceSet filterResourcesOutput(Object path);
-
-    /**
-     * @since 1.2 - SKIF-173
-     * @return output dir for filtered resources
-     */
-    File getFilterResourcesOutputDir();
-
     String getFilterResourcesTaskName();
+
 }

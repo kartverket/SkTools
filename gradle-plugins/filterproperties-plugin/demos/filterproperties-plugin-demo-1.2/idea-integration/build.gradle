@@ -11,12 +11,16 @@ task runDemo {
 }
 
 tasks.clean.dependsOn('cleanIdea')
+tasks.clean.doLast {
+    project.delete('gen')
+    project.delete('src')
+}
 
 task testFilterResourcesAsSourceFolders(dependsOn:['ideaModule']) << {
     file("${project.name}.iml").text.with { fileContents ->
         [
-                'gen/main/resources',
-                'gen/test/resources',
+                '$MODULE_DIR$/gen/main/resources',
+                '$MODULE_DIR$/gen/test/resources',
         ].each {
             assert fileContents.contains(it) //forventer at iml fil inneholder filstier
         }

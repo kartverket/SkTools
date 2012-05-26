@@ -56,12 +56,5 @@ public class DefaultFilterResourcesSourceSet implements FilterResourcesSourceSet
         return name.equals(SourceSet.MAIN_SOURCE_SET_NAME) ? "" : GUtil.toCamelCase(name);
     }
 
-    public FilterResourcesSourceSet filterResourcesOutput(Object path) {
-        this.outputPath = path;
-        return this;
-    }
 
-    public File getFilterResourcesOutputDir() {
-        return fileResolver.resolve(outputPath);
-    }
 }

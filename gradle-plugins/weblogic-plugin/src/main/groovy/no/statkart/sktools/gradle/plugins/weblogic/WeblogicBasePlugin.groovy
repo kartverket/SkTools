@@ -27,7 +27,8 @@ class WeblogicBasePlugin implements Plugin<ProjectInternal> {
     }
 
     private Configuration createConfiguration(ProjectInternal project) {
-        project.getConfigurations().add(WEBLOGIC_CONFIGURATION_NAME).setVisible(false).setTransitive(false).setDescription("The weblogic libraries to be used for this project.")
+//        project.getConfigurations().add(WEBLOGIC_CONFIGURATION_NAME).setVisible(false).setTransitive(false).setDescription("The weblogic libraries to be used for this project.")
+        project.getConfigurations().add(WEBLOGIC_CONFIGURATION_NAME).setVisible(true).setTransitive(true).setDescription("The weblogic libraries to be used for the weblogic artifacts.")
     }
 
     private void configureCompileDefaults(final Project project) {

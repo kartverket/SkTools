@@ -10,6 +10,7 @@ import no.statkart.sktools.gradle.testutils.ProjectHelper
 import no.statkart.sktools.gradle.testutils.filewriter.FilterPropertiesTestutilFilewriter
 import org.gradle.api.plugins.BasePlugin
 import org.gradle.api.plugins.JavaPlugin
+import org.gradle.api.tasks.SourceSet
 
 /**
  * @author Leif Lislegård
@@ -152,10 +153,10 @@ class FilterPropertiesPluginTest {
         projectHelper.initializeProject()
 
         projectHelper.executeTask("processResources")
-        projectHelper.assertTaskExecutedNotSkipped("processResources")
+//        projectHelper.assertTaskExecutedNotSkipped("processResources")
         projectHelper.assertTaskExecutedNotSkipped(FilterPropertiesPlugin.FILTER_MAIN_RESOURCES_TASK_NAME)
 
-        projectHelper.assertFileExists("build/resources/main/simpleResource1.txt") { File file ->
+        projectHelper.assertFileExists("gen/main/resources/simpleResource1.txt") { File file ->
             assert file.text.contains("myProperty1=testValue")
         }
 
@@ -205,13 +206,13 @@ class FilterPropertiesPluginTest {
                     filterResources {
                        srcDir 'src/special/main'
                     }
-                    filterResourcesOutput 'gen/special/main'
+                    output.filterResourcesOutput 'gen/special/main'
                 }
                 test {
                     filterResources {
                        srcDir 'src/special/test'
                     }
-                    filterResourcesOutput 'gen/special/test'
+                    output.filterResourcesOutput 'gen/special/test'
                 }
             }
         }
@@ -255,13 +256,14 @@ class FilterPropertiesPluginTest {
                     filterResources {
                        srcDir 'src/main/java' //ressursfiler finnes sammed med kildekoden
                     }
-                    filterResourcesOutput 'gen/main/resources'
+                    output.filterResourcesOutput 'gen/main/resources'
                 }
                 test {
                     filterResources {
-                       srcDir 'src/test/resources'  //kun et utvalg av test resources skal filtreres
+                       srcDir 'src/test/resources'
+                       include '*.txt' //kun et utvalg av test resources skal filtreres, resten skal resources håndtere
                     }
-                    filterResourcesOutput 'gen/test/resources'
+                    output.filterResourcesOutput 'gen/test/resources'
                 }
             }
         }
@@ -345,4 +347,63 @@ class FilterPropertiesPluginTest {
         projectHelper.assertFileNotExists("build/resources/test/file2.doc")
 
     }
+
+
+   /**
+     * SKIF-173
+     *
+     */
+    @Test
+    void testClasspathForSourceSet() {
+        ProjectHelper projectHelper = FilterPropertiesProjectBuilder.builder().applyJavaPlugin().applyFilterPropertiesPlugin().build()
+
+        projectHelper.configureProject {
+            sourceSets {
+                coolCode {
+                    filterResources.srcDirs = ['src/code/unfiltered', 'src/easter/eggs']
+                    output.filterResourcesOutput 'build/gen/so/cool'
+                }
+            }
+        }
+
+        projectHelper.project.file('src/easter/eggs').mkdirs()
+        projectHelper.project.file('src/easter/eggs/resource1.txt').createNewFile()
+
+        projectHelper.project.file('src/code/unfiltered').mkdirs()
+        projectHelper.project.file('src/code/unfiltered/resource2.txt').createNewFile()
+
+        //eksekverer
+        projectHelper.initializeProject()
+
+        Project project = projectHelper.project
+
+        //tester main sourceset
+        ((SourceSet) project.sourceSets.main).with {
+            assert output.contains(output.classesDir)
+            assert output.contains(output.resourcesDir)
+            assert output.contains(output.filterResourcesOutputDir)
+
+            assert runtimeClasspath.contains(output.classesDir)
+            assert runtimeClasspath.contains(output.resourcesDir)
+            assert runtimeClasspath.contains(output.filterResourcesOutputDir)
+        }
+
+        //tester coolCode sourceset
+        ((SourceSet) project.sourceSets.coolCode).with {
+            assert output.contains(output.classesDir)
+            assert output.contains(output.resourcesDir)
+            assert output.contains(output.filterResourcesOutputDir)
+
+            assert runtimeClasspath.contains(output.classesDir)
+            assert runtimeClasspath.contains(output.resourcesDir)
+            assert runtimeClasspath.contains(output.filterResourcesOutputDir)
+        }
+
+
+        projectHelper.executeTask(projectHelper.project.sourceSets.coolCode.filterResourcesTaskName)
+
+        projectHelper.assertFileExists('build/gen/so/cool/resource1.txt', 'Forventer at ressursfil er generert')
+        projectHelper.assertFileExists('build/gen/so/cool/resource2.txt', 'Forventer at ressursfil er generert')
+    }
+
 }

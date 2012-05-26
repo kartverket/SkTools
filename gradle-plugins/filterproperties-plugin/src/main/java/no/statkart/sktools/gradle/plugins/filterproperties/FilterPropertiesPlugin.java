@@ -88,8 +88,13 @@ public class FilterPropertiesPlugin implements Plugin<ProjectInternal> {
             public void execute(final SourceSet sourceSet) {
                 //oppretter source set-utvidelse for filtrerte ressurser
                 final DefaultFilterResourcesSourceSet filterResourcesSourceSet = new DefaultFilterResourcesSourceSet(sourceSet.getName(), project.getFileResolver());
-                //hekter inn utvidelse på source settet
-                ((HasConvention) sourceSet).getConvention().getPlugins().put("filterResources", filterResourcesSourceSet);    // SKIF-173
+                final DefaultFilterResourcesSourceSetOutput filterResourcesSourceSetOutput = new DefaultFilterResourcesSourceSetOutput(sourceSet.getName(), project.getFileResolver(), project.getTasks());
+
+                //hekter inn utvidelser på source settet
+                ((HasConvention) sourceSet).getConvention().getPlugins().put(CONVENTION_NAME, filterResourcesSourceSet); // SKIF-173
+                ((HasConvention) sourceSet.getOutput()).getConvention().getPlugins().put(CONVENTION_NAME, filterResourcesSourceSetOutput); // SKIF-173
+
+                sourceSet.getOutput().dir(Collections.singletonMap("builtBy", (Object) filterResourcesSourceSet.getFilterResourcesTaskName()), filterResourcesSourceSetOutput);
 
                 filterResourcesSourceSet.getFilterResources().srcDir(String.format("src/%s/filterResources", sourceSet.getName()));
 
@@ -101,14 +106,6 @@ public class FilterPropertiesPlugin implements Plugin<ProjectInternal> {
                 });
 
 
-                //legger filtrert output til resources source set - verdien er lazy, dvs at den blir hentet runtime hver gang en beregner filer for resources sourcesett.
-                // Med andre ord så tillater dette at man har byttet ut tasken med noe annet i mellomtiden...
-                sourceSet.getResources().srcDir(new Callable() {
-                    public Object call() throws Exception {
-                        return filterResourcesSourceSet.getFilterResourcesOutputDir();
-                    }
-                });
-
                 final String filterResourcesTaskName = filterResourcesSourceSet.getFilterResourcesTaskName();
 
                 //hekter inn task for filtering
@@ -117,8 +114,8 @@ public class FilterPropertiesPlugin implements Plugin<ProjectInternal> {
                 //legger til clean
                 project.getTasks().getByName(BasePlugin.CLEAN_TASK_NAME).doFirst(new Action<Task>() {
                     public void execute(Task cleanTask) {
-                        cleanTask.getLogger().info("Deleting directory " + filterResourcesSourceSet.outputPath);
-                        cleanTask.getProject().delete(filterResourcesSourceSet.getFilterResourcesOutputDir());
+                        cleanTask.getLogger().info("Deleting directory " + filterResourcesSourceSetOutput.getFilterResourcesOutputDir());
+                        cleanTask.getProject().delete(filterResourcesSourceSetOutput.getFilterResourcesOutputDir());
                     }
                 });
 
@@ -134,7 +131,7 @@ public class FilterPropertiesPlugin implements Plugin<ProjectInternal> {
                 });
                 filterResourcesTask.into(new Callable<Object>() {
                     public Object call() throws Exception {
-                        return filterResourcesSourceSet.getFilterResourcesOutputDir();
+                        return filterResourcesSourceSetOutput.getFilterResourcesOutputDir();
                     }
                 });
 
@@ -142,8 +139,8 @@ public class FilterPropertiesPlugin implements Plugin<ProjectInternal> {
                 project.afterEvaluate(new Action<Object>() {
                     public void execute(Object o) {
                         //default verdier for filterResoruces source set
-                        if (filterResourcesSourceSet.outputPath == null) {
-                            filterResourcesSourceSet.filterResourcesOutput(String.format("gen/%s/resources", filterResourcesSourceSet.name));
+                        if (filterResourcesSourceSetOutput.getFilterResourcesOutputDir() == null) {
+                            filterResourcesSourceSetOutput.filterResourcesOutput(String.format("gen/%s/resources", sourceSet.getName()));
                         }
 
                         //registrerre properties til task
