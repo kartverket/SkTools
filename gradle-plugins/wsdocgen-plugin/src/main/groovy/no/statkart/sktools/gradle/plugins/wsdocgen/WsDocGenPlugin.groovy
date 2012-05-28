@@ -134,7 +134,7 @@ class WsDocGenPlugin implements Plugin<Project> {
             });
             map("classpath", new Callable() {
                 public Object call() {
-                    return new UnionFileCollection(findPluginClasspath(project), project.getConfigurations().getByName(WsDocGenPlugin.CONFIGURATION_NAME)).getAsFileTree();
+                    return new UnionFileCollection(project.getConfigurations().getByName(WsDocGenPlugin.CONFIGURATION_NAME), findPluginClasspath(project)).getAsFileTree();
                 }
             });
         }
