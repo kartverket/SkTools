@@ -148,17 +148,30 @@ class WsDocGenPlugin implements Plugin<Project> {
     }
 
     private static FileCollection findPluginClasspath(final Project project) {
-        FileCollection returnedFileCollection = project.getBuildscript().getConfigurations().getByName(ScriptHandler.CLASSPATH_CONFIGURATION);
 
-        [project, project.getRootProject()].each {
+        Closure<Boolean> pluginDependencyMatcher = {Dependency dependency -> dependency.getGroup() == 'no.statkart.sktools.gradle' && dependency.getName() == 'wsdocgen-plugin'}
+        Closure<Boolean> samlepomDependencyMatcher = {Dependency dependency -> dependency.getGroup() == 'no.statkart.sktools.gradle' && dependency.getName() == 'gradle-plugins'}
+
+        List<FileCollection> candidateFileCollections = [project, project.getRootProject()].collect {
             Configuration buildConfiguration = it.getBuildscript().getConfigurations().getByName(ScriptHandler.CLASSPATH_CONFIGURATION);
 
-            Dependency pluginDependency = buildConfiguration.dependencies.find {Dependency dependency -> dependency.getGroup() == 'no.statkart.sktools.gradle' && dependency.getName() == 'wsdocgen-plugin'};
-            if  (pluginDependency != null) {
-                returnedFileCollection = new SimpleFileCollection(buildConfiguration.files(pluginDependency));
+            Dependency pluginDependency = buildConfiguration.dependencies.find (pluginDependencyMatcher);
+            if (!pluginDependency.is(null)) {
+                return buildConfiguration.fileCollection(pluginDependency);
+            } else {
+                //forsøker å finne 'samlepom' [SKIF-154]
+                Dependency samlepomDependency = buildConfiguration.dependencies.find (samlepomDependencyMatcher);
+                if (!samlepomDependency.is(null)) {
+                    return buildConfiguration.fileCollection(samlepomDependency);
+                }
             }
+            return [];
         }
-        return returnedFileCollection;
+
+        FileCollection candidate = candidateFileCollections.find { !it.isEmpty() }
+        if (candidate == null) candidate = project.files(); //ok under eksekvering av test
+
+        return candidate;
     }
 
 

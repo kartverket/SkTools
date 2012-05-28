@@ -32,7 +32,13 @@ buildscript {
 
     //innkobling av plugin jar filer for gradle byggesystem
     dependencies {
-        classpath "no.statkart.sktools.gradle:xjc-plugin:${version}"
+        if (!Boolean.valueOf(gradle.startParameter.systemPropertiesArgs.containsKey('samlepom'))) {   //dersom ikke "-Dsamplepom" parameter anngitt
+            classpath "no.statkart.sktools.gradle:xjc-plugin:${version}"
+        } else {
+            classpath "no.statkart.sktools.gradle:gradle-plugins:${version}"    //SKIF-154
+        }
     }
+
+//    println "Using artifacts \n\t" + configurations.classpath.files.join("\n\t")
 
 }
