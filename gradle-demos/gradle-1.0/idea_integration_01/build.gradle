@@ -7,14 +7,12 @@
 project.ext.set('PUBLIC_REPO', project.properties.get('PUBLIC_REPO', 'http://skrivap92.statkart.no:8001/nexus/content/groups/public/'))
 
 
-allprojects { p ->
-    apply from: rootProject.file('intellij/ideaModule.gradle'), to: p
-}
-
 apply from: rootProject.file('intellij/ideaProject.gradle')
 apply from: rootProject.file('intellij/ideaWorkspace.gradle')
 
 subprojects { p ->
+
+    project.ext.set('isIdeaModule', project.subprojects.size() == 0)
 
     task('gen') { task ->
         description = "Genererer kildekode for alle sourceSets"
@@ -23,8 +21,6 @@ subprojects { p ->
     task('resources', dependsOn:'gen') { task ->
         description = "Genererer ressurser for alle sourceSets"
     }
-
-    apply from: rootProject.file('intellij/ideaIntegration.gradle'), to: p
 
     repositories {
         mavenRepo name: 'public', url: "${rootProject.PUBLIC_REPO}"
@@ -36,6 +32,9 @@ evaluationDependsOnChildren()   //lar children legge til java plugin etter behov
 
 
 subprojects { Project subProject ->
+
+    apply from: rootProject.file('intellij/ideaModule.gradle'), to: p
+    apply from: rootProject.file('intellij/ideaIntegration.gradle'), to: subProject
 
     def resourcesTask = subProject.tasks.resources
     subProject.convention.plugins.java?.sourceSets?.all {
