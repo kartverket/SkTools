@@ -2,7 +2,7 @@ import org.gradle.plugins.ide.idea.model.IdeaModule;
 
 /**
  * Logikk for hvordan vi eksponerer ting i idea-prosjektet. 
- * Da IntelliJ (per 2010) ikke har mulighet til å holde flere konfigurasjoner/sourcesets per modul så må vi 
+ * Da IntelliJ (per versjon 11.1) ikke har mulighet til å holde flere konfigurasjoner/sourcesets per modul så må vi
  * redusere disse til kun ett i InteliJ.
  */
 
@@ -26,7 +26,7 @@ tasks.ideaModule.doFirst {
     def ekstraCompileJars = [] as HashSet
     def ekstraRuntimeJars = [] as HashSet
 
-    project.sourceSets.findAll {!['main', 'test'].contains(it.name)}.each {
+    project.sourceSets.findAll {!['test'].contains(it.name)}.each {
         wellKnownOutputdirs += it.output.classesDir
 
         ideaModule.sourceDirs += it.java.srcDirs
@@ -34,30 +34,33 @@ tasks.ideaModule.doFirst {
         ideaModule.scopes.RUNTIME.minus += project.configurations[it.compileConfigurationName]
         ideaModule.scopes.RUNTIME.plus += project.configurations[it.runtimeConfigurationName]
 
-        //putter på filer som evt ligger på *classpath men ikke dekkes av configurations
-        //PS: ideaModule.singleEntryLibraries er av en ukjent grunn uggen (lar seg ikke legge til compile scope) - benytter derfor ekstra konfigurasjoner
-
-        def providedJars = ideaModule.scopes.PROVIDED.plus.collectMany {it.files} - ideaModule.scopes.PROVIDED.minus.collectMany {it.files} + ideaModule.singleEntryLibraries.PROVIDED?.files
-        def compileJars = ideaModule.scopes.COMPILE.plus.collectMany {it.files} - ideaModule.scopes.COMPILE.minus.collectMany {it.files} - ideaModule.singleEntryLibraries.COMPILE?.files - providedJars
-        def runtimeJars = ideaModule.scopes.RUNTIME.plus.collectMany {it.files} - ideaModule.scopes.RUNTIME.minus.collectMany {it.files} - ideaModule.singleEntryLibraries.RUNTIME?.files - providedJars
-
-        it.compileClasspath.files.each {
-            if (!compileJars.contains(it)) ekstraCompileJars << it
-        }
-
-        it.runtimeClasspath.files.each {
-            if (!runtimeJars.contains(it)) ekstraRuntimeJars << it
-        }
+        ekstraCompileJars += it.compileClasspath.files
+        ekstraRuntimeJars += it.runtimeClasspath.files
     }
 
-    ekstraCompileJars -= wellKnownOutputdirs //fjerner wellKnownOutputdirs da intellij kompilerer kildekoden for disse
-    ekstraCompileJars -= project.sourceSets.collectMany { [it.output.classesDir, it.output.resourcesDir] + it.output.dirs.files} //fjerner alle outputkataloger for sourcesets da disse blir hektet inn via 'library' (se under)
-    ekstraRuntimeJars -= wellKnownOutputdirs
+    //putter på filer som evt ligger på *classpath men ikke dekkes av configurations
+    //PS: ideaModule.singleEntryLibraries er av en ukjent grunn uggen (lar seg ikke legge til compile scope) - benytter derfor ekstra konfigurasjoner
+
+    def providedJars = ideaModule.scopes.PROVIDED.plus.collectMany {it.files} - ideaModule.scopes.PROVIDED.minus.collectMany {it.files} + ideaModule.singleEntryLibraries.PROVIDED?.files
+    def compileJars = ideaModule.scopes.COMPILE.plus.collectMany {it.files} - ideaModule.scopes.COMPILE.minus.collectMany {it.files} - ideaModule.singleEntryLibraries.COMPILE?.files - providedJars
+    def runtimeJars = ideaModule.scopes.RUNTIME.plus.collectMany {it.files} - ideaModule.scopes.RUNTIME.minus.collectMany {it.files} - ideaModule.singleEntryLibraries.RUNTIME?.files - providedJars
+
+
+    //fjerner wellKnownOutputdirs da intellij alerede kompilerer kildekoden for disse
+    ekstraCompileJars = ekstraCompileJars.findAll { !wellKnownOutputdirs.contains(it) && !compileJars.contains(it) && !providedJars.contains(it)}
+    ekstraRuntimeJars = ekstraRuntimeJars.findAll { !wellKnownOutputdirs.contains(it) && !compileJars.contains(it) && !providedJars.contains(it) && !runtimeJars.contains(it)}
+
+    ekstraRuntimeJars -= ekstraCompileJars
+    //fjerner alle outputkataloger for sourcesets da disse blir hektet inn via 'library' (se under)
+    ekstraCompileJars -= project.sourceSets.collectMany { [it.output.classesDir, it.output.resourcesDir] + it.output.dirs.files}
     ekstraRuntimeJars -= project.sourceSets.collectMany { [it.output.classesDir, it.output.resourcesDir] + it.output.dirs.files}
 
-
+    //oppretter ekstra konfigurasjons objekter for våre ekstra classpather
     def extraCompileConfiguration = project.configurations.detachedConfiguration(project.dependencies.create(project.files(ekstraCompileJars)))
     def extraRuntimeConfiguration = project.configurations.detachedConfiguration(project.dependencies.create(project.files(ekstraRuntimeJars)))
+
+    project.logger.info "adding jars to idea classpath COMPILE \n\t${extraCompileConfiguration.files.join('\n\t')}"
+    project.logger.info "adding jars to idea classpath RUNTIME \n\t${extraRuntimeConfiguration.files.join('\n\t')}"
 
     ideaModule.scopes.COMPILE.plus += extraCompileConfiguration
     ideaModule.scopes.RUNTIME.minus += extraCompileConfiguration
@@ -73,6 +76,18 @@ tasks.ideaModule.doFirst {
             def rootNode = provider.asNode()
 
             def moduleManager = rootNode.component[0]
+
+            //tar vare på orginal rekkefølge for så å hekte disse inn igjen i ønsket rekkefølge
+            def previousOrderEntries = moduleManager.orderEntry
+            previousOrderEntries.each { moduleManager.remove it } //hekter ut noder
+
+            while (!previousOrderEntries.isEmpty()) {
+                def node = previousOrderEntries[0];
+                if(node.@type == 'sourceFolder' && node.@forTests == 'false') { break; }
+                previousOrderEntries.remove(node);
+                moduleManager.append(node); //hekter inn noder som skal først
+            }
+
 
             //Legger til classes og sources for hvert sourceset. Oppretter et nytt 'library' for hvert sourceset.
             project.sourceSets.all { sourceSet ->
@@ -144,6 +159,11 @@ tasks.ideaModule.doFirst {
                     assert true //ok her
                 }
 
+            }
+
+            //hekter inn resten av pre-genererte node
+            previousOrderEntries.each {
+                moduleManager.append(it);
             }
 
 

@@ -1,7 +1,7 @@
 /******************************************************************************************************************** **
  * Demonstrasjon av bruk av ekstra ressurser ala jasper rapportmaler
  *
- *
+ * Merk: Vanligvis så vil man deklarere en configuration for dependencies brukt for rapporter.
  ******************************************************************************************************************** */
 
 apply plugin: 'java'
@@ -9,14 +9,14 @@ apply plugin: 'java'
 sourceSets {
 
     jasper {
-// har implementert noe understøttende jasper spesifik kode, ligger her i std java source dir
-//        java.srcDirs = []
+        //har implementert noe understøttende jasper spesifik kode, ligger her i std java source dir
+        java.srcDirs
+
+        //registrerer disse outputene på main slik at disse blir med i evt jar fil for jasper sourceSet.. merk at builtBy er optional og gjør at tasken blir kalt ved 'idea', 'jar' ol
+        output.dir('gen/jasper/reports', builtBy: 'genJasper')
     }
 
     main {
-
-        //registrerer disse outputene på main slik at disse blir med i jar fil.. merk at builtBy er optional og gjør at tasken blir kalt ved 'idea', 'jar' ol
-        output.dir(jasper.output.resourcesDir, builtBy: jasper.processResourcesTaskName)
     }
 
 }
@@ -24,19 +24,32 @@ sourceSets {
 
 configurations {
     myNiftyLibs {
-        description = "Konfigurasjon som inneholder alle kjekke bibliotek vi bruker"
+        description = "Konfigurasjon som inneholder noen kjekke bibliotek vi bruker"
     }
 
     jasperCompile {
         extendsFrom myNiftyLibs //legger til noen libs som runtime dependency
     }
-
 }
 
 
 
 dependencies {
-    myNiftyLibs 'commons-lang:commons-lang:2.6@jar'
+    myNiftyLibs 'net.sf.jasperreports:jasperreports:3.7.0'
+    jasperRuntime 'commons-lang:commons-lang:2.6@jar'
+
+    runtime configurations.jasperRuntime //legger til dependency - får da riktig classpath for main
+}
+
+project.tasks.build.dependsOn project.tasks.compileJasperJava
+
+project.task('genJasper') {
+    doLast {
+        //evt tilleggslogikk her..
+        project.mkdir('gen/jasper/reports')
+    }
+
+    project.tasks.compileJasperJava.dependsOn(it)
 }
 
 /**
@@ -97,8 +110,13 @@ task assertIdeaModule() << {
 
         assert it.contains('<root url="file://$MODULE_DIR$/build/resources/main')
 
-        assert it.contains('commons-lang-2.6.jar!')  //forventer at denne ligger som runtime avhengighet
+        assert it.contains('<root url="file://$MODULE_DIR$/gen/jasper/reports')
+        assert it.contains('<root url="file://$MODULE_DIR$/build/resources/jasper')
 
+        assert it.contains('<root url="file://$MODULE_DIR$/src/jasper/resources') //forventer at denne hektes inn som source for lib
+
+        assert it.contains('commons-lang-2.6.jar!')  //forventer at denne ligger som runtime avhengighet
+        assert it.contains('jasperreports-3.7.0.jar!') //forventer denne som compile time avhengighet
     }
 
 }
