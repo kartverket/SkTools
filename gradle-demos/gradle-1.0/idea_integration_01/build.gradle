@@ -12,6 +12,7 @@ allprojects { p ->
 }
 
 apply from: rootProject.file('intellij/ideaProject.gradle')
+apply from: rootProject.file('intellij/ideaWorkspace.gradle')
 
 subprojects { p ->
 
@@ -34,10 +35,10 @@ subprojects { p ->
 evaluationDependsOnChildren()   //lar children legge til java plugin etter behov
 
 
-subprojects {
+subprojects { Project subProject ->
 
-    def resourcesTask = tasks.resources
-    project.convention.plugins.java?.sourceSets?.all {
+    def resourcesTask = subProject.tasks.resources
+    subProject.convention.plugins.java?.sourceSets?.all {
         resourcesTask.dependsOn it.processResourcesTaskName
     }
 
