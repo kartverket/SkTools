@@ -6,127 +6,143 @@ import org.gradle.plugins.ide.idea.model.IdeaModule;
  * redusere disse til kun ett i InteliJ.
  */
 
+if (project.plugins.hasPlugin('idea')) {
+
 //Finner ut av source kataloger og dependencies for IDEA
-tasks.ideaModule.doFirst {
+    tasks.ideaModule.doFirst {
 
-    def mainSourceSet = project.sourceSets.findByName("main")
-    def testSourceSet = project.sourceSets.findByName("test")
+        def mainSourceSet = project.sourceSets.findByName("main")
+        def testSourceSet = project.sourceSets.findByName("test")
 
-    def wellKnownOutputdirs = [] as HashSet //outputkataloger i gradle for kildekode som blir markert som 'source' i IntelliJ
-    wellKnownOutputdirs += mainSourceSet?.output?.classesDir
-    wellKnownOutputdirs += testSourceSet?.output?.classesDir
+        def wellKnownOutputdirs = [] as HashSet //outputkataloger i gradle for kildekode som blir markert som 'source' i IntelliJ
+        wellKnownOutputdirs += mainSourceSet?.output?.classesDir
+        wellKnownOutputdirs += testSourceSet?.output?.classesDir
 
-    //finner source folders
-    IdeaModule ideaModule = project.idea.module
-    if (!mainSourceSet.is(null)) {
-        ideaModule.sourceDirs -= mainSourceSet.resources.srcDirs
-        ideaModule.sourceDirs += mainSourceSet.allJava.srcDirs
-    }
+        //finner source folders
+        IdeaModule ideaModule = project.idea.module
+        if (!mainSourceSet.is(null)) {
+            ideaModule.sourceDirs -= mainSourceSet.resources.srcDirs
+            ideaModule.sourceDirs += mainSourceSet.allJava.srcDirs
+        }
 
-    def ekstraCompileJars = [] as HashSet
-    def ekstraRuntimeJars = [] as HashSet
+        def ekstraCompileJars = [] as HashSet
+        def ekstraRuntimeJars = [] as HashSet
 
-    project.sourceSets.findAll {!['test'].contains(it.name)}.each {
-        wellKnownOutputdirs += it.output.classesDir
+        project.sourceSets.findAll {!['test'].contains(it.name)}.each {
+            wellKnownOutputdirs += it.output.classesDir
 
-        ideaModule.sourceDirs += it.java.srcDirs
-        ideaModule.scopes.COMPILE.plus += project.configurations[it.compileConfigurationName]
-        ideaModule.scopes.RUNTIME.minus += project.configurations[it.compileConfigurationName]
-        ideaModule.scopes.RUNTIME.plus += project.configurations[it.runtimeConfigurationName]
+            ideaModule.sourceDirs += it.java.srcDirs
+            ideaModule.scopes.COMPILE.plus += project.configurations[it.compileConfigurationName]
+            ideaModule.scopes.RUNTIME.minus += project.configurations[it.compileConfigurationName]
+            ideaModule.scopes.RUNTIME.plus += project.configurations[it.runtimeConfigurationName]
 
-        ekstraCompileJars += it.compileClasspath.files
-        ekstraRuntimeJars += it.runtimeClasspath.files
-    }
+            ekstraCompileJars += it.compileClasspath.files
+            ekstraRuntimeJars += it.runtimeClasspath.files
+        }
 
-    //putter på filer som evt ligger på *classpath men ikke dekkes av configurations
-    //PS: ideaModule.singleEntryLibraries er av en ukjent grunn uggen (lar seg ikke legge til compile scope) - benytter derfor ekstra konfigurasjoner
+        //putter på filer som evt ligger på *classpath men ikke dekkes av configurations
+        //PS: ideaModule.singleEntryLibraries er av en ukjent grunn uggen (lar seg ikke legge til compile scope) - benytter derfor ekstra konfigurasjoner
 
-    def providedJars = ideaModule.scopes.PROVIDED.plus.collectMany {it.files} - ideaModule.scopes.PROVIDED.minus.collectMany {it.files} + ideaModule.singleEntryLibraries.PROVIDED?.files
-    def compileJars = ideaModule.scopes.COMPILE.plus.collectMany {it.files} - ideaModule.scopes.COMPILE.minus.collectMany {it.files} - ideaModule.singleEntryLibraries.COMPILE?.files - providedJars
-    def runtimeJars = ideaModule.scopes.RUNTIME.plus.collectMany {it.files} - ideaModule.scopes.RUNTIME.minus.collectMany {it.files} - ideaModule.singleEntryLibraries.RUNTIME?.files - providedJars
-
-
-    //fjerner wellKnownOutputdirs da intellij alerede kompilerer kildekoden for disse
-    ekstraCompileJars = ekstraCompileJars.findAll { !wellKnownOutputdirs.contains(it) && !compileJars.contains(it) && !providedJars.contains(it)}
-    ekstraRuntimeJars = ekstraRuntimeJars.findAll { !wellKnownOutputdirs.contains(it) && !compileJars.contains(it) && !providedJars.contains(it) && !runtimeJars.contains(it)}
-
-    ekstraRuntimeJars -= ekstraCompileJars
-    //fjerner alle outputkataloger for sourcesets da disse blir hektet inn via 'library' (se under)
-    ekstraCompileJars -= project.sourceSets.collectMany { [it.output.classesDir, it.output.resourcesDir] + it.output.dirs.files}
-    ekstraRuntimeJars -= project.sourceSets.collectMany { [it.output.classesDir, it.output.resourcesDir] + it.output.dirs.files}
-
-    //oppretter ekstra konfigurasjons objekter for våre ekstra classpather
-    def extraCompileConfiguration = project.configurations.detachedConfiguration(project.dependencies.create(project.files(ekstraCompileJars)))
-    def extraRuntimeConfiguration = project.configurations.detachedConfiguration(project.dependencies.create(project.files(ekstraRuntimeJars)))
-
-    project.logger.info "adding jars to idea classpath COMPILE \n\t${extraCompileConfiguration.files.join('\n\t')}"
-    project.logger.info "adding jars to idea classpath RUNTIME \n\t${extraRuntimeConfiguration.files.join('\n\t')}"
-
-    ideaModule.scopes.COMPILE.plus += extraCompileConfiguration
-    ideaModule.scopes.RUNTIME.minus += extraCompileConfiguration
-    ideaModule.scopes.RUNTIME.plus += extraRuntimeConfiguration
-
-    //ideaModule.testSourceDirs //todo: evt legge inn test_manual?
-
-    //linker inn resources og generert kode
-    // gjøres på xml nivå da en her har full kontroll over class, source og scope
-    ideaModule.iml {
-
-        withXml { provider -> //legger til outputkataloger for resources og generert source som dependencies
-            def rootNode = provider.asNode()
-
-            def moduleManager = rootNode.component[0]
-
-            //tar vare på orginal rekkefølge for så å hekte disse inn igjen i ønsket rekkefølge
-            def previousOrderEntries = moduleManager.orderEntry
-            previousOrderEntries.each { moduleManager.remove it } //hekter ut noder
-
-            while (!previousOrderEntries.isEmpty()) {
-                def node = previousOrderEntries[0];
-                if(node.@type == 'sourceFolder' && node.@forTests == 'false') { break; }
-                previousOrderEntries.remove(node);
-                moduleManager.append(node); //hekter inn noder som skal først
-            }
+        def providedJars = ( ideaModule.scopes.PROVIDED.plus.collectMany {it.files} + ideaModule.singleEntryLibraries?.PROVIDED ?: []) - ( ideaModule.scopes.PROVIDED.minus.collectMany {it.files} )
+        def compileJars = ( ideaModule.scopes.COMPILE.plus.collectMany {it.files} ) - ( ideaModule.scopes.COMPILE.minus.collectMany {it.files} + ideaModule.singleEntryLibraries?.COMPILE ?: [] + providedJars )
+        def runtimeJars = ( ideaModule.scopes.RUNTIME.plus.collectMany {it.files} ) - ( ideaModule.scopes.RUNTIME.minus.collectMany {it.files} + ideaModule.singleEntryLibraries?.RUNTIME ?: [] + providedJars )
 
 
-            //Legger til classes og sources for hvert sourceset. Oppretter et nytt 'library' for hvert sourceset.
-            project.sourceSets.all { sourceSet ->
+        //fjerner wellKnownOutputdirs da intellij alerede kompilerer kildekoden for disse
+        ekstraCompileJars = ekstraCompileJars.findAll { !wellKnownOutputdirs.contains(it) && !compileJars.contains(it) && !providedJars.contains(it)}
+        ekstraRuntimeJars = ekstraRuntimeJars.findAll { !wellKnownOutputdirs.contains(it) && !compileJars.contains(it) && !providedJars.contains(it) && !runtimeJars.contains(it)}
 
-                def entry = moduleManager.appendNode('orderEntry', [type: 'module-library'])
-                if (sourceSet.name != 'test') {
-                    entry.attributes().put('exported', '')
-                } else {
-                    entry.attributes().put('scope', 'TEST')
+        ekstraRuntimeJars -= ekstraCompileJars
+        //fjerner alle outputkataloger for sourcesets da disse blir hektet inn via 'library' (se under)
+        ekstraCompileJars -= project.sourceSets.collectMany { [it.output.classesDir, it.output.resourcesDir] + it.output.dirs.files}
+        ekstraRuntimeJars -= project.sourceSets.collectMany { [it.output.classesDir, it.output.resourcesDir] + it.output.dirs.files}
+
+        //oppretter ekstra konfigurasjons objekter for våre ekstra classpather
+        def extraCompileConfiguration = project.configurations.detachedConfiguration(project.dependencies.create(project.files(ekstraCompileJars)))
+        def extraRuntimeConfiguration = project.configurations.detachedConfiguration(project.dependencies.create(project.files(ekstraRuntimeJars)))
+
+        project.logger.info "adding jars to idea classpath COMPILE \n\t${extraCompileConfiguration.files.join('\n\t')}"
+        project.logger.info "adding jars to idea classpath RUNTIME \n\t${extraRuntimeConfiguration.files.join('\n\t')}"
+
+        ideaModule.scopes.COMPILE.plus += extraCompileConfiguration
+        ideaModule.scopes.RUNTIME.minus += extraCompileConfiguration
+        ideaModule.scopes.RUNTIME.plus += extraRuntimeConfiguration
+
+        //ideaModule.testSourceDirs //todo: evt legge inn test_manual?
+
+        //linker inn resources og generert kode
+        // gjøres på xml nivå da en her har full kontroll over class, source og scope
+        ideaModule.iml {
+
+            withXml { provider -> //legger til outputkataloger for resources og generert source som dependencies
+                def rootNode = provider.asNode()
+
+                def moduleManager = rootNode.component[0]
+
+                //tar vare på orginal rekkefølge for så å hekte disse inn igjen i ønsket rekkefølge
+                def previousOrderEntries = moduleManager.orderEntry
+                previousOrderEntries.each { moduleManager.remove it } //hekter ut noder
+
+                while (!previousOrderEntries.isEmpty()) {
+                    def node = previousOrderEntries[0];
+                    if(node.@type == 'sourceFolder' && node.@forTests == 'false') { break; }
+                    previousOrderEntries.remove(node);
+                    moduleManager.append(node); //hekter inn noder som skal først
                 }
-                def library = entry.appendNode('library', [name: "${project.path}:${sourceSet.name}[generated]"])
 
-                //legger til classes
-                def classes = library.appendNode('CLASSES')
-                if (!wellKnownOutputdirs.contains(sourceSet.output.classesDir)) {
-                    wellKnownOutputdirs += sourceSet.output.classesDir
-                    classes.appendNode('root', [url: "file://\$MODULE_DIR\$/${project.relativePath(sourceSet.output.classesDir).replaceAll('\\\\', '/')}"])
-                }
-                if (!wellKnownOutputdirs.contains(sourceSet.output.resourcesDir)) {
-                    wellKnownOutputdirs += sourceSet.output.resourcesDir
-                    classes.appendNode('root', [url: "file://\$MODULE_DIR\$/${project.relativePath(sourceSet.output.resourcesDir).replaceAll('\\\\', '/')}"])
-                }
-                sourceSet.output.dirs.files.each {
-                    if (!wellKnownOutputdirs.contains(it)) {
-                        wellKnownOutputdirs += it
-                        classes.appendNode('root', [url: "file://\$MODULE_DIR\$/${project.relativePath(it).replaceAll('\\\\', '/')}"])
+
+                //Legger til classes og sources for hvert sourceset. Oppretter et nytt 'library' for hvert sourceset.
+                project.sourceSets.all { sourceSet ->
+
+                    def entry = moduleManager.appendNode('orderEntry', [type: 'module-library'])
+                    if (sourceSet.name != 'test') {
+                        entry.attributes().put('exported', '')
+                    } else {
+                        entry.attributes().put('scope', 'TEST')
                     }
-                }
+                    def library = entry.appendNode('library', [name: "${project.path}:${sourceSet.name}[generated]"])
 
-                def javadoc = library.appendNode('JAVADOC')
+                    //legger til classes
+                    def classes = library.appendNode('CLASSES')
+                    if (!wellKnownOutputdirs.contains(sourceSet.output.classesDir)) {
+                        wellKnownOutputdirs += sourceSet.output.classesDir
+                        classes.appendNode('root', [url: "file://\$MODULE_DIR\$/${project.relativePath(sourceSet.output.classesDir).replaceAll('\\\\', '/')}"])
+                    }
+                    if (!wellKnownOutputdirs.contains(sourceSet.output.resourcesDir)) {
+                        wellKnownOutputdirs += sourceSet.output.resourcesDir
+                        classes.appendNode('root', [url: "file://\$MODULE_DIR\$/${project.relativePath(sourceSet.output.resourcesDir).replaceAll('\\\\', '/')}"])
+                    }
+                    sourceSet.output.dirs.files.each {
+                        if (!wellKnownOutputdirs.contains(it)) {
+                            wellKnownOutputdirs += it
+                            classes.appendNode('root', [url: "file://\$MODULE_DIR\$/${project.relativePath(it).replaceAll('\\\\', '/')}"])
+                        }
+                    }
 
-                //legger til sources (kildekode)
-                def sources = library.appendNode('SOURCES')
+                    def javadoc = library.appendNode('JAVADOC')
 
-                if (!['main', 'test'].contains(sourceSet.name)) { //dersom ikke kjent kildekode (java eller groovy)
-                    ['java', 'groovy'].each {
+                    //legger til sources (kildekode)
+                    def sources = library.appendNode('SOURCES')
+
+                    if (!['main', 'test'].contains(sourceSet.name)) { //dersom ikke kjent kildekode (java eller groovy)
+                        ['java', 'groovy'].each {
+                            try {
+                                sourceSet."$it".srcDirs.each {
+                                    if (!ideaModule.sourceDirs.contains(it)) {  //IntelliJ blir forvirret dersom mappen både er markert som source OG som koblet kildekode for library
+                                        sources.appendNode('root', [url: "file://\$MODULE_DIR\$/${project.relativePath(it).replaceAll('\\\\', '/')}"])
+                                    }
+                                }
+                            } catch (MissingPropertyException mpe) {
+                                assert true //ok her
+                            }
+                        }
+                    }
+
+                    //alle resources og genererte resources
+                    ['resources'].each {
                         try {
                             sourceSet."$it".srcDirs.each {
-                                if (!ideaModule.sourceDirs.contains(it)) {  //IntelliJ blir forvirret dersom mappen både er markert som source OG som koblet kildekode for library
+                                if (!ideaModule.sourceDirs.contains(it)) {
                                     sources.appendNode('root', [url: "file://\$MODULE_DIR\$/${project.relativePath(it).replaceAll('\\\\', '/')}"])
                                 }
                             }
@@ -134,12 +150,9 @@ tasks.ideaModule.doFirst {
                             assert true //ok her
                         }
                     }
-                }
 
-                //alle resources og genererte resources
-                ['resources'].each {
                     try {
-                        sourceSet."$it".srcDirs.each {
+                        sourceSet.'filterResourcesOutput'.each {
                             if (!ideaModule.sourceDirs.contains(it)) {
                                 sources.appendNode('root', [url: "file://\$MODULE_DIR\$/${project.relativePath(it).replaceAll('\\\\', '/')}"])
                             }
@@ -147,33 +160,25 @@ tasks.ideaModule.doFirst {
                     } catch (MissingPropertyException mpe) {
                         assert true //ok her
                     }
+
                 }
 
-                try {
-                    sourceSet.'filterResourcesOutput'.each {
-                        if (!ideaModule.sourceDirs.contains(it)) {
-                            sources.appendNode('root', [url: "file://\$MODULE_DIR\$/${project.relativePath(it).replaceAll('\\\\', '/')}"])
-                        }
-                    }
-                } catch (MissingPropertyException mpe) {
-                    assert true //ok her
+                //hekter inn resten av pre-genererte node
+                previousOrderEntries.each {
+                    moduleManager.append(it);
                 }
+
 
             }
 
-            //hekter inn resten av pre-genererte node
-            previousOrderEntries.each {
-                moduleManager.append(it);
+
+            beforeMerged { module ->
+                module.dependencies.clear() //skips merging of dependencies
+                module.sourceFolders.clear()
             }
-
-
         }
 
-
-        beforeMerged { module ->
-            module.dependencies.clear() //skips merging of dependencies
-            module.sourceFolders.clear()
-        }
-    }
+    } //end ideaModule.doFirst{}
 
 }
+

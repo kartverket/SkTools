@@ -11,3 +11,15 @@ idea.module {
   downloadSources = false
   downloadJavadoc = false
 }
+
+
+//Legger til scopes for alle prosjekter som mangler dette (eks rene war moduler)
+if (!project.plugins.hasPlugin('java')) {
+    project.idea.module {
+        scopes.get('PROVIDED', [plus: [], minus: []])
+        scopes.get('COMPILE', [plus: [], minus: []])
+        scopes.get('RUNTIME', [plus: [], minus: []])
+    }
+}
+
+
