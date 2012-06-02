@@ -216,7 +216,8 @@ class WebServiceConfig implements Serializable {
 }
 
 /**
- * Component
+ * Det kan virke som om at exceptions er forbedret i webservicer generert med weblogic 10.3.5 ?
+ *
  * @since 1.1
  */
 class ExceptionConfig implements Serializable {
@@ -224,7 +225,7 @@ class ExceptionConfig implements Serializable {
     private final WebServiceConfig convention;
 
     protected String packageOrPathString
-    protected PatternSet exceptionFilePatternSet = new PatternSet(includes: ['**/*Exception.java', '**/*FaultInfo.java']) //disse henger sammen og blir relokalisert/slått sammen
+    protected PatternSet exceptionFilePatternSet = new PatternSet(includes: ['**/*Exception.java'])
 
 
 

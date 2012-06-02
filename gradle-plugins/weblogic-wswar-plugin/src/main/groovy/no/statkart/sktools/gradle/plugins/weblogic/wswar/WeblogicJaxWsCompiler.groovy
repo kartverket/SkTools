@@ -42,6 +42,7 @@ class WeblogicJaxWsCompiler implements org.gradle.api.internal.tasks.compile.Com
                 classpathref: JWSC_CLASSPATH_ID,
                 includeantruntime: false,
                 destEncoding: 'UTF-8',
+                tempdir: spec.getTempDir()
         ]
 
         attributes += spec.compileOptions.optionMap()

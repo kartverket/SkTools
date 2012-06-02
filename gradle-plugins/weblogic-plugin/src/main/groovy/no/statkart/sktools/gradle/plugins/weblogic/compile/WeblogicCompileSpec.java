@@ -17,5 +17,8 @@ public interface WeblogicCompileSpec extends JvmLanguageCompileSpec {
 
     void setWeblogicClasspath(Iterable<File> classpath);
 
+    void setTempDir(File tempDir);
+
+    File getTempDir();
 
 }

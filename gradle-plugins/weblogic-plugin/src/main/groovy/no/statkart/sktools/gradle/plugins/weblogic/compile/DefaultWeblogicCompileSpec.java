@@ -12,6 +12,7 @@ import java.io.File;
 public class DefaultWeblogicCompileSpec extends DefaultJavaCompileSpec implements WeblogicCompileSpec {
 
     private Iterable<File> weblogicClasspath;
+    private File tempDir;
 
     @Override
     public Iterable<File> getWeblogicClasspath() {
@@ -23,4 +24,11 @@ public class DefaultWeblogicCompileSpec extends DefaultJavaCompileSpec implement
         weblogicClasspath = classpath;
     }
 
+    public File getTempDir() {
+        return tempDir;
+    }
+
+    public void setTempDir(File tempDir) {
+        this.tempDir = tempDir;
+    }
 }

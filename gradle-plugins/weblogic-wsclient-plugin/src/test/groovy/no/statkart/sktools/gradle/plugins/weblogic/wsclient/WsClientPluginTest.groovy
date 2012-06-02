@@ -136,7 +136,7 @@ class WeblogicWsClientPluginTest {
         //eksekverer
 
         //genererer wsclient artifakt
-        wsClientProjectHelper.executeTask(WeblogicWsClientPlugin.WEBLOGIC_JAR_TASK_NAME)
+        wsClientProjectHelper.executeTask(WeblogicWsClientPlugin.JAR_WEBLOGIC_TASK_NAME)
         //forventer at ovenstående kaller {@code WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME }
 
         //tester at avhengighet er blit bygd.

@@ -55,6 +55,7 @@ class WeblogicJaxWsClientCompiler implements org.gradle.api.internal.tasks.compi
                 destdir: spec.destinationDir,
                 type: 'JAXWS',
                 includeantruntime: false,
+                tempdir: spec.getTempDir()
                 // kodegenerering avhenger kun av providede weblogic klasser. Definerer derfor ingen eksplisitt classpath.
         ]
 
@@ -118,17 +119,21 @@ class WeblogicJaxWsClientCompiler implements org.gradle.api.internal.tasks.compi
      */
     protected static void reuseExceptions(File genSourceDir, FileCollection files, ExceptionConfig exceptionConfig, AntBuilder ant) {
         String packageString = exceptionConfig.packageOrPathString.replace('/', '.').replace('\\', '.')
-        FileTree javaFiles = files.getAsFileTree().matching(new PatternSet(includes: ['**/*.java']))
-
+//
         File exceptionPackageDir = new File(genSourceDir, packageString.replace((char) '.', File.separatorChar))
+        FileCollection exceptionFiles = new SimpleFileCollection(exceptionPackageDir).getAsFileTree().matching(new PatternSet(includes: ['*.java']))
+
+        FileTree javaFiles = files.minus(exceptionFiles).getAsFileTree().matching(new PatternSet(includes: ['**/*.java']))
+
         exceptionPackageDir.mkdirs()
 
         //flytter alle exceptions til felles katalog
         javaFiles.matching(exceptionConfig.exceptionFilePatternSet).files.each { File file ->
             File relocatedFile = new File(exceptionPackageDir, file.getName())
-            logger.debug("merging exception ${relocatedFile} <- ${file}")
+            logger.info("merging exception ${relocatedFile} <- ${file}")
 
             FileUtils.copyFileToDirectory(file, exceptionPackageDir)
+            file.delete()
 
             //kjører regexp replace på package statement for flyttet fil
             relocatedFile.text = relocatedFile.text.replaceFirst(/(?ms)package[^;]+/, "package " + packageString)
@@ -136,7 +141,7 @@ class WeblogicJaxWsClientCompiler implements org.gradle.api.internal.tasks.compi
         }
 
         //legger til import statements for de andre java filene
-        javaFiles.minus(new SimpleFileCollection(exceptionPackageDir)).files.each { File file ->
+        javaFiles.files.each { File file ->
             logger.debug("adding exception import statement in ${file}")
             file.text = file.text.replaceFirst('import ', "import ${packageString}.*;\nimport ")
         }

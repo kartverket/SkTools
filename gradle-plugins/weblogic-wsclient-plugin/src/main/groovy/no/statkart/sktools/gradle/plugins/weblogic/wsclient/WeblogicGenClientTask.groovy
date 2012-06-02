@@ -50,6 +50,7 @@ class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInter
         compiler.ant = getAnt()
         compiler.webServices = project.getConvention().getPlugins().get(WeblogicWsClientPlugin.CONVENTION_NAME).webService
         spec.setWeblogicClasspath(getWeblogicClasspath().files)
+        spec.setTempDir(project.file('build/tmp/weblogic'))
 
         spec.setSource(getSource());
         spec.setDestinationDir(getDestinationDir());

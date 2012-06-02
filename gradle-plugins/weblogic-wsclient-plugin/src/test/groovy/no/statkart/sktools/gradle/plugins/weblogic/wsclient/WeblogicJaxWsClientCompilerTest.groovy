@@ -139,9 +139,6 @@ class WeblogicJaxWsClientCompilerTest {
         rootProjectHelper.assertFileExists('src/main/java/no/statkart/test/exceptiondemo01/common/ServiceException.java')
 
 
-        //tester at generert kildekode er ok ved å kompilere den
-        rootProjectHelper.executeTask('compileJava')
-
     }
 
 

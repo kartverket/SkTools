@@ -49,6 +49,7 @@ class WeblogicWsCompileTask extends AbstractCompile implements WeblogicTaskInter
         compiler.fileResolver = ((ProjectInternal)getProject()).getFileResolver()
 
         spec.weblogicClasspath = getWeblogicClasspath().files
+        spec.setTempDir(project.file('build/tmp/weblogic'))
 
         spec.setSource(getSource());
         spec.setDestinationDir(getDestinationDir());
