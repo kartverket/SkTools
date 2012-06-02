@@ -148,7 +148,7 @@ class WeblogicWsClientPluginTest {
         wsClientProjectHelper.assertTaskExecutedNotSkipped(WeblogicWsClientPlugin.GEN_CLIENT_TASK_NAME)
         wsClientProjectHelper.assertTaskExecutedNotSkipped(WeblogicWsClientPlugin.PROCESS_WEBLOGIC_RESOURCES_TASK_NAME)
         wsClientProjectHelper.assertTaskExecutedNotSkipped(WeblogicWsClientPlugin.COMPILE_WEBLOGIC_TASK_NAME)
-        wsClientProjectHelper.assertTaskExecutedNotSkipped(WeblogicWsClientPlugin.WEBLOGIC_JAR_TASK_NAME)
+        wsClientProjectHelper.assertTaskExecutedNotSkipped(WeblogicWsClientPlugin.JAR_WEBLOGIC_TASK_NAME)
 
         //tester at enkelte filer er generert
         wsClientProjectHelper.assertFileExists('gen/weblogic/wsclient/META-INF/wsdls/TestServiceWS.wsdl')

@@ -131,16 +131,14 @@ class WeblogicJaxWsClientCompiler implements org.gradle.api.internal.tasks.compi
             FileUtils.copyFileToDirectory(file, exceptionPackageDir)
 
             //kjører regexp replace på package statement for flyttet fil
-            relocatedFile.text = relocatedFile.text.replaceFirst(/(?ms)package[^;]+/, "packgage " + packageString)
-
-//            assert text ==~ /(?ms).*import\s+no\.statkart\.grunnbok\.skif\.util\.ListIterable;.*/ //(?ms) matches regex over multiple lines.
+            relocatedFile.text = relocatedFile.text.replaceFirst(/(?ms)package[^;]+/, "package " + packageString)
 
         }
 
-        //legger til import statements for de andre java filene.
+        //legger til import statements for de andre java filene
         javaFiles.minus(new SimpleFileCollection(exceptionPackageDir)).files.each { File file ->
             logger.debug("adding exception import statement in ${file}")
-            file.text = "import ${packageString}.*;\n${file.text}"
+            file.text = file.text.replaceFirst('import ', "import ${packageString}.*;\nimport ")
         }
 
 

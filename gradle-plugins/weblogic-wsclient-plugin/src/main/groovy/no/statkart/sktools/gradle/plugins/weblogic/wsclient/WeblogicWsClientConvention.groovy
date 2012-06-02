@@ -224,7 +224,7 @@ class ExceptionConfig implements Serializable {
     private final WebServiceConfig convention;
 
     protected String packageOrPathString
-    protected PatternSet exceptionFilePatternSet = new PatternSet(includes: ['**/*Exception.java'])
+    protected PatternSet exceptionFilePatternSet = new PatternSet(includes: ['**/*Exception.java', '**/*FaultInfo.java']) //disse henger sammen og blir relokalisert/slått sammen
 
 
 

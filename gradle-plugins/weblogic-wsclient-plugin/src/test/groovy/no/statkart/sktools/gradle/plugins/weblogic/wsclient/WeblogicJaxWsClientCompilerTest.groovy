@@ -91,7 +91,7 @@ class WeblogicJaxWsClientCompilerTest {
     @Test
     void testExceptionRewrite() {
         //forks a new project in a temp folder
-        ProjectHelper rootProjectHelper = GradleProjectBuilder.builder("rootProject").build()
+        ProjectHelper rootProjectHelper = GradleProjectBuilder.builder("rootProject").applyJavaPlugin().build()
         Project rootProject = rootProjectHelper.project
 
         //forks a new project in a temp folder
@@ -124,7 +124,7 @@ class WeblogicJaxWsClientCompilerTest {
 
         DefaultWeblogicCompileSpec compileSpec = new DefaultWeblogicCompileSpec()
         compileSpec.setWeblogicClasspath(rootProjectHelper.weblogicClasspath + rootProjectHelper.toolsJar)
-        compileSpec.setDestinationDir(rootProject.buildDir)
+        compileSpec.setDestinationDir(rootProject.file('src/main/java'))
         compileSpec.source = schemaFiles
 
         //eksekverer
@@ -133,10 +133,14 @@ class WeblogicJaxWsClientCompilerTest {
 
 
         //tester at enkelte filer er generert
-        rootProjectHelper.assertFileExists('build/no/statkart/test/exceptiondemo01/service/service1/ExceptionService1.java')
-        rootProjectHelper.assertFileExists('build/no/statkart/test/exceptiondemo01/displaced/service/service2/ExceptionService2.java')
+        rootProjectHelper.assertFileExists('src/main/java/no/statkart/test/exceptiondemo01/service/service1/ExceptionService1.java')
+        rootProjectHelper.assertFileExists('src/main/java/no/statkart/test/exceptiondemo01/displaced/service/service2/ExceptionService2.java')
 
-        rootProjectHelper.assertFileExists('build/no/statkart/test/exceptiondemo01/common/ServiceException.java')
+        rootProjectHelper.assertFileExists('src/main/java/no/statkart/test/exceptiondemo01/common/ServiceException.java')
+
+
+        //tester at generert kildekode er ok ved å kompilere den
+        rootProjectHelper.executeTask('compileJava')
 
     }
 

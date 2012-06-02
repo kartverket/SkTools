@@ -43,7 +43,7 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
     public static final String PROCESS_WEBLOGIC_RESOURCES_TASK_NAME = 'processWeblogicResources'
     public static final String COMPILE_WEBLOGIC_TASK_NAME = 'compileWeblogicJava'
     public static final String WEBLOGIC_CLASSES_TASK_NAME = 'weblogicClasses'
-    public static final String WEBLOGIC_JAR_TASK_NAME = 'weblogicJar'
+    public static final String JAR_WEBLOGIC_TASK_NAME = 'jarWeblogic'
 
     @Override
     void apply(Project project) {
@@ -87,7 +87,7 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
 
 
         //task for artifakt
-        Task archiveWsClient = configureArchives(wsClientConvention, sourceSet).dependsOn(
+        Task jarTask = configureArchives(wsClientConvention, sourceSet).dependsOn(
                 WeblogicWsClientPlugin.WEBLOGIC_CLASSES_TASK_NAME,
         )
 
@@ -165,7 +165,7 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
         if (project.getTasks().findByName(JavaPlugin.TEST_TASK_NAME) != null) {
             project.getTasks().getByName(JavaBasePlugin.CHECK_TASK_NAME).dependsOn(JavaPlugin.TEST_TASK_NAME);
         }
-        Jar jar = project.getTasks().add(WeblogicWsClientPlugin.WEBLOGIC_JAR_TASK_NAME, Jar.class);
+        Jar jar = project.getTasks().add(WeblogicWsClientPlugin.JAR_WEBLOGIC_TASK_NAME, Jar.class);
 //        jar.getManifest().from(javaConvention.getManifest());
         jar.setDescription("Assembles a jar archive containing the WS-Client classes.");
         jar.setClassifier(WeblogicWsClientPlugin.WEBLOGIC_SOURCE_SET_NAME)
