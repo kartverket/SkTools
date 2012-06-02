@@ -1,16 +1,20 @@
 /******************************************************************************************************************** **
- * Demonstrerer standard bruk av plugin
+ * Demonstrerer hvordan en kan integrere med JavaPlugin og andre konfigurasjoner
  *
+ * Ved 'build' så blir da "runtime" artifaktet generert
+ * Ved 'buildWeblogic' så blir da "weblogic" artifaktet generert
+ * - PS: merk at dette artifaktet vil bli automatiskt generert der en trenger det i andre prosjekter (war, ear, testkode osv)
  ******************************************************************************************************************** */
 
+apply plugin: 'java'
 apply plugin: 'sktools-weblogic-wsclient-plugin'
+
 
 
 dependencies {
     weblogic libraries.weblogic
     weblogic libraries.'tools.jar'  //tools jar må være med for weblogic 10.3.5 eller nyere?
 }
-
 
 weblogicWsClient {
     webService {
@@ -19,25 +23,49 @@ weblogicWsClient {
     }
 }
 
+// MAT-10082
+// Dersom en ønsker at artifaktet blir generert ved build/assemble
+afterEvaluate { Project project ->
+
+    //må være sikker på at pluginen er registrert.. bruker sen evaluering som eksempel
+    if (project.plugins.hasPlugin('sktools-weblogic-wsclient-plugin')) {
+        project.tasks.assemble.dependsOn 'jarWeblogic'
+    }
+}
+
+
+// Task for generering av all generert kode
+task gen { genTask ->
+    project.tasks.withType(no.statkart.sktools.gradle.plugins.weblogic.wsclient.WeblogicGenClientTask).all {
+        genTask.dependsOn(it)
+    }
+}
 
 
 /******************************************************************************************************************** **
  * Diverse tasker som tester og demonstrerer implementasjonen
  ******************************************************************************************************************** */
 
+
+
 task runDemo() << {
 
     println 'Tester clean...'
     forkGradle(['clean', 'assertClean'])
 
-    println 'Tester kodegenerering...'
-    forkGradle(['genWeblogicWsClient', 'assertGenWeblogicWsClient'])
-
     println 'Tester bygging av weblogic artifakt...'
-    forkGradle(['clean', 'buildWeblogic', 'assertBuildWeblogic'])
+    forkGradle(['buildWeblogic', 'assertBuildWeblogic'])
 
-    println 'Tester bygging av main artifakt...'   //"weblogic" er eneste artifakt
-    forkGradle(['clean', 'build', 'assertBuildWeblogic'])
+    assert !file("build/libs/${project.name}.jar").exists() //skal ikke trigge generering av andre artifakter
+
+    println 'Tester bygging av main artifakt...'
+    forkGradle(['build', 'assertBuild'])
+
+    println 'Tester bygging av alle artifakter...'   //assemble depends on 'jarWeblogic'
+    forkGradle(['clean', 'build', 'assertBuild', 'assertBuildWeblogic'])
+
+    println 'Tester generering via gen...'   //gen depends on 'jarWeblogic'
+    forkGradle(['clean', 'gen', 'assertGeneratedWeblogicResources', 'assertGeneratedWeblogicClasses'])
 
 }
 
@@ -51,23 +79,22 @@ task assertGeneratedWeblogicClasses() << {
 }
 
 
-task assertGenWeblogicWsClient() {
+task assertBuildWeblogic() {
     dependsOn assertGeneratedWeblogicResources
     dependsOn assertGeneratedWeblogicClasses
-}
-
-
-task assertBuildWeblogic() {
-    dependsOn assertGenWeblogicWsClient
     doLast {
         assert file("build/libs/${project.name}-weblogic.jar").exists()
     }
 }
 
+task assertBuild() << {
+    assert file("build/libs/${project.name}.jar").exists()
+}
 
 task assertClean() << {
     assert !file('gen/classes/weblogic').exists()
     assert !file("build/libs/${project.name}-weblogic.jar").exists()
+    assert !file("build/libs/$project.{name}.jar").exists()
 }
 
 

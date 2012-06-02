@@ -1,5 +1,6 @@
 include ':war1'
 include ':simple-demo'
+include ':java-plugin-demo'
 
 rootProject.name = 'weblogic-wsclient-demos'
 
