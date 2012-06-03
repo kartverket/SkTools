@@ -75,11 +75,6 @@ public class DbtoolsConvention {
 
     }
 
-    @Deprecated
-    public Map<String, Object> getEnvironments() {
-        println "project.environments er depricated i versjon 1.2 - benytt heller project.dbToolSets"
-        return dbToolSets
-    }
 
     /**
      * Følgende toolset er tilgjengelige:
@@ -178,8 +173,8 @@ configureDatabasePlugin {
 
         convention.addTasks(path)
 
-        project.logger.info('Adding default tools for Oracle...')
-        convention.tasks.addDefaultTools('Database')
+        project.logger.info('Adding default tasks for Oracle...')
+        convention.addDefaultTasks('Database')
 
         return convention
     }
@@ -200,8 +195,8 @@ configureDatabasePlugin {
 
         convention.addTasks(path)
 
-        project.logger.info('Adding default tools for HSQLDB...')
-        convention.tasks.addDefaultTools('Database')
+        project.logger.info('Adding default tasks for HSQLDB...')
+        convention.addDefaultTasks('Database')
 
         return convention
     }

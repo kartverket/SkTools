@@ -31,12 +31,14 @@ abstract class AbstractDatabaseTasks<I extends AbstractDatabaseConvention> exten
     protected I getConvention() { return convention }
 
 
-    abstract void addDefaultTools(String groupString);
+    public Task addTask(String name, Task task) {
+        getTasks().put(name, task)
+        return task
+    }
 
 
     protected def configureTargets(Project project, String groupString) {
         I conv = getConvention()
-        def tasks = getTasks()
         def buildSQLTask = project.convention.plugins.db.buildSQLTask
 
         def sourceRoot = new File(project.getProjectDir(), 'src')
@@ -57,7 +59,7 @@ abstract class AbstractDatabaseTasks<I extends AbstractDatabaseConvention> exten
                 map 'driver', {conv.driver}
             }
 
-            tasks.put(taskName, task)
+            addTask(taskName, task)
         }
 
     }

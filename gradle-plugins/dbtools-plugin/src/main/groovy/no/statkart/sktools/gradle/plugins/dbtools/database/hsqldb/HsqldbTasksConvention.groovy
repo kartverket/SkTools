@@ -27,6 +27,8 @@ class HsqldbTasksConvention extends AbstractDatabaseConvention {
         return this
     }
 
+    void addDefaultTasks(String groupString) {
+    }
 
 
 }

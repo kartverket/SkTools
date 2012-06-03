@@ -11,9 +11,6 @@ class HsqldbTasks extends AbstractDatabaseTasks<HsqldbTasksConvention> {
         super(relativePath, convention)
     }
 
-    void addDefaultTools(String groupString) {
-//        if (tasks.containsKey('import')) return;
-    }
 
 
 }

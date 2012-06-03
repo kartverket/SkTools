@@ -38,6 +38,9 @@ abstract class AbstractDatabaseConvention {
         closure()
    }
 
-   public abstract AbstractDatabaseTasks getTasks();
+    public abstract AbstractDatabaseTasks getTasks()
+
+    public abstract void addDefaultTasks(String groupString)
+
 
 }

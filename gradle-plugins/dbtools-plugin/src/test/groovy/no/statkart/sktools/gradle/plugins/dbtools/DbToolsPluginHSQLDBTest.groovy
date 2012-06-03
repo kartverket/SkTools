@@ -201,7 +201,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
 
 
         // STEG 3 - credentials ihht konfig
-        def credentials = convention.environments['Prefix_'].credentials
+        def credentials = convention.dbToolSets['Prefix_'].credentials
         Assert.assertEquals credentials.username, 'sa'
         Assert.assertEquals credentials.password, ''
 

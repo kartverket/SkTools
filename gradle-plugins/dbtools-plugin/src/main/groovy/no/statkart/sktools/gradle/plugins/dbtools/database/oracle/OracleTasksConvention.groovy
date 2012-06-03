@@ -29,16 +29,20 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
          * passord er det samme som brukernavn dersom uspesifisert
          */
         if (!ext.has(propertyPrefix + 'db_password')) {
-            ext.set(propertyPrefix + 'db_password', ext.get(propertyPrefix + 'db_username'))
-            project.logger.info "setting property ${propertyPrefix + 'db_password'} to ${project.properties[propertyPrefix + 'db_password']}"
+            if (ext.has(propertyPrefix + 'db_username')) {
+                ext.set(propertyPrefix + 'db_password', ext.get(propertyPrefix + 'db_username'))
+                project.logger.info "setting property ${propertyPrefix + 'db_password'} to ${project.properties[propertyPrefix + 'db_password']}"
+            }
         }
 
         /**
          * schema er det samme som brukernavn dersom uspesifisert
          */
         if (!ext.has(propertyPrefix + 'db_schema')) {
-            ext.set(propertyPrefix + 'db_schema', ext.get(propertyPrefix + 'db_username'))
-            project.logger.info "setting property ${propertyPrefix + 'db_schema'} to ${project.properties[propertyPrefix + 'db_schema']}"
+            if (ext.has(propertyPrefix + 'db_username')) {
+                ext.set(propertyPrefix + 'db_schema', ext.get(propertyPrefix + 'db_username'))
+                project.logger.info "setting property ${propertyPrefix + 'db_schema'} to ${project.properties[propertyPrefix + 'db_schema']}"
+            }
         }
 
 
@@ -201,5 +205,37 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
     public Task getInfoTask() {
         project.println "infoTask property is depricated since version 1.2 - Use tasks.info instead !"
         return tasks.getByName('info')
+    }
+
+
+    public void addDefaultTasks(String groupString) {
+
+        if (tasks.findByName('import')) return;
+
+        Task importTask = project.task([type: OracleImportTask], "${prefix}Import") {
+            group = groupString
+            convention = this
+            description = 'Import av dump via Oracles eget verktøy'
+        }
+        tasks.addTask('import', importTask)
+
+
+        Task exportTask = project.task([type: OracleExportTask], "${prefix}Export") {
+            group = groupString
+            convention = this
+            description = 'Export av dump via Oracles eget verktøy'
+        }
+        tasks.addTask('export', exportTask)
+
+        Task infoTask = project.task("${prefix}Info") {
+            group = groupString
+            description = 'Viser gjeldende konfigurasjon'
+
+            doLast {
+                printInfo()
+            }
+        }
+        tasks.addTask('info', infoTask)
+
     }
 }
