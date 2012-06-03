@@ -1,9 +1,6 @@
 package no.statkart.sktools.gradle.plugins.dbtools.database.oracle
 
 import org.gradle.api.Project
-import no.statkart.sktools.gradle.plugins.dbtools.database.SQLTask
-import no.statkart.sktools.gradle.plugins.dbtools.database.util.DatabaseTasksInterface
-import no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractDatabaseConvention
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractDatabaseTasks
 import org.gradle.api.Task
 
@@ -23,32 +20,37 @@ class OracleTasks extends AbstractDatabaseTasks<OracleTasksConvention> {
 
 
 
-    public static void addDefaultTools(String groupString, OracleTasksConvention conv) {
+    public void addDefaultTools(String groupString) {
 
-        Project project = conv.project
+        Project project = convention.project
 
-        conv.importTask = project.task([type: OracleImportTask], "${conv.prefix}Import") {
+        if (tasks.containsKey('import')) return;
+
+        Task importTask = project.task([type: OracleImportTask], "${convention.prefix}Import") {
             group = groupString
-            convention = conv
+            it.convention = getConvention()
             description = 'Import av dump via Oracles eget verktøy'
         }
+        tasks.put('import', importTask)
 
 
-        conv.exportTask = project.task([type: OracleExportTask], "${conv.prefix}Export") {
+        Task exportTask = project.task([type: OracleExportTask], "${convention.prefix}Export") {
             group = groupString
-            convention = conv
+            it.convention = getConvention()
             description = 'Export av dump via Oracles eget verktøy'
         }
+        tasks.put('export', exportTask)
 
-        conv.infoTask = project.task("${conv.prefix}Info") {
+        Task infoTask = project.task("${convention.prefix}Info") {
             group = groupString
             description = 'Viser gjeldende konfigurasjon'
 
             doLast {
-                conv.printInfo()
+                convention.printInfo()
             }
-
         }
+        tasks.put('info', infoTask)
+
     }
 
 }

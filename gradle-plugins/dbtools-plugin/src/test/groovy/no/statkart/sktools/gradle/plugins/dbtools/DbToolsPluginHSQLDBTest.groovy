@@ -234,6 +234,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
 
         try {
             createSchema2Task.execute()
+            assert false
         } catch (TaskExecutionException tee) {
             def cause = tee.cause
             assert cause.message.contains('authorization')

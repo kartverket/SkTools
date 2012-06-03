@@ -2,7 +2,7 @@ package no.statkart.sktools.gradle.plugins.dbtools.database
 
 import org.gradle.api.Project
 import no.statkart.sktools.gradle.plugins.dbtools.database.oracle.OracleTasksConvention
-import no.statkart.sktools.gradle.plugins.dbtools.database.oracle.OracleTasks
+
 import java.sql.Driver
 import java.sql.DriverManager
 import org.gradle.api.Task
@@ -47,10 +47,11 @@ configureDatabasePlugin {
  *
  */
 public class DbtoolsConvention {
-    final Project project;
+    protected final Project project;
+
     private final Set<String> loadedDrivers = new HashSet<String>();
 
-    final Map<String, ?> env = new HashMap<String, Object>()
+    public final Map<String, ?> dbToolSets = new HashMap<String, Object>()
 
     Task buildSQLTask
 
@@ -74,8 +75,10 @@ public class DbtoolsConvention {
 
     }
 
+    @Deprecated
     public Map<String, Object> getEnvironments() {
-        return env
+        println "project.environments er depricated i versjon 1.2 - benytt heller project.dbToolSets"
+        return dbToolSets
     }
 
     /**
@@ -160,15 +163,13 @@ configureDatabasePlugin {
     }
 
     private def addOracleToolset(String prefix, String path, Closure closure) {
-        OracleTasksConvention convention = env.get(prefix)
+        OracleTasksConvention convention = dbToolSets.get(prefix)
 
         if (convention == null) {
             project.logger.info("Applying Oracle convention to ${path} ...")
             convention = new OracleTasksConvention(project, prefix)
-            env.put(prefix, convention)
+            dbToolSets.put(prefix, convention)
 
-            project.logger.info('Adding default tools for Oracle...')
-            OracleTasks.addDefaultTools('Database', convention)
         }
 
         convention.config(closure)
@@ -176,20 +177,21 @@ configureDatabasePlugin {
         registerDriver(convention.driver)
 
         convention.addTasks(path)
+
+        project.logger.info('Adding default tools for Oracle...')
+        convention.tasks.addDefaultTools('Database')
 
         return convention
     }
 
     private def addHsqldbToolset(String prefix, String path, Closure closure) {
-        HsqldbTasksConvention convention = env.get(prefix)
+        HsqldbTasksConvention convention = dbToolSets.get(prefix)
 
         if (convention == null) {
             project.logger.info("Applying HSQLDB convention to ${path} ...")
             convention = new HsqldbTasksConvention(project, prefix)
-            env.put(prefix, convention)
+            dbToolSets.put(prefix, convention)
 
-//            project.logger.info('Adding default tools for HSQLDB...')
-//            HsqldbTasks.addDefaultTools('Database', convention)
         }
 
         convention.config(closure)
@@ -197,6 +199,9 @@ configureDatabasePlugin {
         registerDriver(convention.driver)
 
         convention.addTasks(path)
+
+        project.logger.info('Adding default tools for HSQLDB...')
+        convention.tasks.addDefaultTools('Database')
 
         return convention
     }

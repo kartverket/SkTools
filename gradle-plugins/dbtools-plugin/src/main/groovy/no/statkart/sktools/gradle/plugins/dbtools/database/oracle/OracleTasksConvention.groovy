@@ -5,7 +5,6 @@ import org.gradle.api.Project
 import org.gradle.api.InvalidUserDataException
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractDatabaseConvention
 import org.gradle.api.Task
-import org.gradle.api.plugins.ExtensionContainer
 import org.gradle.api.plugins.ExtraPropertiesExtension
 
 /**
@@ -16,9 +15,7 @@ import org.gradle.api.plugins.ExtraPropertiesExtension
  */
 class OracleTasksConvention extends AbstractDatabaseConvention {
 
-    Task importTask
-    Task exportTask
-    Task infoTask
+    OracleTasks tasks;
 
     OracleTasksConvention(Project project, String propertyPrefix) {
         super(project, propertyPrefix, 'oracle.jdbc.OracleDriver')
@@ -99,8 +96,10 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
 
 
     public OracleTasksConvention addTasks(String path) {
-        OracleTasks tasks = new OracleTasks(path, this)
-        tasks.init(project)
+        if (tasks == null) {
+            tasks = new OracleTasks(path, this)
+            tasks.init(project)
+        }
         return this
     }
 
@@ -185,4 +184,22 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
         return 'REPLACE'
     }
 
+
+    @Deprecated
+    public Task getImportTask() {
+        project.println "importTask property is depricated since version 1.2 - Use tasks.import instead !"
+        return tasks.getByName('import')
+    }
+
+    @Deprecated
+    public Task getExportTask() {
+        project.println "exportTask property is depricated since version 1.2 - Use tasks.export instead !"
+        return tasks.getByName('export')
+    }
+
+    @Deprecated
+    public Task getInfoTask() {
+        project.println "infoTask property is depricated since version 1.2 - Use tasks.info instead !"
+        return tasks.getByName('info')
+    }
 }

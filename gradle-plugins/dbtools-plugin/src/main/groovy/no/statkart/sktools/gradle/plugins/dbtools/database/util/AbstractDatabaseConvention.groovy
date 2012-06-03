@@ -7,14 +7,14 @@ import org.gradle.api.Project
  */
 abstract class AbstractDatabaseConvention {
 
-    final Project project
+    protected final Project project
 
     /**
      * Prefix for alle tasks for tilknyttet denne konvensjonen
      */
-    final String prefix
+    public final String prefix
 
-    public Credentials credentials
+    public final Credentials credentials
 
     /** kan settes via {@link #config(Closure) config closure} definert i prosjekt */
     public String driver
@@ -26,7 +26,7 @@ abstract class AbstractDatabaseConvention {
         this.project = project
         this.prefix = propertyPrefix
 
-        this.credentials = new Credentials(project)
+        this.credentials = new Credentials(project, "toolset:${prefix}")
 
         this.driver = driver
 
@@ -38,5 +38,6 @@ abstract class AbstractDatabaseConvention {
         closure()
    }
 
+   public abstract AbstractDatabaseTasks getTasks();
 
 }

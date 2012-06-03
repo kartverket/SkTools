@@ -11,6 +11,8 @@ import org.gradle.api.Project
  */
 class HsqldbTasksConvention extends AbstractDatabaseConvention {
 
+    HsqldbTasks tasks
+
     HsqldbTasksConvention(Project project, String propertyPrefix) {
 
         super(project, propertyPrefix, 'org.hsqldb.jdbc.JDBCDriver')
@@ -18,8 +20,13 @@ class HsqldbTasksConvention extends AbstractDatabaseConvention {
     }
 
     public HsqldbTasksConvention addTasks(String path) {
-        HsqldbTasks tasks = new HsqldbTasks(path, this)
-        tasks.init(project)
+        if (tasks == null)  {
+            tasks = new HsqldbTasks(path, this)
+            tasks.init(project)
+        }
         return this
     }
+
+
+
 }

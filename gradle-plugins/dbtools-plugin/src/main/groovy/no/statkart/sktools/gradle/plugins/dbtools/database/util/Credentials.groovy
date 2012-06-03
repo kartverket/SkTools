@@ -1,7 +1,5 @@
 package no.statkart.sktools.gradle.plugins.dbtools.database.util
 
-import org.gradle.api.DefaultTask
-import org.gradle.api.tasks.TaskAction
 import org.gradle.api.Project
 
 /**
@@ -11,15 +9,17 @@ import org.gradle.api.Project
  * @since 1.0
  */
 class Credentials {
+    private final String context
 
-    private String username
-    private String password
+    String username
+    String password
 
 
 
-    Credentials(Project project) {
-        username = project.properties['username']
-        password = project.properties['password']
+    Credentials(Project project, String context) {
+        username = project.ext.properties['username']
+        password = project.ext.properties['password']
+        this.context = context
     }
 
     public boolean hasUsername() {
@@ -28,7 +28,7 @@ class Credentials {
 
     public String getUsername() {
         if (!hasUsername()) {
-            username = System.console().readLine('Please enter username: ')
+            username = System.console().readLine('<%s>Please enter username: ', context)
         }
         return username
     }
@@ -39,12 +39,28 @@ class Credentials {
 
     public String getPassword() {
         if (!hasPassword()) {
-            password = new String(System.console().readPassword('Please enter password for %s (empty defaults to %s): ', username, username))
+            password = new String(System.console().readPassword('<%s>Please enter password for %s (empty defaults to %s): ', context, username, username))
             if (password.isEmpty()) {
                 password = username
             }
         }
         return password
     }
+
+    /**
+     * @since 1.2
+     */
+    public void clear() {
+        username = null
+        password = null
+    }
+
+    /**
+     * @since 1.2
+     */
+    public boolean isEmpty() {
+        return !(hasUsername() || hasPassword())
+    }
+
 
 }
