@@ -39,11 +39,6 @@ task('testDemos', dependsOn:'cleanDemos') {
         }
     }
 
-    //install før kjøring av demos
-    childProjects.values().each { Project childProject ->
-        dependsOn("${childProject.path}:install")
-
-    }
 
     doLast {
         println 'Running demos..'
@@ -65,9 +60,13 @@ task('testDemos', dependsOn:'cleanDemos') {
 //task som cleaner demo-prosjekter som evt måtte finnes
 task('cleanDemos') {
 
+    //clean install før kjøring av demos
     childProjects.values().each { Project childProject ->
         dependsOn("${childProject.path}:clean")
+        dependsOn("${childProject.path}:install")
+
     }
+
 
     doLast {
         println 'Cleaning demos..'

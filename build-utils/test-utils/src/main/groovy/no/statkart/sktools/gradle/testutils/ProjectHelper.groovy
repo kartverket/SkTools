@@ -33,9 +33,10 @@ class ProjectHelper {
         return execute(project.tasks[taskName])
     }
 
-    private Task execute(Task task) {
-        if (task.state.executed) return;
-        task.getTaskDependencies().getDependencies(task).each {execute(it)}
+    private Task execute(Task task, final Set evaluatedTasks = [] as HashSet) {
+        if (evaluatedTasks.contains(task)) return task;
+        evaluatedTasks << task
+        task.getTaskDependencies().getDependencies(task).each {execute(it, evaluatedTasks)}
         println "..executing task ${task.path}"
         task.execute()
         task
