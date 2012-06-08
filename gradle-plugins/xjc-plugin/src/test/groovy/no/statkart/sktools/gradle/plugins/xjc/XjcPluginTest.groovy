@@ -3,13 +3,11 @@ package no.statkart.sktools.gradle.plugins.xjc
 import org.testng.annotations.Test
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
-import org.testng.Assert
 import no.statkart.sktools.gradle.testutils.ProjectHelper
 import no.statkart.sktools.gradle.testutils.builder.XjcProjectBuilder
 import no.statkart.sktools.gradle.testutils.filewriter.XjcTestutilFilewriter
-import org.gradle.api.plugins.JavaBasePlugin
-import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSet
+import org.gradle.api.tasks.SourceSetContainer
 
 /**
  * Test av {@link XjcPlugin}
@@ -27,10 +25,6 @@ class XjcPluginTest {
         Project project = ProjectBuilder.builder().build()
 
         project.apply plugin: 'sktools-xjc-plugin'
-
-
-        assert project.convention.plugins.xjc != null
-        Assert.assertTrue(project.convention.plugins.xjc instanceof XjcConvention)
 
     }
 
@@ -51,21 +45,23 @@ class XjcPluginTest {
 
         //config
         projectHelper.configureProject {
-            xjc {
+            sourceSets.main.xjc {
                 schema {
-                    path 'src/main/xsd'
+                    srcDir 'src/main/xsd'
                 }
             }
         }
-        projectHelper.initializeProject()
 
 
         //executes the gen task
-        projectHelper.executeTask(XjcPlugin.XJC_TASK_NAME)
+        projectHelper.executeTask('assemble')
+
+        XjcSchemaContainer xjc = projectHelper.project.sourceSets.main.xjc
 
         //asserts the results
-        projectHelper.assertTaskExecutedNotSkipped(XjcPlugin.XJC_TASK_NAME)
-        projectHelper.assertFileExists("gen/main/java/no/statkart/sktools/test/SimpleType.java")
+        projectHelper.assertTaskExecutedNotSkipped(xjc[0].generateXjcSchemaTaskName)
+        projectHelper.assertTaskExecutedNotSkipped(xjc[0].compileXjcSchemaTaskName)
+        projectHelper.assertFileExists("${xjc[0].getGeneratedSourcesDir()}/no/statkart/sktools/test/SimpleType.java")
 
     }
 
@@ -87,22 +83,26 @@ class XjcPluginTest {
 
         //config
         projectHelper.configureProject {
-            xjc {
+            sourceSets.main.xjc {
                 schema {
-                    path 'src/main/xsd'
-                    withGrunnbokDoc
+                    srcDir 'src/main/xsd'
+                    config {
+                        withGrunnbokDoc
+                    }
                 }
             }
         }
-        projectHelper.initializeProject()
 
+
+        XjcSchemaContainer xjc = projectHelper.project.sourceSets.main.xjc
 
         //executes the gen task
-        projectHelper.executeTask(XjcPlugin.XJC_TASK_NAME)
+        projectHelper.executeTask(xjc[0].generateXjcSchemaTaskName)
 
         //asserts the results
-        projectHelper.assertTaskExecutedNotSkipped(XjcPlugin.XJC_TASK_NAME)
-        projectHelper.assertFileExists("gen/main/java/no/statkart/sktools/test/DocumentedSimpleType.java") { File file ->
+        projectHelper.assertTaskExecutedNotSkipped(xjc[0].generateXjcSchemaTaskName)
+
+        projectHelper.assertFileExists("${xjc[0].getGeneratedSourcesDir()}/no/statkart/sktools/test/DocumentedSimpleType.java") { File file ->
             assert file.text.contains("Ekstra dokumentasjon for typen.")
         }
 
@@ -119,30 +119,38 @@ class XjcPluginTest {
         //generates a simple source file
         use(XjcTestutilFilewriter) {
             projectHelper.writeSimpleSchema("src/main/xsd/simple.xsd")
+
+            projectHelper.project.mkdir("src/adaper/java/some_adapter")
+            projectHelper.project.file("src/adaper/java/some_adapter/Fqn.java").createNewFile()
+            projectHelper.project.file("src/adaper/java/some_adapter/Fqn.java") << "package some_adapter;\n public class Fqn { }"
         }
 
 
         //config
         projectHelper.configureProject {
-            xjc {
-                targetDir 'build'
+            sourceSets.main.xjc {
                 schema {
-                    path 'src/main/xsd'
-                    withListAdapter 'someAdapter.Fqn'
+                    srcDir 'src/main/xsd'
+                    config {
+                        withListAdapter 'some_adapter.Fqn'
+                        java.srcDir "src/adaper/java"
+                    }
                 }
             }
         }
-        projectHelper.initializeProject()
 
 
-        //executes the gen task
-        projectHelper.executeTask(XjcPlugin.XJC_TASK_NAME)
+        XjcSchemaContainer xjc = projectHelper.project.sourceSets.main.xjc
+
+        //executes builds the main source
+        projectHelper.executeTask('classes')
 
         //asserts the results
-        projectHelper.assertTaskExecutedNotSkipped(XjcPlugin.XJC_TASK_NAME)
-        projectHelper.assertFileExists("build/no/statkart/sktools/test/StringList.java") { File file ->
+        projectHelper.assertTaskExecutedNotSkipped(xjc[0].generateXjcSchemaTaskName)
+        projectHelper.assertFileExists(xjc[0].getGeneratedSourcesDir())
+        projectHelper.assertFileExists("${xjc[0].getGeneratedSourcesDir()}/no/statkart/sktools/test/StringList.java") { File file ->
 
-            assert file.text.contains('import someAdapter.Fqn;')
+            assert file.text.contains('import some_adapter.Fqn;')
             assert file.text.contains('extends Fqn')
 
         }
@@ -150,12 +158,11 @@ class XjcPluginTest {
     }
 
 
-
     /**
      * Tester og demonstrer oppsett av konfigurasjon
      */
     @Test
-    void testConventionConfiguration() {
+    void testConventionConfiguration2() {
 
         //forks a new project in a temp folder
         ProjectHelper projectHelper = XjcProjectBuilder.builder().applyXjcPlugin().build()
@@ -163,76 +170,71 @@ class XjcPluginTest {
         //config
         projectHelper.configureProject {
 
-            //registrerer et source sett via javabase plugin
-            apply plugin:JavaBasePlugin.class
             sourceSets {
-                mysource
+                main {
+                    xjc {
+                        schema {
+                            srcDir 'src/main/xsd'
+                            config {
+                                withGrunnbokDoc
+                            }
+                        }
+                        schema {
+                            srcDir 'src/main/xsd'
+                            config {
+                                withListAdapter
+                            }
+                        }
+                    }
+                }
+
+                other.xjc {
+                    schema {
+                        srcDir 'src/main/xsd'
+                        config {
+                            withGrunnbokDoc
+                            withListAdapter 'someAdapter.fqn'
+                        }
+                    }
+                }
             }
 
-            xjc {
-
-                sourceSetName 'mysource'
-
-                schema {
-                    path 'src/main/xsd'
-                    withGrunnbokDoc
-                }
-                schema {
-                    path project.file('src/main/xsd')
-                    includes '*.xsd'
-                    withListAdapter
-                }
-                schema {
-                    path "${project.buildDir}/../src/main/xsd"
-                    includes '*.xsd'
-                    includes '*.xml'
-
-                    withGrunnbokDoc
-                    withListAdapter 'someAdapter.fqn'
-                }
-            }
         }
 
         projectHelper.initializeProject()
 
         Project project = projectHelper.project
-        XjcConvention convention = project.getConvention().getPlugins().get(XjcPlugin.CONVENTION_NAME);
 
-        assert convention != null
+        SourceSetContainer sourceSets = (SourceSetContainer) project.getConvention().getPlugins().get('java').sourceSets;
+        assert sourceSets != null //foventer at javaBase plugin er aktivert
+
+
+        //tester at source set er utvidet med plugin konfigurasjon
+
+        assert sourceSets.main.xjc.schemas[0] //foventer schema konfigurasjon
+        assert sourceSets.main.xjc.schemas[1] //foventer schema konfigurasjon
 
 
         //tester targetDir
-        assert convention.targetDir == project.file('gen/mysource/java')
-        convention.targetDir('src/gen/myjava')
-        assert convention.targetDir == project.file('src/gen/myjava')
-
-
-
-        //tester schema.dir
-        File expectedPath = project.file('src/main/xsd')
-        (0..2).each {
-            assert convention.schema[it].dir == expectedPath;
+        sourceSets.main.xjc.each { XjcSchema schema ->
+            def compileTask = project.tasks[schema.getCompileXjcSchemaTaskName()]
+            assert sourceSets.main.output.dirs.contains(compileTask.destinationDir)
         }
-
-
-        //tester schema.includes (default verdi er '**/*.xsd')
-        (0..2).each {
-            assert convention.schema[it].includes.contains('*.xsd');
-        }
-        assert convention.schema[2].includes.contains('*.xml');
 
 
         //tester schema.withGrunnbokDoc
-        assert convention.schema[0].xjcOptions.containsKey(Schema.GRUNNBOK_DOC)
-        assert convention.schema[2].xjcOptions.containsKey(Schema.GRUNNBOK_DOC)
+        assert sourceSets.main.xjc.schemas[0].config.xjcOptions.containsKey(XjcConfig.GRUNNBOK_DOC)
+        assert sourceSets.other.xjc.schemas[0].config.xjcOptions.containsKey(XjcConfig.LIST_ADAPTER)
 
         //tester schema.withListAdapter
-        assert convention.schema[1].xjcOptions.containsKey(Schema.LIST_ADAPTER)
-        assert convention.schema[2].xjcOptions.containsKey(Schema.LIST_ADAPTER)
-        assert convention.schema[2].xjcOptions[Schema.LIST_ADAPTER] == [baseClass:'someAdapter.fqn']
+        assert sourceSets.main.xjc.schemas[1].config.xjcOptions.containsKey(XjcConfig.LIST_ADAPTER)
+        assert sourceSets.other.xjc.schemas[0].config.xjcOptions[XjcConfig.LIST_ADAPTER] == [baseClass:'someAdapter.fqn']
 
 
     }
+
+
+
 
     /**
      * SKIF-171
@@ -248,21 +250,22 @@ class XjcPluginTest {
         projectHelper.configureProject {
             apply plugin: 'idea'
 
-            xjc {
-                schema {
-                    path 'src/main/xsd'
+            sourceSets {
+                main {
+                    xjc {
+                        schema {
+                            srcDir 'src/main/xsd'
+                        }
+                    }
                 }
             }
         }
 
-        projectHelper.initializeProject()
-
         Project project = projectHelper.project
-        XjcConvention convention = project.getConvention().getPlugins().get(XjcPlugin.CONVENTION_NAME);
 
 
         SourceSet sourceSet = project.convention.plugins.java.sourceSets.main
-        sourceSet.allSource.srcDirs.contains project.file('src/main/xsd')
+        assert sourceSet.allSource.srcDirs.contains(project.file('src/main/xsd'))
     }
 
 

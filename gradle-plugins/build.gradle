@@ -62,7 +62,6 @@ task('cleanDemos') {
 
     //clean install før kjøring av demos
     childProjects.values().each { Project childProject ->
-        dependsOn("${childProject.path}:clean")
         dependsOn("${childProject.path}:install")
 
     }

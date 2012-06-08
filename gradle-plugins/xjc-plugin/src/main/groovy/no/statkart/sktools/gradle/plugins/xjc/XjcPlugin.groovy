@@ -8,16 +8,23 @@ import org.gradle.api.artifacts.Dependency
 import org.gradle.api.file.FileCollection
 import org.gradle.api.initialization.dsl.ScriptHandler
 import org.gradle.api.internal.file.UnionFileCollection
-import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSet
 import java.util.concurrent.Callable
+import org.gradle.api.Action
+import org.gradle.api.internal.project.ProjectInternal
+import org.gradle.api.internal.HasConvention
+import org.gradle.api.tasks.compile.Compile
+import org.gradle.api.plugins.JavaBasePlugin
+import org.gradle.api.file.ConfigurableFileCollection
 
 /**
  * Genererer JAXB java klasser basert på <code>*.xsd<code> filer. <br />
- * Pluginen baserer seg på {@code JavaPlugin} og integrerer seg dynamiskt med denne.
+ * Pluginen baserer seg på {@code JavaBasePlugin} og integrerer seg med deklarerte {@link SourceSet}s.
  *
- * Se dokumentasjon for <i>xjc-plugins<i> modul for bruk av evt utvidelser.
+ * For hvert sourceSet plugges det inn muglihet for ekstra konfiguasjon. Se {@link XjcSourceSetExtention }
+ *
+ * Se dokumentasjon for <i>xjc-plugins</i> modul for bruk av utvidelser.
  * <ul>
  *  <li>{@link com.sun.tools.xjc.addon.statkart.GrunnbokDocPlugin}
  *  <li>{@link com.sun.tools.xjc.addon.statkart.ListGenPlugin}
@@ -28,105 +35,125 @@ import java.util.concurrent.Callable
  * @author Leif Lislegård
 
  */
-class XjcPlugin implements Plugin<Project> {
+class XjcPlugin implements Plugin<ProjectInternal> {
 
     final static String CONVENTION_NAME = 'xjc'
     final static String JAXB_CONFIGURATION_NAME = 'jaxb'
-    final static String XJC_TASK_NAME = 'xjcGenerate'
 
     @Override
-    void apply(Project project) {
-        project.apply plugin: JavaPlugin.class
-
-        final XjcConvention xjcConvention = new XjcConvention(project)
-        project.convention.plugins.put(XjcPlugin.CONVENTION_NAME, xjcConvention);
+    void apply(ProjectInternal project) {
+        project.apply plugin: JavaBasePlugin.class
 
         final Configuration xjcConfiguration = createConfiguration(project);
-
-        //creates the task
-        Task xjcTask = project.task(XJC_TASK_NAME, type: XjcTask.class).dependsOn(
-                xjcConfiguration,
-        );
-
-
-        //setting defaults if not already configured
-        project.afterEvaluate {
-            setConventionalDefaults(xjcConvention)
-            configureConventionalValuesForXjcTask(project, xjcConvention)
-
-            SourceSet sourceSet = configureSourceSet(xjcConvention)
-
-            project.tasks[sourceSet.getCompileJavaTaskName()].dependsOn(
-                    XjcPlugin.XJC_TASK_NAME,    //hooks it into prior to 'compile<sourceSet>Java' task
-            );
-        }
+        final SourceSet sourceSet = configureSourceSets(project, xjcConfiguration)
 
     }
 
     /**
-     * Legger til mappe for generert kildekode til valgt source sett.
-     * <p>
-     * Se {@link XjcConvention#sourceSetName} for valg av sourceSet
+     * Utvider sourceSets med xjc tillegg
      */
-    private SourceSet configureSourceSet(XjcConvention xjcConvention) {
-        Project project = xjcConvention.project
-        JavaPluginConvention javaConvention = project.getConvention().getPlugins().get("java");
-        SourceSet sourceSet = javaConvention.getSourceSets().getByName(xjcConvention.sourceSetName)
+    private void configureSourceSets(final ProjectInternal project, final Configuration configuration) {
 
-        //legger genererte java filer til source set
-        sourceSet.getJava().srcDir(xjcConvention.targetDir)
+        final JavaBasePlugin javaBasePlugin = project.getPlugins().getPlugin(JavaBasePlugin.class)
 
-        //legger til kildekode slik at de kan bli plukket opp av dokumentajonsverktøy, kildekode distribusjon mm
-        xjcConvention.schema.each {
-            if (it.dir) sourceSet.getAllSource().srcDir(it.dir)
-        }
+        //for hvert source sett som finnes/blir lagt til
+        project.getConvention().getPlugin(JavaPluginConvention.class).getSourceSets().all(new Action<SourceSet>() {
+            public void execute(final SourceSet sourceSet) {
+                XjcSourceSetExtention xjcSourceSet = new XjcSourceSetExtention(sourceSet, project.getFileResolver());
 
-        return sourceSet;
+                //hekter inn utvidelser på source settet
+                ((HasConvention) sourceSet).getConvention().getPlugins().put(CONVENTION_NAME, xjcSourceSet); // SKIF-195
+
+                //hekter inn generert resultat og legger dette compile classpath
+                ConfigurableFileCollection xjcOutputClasspath = project.files()
+                sourceSet.setCompileClasspath( sourceSet.getCompileClasspath().plus(xjcOutputClasspath) )
+
+
+                final String buildPath = project.relativePath(project.getBuildDir())
+
+                xjcSourceSet.getXjc().all(new Action<XjcSchema>() {
+                    void execute(XjcSchema xjcSchema) {
+                        //setter ingen default plassering av kildefiler for sourceSet - dette må eksplisitt deklareres i konfigurasjon
+
+                        File buildOutputDir = project.file("${buildPath}/classes/${xjcSchema.getName()}")
+                        File genOutputDir = project.file(xjcSchema.getGeneratedSourcesDir())
+
+                        //legger til output til classpath
+                        xjcOutputClasspath.from(buildOutputDir)
+
+                        //legger til output katalog til sourceset
+                        sourceSet.output.dir(buildOutputDir)
+
+                        //legger til generert kildekode slik at de kan bli plukket opp av dokumentajonsverktøy, kildekode distribusjon mm
+                        sourceSet.getAllJava().srcDir(genOutputDir);
+                        //legger også til kildekode for xsd filer
+                        sourceSet.getAllSource().srcDirs(xjcSchema);
+
+
+                        Task xjcTask = createXjcTaskForSourceSet(xjcSchema, genOutputDir).dependsOn(
+                                configuration,
+                        );
+
+                        Task compileTask = createCompileXjcTaskForSchema(xjcSchema, xjcTask, buildOutputDir).dependsOn(
+                                xjcTask,
+                                project.getConfigurations().getByName(sourceSet.getCompileConfigurationName()),
+                        )
+
+                        project.tasks[sourceSet.getCompileJavaTaskName()].dependsOn(compileTask);
+
+                    }
+
+
+                    private XjcTask createXjcTaskForSourceSet(XjcSchema xjcSchema, File genOutputDir) {
+                        XjcTask task = (XjcTask) project.task(type: XjcTask.class, xjcSchema.getGenerateXjcSchemaTaskName());
+                        task.getConventionMapping().with {
+                            map("source", new Callable() {
+                                public Object call() {
+                                    return xjcSchema;
+                                }
+                            });
+                            map("config", new Callable() {
+                                public Object call() {
+                                    return xjcSchema.getConfig();
+                                }
+                            });
+                            map("outputDirectory", new Callable() {
+                                public Object call() {
+                                    return genOutputDir;
+                                }
+                            });
+                            map("classpath", new Callable() {
+                                public Object call() {
+                                    //merge plugins dependencies with jaxb, putting jaxb first in classpath for optional override.
+                                    return new UnionFileCollection(project.getConfigurations().getByName(XjcPlugin.JAXB_CONFIGURATION_NAME), findPluginClasspath(project));
+                                }
+                            });
+                        }
+                        return task
+                    }
+
+                    private Task createCompileXjcTaskForSchema(XjcSchema xjcSchema, Task xjcTask, File buildOutputDir) {
+                        Compile compile = (Compile) project.task(xjcSchema.getCompileXjcSchemaTaskName(), type: XjcCompile.class)
+                        javaBasePlugin.configureForSourceSet(sourceSet, compile);
+
+                        compile.setDescription("Compiles the XCJ generated schema files");
+                        compile.setSource(xjcTask);
+                        compile.source(xjcSchema.getJava());  //for evt ListAdapter implementasjon osv
+                        compile.setDestinationDir(buildOutputDir);
+
+                        return compile;
+                    }
+
+
+                });
+            }
+        });
+
     }
 
-    /**
-     * Setter default verdier etter at all annen konfigurasjon er gjort.
-     */
-    private void setConventionalDefaults(XjcConvention xjcConvention) {
-        Project project = xjcConvention.project
-
-        if (xjcConvention.targetDir == null) {
-            xjcConvention.targetDir = project.file("gen/${xjcConvention.sourceSetName}/java")
-        }
-
-        xjcConvention.schema.each {
-            if (it.includes == null) it.includes = ['*.xsd']
-        }
-    }
 
 
-    private configureConventionalValuesForXjcTask(final Project project, final XjcConvention xjcConvention) {
-        project.tasks.getByName(XJC_TASK_NAME).getConventionMapping().with {
-            map("source", new Callable() {
-                public Object call() {
-                    return project.files(xjcConvention.schema.collect {it.dir}).getAsFileTree();  //default source
-                }
-            });
-            map("schemas", new Callable() {
-                public Object call() {
-                    return xjcConvention.schema;
-                }
-            });
-            map("outputDirectory", new Callable() {
-                public Object call() {
-                    return xjcConvention.targetDir;
-                }
-            });
-            map("classpath", new Callable() {
-                public Object call() {
-                    //merge plugins dependencies with jaxb, putting jaxb first in classpath for optional override.
-                    return new UnionFileCollection(project.getConfigurations().getByName(XjcPlugin.JAXB_CONFIGURATION_NAME), findPluginClasspath(project));
-                }
-            });
-        }
-    }
-
-
+    //todo: en bedre strategi her er eksplisitt å legge til dependencies. Dette kunne feks leses inn via en property fil for pluginet?
     private static FileCollection findPluginClasspath(final Project project) {
 
         Closure<Boolean> pluginDependencyMatcher = {Dependency dependency -> dependency.getGroup() == 'no.statkart.sktools.gradle' && dependency.getName() == 'xjc-plugin'}

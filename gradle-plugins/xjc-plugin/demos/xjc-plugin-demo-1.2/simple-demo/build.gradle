@@ -1,26 +1,130 @@
+/******************************************************************************************************************** **
+ *
+ * Demonstrasjon på enkel bruk av plugin.
+ *
+ * En viser også eksempel implementasjon av 'gen' target.
+ *
+ ******************************************************************************************************************** */
+
 apply plugin: 'sktools-xjc-plugin'
+apply plugin: 'java'
 
 
-xjc {
-    schema {
-        path 'src/main/xsd'
+sourceSets {
+    main.xjc {
+        schema {
+            srcDir 'src/main/xsd'
+            srcDir 'build/gen/dirty'
+        }
+    }
+}
+
+task('gen').description = "Genererte ressurser for alle sourceSets"
+
+//integrasjon med xjc plugin
+if (project.plugins.hasPlugin('sktools-xjc-plugin')) {
+    project.tasks.withType(no.statkart.sktools.gradle.plugins.xjc.XjcCompile.class) {
+        project.tasks.gen.dependsOn it
+    }
+}
+
+
+/******************************************************************************************************************** **
+ * Diverse tasker som tester og demonstrerer implementasjonen
+ ******************************************************************************************************************** */
+
+task runDemo(dependsOn:'clean') {
+    description = 'Kjører en enkel demo for å teste funksjonaliteten'
+
+    doLast {
+
+        println 'Tester generering av kildekode...'
+        forkGradle([sourceSets.main.xjc[0].generateXjcSchemaTaskName, 'assertXjcGeneratedSources'])
+
+        println 'Tester generering ved asssemble...'
+        forkGradle(['assemble', 'assertXjcGeneratedSources', 'assertXjcClasses'])
+
+        println 'Tester at "dirty resources" ikke forekommer...'
+        createDirtySchema('build/gen/dirty')
+        forkGradle(['assemble', 'assertDirtySources', 'assertDirtyClasses'])
+        project.delete('build/gen/dirty')
+        forkGradle(['assemble', 'assertNoDirtySources', 'assertNoDirtyClasses'])
+
+
+        println 'Tester integrasjon av "gen" target...'
+        forkGradle(['clean'])
+        forkGradle(['gen', 'assertXjcGeneratedSources', 'assertXjcClasses'])
+
+        //keep it tidy!
+        forkGradle(['clean'])
+
     }
 }
 
 
 
-
-
-task runDemo {
-    dependsOn 'testXjcGenerate'
-    dependsOn 'testClean'
+task assertXjcGeneratedSources() << {
+    assert files(sourceSets.main.xjc[0].generatedSourcesDir).asFileTree.files.find {it.name == 'SimpleType.java'}
 }
 
-task testXjcGenerate(dependsOn:'compileJava') << {
-    assert file('gen/main/java/no/statkart/sktools/test/SimpleType.java').exists()
+task assertXjcClasses() << {
+    assert files(sourceSets.main.output).asFileTree.files.find {it.name == 'SimpleType.class'}
 }
 
-task testClean(dependsOn:['testXjcGenerate', 'clean']) << {
-    println 'todo'
-//    assert !file('gen/main/java/no/statkart/sktools/test/SimpleType.java').exists()
+void createDirtySchema(def path) {
+    project.file("${path}/other.xsd").with { File file ->
+        println "Creating file ${project.relativePath(file)}"
+        file.parentFile.mkdirs()
+        file.createNewFile()
+        file.withPrintWriter { writer ->
+//    file.withPrintWriter('UTF-8') { writer ->
+            writer.print '''<?xml version="1.0" encoding="UTF-8"?>
+            <xs:schema
+                    version="1.0"
+                    elementFormDefault="qualified"
+                    targetNamespace="http://dirty"
+                    xmlns="http://dirty"
+                    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                    xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
+                    jaxb:version="2.1">
+
+                <xs:complexType name="Dirty">
+                    <xs:sequence>
+                        <xs:element name="var1" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+
+            </xs:schema>
+            '''
+        }
+    }
+}
+
+task assertDirtySources() << {
+    assert files(sourceSets.main.xjc[0].generatedSourcesDir).asFileTree.files.find {it.name == 'Dirty.java'}
+}
+
+task assertDirtyClasses() << {
+    assert files(sourceSets.main.output).asFileTree.files.find {it.name == 'Dirty.class'}
+}
+
+
+task assertNoDirtySources() << {
+    assert !files(sourceSets.main.xjc[0].generatedSourcesDir).asFileTree.files.find {it.name == 'Dirty.java'} //forventer ikke å finne Dirty.java blandt source
+}
+
+task assertNoDirtyClasses() << {
+    assert !files(sourceSets.main.output).asFileTree.files.find {it.name == 'Dirty.class'} //forventer ikke å finne Dirty.class blandt class filer
+}
+
+
+/******************************************************************************************************************** **
+ * Hjelpemetode for forking av gradle eksekveringer
+ * Kun relevant for testing...
+ ******************************************************************************************************************** */
+void forkGradle(List tasks, Map props = [:]) {
+    StartParameter sp = gradle.startParameter.newInstance()
+    sp.taskNames = tasks.collect {"${project.path}:${it}".toString()}
+    sp.projectProperties = props
+    GradleLauncher.newInstance(sp).run().rethrowFailure();
 }
