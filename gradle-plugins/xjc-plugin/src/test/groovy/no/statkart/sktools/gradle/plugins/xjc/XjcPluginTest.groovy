@@ -45,9 +45,11 @@ class XjcPluginTest {
 
         //config
         projectHelper.configureProject {
-            sourceSets.main.xjc {
-                schema {
-                    srcDir 'src/main/xsd'
+            sourceSets {
+                main.xjc {
+                    schema {
+                        srcDir 'src/main/xsd'
+                    }
                 }
             }
         }
@@ -83,11 +85,13 @@ class XjcPluginTest {
 
         //config
         projectHelper.configureProject {
-            sourceSets.main.xjc {
-                schema {
-                    srcDir 'src/main/xsd'
-                    config {
-                        withGrunnbokDoc
+            sourceSets {
+                main.xjc {
+                    schema {
+                        srcDir 'src/main/xsd'
+                        config {
+                            withGrunnbokDoc
+                        }
                     }
                 }
             }
@@ -128,12 +132,14 @@ class XjcPluginTest {
 
         //config
         projectHelper.configureProject {
-            sourceSets.main.xjc {
-                schema {
-                    srcDir 'src/main/xsd'
-                    config {
-                        withListAdapter 'some_adapter.Fqn'
-                        java.srcDir "src/adaper/java"
+            sourceSets {
+                main.xjc {
+                    schema {
+                        srcDir 'src/main/xsd'
+                        config {
+                            withListAdapter 'some_adapter.Fqn'
+                            java.srcDir "src/adaper/java"
+                        }
                     }
                 }
             }
