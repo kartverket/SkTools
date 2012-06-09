@@ -30,6 +30,8 @@ class XjcPluginTest {
 
     /**
      * Tester minimal konfigurasjon - uten ekstra funksjonalitet innkoblet
+     *
+     * Merk at her er ingen artifakter deklarert. JavaPlugin er heller ikke aktivert.
      */
     @Test
     void testDefaultSetting() {
@@ -56,7 +58,7 @@ class XjcPluginTest {
 
 
         //executes the gen task
-        projectHelper.executeTask('assemble')
+        projectHelper.executeTask('compileJava')
 
         XjcSchemaContainer xjc = projectHelper.project.sourceSets.main.xjc
 
