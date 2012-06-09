@@ -50,11 +50,9 @@ class WeblogicWsWarPluginTest {
         ProjectHelper projectHelper = WeblogicWsWarProjectBuilder.builder().applyWsWarPlugin(true).build()
 
         projectHelper.configureProject {
-            weblogicWsWar {
-                sourceSet {
-                    java.srcDir 'scr/someJavaSourceDir'
-                    resources.srcDir 'scr/someResourcesDir'
-                }
+            sourceSets.weblogic {
+                java.srcDir 'scr/someJavaSourceDir'
+                resources.srcDir 'scr/someResourcesDir'
             }
         }
 
@@ -71,7 +69,8 @@ class WeblogicWsWarPluginTest {
     /**
      * Tester task med default verdier
      *
-     * @see WeblogicWsWarPlugin#COMPILE_WEBLOGIC_TASK_NAME
+     * @see WeblogicWsWarPlugin#WEBLOGIC_GEN_TASK_NAME
+     * @see WeblogicWsWarPlugin#WEBLOGIC_WAR_TASK_NAME
      */
     @Test
     void testCompileTask() {
@@ -84,9 +83,9 @@ class WeblogicWsWarPluginTest {
             projectHelper.writeDemoServiceWSBean('src/weblogic/java')
         }
 
-        projectHelper.executeTask(WeblogicWsWarPlugin.COMPILE_WEBLOGIC_TASK_NAME)
+        projectHelper.executeTask(WeblogicWsWarPlugin.WEBLOGIC_GEN_TASK_NAME)
 
-        projectHelper.assertTaskExecutedNotSkipped(WeblogicWsWarPlugin.COMPILE_WEBLOGIC_TASK_NAME, '') { Task task ->
+        projectHelper.assertTaskExecutedNotSkipped(WeblogicWsWarPlugin.WEBLOGIC_GEN_TASK_NAME, '') { Task task ->
             assert task.outputs.hasOutput //skal ha fått deklarert at denne tasken har outputs
             assert !task.outputs.getFiles().isEmpty() //forventer genererte filer
             assert 1 == task.outputs.getFiles().getAsFileTree().findAll {it.name.endsWith('.wsdl')}.size() //antall wsdl filer generert
@@ -111,38 +110,19 @@ class WeblogicWsWarPluginTest {
         }
 
         //eksekverer task
-        projectHelper.executeTask(WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME)
+        Task warTask = projectHelper.executeTask(WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME)
 
         //tester task
-        Task warTask = projectHelper.assertTaskExecutedNotSkipped(WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME)
-        projectHelper.assertTaskExecutedNotSkipped(WeblogicWsWarPlugin.COMPILE_WEBLOGIC_TASK_NAME)
+        projectHelper.assertTaskExecutedNotSkipped(WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME)
+        projectHelper.assertTaskExecutedNotSkipped(WeblogicWsWarPlugin.WEBLOGIC_GEN_TASK_NAME)
+        projectHelper.assertTaskExecutedNotSkipped('compileWeblogicJava')
 
         File warFile = projectHelper.assertFileExists('build/libs/WeblogicWsWarProjectBuilder-weblogic.war')
 
-        assert warTask.getOutputs().getFiles().contains(warFile) //forventer at output inneholder denne filen
+        assert warTask.getOutputs().getFiles().getSingleFile() == warFile //forventer at output inneholder denne filen
 
     }
 
-    /**
-     * Tester at følgende statiske variabler har riktig verdi
-     * <ul>
-     *  <li>{@link WeblogicWsWarPlugin#COMPILE_WEBLOGIC_TASK_NAME}
-     *  <li>{@link WeblogicWsWarPlugin#PROCESS_WEBLOGIC_RESOURCES_TASK_NAME}
-     *  </ul>
-     */
-    @Test
-    void testTaskName() {
-        //forks a new project in a temp folder
-        ProjectHelper projectHelper = WeblogicWsWarProjectBuilder.builder().applyWsWarPlugin(false).build()
-        Project project = projectHelper.project
-
-
-        JavaPluginConvention javaPluginConvention = project.getConvention().getPlugins().get("java")
-        SourceSet weblogicSourceSet = javaPluginConvention.getSourceSets().getByName(WeblogicWsWarPlugin.WEBLOGIC_SOURCE_SET_NAME)
-
-        assert weblogicSourceSet.getCompileJavaTaskName() == WeblogicWsWarPlugin.COMPILE_WEBLOGIC_TASK_NAME
-        assert weblogicSourceSet.getProcessResourcesTaskName() == WeblogicWsWarPlugin.PROCESS_WEBLOGIC_RESOURCES_TASK_NAME
-    }
 
     /**
      * Tester oppsett av {@code SourceSet}

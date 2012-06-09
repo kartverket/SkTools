@@ -1,5 +1,4 @@
 include ':simple-demo'
-include ':embedded-sources'
 
 rootProject.name = 'weblogic-wswar-demos'
 

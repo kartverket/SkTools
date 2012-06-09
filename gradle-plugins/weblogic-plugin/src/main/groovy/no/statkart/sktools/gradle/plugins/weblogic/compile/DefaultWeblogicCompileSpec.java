@@ -11,8 +11,16 @@ import java.io.File;
  */
 public class DefaultWeblogicCompileSpec extends DefaultJavaCompileSpec implements WeblogicCompileSpec {
 
+    /**
+     * Classpath for bruk av weblogic spesifike verktøy
+     */
     private Iterable<File> weblogicClasspath;
+
+    /**
+     * Mappe som kan benyttes generering av temporære filer
+     */
     private File tempDir;
+
 
     @Override
     public Iterable<File> getWeblogicClasspath() {
@@ -31,4 +39,5 @@ public class DefaultWeblogicCompileSpec extends DefaultJavaCompileSpec implement
     public void setTempDir(File tempDir) {
         this.tempDir = tempDir;
     }
+
 }

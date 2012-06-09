@@ -43,18 +43,28 @@ class WeblogicJaxWsClientCompilerTest {
             wsWarProjectHelper.writePingServiceWSBean('src/weblogic/java')
         }
 
-        wsWarProjectHelper.executeTask(WeblogicWsWarPlugin.COMPILE_WEBLOGIC_TASK_NAME)
-        wsWarProjectHelper.assertTaskExecutedNotSkipped(WeblogicWsWarPlugin.COMPILE_WEBLOGIC_TASK_NAME)
+        wsWarProjectHelper.executeTask(WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME)
+        wsWarProjectHelper.assertTaskExecutedNotSkipped(WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME)
 
-        rootProject.file('somedir').mkdir()
-        FileUtils.copyFileToDirectory(wsWarProjectHelper.assertFileExists('build/classes/weblogic/wswar.war/WEB-INF/TestServiceWS.wsdl'), rootProject.file('somedir'))
-        FileUtils.copyFileToDirectory(wsWarProjectHelper.assertFileExists('build/classes/weblogic/wswar.war/WEB-INF/TestServiceWS_schema1.xsd'), rootProject.file('somedir'))
+        // pakker ut schema filer ifra generert war
+        assert wsWarProjectHelper.assertFileExists(wsWarProjectHelper.project.configurations['weblogic'].artifacts.files.singleFile) { warFile ->
+            rootProject.copy {
+                into 'somedir'
+                from wsWarProjectHelper.project.zipTree(warFile).matching { include '**/TestService*.wsdl', '**/TestService*.xsd' }.files
+            }
+            rootProject.copy {
+                into 'additional'
+                from wsWarProjectHelper.project.zipTree(warFile).matching { include '**/PingService*.wsdl', '**/PingService*.xsd' }.files
+            }
+        }
+
+        rootProjectHelper.assertFileExists('somedir/TestServiceWS.wsdl')
+        rootProjectHelper.assertFileExists('somedir/TestServiceWS_schema1.xsd')
+        rootProjectHelper.assertFileExists('additional/PingServiceWS.wsdl')
+        rootProjectHelper.assertFileExists('additional/PingServiceWS_schema1.xsd')
 
         FileCollection someDirFiles = rootProject.files('somedir')
-        FileCollection additionalFiles = rootProject.files(
-                wsWarProjectHelper.assertFileExists('build/classes/weblogic/wswar.war/WEB-INF/PingServiceWS.wsdl'),
-                wsWarProjectHelper.assertFileExists('build/classes/weblogic/wswar.war/WEB-INF/PingServiceWS_schema1.xsd'),
-        )
+        FileCollection additionalFiles = rootProject.files('additional')
 
         //konfigurerer compiler
         WeblogicJaxWsClientCompiler compiler = new WeblogicJaxWsClientCompiler()
@@ -108,11 +118,19 @@ class WeblogicJaxWsClientCompilerTest {
             wsWarProjectHelper.writeExceptionDemoWithTwoServicesService('src/weblogic/java')
         }
 
-        wsWarProjectHelper.executeTask(WeblogicWsWarPlugin.COMPILE_WEBLOGIC_TASK_NAME)
-        wsWarProjectHelper.assertTaskExecutedNotSkipped(WeblogicWsWarPlugin.COMPILE_WEBLOGIC_TASK_NAME)
-        wsWarProjectHelper.assertFileExists('build/classes/weblogic/wswar.war/WEB-INF/ExceptionService1WS.wsdl')
+        wsWarProjectHelper.executeTask(WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME)
+        wsWarProjectHelper.assertTaskExecutedNotSkipped(WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME)
 
-        FileCollection schemaFiles = rootProject.files('wswar/build/classes/weblogic/wswar.war/WEB-INF').getAsFileTree().matching(new PatternSet(includes: ['*.wsdl', '*.xsd']))
+        // pakker ut schema filer ifra generert war
+        assert wsWarProjectHelper.assertFileExists(wsWarProjectHelper.project.configurations['weblogic'].artifacts.files.singleFile) { warFile ->
+            rootProject.copy {
+                into 'somedir'
+                from wsWarProjectHelper.project.zipTree(warFile).matching { include '**/*.wsdl', '**/*.xsd' }.files
+            }
+        }
+        rootProjectHelper.assertFileExists('somedir/ExceptionService1WS.wsdl')
+
+        FileCollection schemaFiles = rootProject.files('somedir').getAsFileTree().matching(new PatternSet(includes: ['*.wsdl', '*.xsd']))
 
         //konfigurerer compiler
         WeblogicJaxWsClientCompiler compiler = new WeblogicJaxWsClientCompiler()

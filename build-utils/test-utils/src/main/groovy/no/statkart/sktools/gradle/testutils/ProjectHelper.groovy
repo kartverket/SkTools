@@ -189,17 +189,17 @@ class ProjectHelper {
         return project.files("${System.getenv('JAVA_HOME')}/lib/tools.jar").stopExecutionIfEmpty() //JAVA_HOME ikke satt??
     }
 
-    public File assertFileNotExists(String path, Closure testClosure = null) {
+    public File assertFileNotExists(Object path, Closure testClosure = null) {
         return assertFile(path, '', testClosure, false);
     }
-    public File assertFileExists(String path, Closure testClosure = null) {
+    public File assertFileExists(Object path, Closure testClosure = null) {
         return assertFile(path, '', testClosure, true);
     }
-    public File assertFileExists(String path, String message, Closure testClosure = null) {
+    public File assertFileExists(Object path, String message, Closure testClosure = null) {
         return assertFile(path, message, testClosure, true);
     }
 
-    private File assertFile(String path, String message, Closure testClosure, boolean expectFileExist) {
+    private File assertFile(Object path, String message, Closure testClosure, boolean expectFileExist) {
         File file = project.file(path)
         if (expectFileExist && !file.exists()) {
             Assert.fail("Forventet at filen ${path} finnes. ${message}")
