@@ -5,7 +5,7 @@ propertyUtils.with {
 }
 
 
-task runDemo {
+task runDemo() {
     assert project.properties.expandedValue == '${testValue} ${testValue}'
 
     propertyUtils.expandProjectProperties()

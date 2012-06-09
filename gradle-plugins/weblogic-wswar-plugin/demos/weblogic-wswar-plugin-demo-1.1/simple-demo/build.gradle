@@ -20,7 +20,7 @@ project.task('listSourceFiles') {
     }
 }
 
-task runDemo {
+task runDemo() {
     dependsOn 'testCompileWeblogicJava'
     dependsOn 'testClean'
 }

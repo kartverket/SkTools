@@ -15,7 +15,7 @@ dependencies {
 }
 
 
-task runDemo {
+task runDemo() {
     dependsOn 'testGenWsDoc'
     dependsOn 'testClean'
 

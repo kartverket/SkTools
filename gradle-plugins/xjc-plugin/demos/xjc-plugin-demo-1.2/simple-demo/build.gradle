@@ -22,12 +22,13 @@ sourceSets {
 task('gen').description = "Genererte ressurser for alle sourceSets"
 
 //integrasjon med xjc plugin
-if (project.plugins.hasPlugin('sktools-xjc-plugin')) {
-    project.tasks.withType(no.statkart.sktools.gradle.plugins.xjc.XjcCompile.class) {
-        project.tasks.gen.dependsOn it
+afterEvaluate {
+    if (project.plugins.hasPlugin('sktools-xjc-plugin')) {
+        project.tasks.withType(no.statkart.sktools.gradle.plugins.xjc.XjcCompile.class) {
+            project.tasks.gen.dependsOn it
+        }
     }
 }
-
 
 /******************************************************************************************************************** **
  * Diverse tasker som tester og demonstrerer implementasjonen

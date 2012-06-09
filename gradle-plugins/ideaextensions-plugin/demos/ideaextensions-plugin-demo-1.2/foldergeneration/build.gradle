@@ -20,7 +20,7 @@ sourceSets {
     }
 }
 
-task runDemo {
+task runDemo() {
     dependsOn 'testFolderGeneration'
     dependsOn 'testSourceFolderDefs'
 }

@@ -5,7 +5,7 @@ apply plugin: 'java'
 
 
 
-task runDemo {
+task runDemo() {
     dependsOn 'testFilterResources'
 }
 

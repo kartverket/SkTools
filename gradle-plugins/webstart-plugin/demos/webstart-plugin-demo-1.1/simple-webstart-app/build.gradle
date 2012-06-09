@@ -86,7 +86,7 @@ webstart {
 
 
 
-task runDemo {
+task runDemo() {
     dependsOn 'testGenWebstart'
     dependsOn 'testClean'
 }

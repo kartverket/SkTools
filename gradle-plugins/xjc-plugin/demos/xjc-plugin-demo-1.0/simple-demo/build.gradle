@@ -11,7 +11,7 @@ xjc {
 
 
 
-task runDemo {
+task runDemo() {
     dependsOn 'testXjcGenerate'
     dependsOn 'testClean'
 }

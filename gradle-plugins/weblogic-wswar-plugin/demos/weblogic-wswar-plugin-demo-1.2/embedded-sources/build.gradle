@@ -21,7 +21,7 @@ weblogicWsWar {
 
 
 
-task runDemo {
+task runDemo() {
     dependsOn 'testCompileWeblogicJava'
 }
 

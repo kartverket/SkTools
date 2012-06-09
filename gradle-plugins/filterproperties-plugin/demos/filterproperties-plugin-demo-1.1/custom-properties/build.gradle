@@ -13,7 +13,7 @@ filteredProperties {
 
 
 
-task runDemo {
+task runDemo() {
     dependsOn 'testFilterResources'
     dependsOn 'testClean'
 }
