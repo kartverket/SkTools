@@ -120,7 +120,7 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
         genTask.group = BasePlugin.BUILD_GROUP
 
         genTask.source = sourceSet.java
-        genTask.classpath = project.configurations[sourceSet.runtimeConfigurationName]
+        genTask.classpath = sourceSet.runtimeClasspath //avhenger av kompilerte filer ifra sourceSet
 
         genTask.destinationDir = project.file("${project.buildDir}/${sourceSet.name}/webapp")
         genTask.classesDir = project.file("${project.buildDir}/${sourceSet.name}/classes")

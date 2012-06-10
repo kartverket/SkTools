@@ -12,6 +12,8 @@ import no.statkart.sktools.gradle.testutils.ProjectHelper
 import no.statkart.sktools.gradle.testutils.builder.WeblogicWsWarProjectBuilder
 import org.gradle.api.file.FileCollection
 import no.statkart.sktools.gradle.testutils.filewriter.WeblogicWsWarTestutilFilewriter
+import org.gradle.api.tasks.SourceTask
+import org.gradle.api.tasks.compile.AbstractCompile
 
 /**
  * Test av {@link WeblogicWsWarPlugin}
@@ -62,6 +64,23 @@ class WeblogicWsWarPluginTest {
 
         assert javaConvention.sourceSets['weblogic'].java.srcDirs.contains(projectHelper.project.file('scr/someJavaSourceDir'))
         assert javaConvention.sourceSets['weblogic'].resources.srcDirs.contains(projectHelper.project.file('scr/someResourcesDir'))
+
+    }
+
+
+    /**
+     * Tester {@link WeblogicWsWarPlugin#WEBLOGIC_GEN_TASK_NAME}
+     */
+    @Test
+    void testCompileTaskClasspath() {
+        //forks a new project in a temp folder
+        ProjectHelper projectHelper = WeblogicWsWarProjectBuilder.builder().applyWsWarPlugin(true).build()
+        Project project = projectHelper.project
+
+        AbstractCompile genTask = project.tasks[WeblogicWsWarPlugin.WEBLOGIC_GEN_TASK_NAME]
+        SourceSet sourceSet = project.sourceSets[WeblogicWsWarPlugin.WEBLOGIC_SOURCE_SET_NAME]
+
+        assert genTask.classpath.contains(sourceSet.output.classesDir) // forventer kompilerte classfiler på classpath
 
     }
 
