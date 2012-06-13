@@ -208,6 +208,8 @@ class ProjectHelper {
         }
 
         if (testClosure != null) {
+            testClosure.setDelegate(this)
+            testClosure.setResolveStrategy(Closure.DELEGATE_FIRST)
             testClosure.call(file)
         }
         return file

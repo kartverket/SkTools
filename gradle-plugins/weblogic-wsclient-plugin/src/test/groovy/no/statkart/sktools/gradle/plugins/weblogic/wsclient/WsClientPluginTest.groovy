@@ -11,6 +11,8 @@ import org.testng.annotations.Test
 import org.gradle.api.plugins.BasePlugin
 import no.statkart.sktools.gradle.testutils.filewriter.WeblogicWsWarTestutilFilewriter
 import org.gradle.api.Task
+import org.gradle.api.file.FileTree
+import org.gradle.api.tasks.SourceSet
 
 /**
  * Test  av {@link WeblogicWsClientPlugin}-funksjonalitet.
@@ -78,7 +80,7 @@ class WeblogicWsClientPluginTest {
         def convention = wsClientProject.convention.plugins.get(WeblogicWsClientPlugin.CONVENTION_NAME)
 
         assert convention != null
-        assert convention.genDir == wsClientProject.file('gen/weblogic/wsclient')
+        assert convention.genDir == 'gen/main/wsclient'
         assert convention.webService[1].exception.packageOrPathString != null
 
         //tester baseWar
@@ -106,11 +108,12 @@ class WeblogicWsClientPluginTest {
 
     /**
      * Tester generering av wsclient der man peker til war modul i et annet gradle prosjekt.
+     * Benytter her JavaPlugin oppsett.
      */
     @Test
     void testDependency() {
         //forks a new wsClientProject in a temp folder
-        ProjectHelper wsClientProjectHelper = WeblogicWsClientProjectBuilder.builder().withName('wsclient').applyWsClientPlugin(true).build()
+        ProjectHelper wsClientProjectHelper = WeblogicWsClientProjectBuilder.builder().withName('wsclient').applyJavaPlugin().applyWsClientPlugin(true).build()
         Project wsClientProject = wsClientProjectHelper.project
 
         //forks a child wsClientProject within the same temp folder
@@ -133,10 +136,9 @@ class WeblogicWsClientPluginTest {
 
         wsClientProjectHelper.initializeProject()
 
-        //eksekverer
 
-        //genererer wsclient artifakt
-        wsClientProjectHelper.executeTask(WeblogicWsClientPlugin.JAR_WEBLOGIC_TASK_NAME)
+        //eksekverer - genererer wsclient artifakt
+        wsClientProjectHelper.executeTask('assemble')
         //forventer at ovenstående kaller {@code WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME }
 
         //tester at avhengighet er blit bygd.
@@ -146,16 +148,35 @@ class WeblogicWsClientPluginTest {
         wsWarProjectHelper.assertTaskExecutedNotSkipped(WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME)
 
         wsClientProjectHelper.assertTaskExecutedNotSkipped(WeblogicWsClientPlugin.GEN_CLIENT_TASK_NAME)
-        wsClientProjectHelper.assertTaskExecutedNotSkipped(WeblogicWsClientPlugin.PROCESS_WEBLOGIC_RESOURCES_TASK_NAME)
-        wsClientProjectHelper.assertTaskExecutedNotSkipped(WeblogicWsClientPlugin.COMPILE_WEBLOGIC_TASK_NAME)
-        wsClientProjectHelper.assertTaskExecutedNotSkipped(WeblogicWsClientPlugin.JAR_WEBLOGIC_TASK_NAME)
+        assert wsClientProjectHelper.project.tasks['processResources'].state.executed
+        assert wsClientProjectHelper.project.tasks['compileJava'].state.executed
+        assert wsClientProjectHelper.project.tasks['assemble'].state.executed
 
-        //tester at enkelte filer er generert
-        wsClientProjectHelper.assertFileExists('gen/weblogic/wsclient/META-INF/wsdls/TestServiceWS.wsdl')
-        wsClientProjectHelper.assertFileExists('gen/weblogic/wsclient/no/statkart/test/service/demotns/TestServiceWS.class')
-        wsClientProjectHelper.assertFileExists('gen/weblogic/wsclient/no/statkart/test/service/demotns/TestServiceWS.java')
 
-        wsClientProjectHelper.assertFileExists('gen/weblogic/wsclient/META-INF/wsdls/PingServiceWS_schema1.xsd')
+        //tester sourceSet
+        SourceSet sourceSet = wsClientProject.sourceSets.main;
+
+        //tester sourceSet.output
+        assert sourceSet.output.asFileTree.files.find { it.toURI().path.endsWith('/no/statkart/test/service/demotns/TestServiceWS.class')}
+        assert sourceSet.output.asFileTree.files.find { it.toURI().path.endsWith('/META-INF/wsdls/TestServiceWS.wsdl')}
+
+        //tester sourceSet.source
+        assert sourceSet.allSource.asFileTree.files.find { it.toURI().path.endsWith('/META-INF/wsdls/TestServiceWS.wsdl')}
+        assert sourceSet.allSource.asFileTree.files.find { it.toURI().path.endsWith('/META-INF/wsdls/PingServiceWS_schema1.xsd')}
+        assert sourceSet.allSource.asFileTree.files.find { it.toURI().path.endsWith('/no/statkart/test/service/demotns/TestServiceWS.java')}
+
+
+        //tester artifakt
+        wsClientProjectHelper.assertFileExists('build/libs/wsclient.jar') { File archiveFile ->
+            FileTree archiveFileTree = project.zipTree(archiveFile)
+            assert archiveFileTree.files.find { it.toURI().path.endsWith('/META-INF/wsdls/TestServiceWS.wsdl')}
+            assert archiveFileTree.files.find { it.toURI().path.endsWith('/no/statkart/test/service/demotns/TestServiceWS.class')}
+            assert !archiveFileTree.files.find { it.toURI().path.endsWith('/no/statkart/test/service/demotns/TestServiceWS.java')}
+
+            assert archiveFileTree.files.find { it.toURI().path.endsWith('/META-INF/wsdls/PingServiceWS_schema1.xsd')}
+        }
+
+
     }
 
     /**
@@ -164,14 +185,16 @@ class WeblogicWsClientPluginTest {
     @Test()
     void testBuildTaskDependsOn() {
         //forks a new project in a temp folder
-        ProjectHelper projectHelper = WeblogicWsClientProjectBuilder.builder().applyWsClientPlugin(false).build()
+        ProjectHelper projectHelper = WeblogicWsClientProjectBuilder.builder().applyJavaPlugin().applyWsClientPlugin(false).build()
+
+        projectHelper.initializeProject(false)
 
         List<String> taskDependencies = projectHelper.findDependsOnTaskNames('build')
 
         assert taskDependencies.contains('build')
         assert taskDependencies.contains(WeblogicWsClientPlugin.GEN_CLIENT_TASK_NAME)
-        assert taskDependencies.contains(WeblogicWsClientPlugin.PROCESS_WEBLOGIC_RESOURCES_TASK_NAME)
-        assert taskDependencies.contains(WeblogicWsClientPlugin.COMPILE_WEBLOGIC_TASK_NAME)
+        assert taskDependencies.contains('processResources')
+        assert taskDependencies.contains('compileJava')
         assert taskDependencies.contains(BasePlugin.ASSEMBLE_TASK_NAME)
 
     }
@@ -194,7 +217,7 @@ class WeblogicWsClientPluginTest {
         }
 
 
-        Task task = projectHelper.project.tasks.getByName(WeblogicWsClientPlugin.GEN_CLIENT_TASK_NAME)
+        Task task = projectHelper.project.tasks.getByName('genWsClientSource')
 
         assert task.weblogicClasspath.files.contains(someJarFile)
 

@@ -22,6 +22,7 @@ import org.gradle.api.tasks.InputFiles
  * @author Leif Lislegård
  */
 class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInterface {
+    private final WeblogicWsClientConvention weblogicWsClientConvention = (WeblogicWsClientConvention) project.getConvention().getPlugins().get(WeblogicWsClientPlugin.CONVENTION_NAME);
 
     private WeblogicJaxWsClientCompiler compiler;
     private final DefaultWeblogicCompileSpec spec = new DefaultWeblogicCompileSpec();
@@ -48,9 +49,9 @@ class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInter
     @TaskAction
     protected void compile() {
         compiler.ant = getAnt()
-        compiler.webServices = project.getConvention().getPlugins().get(WeblogicWsClientPlugin.CONVENTION_NAME).webService
+        compiler.webServices = weblogicWsClientConvention.webService
         spec.setWeblogicClasspath(getWeblogicClasspath().files)
-        spec.setTempDir(project.file('build/tmp/weblogic'))
+        spec.setTempDir(project.file("${project.buildDir}/tmp/weblogic"))
 
         spec.setSource(getSource());
         spec.setDestinationDir(getDestinationDir());
@@ -59,8 +60,12 @@ class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInter
         spec.setSourceCompatibility(getSourceCompatibility());
         spec.setTargetCompatibility(getTargetCompatibility());
 
+        //clean resources
+        project.delete(getDestinationDir())
+
         WorkResult result = compiler.execute(spec);
         setDidWork(result.getDidWork());
+
 
     }
 

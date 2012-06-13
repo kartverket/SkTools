@@ -1,7 +1,6 @@
 package no.statkart.sktools.gradle.plugins.weblogic.wsclient
 
 import org.gradle.api.Project
-import org.gradle.api.tasks.SourceSet
 import org.gradle.api.artifacts.Dependency
 
 import org.gradle.api.file.FileCollection
@@ -19,15 +18,12 @@ import org.apache.commons.lang.builder.EqualsBuilder
  */
 class WeblogicWsClientConvention {
     protected final transient Project project
-    protected final transient SourceSet sourceSet
 
     protected final Collection<WebServiceConfig> webService = new ArrayList<WebServiceConfig>()
-    protected File genDir
+    protected def genDir
 
-    WeblogicWsClientConvention(Project project, SourceSet sourceSet) {
+    WeblogicWsClientConvention(Project project) {
         this.project = project
-        this.sourceSet = sourceSet
-        genDir('gen/weblogic/wsclient')
     }
 
     /**
@@ -44,7 +40,7 @@ class WeblogicWsClientConvention {
      * Legger til konfigurasjon for en service.
      * @since 1.1
      */
-    def webService(Closure closure) {
+    protected def webService(Closure closure) {
         webService.add(
                 new WebServiceConfig(this).name("webService Closure#${webService.size() + 1}").configure(closure)
         )
@@ -54,31 +50,26 @@ class WeblogicWsClientConvention {
      * Bestemmer katalog for genererte filer.
      * @since 1.1
      */
-    def File genDir(Object path) {
-        genDir = project.file(path)
+    protected def WeblogicWsClientConvention genDir(Object path) {
+        genDir = path
+        this
     }
 
-    public File getGenDir() {
+    protected def getGenDir() {
         return genDir
     }
 
     /**
      * Konfigurerer source set for plugin
      * @since 1.1
-     */
-    def sourceSet(Closure closure) {
-        closure.setResolveStrategy(Closure.DELEGATE_FIRST);
-        closure.delegate = sourceSet
-        closure()
-    }
-
-    /**
-     * @depricated since 1.0 - bruk heller {@link #weblogicWsClient(Closure)}.
+     * @deprecated since 1.2 - bruk heller std javaplugin konfigurasjon
      */
     @Deprecated
-    def wsClient(Closure closure) {
-        println 'wsClient(Closure) is now depricated - use weblogicWsClient(Closure) instead!'
-        return weblogicWsClient(closure)
+    protected def sourceSet(Closure closure) {
+        println 'sourceSet{closure} is now depricated - use project.sourceSets.main{closure} instead!'
+        closure.setResolveStrategy(Closure.DELEGATE_FIRST);
+        closure.delegate = project.sourceSets.main
+        closure()
     }
 
 }
