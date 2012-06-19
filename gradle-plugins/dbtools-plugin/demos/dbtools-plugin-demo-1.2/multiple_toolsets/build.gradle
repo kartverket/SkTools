@@ -1,12 +1,13 @@
+/******************************************************************************************************************** **
+ *
+ * Demonstrasjon på hvordan en kan sette opp en database med forskjellige brukere.
+ *
+ * Eksempelet kan enkelt utvides til å omfatte flere databaser.
+ *
+ ******************************************************************************************************************** */
+
 apply plugin: 'sktools-dbtools-plugin'
 
-
-description = """\
-
-    Demo av hvordan en kan sette opp en database med forskjellige brukere.
-
-    Eksempelet kan enkelt utvides til å omfatte flere databaser.
-"""
 
 configurations {
     drivers
@@ -41,9 +42,7 @@ configureDatabasePlugin {
 
 }
 
-task runDemo(dependsOn:'dbInit') {}
-
-task dbInit {
+task dbInit() {
 
     description = 'Setter opp demobase'
     def tasks = [
@@ -64,4 +63,48 @@ task dbInit {
 
 }
 
+/******************************************************************************************************************** **
+ * Diverse tasker som tester og demonstrerer implementasjonen
+ ******************************************************************************************************************** */
+
+task runDemo() {
+    description = 'Kjører en enkel demo for å teste funksjonaliteten'
+
+    doLast {
+
+        println 'Tester dbInit...'
+        forkGradle(['dbInit', 'assertTable1AccessForSA', 'assertTable1AccessForBruker1'])
+    }
+}
+
+
+task assertTable1AccessForSA() << {
+    def convention = project.convention.plugins['db'].dbToolSets['Sa']
+    def sql = groovy.sql.Sql.newInstance(convention.url, convention.credentials.username, convention.credentials.password, convention.driver)
+    sql.eachRow("select count(*) from BRUKER1.TABLE1") {
+      assert it[0] == 0
+    }
+}
+
+task assertTable1AccessForBruker1() << {
+    def convention = project.convention.plugins['db'].dbToolSets['Bruker1']
+    def sql = groovy.sql.Sql.newInstance(convention.url, convention.credentials.username, convention.credentials.password, convention.driver)
+    sql.eachRow("select count(*) from TABLE1") {
+      assert it[0] == 0
+    }
+    sql.eachRow("select count(*) from BRUKER1.TABLE1") {
+      assert it[0] == 0
+    }
+}
+
+/******************************************************************************************************************** **
+ * Hjelpemetode for forking av gradle eksekveringer
+ * Kun relevant for testing...
+ ******************************************************************************************************************** */
+void forkGradle(List tasks, Map props = [:]) {
+    StartParameter sp = gradle.startParameter.newInstance()
+    sp.taskNames = tasks.collect {"${project.path}:${it}".toString()}
+    sp.projectProperties = props
+    GradleLauncher.newInstance(sp).run().rethrowFailure();
+}
 
