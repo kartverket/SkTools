@@ -73,6 +73,9 @@ class OracleExportTask extends DefaultTask {
 
 
 
+    OracleExportTask() {
+        description = 'Export av dump via Oracles eget verktøy'
+    }
 
 
     @TaskAction

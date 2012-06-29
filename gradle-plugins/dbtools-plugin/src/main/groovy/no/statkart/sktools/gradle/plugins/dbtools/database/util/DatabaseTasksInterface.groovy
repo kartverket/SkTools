@@ -7,7 +7,5 @@ import org.gradle.api.Project
  */
 public interface DatabaseTasksInterface<I extends AbstractDatabaseConvention> {
 
-    def init(Project project)
-
 
 }

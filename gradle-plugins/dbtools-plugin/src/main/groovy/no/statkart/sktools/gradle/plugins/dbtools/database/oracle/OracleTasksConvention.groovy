@@ -6,16 +6,21 @@ import org.gradle.api.InvalidUserDataException
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractDatabaseConvention
 import org.gradle.api.Task
 import org.gradle.api.plugins.ExtraPropertiesExtension
+import org.gradle.api.GradleException
+import org.gradle.util.ConfigureUtil
 
 /**
  * Convention object for Oracle database tools
+ *
+ *
+ * todo: endre property bruk til bruk av properties til denne conventionen
  *
  * @author Leif Lislegård
  * @since 1.0
  */
 class OracleTasksConvention extends AbstractDatabaseConvention {
 
-    OracleTasks tasks;
+    protected OracleTasks tasks = new OracleTasks(this);
 
     OracleTasksConvention(Project project, String propertyPrefix) {
         super(project, propertyPrefix, 'oracle.jdbc.OracleDriver')
@@ -74,6 +79,17 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
         if (!ext.has(propertyPrefix + 'db_oradata09')) {
             ext.set(propertyPrefix + 'db_oradata09', ext.get(propertyPrefix + 'db_oradata06'))
         }
+
+
+        Task infoTask = project.task("${prefix}Info") {
+            description = 'Viser gjeldende konfigurasjon'
+
+            doLast {
+                printInfo()
+            }
+        }
+        getTasks().addTask('info', infoTask)
+
     }
 
     /**
@@ -99,14 +115,10 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
     }
 
 
-    public OracleTasksConvention addTasks(String path) {
-        if (tasks == null) {
-            tasks = new OracleTasks(path, this)
-            tasks.init(project)
-        }
-        return this
+    @Override
+    OracleTasks getTasks() {
+        return tasks;
     }
-
 
     // oracle attributes by convention... -->
 
@@ -207,35 +219,53 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
         return tasks.getByName('info')
     }
 
-
-    public void addDefaultTasks(String groupString) {
-
-        if (tasks.findByName('import')) return;
-
-        Task importTask = project.task([type: OracleImportTask], "${prefix}Import") {
-            group = groupString
-            convention = this
-            description = 'Import av dump via Oracles eget verktøy'
-        }
-        tasks.addTask('import', importTask)
-
-
-        Task exportTask = project.task([type: OracleExportTask], "${prefix}Export") {
-            group = groupString
-            convention = this
-            description = 'Export av dump via Oracles eget verktøy'
-        }
-        tasks.addTask('export', exportTask)
-
-        Task infoTask = project.task("${prefix}Info") {
-            group = groupString
-            description = 'Viser gjeldende konfigurasjon'
-
-            doLast {
-                printInfo()
-            }
-        }
-        tasks.addTask('info', infoTask)
-
+    public OracleImportTask importTask(Closure closure = null) {
+        return importTask([:], closure);
     }
+    public OracleImportTask importTask(Map params, Closure closure = null) {
+        params.put('type', OracleImportTask.class.name)
+        return (OracleImportTask) task(params, 'Import', closure)
+    }
+    
+
+    public OracleExportTask exportTask(Closure closure = null) {
+        return exportTask([:], closure);
+    }
+    public OracleExportTask exportTask(Map params, Closure closure = null) {
+        params.put('type', OracleExportTask.class.name)
+        return (OracleExportTask) task(params, 'Export', closure)
+    }
+
+    public Task task(Map params, String name, Closure closure = null) {
+        validate()
+
+        if (name == null || name.trim().isEmpty()) {
+            throw new GradleException('name parameter not supplied for task!')
+        }
+
+        if (!params.containsKey('type')) {
+            throw new GradleException('type parameter not supplied for task!')
+        }
+        String type = params['type']
+        params.remove('type')
+
+        String taskName = "${prefix}${name}"
+        Class taskType = null
+        try {
+            taskType = Class.forName(type.startsWith(this.class.package.name) ? type : "${this.class.package.name}.${type}", true, this.class.getClassLoader())
+        } catch (ClassNotFoundException cnfe) {
+            throw new Exception("Unknown task type: ${type}", cnfe);
+        }
+
+        Task task = project.tasks.add(name:taskName, type:taskType);
+        task.group = "Database"
+        task.convention = this //todo: gradlefy this
+
+        ConfigureUtil.configureByMap(params, task)
+        ConfigureUtil.configure(closure, task, false);
+
+        getTasks().addTask(name, task)
+        return task;
+    }
+
 }

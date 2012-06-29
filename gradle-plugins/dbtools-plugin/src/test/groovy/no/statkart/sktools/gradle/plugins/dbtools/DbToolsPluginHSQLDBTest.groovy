@@ -9,10 +9,7 @@ import org.testng.Assert
 import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsConvention
 import java.sql.SQLSyntaxErrorException
 import org.gradle.api.Task
-import java.sql.SQLInvalidAuthorizationSpecException
-import java.sql.SQLException
 import org.gradle.api.tasks.TaskExecutionException
-import groovy.sql.Sql
 
 /**
  * Tester plugin funjsonalitet via HSQLDB - en in memory database
@@ -78,23 +75,24 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
 
         DbtoolsConvention convention = project.convention.getPlugin(DbtoolsConvention.class)
         convention.configureDatabasePlugin {
-            useToolset('hsqldb', 'Prefix_', 'hsql') {
+            toolset( name:'Prefix', type:'hsqldb', prefix:'Prefix') {
 
                 url = sql.connection.properties.URL
                 driver = jdbcDriverClassString
+
+                sqlTask( 'CreateSchema', sqlFile:'src/hsql/CreateSchema.sql')
+                sqlTask( 'data', sqlFile:'src/hsql/data.sql')
             }
         }
 
 
-        // STEG 3 - tasksk ihht konvensjon
-        Task createSchemaTask = project.tasks.getByName('Prefix_CreateSchema')
-        Task dataTask = project.tasks.getByName('Prefix_data')
+        // STEG 3 - tasks ihht konvensjon
+        Task createSchemaTask = project.tasks.getByName('prefixCreateSchema')
+        Task dataTask = project.tasks.getByName('prefixData')
 
         Assert.assertNotNull createSchemaTask, "Forventet task for ${createShemaFile.name}"
         Assert.assertNotNull dataTask, "Forventet task for ${dataFile.name}"
 
-        //todo: kjører denne inntill en finner ut av hvordan en kan starte taks med depends on og full pakke
-        project.tasks.getByName('buildSQL').execute()
 
         // STEG 4 - kjøring av tasks
 
@@ -140,11 +138,11 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
      * STEG 2: Konfigurering av plugin
      *
      * STEG 3: Deretter sjekkes det at credentials er satt og at tasks er lagt til ihht til konvensjon:
-     *     Prefix_CreateSchema
-     *     Prefix_CreateSchema2
+     *     prefix_CreateSchema
+     *     prefix_CreateSchema2
      *
-     * STEG 4: Tester kjøring av Prefix_CreateSchema for bruker 1
-     * STEG 5: Tester kjøring av Prefix_CreateSchema2 for bruker 2 som ikke finnes, forventer da en feil.
+     * STEG 4: Tester kjøring av prefix_CreateSchema for bruker 1
+     * STEG 5: Tester kjøring av prefix_CreateSchema2 for bruker 2 som ikke finnes, forventer da en feil.
      *
      */
     @Test
@@ -205,15 +203,12 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
         Assert.assertEquals credentials.username, 'sa'
         Assert.assertEquals credentials.password, ''
 
-        Task createSchemaTask = project.tasks.getByName('Prefix_CreateSchema')
+        Task createSchemaTask = project.tasks.getByName('prefix_CreateSchema')
         Assert.assertNotNull createSchemaTask, "Forventet task for ${createShemaFile.name}"
 
-        Task createSchema2Task = project.tasks.getByName('Prefix_CreateSchema2')
+        Task createSchema2Task = project.tasks.getByName('prefix_CreateSchema2')
         Assert.assertNotNull createSchema2Task, "Forventet task for ${createShema2File.name}"
 
-
-        //todo: kjører denne inntill en finner ut av hvordan en kan starte taks med depends on og full pakke
-        project.convention.plugins.db.buildSQLTask.execute()
 
 
         // STEG 4 - kjøring av tasks for bruker 1
@@ -257,11 +252,11 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
      *      DB2
      *
      * STEG 3: Deretter sjekkes det at credentials er satt og at tasks er lagt til ihht til konvensjon:
-     *     DB1_CreateSchema
-     *     DB2_CreateSchema2
+     *     dB1CreateSchema
+     *     dB2CreateSchema2
      *
-     * STEG 4: Tester kjøring av DB1CreateSchema
-     * STEG 5: Tester kjøring av DB2CreateSchema
+     * STEG 4: Tester kjøring av dB1CreateSchema
+     * STEG 5: Tester kjøring av dB2CreateSchema
      *
      */
     @Test
@@ -331,16 +326,12 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
 
 
         // STEG 3 - credentials ihht konfig
-        Task createSchemaTask = project.tasks.getByName('DB1CreateSchema')
+        Task createSchemaTask = project.tasks.getByName('dB1CreateSchema')
         Assert.assertNotNull createSchemaTask, "Forventet task for ${createShemaFile.name}"
 
-        Task createSchema2Task = project.tasks.getByName('DB2CreateSchema2')
+        Task createSchema2Task = project.tasks.getByName('dB2CreateSchema2')
         Assert.assertNotNull createSchema2Task, "Forventet task for ${createShema2File.name}"
 
-
-
-        //todo: kjører denne inntill en finner ut av hvordan en kan starte taks med depends on og full pakke
-        project.convention.plugins.db.buildSQLTask.execute()
 
 
         // STEG 4 - kjøring av tasks for DB1

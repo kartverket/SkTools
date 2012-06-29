@@ -3,11 +3,11 @@ package no.statkart.sktools.gradle.plugins.dbtools.database
 import org.gradle.api.Project
 import no.statkart.sktools.gradle.plugins.dbtools.database.oracle.OracleTasksConvention
 
-import java.sql.Driver
-import java.sql.DriverManager
-import org.gradle.api.Task
 import no.statkart.sktools.gradle.plugins.dbtools.database.hsqldb.HsqldbTasksConvention
 import org.gradle.api.GradleException
+import no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractDatabaseConvention
+import org.gradle.api.artifacts.Dependency
+import org.gradle.api.Task
 
 /**
  * Pluginen kan konfigureres til å håndtere flere ulike databaser og flere instanser av denne.
@@ -21,19 +21,11 @@ import org.gradle.api.GradleException
  * <pre>
  *   <code>
 
-configurations {
-    drivers
-}
-
-dependencies {
-    drivers "com.oracle:ojdbc6:11.2.0.2.0@jar"
-}
-
 configureDatabasePlugin {
 
-    useDrivers configurations.drivers
+    useDrivers "com.oracle:ojdbc6:11.2.0.2.0@jar"
 
-    useToolset 'oracle', 'Db', 'mineScript' {
+    toolset(type:'oracle', name:'Db', prefix:'') {
 
         ... //for details, see {@link DbtoolsConvention#useToolset(String, String, String, Closure) }
 
@@ -49,11 +41,7 @@ configureDatabasePlugin {
 public class DbtoolsConvention {
     protected final Project project;
 
-    private final Set<String> loadedDrivers = new HashSet<String>();
-
     public final Map<String, ?> dbToolSets = new HashMap<String, Object>()
-
-    Task buildSQLTask
 
     DbtoolsConvention(Project project) {
         this.project = project
@@ -62,9 +50,9 @@ public class DbtoolsConvention {
     /**
      * Configures this plugin by running closure defined in your project.
      *
-     * Configuration methods available:
+     * Configuration methods:
      * <ul>
-     *     <li> {@link #useToolset(String, String, String, Closure)}
+     *     <li> {@link #toolset(Map<java.lang.String, ?>, groovy.lang.Closure) }
      *     <li> {@link #useDrivers(Object)}
      * </ul>
      */
@@ -119,86 +107,96 @@ configureDatabasePlugin {
      * @param closure konfigurasjon av toolset
      * @return
      */
-    def useToolset(String type, String prefix, String path, Closure closure) {
+    @Deprecated //since 1.2
+    protected def useToolset(String type, String prefix, String path, Closure closure) {
+        println "useToolset(...){} is deprecated - use toolset(Map){} instead!"
+        println "new config syntax: "
+        println "toolset( name:'${prefix}', type:'${type}', prefix:'${prefix}') {"
+        AbstractDatabaseConvention toolset = toolset(type:type, name:prefix, closure)
+        toolset.config {
 
-        project.logger.info("Adding ${type} toolset for ${prefix} (${path})...")
+            project.fileTree("src/${path}").include('**/*.sql').files.each { File file ->
+                String taskName = file.name.substring(0, file.name.length() - 4)
+                String taskNameWithPrefix = prefix + taskName
+
+                //ny syntax for config
+                println "   sqlTask( '${taskName}', sqlFile:'${project.relativePath(file).replaceAll('\\\\', '/')}')"
+
+                //legger til task
+                sqlTask(taskName, sqlFile:file)
+            }
+        }
+        println "   properties = project.properties"
+        println "   ..."
+        println "}"
+    }
+
+    protected def toolset(Map<String, ?> params, Closure closure) {
+
+        String type = params.get('type')
+        String name = params.get('name')
+        String prefix = params.get('prefix', name)
+
+        project.logger.info("Adding ${type} toolset with name '${name}' (prefix=${prefix})...")
 
         if ('oracle'.equalsIgnoreCase(type)) {
-            return addOracleToolset(prefix, path, closure)
+            return addOracleToolset(prefix, name, closure)
 
         } else if ('hsqldb'.equalsIgnoreCase(type)) {
-            return addHsqldbToolset(prefix, path, closure)
+            return addHsqldbToolset(prefix, name, closure)
 
         } else {
             throw new GradleException("Ukjent verktøyset/database")
         }
+
     }
+
 
     /**
      *  For å kunne benytte jdbc funksjonalitet, må jdbc klasser være lastet inn i classloader til gradle/groovy.
      */
-    def useDrivers(def dependencies) {
+    def useDrivers(Object dependencyNotation) {
+        List<Dependency> dependencies = [dependencyNotation].flatten().collect { project.dependencies.create(it)}
+        def configuration = project.configurations.detachedConfiguration(dependencies.toArray(new Dependency[dependencies.size()]) )
+
         URLClassLoader loader = GroovyObject.class.classLoader
-        dependencies.each {File file ->
+        configuration.files.each {File file ->
             loader.addURL(file.toURL())
         }
     }
 
-    private def registerDriver(String driverAsString) {
-        if (!loadedDrivers.contains(driverAsString)) {
-            project.logger.info("Registring jdbc-driver: ${driverAsString}")
-            Class driver = groovy.lang.GroovyObject.class.classLoader.loadClass(driverAsString)
-
-            // You might need one or both of these as well
-            Driver instance = driver.newInstance()
-            DriverManager.registerDriver(instance)
-
-            loadedDrivers.add(driverAsString)
-        }
-    }
-
-    private def addOracleToolset(String prefix, String path, Closure closure) {
-        OracleTasksConvention convention = dbToolSets.get(prefix)
+    private def addOracleToolset(String prefix, String name, Closure closure) {
+        OracleTasksConvention convention = dbToolSets.get(name)
 
         if (convention == null) {
-            project.logger.info("Applying Oracle convention to ${path} ...")
+            project.logger.info("Applying Oracle convention with name ${name} ...")
             convention = new OracleTasksConvention(project, prefix)
-            dbToolSets.put(prefix, convention)
+            dbToolSets.put(name, convention)
 
         }
 
         convention.config(closure)
 
-        registerDriver(convention.driver)
-
-        convention.addTasks(path)
-
-        project.logger.info('Adding default tasks for Oracle...')
-        convention.addDefaultTasks('Database')
-
         return convention
     }
 
-    private def addHsqldbToolset(String prefix, String path, Closure closure) {
+    private def addHsqldbToolset(String prefix, String name, Closure closure) {
         HsqldbTasksConvention convention = dbToolSets.get(prefix)
 
         if (convention == null) {
-            project.logger.info("Applying HSQLDB convention to ${path} ...")
+            project.logger.info("Applying HSQLDB convention with name ${name} ...")
             convention = new HsqldbTasksConvention(project, prefix)
-            dbToolSets.put(prefix, convention)
+            dbToolSets.put(name, convention)
 
         }
 
         convention.config(closure)
 
-        registerDriver(convention.driver)
-
-        convention.addTasks(path)
-
-        project.logger.info('Adding default tasks for HSQLDB...')
-        convention.addDefaultTasks('Database')
-
         return convention
+    }
+
+    private Task sequenceTask(String name, List tasks, Closure config = null) {
+
     }
 
 }

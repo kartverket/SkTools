@@ -1,12 +1,9 @@
 package no.statkart.sktools.gradle.plugins.dbtools.database
 
-import org.gradle.api.Project
+import java.sql.Driver
+import java.sql.DriverManager
 import org.gradle.api.Plugin
-
-import org.gradle.api.tasks.Copy
-
-import org.apache.tools.ant.filters.ReplaceTokens
-import org.gradle.api.logging.LogLevel
+import org.gradle.api.Project
 
 /**
  * Gradle plugin for database-moduler.
@@ -33,59 +30,56 @@ configureDatabasePlugin {
  *     @see DbtoolsConvention
  */
 class DbtoolsPlugin implements Plugin<Project>  {
+    private static final Set<String> loadedDrivers = new HashSet<String>();
 
-    DbtoolsConvention convention
+    public DbtoolsConvention convention
 
 
-    def void apply(Project project) {
+    def void apply(final Project project) {
         convention = new DbtoolsConvention(project)
         project.convention.plugins.db = convention
 
-        convention.buildSQLTask = configureTaskBuildSQL(project, 'buildSQL', 'Filtrerer og bygger *.sql filer')
+        project.afterEvaluate {
+            assignConventionalValues(project);
+            registerDrivers(project);
+        }
     }
 
+    void assignConventionalValues(Project project) {
+        convention.dbToolSets.values().each {
 
-    /**
-     * todo: endre slik at sql script ligger relativt til prosjekt (og ikke src katalog)
-     */
-    private def configureTaskBuildSQL(Project project, String name, String description) {
-        return project.task([type: Copy, description: description], name) {
-//            group = groupString
-
-            from('src') {
-                include '**/*.sql'
-            }
-
-            destinationDir = project.buildDir
-
-            outputs.upToDateWhen { false }  //skal alltid kjøre denne task uansett!
-
-
-            // late binding enables use of any conventional properties potentially defined by plugins
-            doFirst() {
-                Properties props = new Properties()
+            //setter default properties
+            if (it.properties == null) {
+                Map<String, Object> props = new HashMap<String,Object>()
                 project.properties.each {
                     if (it.value instanceof CharSequence || it.value instanceof Number || it.value instanceof Boolean) {
-                        props.setProperty(it.key, String.valueOf(it.value))
+                        props.put(it.key, String.valueOf(it.value))
                     }
                 }
+                it.properties = props;
+            }
 
-                filter([tokens: props, beginToken: '@', endToken: '@'], ReplaceTokens)
+        }
 
-                if (logger.isEnabled(LogLevel.DEBUG)) {
-                    logger.debug('substitution properties:')
-                    props.sort().each {
-                        logger.debug(it.key + ' -> ' + it.value)
-                    }
-                }
+    }
 
-//                expand() virker ikke på større filer... kommenterer derfor denne ut her...
-//
-//                // Substitute property references in files
-//                expand(project.properties)
+    private void registerDrivers(Project project) {
+        convention.dbToolSets.values().collect { it.driver }.each {
+            String driverAsString = it
+
+            if (!loadedDrivers.contains(driverAsString)) {
+                project.logger.info("Registring jdbc-driver: ${driverAsString}")
+                Class driver = groovy.lang.GroovyObject.class.classLoader.loadClass(driverAsString)
+
+                // You might need one or both of these as well
+                Driver instance = driver.newInstance()
+                DriverManager.registerDriver(instance)
+
+                loadedDrivers.add(driverAsString)
             }
         }
     }
+
 
 }
 

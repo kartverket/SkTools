@@ -19,16 +19,11 @@ public class SQLTask extends ConventionTask {
     /**
      * Disse credentials blir benyttet dersom {@code useTaskCredentials == true}
      *
-     * Dersom {@code useTaskCredentials == false}, så blir konversjonelle verdier benyttet. Det vil da si credentials ifra koblet dbTool-set
+     * Dersom {@code useDefaultCredentials == true}, så blir konversjonelle verdier benyttet. Dvs credentials ifra koblet dbTool-set
      */
-    final Credentials credentials = new Credentials(getProject(), "task:${name}")
-    public void clearCredentials() {
-        credentials.clear()
-        this.usernameSet = !credentials.isEmpty()
-        this.passwordSet = !credentials.isEmpty()
-        assert true
-    }
-    boolean useTaskCredentials = true
+    final Credentials credentials = new Credentials("task:${name}", project.properties)
+    Credentials defaultCredentials = null
+    boolean useDefaultCredentials = false
 
     @Input
     String url
@@ -46,31 +41,25 @@ public class SQLTask extends ConventionTask {
 
     @Input
     String getUsername() {
-        if (useTaskCredentials) {
-            return credentials.getUsername()
-        } else {
-            return credentials.isEmpty() ? null : credentials.getUsername()
+        if (useDefaultCredentials && credentials.isEmpty()) {  //dersom en ikke skal benytte alternative credentials for task
+            return defaultCredentials.getUsername()
         }
+        return credentials.getUsername()
     }
     void setUsername(String username) {
         credentials.username = username
-        this.usernameSet = !credentials.isEmpty()
-        this.passwordSet = !credentials.isEmpty()
     }
 
 
     @Input
     String getPassword() {
-        if (useTaskCredentials) {
-            return credentials.getPassword()
-        } else {
-            return credentials.isEmpty() ? null : credentials.getPassword()
+        if (useDefaultCredentials && credentials.isEmpty()) {  //dersom en ikke skal benytte alternative credentials for task
+            return defaultCredentials.getPassword()
         }
+        return credentials.getPassword()
     }
     void setPassword(String password) {
         credentials.password = password
-        this.usernameSet = !credentials.isEmpty()
-        this.passwordSet = !credentials.isEmpty()
     }
 
 

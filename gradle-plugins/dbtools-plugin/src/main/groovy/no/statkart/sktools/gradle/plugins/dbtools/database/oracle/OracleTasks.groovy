@@ -1,8 +1,6 @@
 package no.statkart.sktools.gradle.plugins.dbtools.database.oracle
 
-import org.gradle.api.Project
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractDatabaseTasks
-import org.gradle.api.Task
 
 /**
  * Tasks for Oracle databases
@@ -13,8 +11,8 @@ import org.gradle.api.Task
  */
 class OracleTasks extends AbstractDatabaseTasks<OracleTasksConvention> {
 
-    OracleTasks(String relativePath, OracleTasksConvention conv) {
-        super(relativePath, conv)
+    OracleTasks(OracleTasksConvention conv) {
+        super(conv)
     }
 
 

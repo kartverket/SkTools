@@ -76,6 +76,11 @@ class OracleImportTask extends DefaultTask {
     String tns
 
 
+
+    OracleImportTask() {
+        description = 'Import av dump via Oracles eget verktøy'
+    }
+
     @TaskAction
     def exec() {
         validateInput()

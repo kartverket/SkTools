@@ -11,37 +11,51 @@ import org.gradle.api.Project
 class Credentials {
     private final String context
 
-    String username
-    String password
+    String username = null
+    String password = null
 
+    Closure defaultUsername
+    Closure defaultPassword
 
-
-    Credentials(Project project, String context) {
-        username = project.ext.properties['username']
-        password = project.ext.properties['password']
+    Credentials(String context, final Map<java.lang.String, ?> properties) {
+        defaultUsername = {
+            properties['username']
+        }
+        defaultPassword = {
+            properties['password']
+        }
         this.context = context
     }
 
     public boolean hasUsername() {
+        if (username == null) {
+            username = defaultUsername.call()
+        }
         return username != null
     }
 
     public String getUsername() {
         if (!hasUsername()) {
-            username = System.console().readLine('<%s>Please enter username: ', context)
+            username = System.console()?.readLine('<%s>Please enter username: ', context)
         }
         return username
     }
 
     public boolean hasPassword() {
+        if (password == null) {
+            password = defaultPassword.call()
+        }
         return password != null
     }
 
     public String getPassword() {
         if (!hasPassword()) {
-            password = new String(System.console().readPassword('<%s>Please enter password for %s (empty defaults to %s): ', context, username, username))
-            if (password.isEmpty()) {
-                password = username
+            char[] pwd = System.console()?.readPassword('<%s>Please enter password for %s (empty defaults to %s): ', context, username, username)
+            if (pwd != null) {
+                password = new String(pwd)
+                if (password.isEmpty()) {
+                    password = username
+                }
             }
         }
         return password

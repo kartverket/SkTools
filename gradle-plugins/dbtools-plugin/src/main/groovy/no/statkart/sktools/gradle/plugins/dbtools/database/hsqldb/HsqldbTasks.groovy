@@ -7,8 +7,8 @@ import no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractDatabase
  */
 class HsqldbTasks extends AbstractDatabaseTasks<HsqldbTasksConvention> {
 
-    HsqldbTasks(String relativePath, HsqldbTasksConvention convention) {
-        super(relativePath, convention)
+    HsqldbTasks(HsqldbTasksConvention convention) {
+        super(convention)
     }
 
 

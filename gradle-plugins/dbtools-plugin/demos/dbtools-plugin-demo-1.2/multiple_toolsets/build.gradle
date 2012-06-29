@@ -9,35 +9,30 @@
 apply plugin: 'sktools-dbtools-plugin'
 
 
-configurations {
-    drivers
-}
-
-dependencies {
-    drivers 'org.hsqldb:hsqldb:2.2.8'
-}
-
-
 //see DbtoolsConvention#ConfigureDatabasePlugin
 configureDatabasePlugin {
 
-    useDrivers configurations.drivers
+    useDrivers 'org.hsqldb:hsqldb:2.2.8'
 
-
-    useToolset('hsqldb', 'Sa', 'main/sql/system') {
-
+    toolset( name:'sa', type:'hsqldb', prefix:'sa') {
         url = "jdbc:hsqldb:mem:testbase"
 
         credentials.username = 'SA'
         credentials.password = ''
+
+        sqlTask( 'CreateUsers', sqlFile:'src/main/sql/system/CreateUsers.sql')
+
+        properties = [brukernavn:'BRUKER1']
+        properties += [brukernavn:'BRUKER1']
     }
 
-    useToolset('hsqldb', 'Bruker1', 'main/sql/bruker1') {
-
+    toolset( name:'bruker1', type:'hsqldb', prefix:'bruker1') {
         url = "jdbc:hsqldb:mem:testbase"
 
         credentials.username = 'BRUKER1'
         credentials.password = 'BRUKER1'
+
+        sqlTask( 'CreateTable1', sqlFile:'src/main/sql/bruker1/CreateTable1.sql')
     }
 
 }
@@ -46,8 +41,8 @@ task dbInit() {
 
     description = 'Setter opp demobase'
     def tasks = [
-            tasks.SaCreateUsers,
-            tasks.Bruker1CreateTable1
+            tasks.saCreateUsers,
+            tasks.bruker1CreateTable1
     ]
 
     tasks.each {
@@ -67,7 +62,7 @@ task dbInit() {
  * Diverse tasker som tester og demonstrerer implementasjonen
  ******************************************************************************************************************** */
 
-task runDemo() {
+task runDemo(dependsOn:clean) {
     description = 'Kjører en enkel demo for å teste funksjonaliteten'
 
     doLast {
@@ -79,7 +74,7 @@ task runDemo() {
 
 
 task assertTable1AccessForSA() << {
-    def convention = project.convention.plugins['db'].dbToolSets['Sa']
+    def convention = project.convention.plugins['db'].dbToolSets['sa']
     def sql = groovy.sql.Sql.newInstance(convention.url, convention.credentials.username, convention.credentials.password, convention.driver)
     sql.eachRow("select count(*) from BRUKER1.TABLE1") {
       assert it[0] == 0
@@ -87,7 +82,7 @@ task assertTable1AccessForSA() << {
 }
 
 task assertTable1AccessForBruker1() << {
-    def convention = project.convention.plugins['db'].dbToolSets['Bruker1']
+    def convention = project.convention.plugins['db'].dbToolSets['bruker1']
     def sql = groovy.sql.Sql.newInstance(convention.url, convention.credentials.username, convention.credentials.password, convention.driver)
     sql.eachRow("select count(*) from TABLE1") {
       assert it[0] == 0
