@@ -13,8 +13,6 @@ import org.gradle.util.ConfigureUtil
  * Convention object for Oracle database tools
  *
  *
- * todo: endre property bruk til bruk av properties til denne conventionen
- *
  * @author Leif Lislegård
  * @since 1.0
  */
@@ -24,6 +22,7 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
 
     OracleTasksConvention(Project project, String propertyPrefix, String name) {
         super(project, propertyPrefix, name, 'oracle.jdbc.OracleDriver')
+        addInfoTask(project)
 
         ExtraPropertiesExtension ext = project.getExtensions().getExtraProperties()
         
@@ -85,38 +84,6 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
 
 
 
-        Task infoTask = project.task("${prefix}Info") {
-            description = "Viser gjeldende konfigurasjon for toolset ${name}"
-
-            doLast {
-                printInfo()
-            }
-        }
-        getTasks().addTask('Info', infoTask)
-
-    }
-
-    /**
-     * Printer viktige definerte properties
-     */
-    public void printInfo() {
-        80.times {project.print '*'}; project.println ''
-
-        println "${this.class.simpleName} for \"${prefix}\":"
-        println "  url -> ${url}"
-        println "  driver -> ${driver}"
-        if (credentials.hasUsername())
-            println "  credentials.username -> ${credentials.username}"
-        if (credentials.hasPassword())
-            println "  credentials.password -> ${credentials.password}"
-
-        println ''
-
-        this.properties.sort().each { key, value ->
-            println "  ${key} -> ${value}"
-        }
-
-        80.times {project.print '*'}; project.println ''
     }
 
 

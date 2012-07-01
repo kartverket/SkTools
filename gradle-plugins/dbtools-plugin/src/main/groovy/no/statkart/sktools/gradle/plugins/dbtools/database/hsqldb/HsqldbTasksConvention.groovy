@@ -2,7 +2,6 @@ package no.statkart.sktools.gradle.plugins.dbtools.database.hsqldb
 
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractDatabaseConvention
 import org.gradle.api.Project
-import no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractDatabaseTasks
 
 /**
  * Convention object for HSQLDB database tools
@@ -15,9 +14,8 @@ class HsqldbTasksConvention extends AbstractDatabaseConvention {
     protected HsqldbTasks tasks = new HsqldbTasks(this);
 
     HsqldbTasksConvention(Project project, String propertyPrefix, String name) {
-
         super(project, propertyPrefix, name, 'org.hsqldb.jdbc.JDBCDriver')
-//        super(project, propertyPrefix, 'org.hsqldb.jdbcDriver')
+        addInfoTask(project)
     }
 
 

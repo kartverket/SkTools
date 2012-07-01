@@ -4,6 +4,7 @@ import org.gradle.api.Project
 import org.gradle.util.ConfigureUtil
 import org.gradle.api.GradleException
 import org.apache.commons.lang.StringUtils
+import org.gradle.api.Task
 
 /**
  *
@@ -120,6 +121,42 @@ abstract class AbstractDatabaseConvention {
         getTasks().addTask(name, task)
         return task;
     }
+
+
+    /**
+     * Printer viktige definerte properties
+     */
+    protected def addInfoTask(Project project) {
+        Task infoTask = project.task("${prefix}Info") {
+            description = "Viser gjeldende konfigurasjon for toolset ${name}"
+
+            doLast {
+                printInfo()
+            }
+        }
+        getTasks().addTask('Info', infoTask)
+    }
+
+    protected void printInfo() {
+        80.times {project.print '*'}; project.println ''
+
+        println "${this.class.simpleName} for \"${prefix}\":"
+        println "  url -> ${url}"
+        println "  driver -> ${driver}"
+        if (credentials.hasUsername())
+            println "  credentials.username -> ${credentials.username}"
+        if (credentials.hasPassword())
+            println "  credentials.password -> ${credentials.password}"
+
+        println ''
+
+        this.properties.sort().each { key, value ->
+            println "  ${key} -> ${value}"
+        }
+
+        80.times {project.print '*'}; project.println ''
+    }
+
 
 
     /**
