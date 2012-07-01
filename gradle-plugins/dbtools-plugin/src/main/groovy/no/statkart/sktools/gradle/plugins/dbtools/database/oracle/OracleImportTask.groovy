@@ -63,7 +63,7 @@ class OracleImportTask extends ConventionTask {
 
         def sout = new StringBuffer()
         def serr = new StringBuffer()
-        String[] command = ['impdp.exe',
+        List<String> command = ['impdp.exe',
                 "${getUsername()}/${getPassword()}@${getTns()}",
                 "DIRECTORY=${getDirectory()}",
                 "SCHEMAS=${getSchemas().join(',')}",
@@ -75,10 +75,10 @@ class OracleImportTask extends ConventionTask {
         ]
 
         if (getExclude() != null && !getExclude().isEmpty()) {
-            command << "EXCLUDE=${getExclude().join(',')}"
+            command += "EXCLUDE=${getExclude().join(',')}"
         }
 
-        def impdb = Runtime.runtime.exec(command, null, getProject().getProjectDir())
+        def impdb = Runtime.runtime.exec(command as String[], null, getProject().getProjectDir())
 
         logger.debug('Kaller impdp.exe med bruker ' + getUsername() + ', tns ' + getTns());
 
