@@ -10,8 +10,9 @@ import org.apache.commons.lang.StringUtils
  */
 abstract class AbstractDatabaseConvention {
 
+    protected final String name
     protected final Project project
-    protected final Map<String, Object> properties = new Hashtable()
+    protected final Map<String, Object> properties = new Hashtable<String, Object>()
 
     /**
      * Prefix for alle tasks for tilknyttet denne konvensjonen
@@ -26,7 +27,8 @@ abstract class AbstractDatabaseConvention {
     /** kan settes via {@link #config(Closure) config closure} definert i prosjekt */
     public String url
 
-    AbstractDatabaseConvention(Project project, String propertyPrefix, String driver) {
+    AbstractDatabaseConvention(Project project, String propertyPrefix, String name, String driver) {
+        this.name = name
         this.project = project
         this.prefix = propertyPrefix
 
@@ -58,6 +60,17 @@ abstract class AbstractDatabaseConvention {
             if (entry.getValue() instanceof CharSequence) {
                 this.properties.put(entry.getKey(), entry.getValue().toString());
             }
+        }
+    }
+
+    protected Object property(String key) {
+        return this.properties.get(key)
+    }
+
+    protected void addPropertyIfNotExist(String key, Object value) {
+        if (!this.properties.containsKey(key.toString())) {
+            this.properties.put(key.toString(), value);
+            project.logger.info "setting dbToolSets[${name != '' ? name : "''"}] property ${key} to ${value}"
         }
     }
 
@@ -120,7 +133,7 @@ abstract class AbstractDatabaseConvention {
             tempFile.parentFile.mkdirs()
             tempFile.createNewFile()
             tempFile.withPrintWriter {
-                it.prinln task.sqlString
+                it.println task.sqlString
             }
         }
 

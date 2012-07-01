@@ -22,78 +22,81 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
 
     protected OracleTasks tasks = new OracleTasks(this);
 
-    OracleTasksConvention(Project project, String propertyPrefix) {
-        super(project, propertyPrefix, 'oracle.jdbc.OracleDriver')
+    OracleTasksConvention(Project project, String propertyPrefix, String name) {
+        super(project, propertyPrefix, name, 'oracle.jdbc.OracleDriver')
 
         ExtraPropertiesExtension ext = project.getExtensions().getExtraProperties()
         
         url = project.properties[propertyPrefix + 'db_jdbc_url']
         driver = ext.getProperties().get(propertyPrefix + 'db_jdbc_driver', this.driver)
 
-        /**
-         * passord er det samme som brukernavn dersom uspesifisert
-         */
-        if (!ext.has(propertyPrefix + 'db_password')) {
-            if (ext.has(propertyPrefix + 'db_username')) {
-                ext.set(propertyPrefix + 'db_password', ext.get(propertyPrefix + 'db_username'))
-                project.logger.info "setting property ${propertyPrefix + 'db_password'} to ${project.properties[propertyPrefix + 'db_password']}"
+        
+        // setter konvensjonelle verdier
+        project.afterEvaluate {
+            if (this.properties.containsKey('db_username')) {
+                
+                // passord er det samme som brukernavn dersom uspesifisert
+                addPropertyIfNotExist('db_password', property('db_username'))
+
+                // schema er det samme som brukernavn dersom uspesifisert
+                addPropertyIfNotExist('db_schema', property('db_username'))
             }
-        }
 
-        /**
-         * schema er det samme som brukernavn dersom uspesifisert
-         */
-        if (!ext.has(propertyPrefix + 'db_schema')) {
-            if (ext.has(propertyPrefix + 'db_username')) {
-                ext.set(propertyPrefix + 'db_schema', ext.get(propertyPrefix + 'db_username'))
-                project.logger.info "setting property ${propertyPrefix + 'db_schema'} to ${project.properties[propertyPrefix + 'db_schema']}"
+            // oradataNN settes enten til standard verdi, eller til hva som er angitt i oradata
+            addPropertyIfNotExist('db_oradata01', property('db_oradata') ?: 'F:\\Oradata')
+            addPropertyIfNotExist('db_oradata02', property('db_oradata') ?: 'G:\\Oradata')
+            addPropertyIfNotExist('db_oradata03', property('db_oradata') ?: 'J:\\Oradata')
+            (4..9).each { int i ->
+                addPropertyIfNotExist("db_oradata0${i}", property("db_oradata0${i-3}"))
             }
-        }
+
+            // schemas defaulter til brukernavn
+            addPropertyIfNotExist('schemas', [getUsername()])
+
+            // dumpfile
+            addPropertyIfNotExist('dumpfile', "${schemas[0]}_${dateString}.DMP")
 
 
-        //oradataNN settes enten til standard verdi, eller til hva som er angitt i oradata
-        if (!ext.has(propertyPrefix + 'db_oradata01')) {
-            ext.set(propertyPrefix + 'db_oradata01', ext.getProperties().get('db_oradata', 'F:\\Oradata'))
+
         }
-        if (!ext.has(propertyPrefix + 'db_oradata02')) {
-            ext.set(propertyPrefix + 'db_oradata02', ext.getProperties().get('db_oradata', 'G:\\Oradata'))
+
+        // setter konvensjonelle verdier
+        // todo: properties med prefix kan trolig utgå ..
+        project.afterEvaluate {
+            if (this.properties.containsKey("${propertyPrefix}db_username")) {
+
+                // passord er det samme som brukernavn dersom uspesifisert
+                addPropertyIfNotExist("${propertyPrefix}db_password", property("${propertyPrefix}db_username"))
+
+                // schema er det samme som brukernavn dersom uspesifisert
+                addPropertyIfNotExist("${propertyPrefix}db_schema", property("${propertyPrefix}db_username"))
+            }
+
+            // oradataNN settes enten til standard verdi, eller til hva som er angitt i oradata
+            addPropertyIfNotExist("${propertyPrefix}db_oradata01", property('db_oradata') ?: 'F:\\Oradata')
+            addPropertyIfNotExist("${propertyPrefix}db_oradata02", property('db_oradata') ?: 'G:\\Oradata')
+            addPropertyIfNotExist("${propertyPrefix}db_oradata03", property('db_oradata') ?: 'J:\\Oradata')
+            (4..9).each {
+                addPropertyIfNotExist("${propertyPrefix}db_oradata0${it}", property("${propertyPrefix}db_oradata0${it-3}"))
+            }
+
         }
-        if (!ext.has(propertyPrefix + 'db_oradata03')) {
-            ext.set(propertyPrefix + 'db_oradata03', ext.getProperties().get('db_oradata', 'J:\\Oradata'))
-        }
-        if (!ext.has(propertyPrefix + 'db_oradata04')) {
-            ext.set(propertyPrefix + 'db_oradata04', ext.get(propertyPrefix + 'db_oradata01'))
-        }
-        if (!ext.has(propertyPrefix + 'db_oradata05')) {
-            ext.set(propertyPrefix + 'db_oradata05', ext.get(propertyPrefix + 'db_oradata02'))
-        }
-        if (!ext.has(propertyPrefix + 'db_oradata06')) {
-            ext.set(propertyPrefix + 'db_oradata06', ext.get(propertyPrefix + 'db_oradata03'))
-        }
-        if (!ext.has(propertyPrefix + 'db_oradata07')) {
-            ext.set(propertyPrefix + 'db_oradata07', ext.get(propertyPrefix + 'db_oradata04'))
-        }
-        if (!ext.has(propertyPrefix + 'db_oradata08')) {
-            ext.set(propertyPrefix + 'db_oradata08', ext.get(propertyPrefix + 'db_oradata05'))
-        }
-        if (!ext.has(propertyPrefix + 'db_oradata09')) {
-            ext.set(propertyPrefix + 'db_oradata09', ext.get(propertyPrefix + 'db_oradata06'))
-        }
+
 
 
         Task infoTask = project.task("${prefix}Info") {
-            description = 'Viser gjeldende konfigurasjon'
+            description = "Viser gjeldende konfigurasjon for toolset ${name}"
 
             doLast {
                 printInfo()
             }
         }
-        getTasks().addTask('info', infoTask)
+        getTasks().addTask('Info', infoTask)
 
     }
 
     /**
-     * Printer viktige definerte proerties
+     * Printer viktige definerte properties
      */
     public void printInfo() {
         80.times {project.print '*'}; project.println ''
@@ -105,11 +108,12 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
             println "  credentials.username -> ${credentials.username}"
         if (credentials.hasPassword())
             println "  credentials.password -> ${credentials.password}"
-        println "  username -> ${username}"
-        println "  host -> ${host}"
-        println "  port -> ${port}"
-        println "  sid -> ${sid}"
-        println "  tns -> ${tns}"
+
+        println ''
+
+        this.properties.sort().each { key, value ->
+            println "  ${key} -> ${value}"
+        }
 
         80.times {project.print '*'}; project.println ''
     }
@@ -123,22 +127,25 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
     // oracle attributes by convention... -->
 
     public String getUsername() {
-        return project.getExtensions().getExtraProperties().get(prefix + 'db_username')
+        return credentials.username
+    }
+    public String getPassword() {
+        return credentials.password
     }
     public String getHost() {
-        return project.getExtensions().getExtraProperties().get(prefix + 'db_host')
+        return property('db_host')
     }
     public String getPort() {
-        return project.getExtensions().getExtraProperties().get(prefix + 'db_port')
+        return property('db_port')
     }
     public String getSid() {
-        return project.getExtensions().getExtraProperties().get(prefix + 'db_sid')
+        return property('db_sid')
     }
 
     public String getTns() {
         String tns;
-        if (project.hasProperty('tns')) {
-            tns = project.property('tns')
+        if (this.properties.containsKey('tns')) {
+            tns = property('tns')
         } else {
             tns = "${host}:${port}/${sid}".toUpperCase()    //defaults to an EZCONNECT connect string
             if (!tns.toUpperCase().endsWith('.STATKART.NO')) {
@@ -148,57 +155,46 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
         return tns
     }
     public String getDirectory() {
-        if (project.hasProperty('directory')) {
-            return project.property('directory')
+        if (this.properties.containsKey('directory')) {
+            return property('directory')
+        } else {
+            throw new InvalidUserDataException("property 'directory' not set!")
         }
-        throw new InvalidUserDataException("property 'directory' not set!")
     }
     public Collection<String> getSchemas() {
-        return Arrays.asList(getUsername())        //defaults to username
+        if (this.properties.containsKey('schemas')) {
+            return property('schemas')
+        } else {
+            throw new InvalidUserDataException("property 'schemas' not set!")
+        }
     }
 
     public Map<String, String> getSchemaMapping() {
-        def schemaMapping = [:]
-        getSchemas().each { it ->
-            schemaMapping[it] = it
+        Map schemaMapping
+        if (this.properties.containsKey('schemaMapping')) {
+            schemaMapping = property('schemaMapping')
+        } else {
+            schemaMapping = [:]
+            getSchemas().each { it ->
+                schemaMapping[it] = it
+            }
         }
         return schemaMapping
     }
 
-    public String getDateString() {
-        return new Date().format('yyyy-MM-dd_hhmmss')
-    }
-
     public String getDumpfile() {
-        return "${schemas[0]}_${dateString}.DMP"
-    }
-
-    public String getLogfileImport(String dumpfile) {
-        return "${dumpfile}.import.${dateString}.LOG"
-    }
-
-    public String getLogfileExport(String dumpfile) {
-        if (dumpfile == null) {
-            dumpfile = getDumpfile()
+        if (this.properties.containsKey('dumpfile')) {
+            String dumpfile = property('dumpfile')
+            if (!dumpfile.toUpperCase().endsWith('.DMP')) {
+                dumpfile += '.DMP'
+            }
+            return dumpfile
+        } else {
+            throw new InvalidUserDataException("property 'dumpfile' not set!")
         }
-        return "${dumpfile}.export.${dateString}.LOG"
     }
 
-    public Collection<String> getExcludesImport() {
-        return 'USER'.split(',')
-    }
 
-    public Collection<String> getExcludesExport() {
-        return 'STATISTICS,TABLESPACE_QUOTA,SYNONYM,VIEW'.split(',')
-    }
-
-    public String getCompression() {
-        return 'DATA_ONLY'
-    }
-
-    public String getTableExistsAction() {
-        return 'REPLACE'
-    }
 
 
     @Deprecated
@@ -224,7 +220,21 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
     }
     public OracleImportTask importTask(Map params, Closure closure = null) {
         params.put('type', OracleImportTask.class.name)
-        return (OracleImportTask) task(params, 'Import', closure)
+        OracleImportTask task = (OracleImportTask) task(params, 'Import', closure)
+
+
+        task.conventionMapping('directory', { getDirectory() })
+        task.conventionMapping('dumpfile', { getDumpfile() })
+        task.conventionMapping('schemas', { getSchemas() })
+        task.conventionMapping('schemaMapping', { getSchemaMapping() })
+        task.conventionMapping('logfile', { "${dumpfile}.import.${dateString}.LOG" })
+        task.conventionMapping('tableExistsAction', { 'REPLACE' })
+
+        task.conventionMapping('username', { getUsername() })
+        task.conventionMapping('password', { getPassword() })
+        task.conventionMapping('tns', { getTns() })
+
+        return task
     }
     
 
@@ -233,7 +243,20 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
     }
     public OracleExportTask exportTask(Map params, Closure closure = null) {
         params.put('type', OracleExportTask.class.name)
-        return (OracleExportTask) task(params, 'Export', closure)
+        OracleExportTask task = (OracleExportTask) task(params, 'Export', closure)
+
+        task.conventionMapping('directory', { getDirectory() })
+        task.conventionMapping('dumpfile', { getDumpfile() })
+        task.conventionMapping('schemas', { getSchemas() })
+        task.conventionMapping('logfile', { "${dumpfile}.export.${dateString}.LOG" })
+        task.conventionMapping('exclude', { ['STATISTICS', 'TABLESPACE_QUOTA', 'SYNONYM', 'VIEW'] })
+        task.conventionMapping('compression', { 'DATA_ONLY' })
+
+        task.conventionMapping('username', { getUsername() })
+        task.conventionMapping('password', { getPassword() })
+        task.conventionMapping('tns', { getTns() })
+
+        return task
     }
 
     public Task task(Map params, String name, Closure closure = null) {
@@ -259,13 +282,16 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
 
         Task task = project.tasks.add(name:taskName, type:taskType);
         task.group = "Database"
-        task.convention = this //todo: gradlefy this
 
         ConfigureUtil.configureByMap(params, task)
         ConfigureUtil.configure(closure, task, false);
 
         getTasks().addTask(name, task)
         return task;
+    }
+
+    private String getDateString() {
+        return new Date().format('yyyy-MM-dd_hhmmss')
     }
 
 }

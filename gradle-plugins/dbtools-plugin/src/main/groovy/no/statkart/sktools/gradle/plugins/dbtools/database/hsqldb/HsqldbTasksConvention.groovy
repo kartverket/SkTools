@@ -14,9 +14,9 @@ class HsqldbTasksConvention extends AbstractDatabaseConvention {
 
     protected HsqldbTasks tasks = new HsqldbTasks(this);
 
-    HsqldbTasksConvention(Project project, String propertyPrefix) {
+    HsqldbTasksConvention(Project project, String propertyPrefix, String name) {
 
-        super(project, propertyPrefix, 'org.hsqldb.jdbc.JDBCDriver')
+        super(project, propertyPrefix, name, 'org.hsqldb.jdbc.JDBCDriver')
 //        super(project, propertyPrefix, 'org.hsqldb.jdbcDriver')
     }
 

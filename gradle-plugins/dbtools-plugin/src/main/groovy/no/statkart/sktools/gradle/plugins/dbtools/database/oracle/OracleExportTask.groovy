@@ -5,69 +5,44 @@ import org.gradle.api.InvalidUserDataException
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.internal.ConventionTask
 
 /**
  * Task for kjøring av export-script for oracle baser
  *
- * Denne task forutsetter følgende prosjek-properties:
- *  <ul>
- *      <li><code>username</code>: brukernavn for database autentisering
- *      <li><code>password</code>: passord for database autentisering
- *      <li><code>tns</code>: tns som definerer databasen
- *
- *      <li><code>directory</code>
- *      <li><code>dumpfile</code>
- *
- *  </ul>
- *
- * Det forutsettes også at Oracle sqlClient er installer og finnes tilgjengelig på path.
+ * Det forutsettes at Oracle sqlClient er installer og finnes tilgjengelig på path.
  *
  * @author Leif Lislegård
  * @since 1.0
  */
-class OracleExportTask extends DefaultTask {
+class OracleExportTask extends ConventionTask {
 
-    @Optional
-    @Input
-    OracleTasksConvention convention
-
-
-
-    @Optional
     @Input
     String directory
 
-    @Optional
     @Input
     String dumpfile
 
-    @Optional
     @Input
     Collection<String> schemas
 
-    @Optional
     @Input
     String logfile
 
-    @Optional
     @Input
     Collection<String> exclude
 
-    @Optional
     @Input
     String compression
 
 
 
-    @Optional
     @Input
     String username
 
-    @Optional
     @Input
     String password
 
-    @Optional
     @Input
     String tns
 
@@ -81,30 +56,23 @@ class OracleExportTask extends DefaultTask {
     @TaskAction
     def exec() {
 
-        validateInput()
 
         def sout = new StringBuffer()
         def serr = new StringBuffer()
         String[] command = ['expdp.exe',
-                "USERID=${username}/${password}@${tns}",
-                "DIRECTORY=${directory}",
-                "SCHEMAS=${schemas.join(',')}",
-                "DUMPFILE=${dumpfile}",
-                "LOGFILE=${logfile}",
-                "EXCLUDE=${exclude.join(',')}",
-                "COMPRESSION=${compression}"
+                "USERID=${getUsername()}/${getPassword()}@${getTns()}",
+                "DIRECTORY=${getDirectory()}",
+                "SCHEMAS=${getSchemas().join(',')}",
+                "DUMPFILE=${getDumpfile()}",
+                "LOGFILE=${getLogfile()}",
+                "EXCLUDE=${getExclude().join(',')}",
+                "COMPRESSION=${getCompression()}"
         ]
         def impdb = Runtime.runtime.exec(command, null, getProject().getProjectDir())
 
-        //todo: filter password
-//        def maskedPassword;
-//        password.length().times{maskedPassword += '*'}
-//        command[1] = command[1].replace(password, maskedPassword)
+        logger.debug('Kaller impdp.exe med bruker ' + getUsername() + ', tns ' + getTns());
 
-
-        logger.debug('Kaller impdp.exe med bruker ' + username + ', tns ' + tns);
-
-        logger.info 'Executing command: \n' + command.join(' ')
+        logger.info 'Executing command: \n' + command.join(' ').replace(getPassword(), getPassword().replaceAll(/./, "*"))
 
         def running = true
         def bufferPrinter = {buffer ->
@@ -140,93 +108,6 @@ class OracleExportTask extends DefaultTask {
 
         println '...oracle export OK'
         print sout
-    }
-
-
-    private void validateInput() {
-
-
-        if (project.hasProperty('directory')) {
-            directory = project.property('directory')
-        } else if (convention != null) {
-            directory = convention.directory
-        } else {
-            throw new InvalidUserDataException("property 'directory' not set!")
-        }
-
-
-        if (project.hasProperty('dumpfile')) {
-            dumpfile = project.property('dumpfile')
-        } else if (convention != null) {
-            dumpfile = convention.dumpfile
-        } else {
-            throw new InvalidUserDataException("property 'dumpfile' not set!")
-        }
-
-        dumpfile = dumpfile.toUpperCase()
-        if (!dumpfile.endsWith('.DMP')) {
-            dumpfile += '.DMP'
-        }
-
-
-        if (project.hasProperty('schemas')) {
-            schemas = project.property('schemas').split(',')
-        } else if (convention != null) {
-            schemas = convention.schemas
-        } else {
-            throw new InvalidUserDataException("property 'schemas' not set!")
-        }
-
-        if (project.hasProperty('logfile')) {
-            logfile = project.property('logfile')
-        } else if (convention != null) {
-            logfile = convention.getLogfileExport(dumpfile)
-        } else {
-            throw new InvalidUserDataException("property 'logfile' not set!")
-        }
-
-
-        if (project.hasProperty('exclude')) {
-            exclude = project.property('exclude').split(',')
-        } else if (convention != null) {
-            exclude = convention.excludesExport
-        } else {
-            throw new InvalidUserDataException("property 'exclude' not set!")
-        }
-
-        if (project.hasProperty('compression')) {
-            compression = project.property('compression')
-        } else if (convention != null) {
-            compression = convention.compression
-        } else {
-            throw new InvalidUserDataException("property 'compression' not set!")
-        }
-
-
-        if (username == null) {
-            if (convention != null) {
-                username = convention.credentials.username
-            } else {
-                throw new InvalidUserDataException("property 'username' not set!")
-            }
-        }
-
-        if (password == null) {
-            if (convention != null) {
-                password = convention.credentials.password
-            } else {
-                throw new InvalidUserDataException("property 'password' not set!")
-            }
-        }
-
-        if (tns == null) {
-            if (convention != null) {
-                tns = convention.tns
-            } else {
-                throw new InvalidUserDataException("property 'tns' not set!")
-            }
-        }
-
     }
 
 

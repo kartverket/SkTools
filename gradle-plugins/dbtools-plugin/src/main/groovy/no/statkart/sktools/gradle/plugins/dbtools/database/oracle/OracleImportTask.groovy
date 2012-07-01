@@ -5,73 +5,50 @@ import org.gradle.api.InvalidUserDataException
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.internal.ConventionTask
 
 /**
  * Task for kjøring av import-script for oracle baser
  *
- * Denne task forutsetter følgende prosjek-properties:
- *  <ul>
- *      <li><code>username</code>: brukernavn for database autentisering
- *      <li><code>password</code>: passord for database autentisering
- *      <li><code>tns</code>: tns som definerer databasen
- *
- *      <li><code>directory</code>
- *      <li><code>dumpfile</code>
- *  </ul>
- *
- * Det forutsettes også at Oracle sqlClient er installer og finnes tilgjengelig på path.
+ * Det forutsettes at Oracle sqlClient er installer og finnes tilgjengelig på path.
  *
  * @author Leif Lislegård
  * @since 1.0
  */
-class OracleImportTask extends DefaultTask {
-
-    @Optional
-    @Input
-    OracleTasksConvention convention
+class OracleImportTask extends ConventionTask {
 
 
 
-
-    @Optional
     @Input
     String directory
 
-    @Optional
     @Input
     String dumpfile
 
-    @Optional
     @Input
     List<String> schemas
 
-    @Optional
     @Input
     Map<String, String> schemaMapping
 
-    @Optional
     @Input
     String logfile
 
-    @Optional
-    @Input
-    Collection<String> excludes
-
-    @Optional
     @Input
     String tableExistsAction
 
-
-
     @Optional
+    @Input
+    Collection<String> exclude
+
+
+
     @Input
     String username
 
-    @Optional
     @Input
     String password
 
-    @Optional
     @Input
     String tns
 
@@ -83,31 +60,29 @@ class OracleImportTask extends DefaultTask {
 
     @TaskAction
     def exec() {
-        validateInput()
 
         def sout = new StringBuffer()
         def serr = new StringBuffer()
         String[] command = ['impdp.exe',
-                "${username}/${password}@${tns}",
-                "DIRECTORY=${directory}",
-                "SCHEMAS=${schemas.join(',')}",
-                "REMAP_SCHEMA=${schemaMapping.collect {key, value -> key + ':' + value}.join(',')}",
-                "DUMPFILE=${dumpfile}",
-                "LOGFILE=${logfile}",
-                "TABLE_EXISTS_ACTION=${tableExistsAction}",
+                "${getUsername()}/${getPassword()}@${getTns()}",
+                "DIRECTORY=${getDirectory()}",
+                "SCHEMAS=${getSchemas().join(',')}",
+                "REMAP_SCHEMA=${getSchemaMapping().collect {key, value -> key + ':' + value}.join(',')}",
+                "DUMPFILE=${getDumpfile()}",
+                "LOGFILE=${getLogfile()}",
+                "TABLE_EXISTS_ACTION=${getTableExistsAction()}",
                 'TRANSFORM=SEGMENT_ATTRIBUTES:n'
         ]
+
+        if (getExclude() != null && !getExclude().isEmpty()) {
+            command << "EXCLUDE=${getExclude().join(',')}"
+        }
+
         def impdb = Runtime.runtime.exec(command, null, getProject().getProjectDir())
 
-        //todo: filter password
-//        def maskedPassword;
-//        password.length().times{maskedPassword += '*'}
-//        command[1] = command[1].replace(password, maskedPassword)
+        logger.debug('Kaller impdp.exe med bruker ' + getUsername() + ', tns ' + getTns());
 
-
-        logger.debug('Kaller impdp.exe med bruker ' + username + ', tns ' + tns);
-
-        logger.info 'Executing command: ' + command.join(' ')
+        logger.info 'Executing command: \n' + command.join(' ').replace(getPassword(), getPassword().replaceAll(/./, "*"))
 
         def running = true
         def bufferPrinter = {buffer ->
@@ -144,95 +119,5 @@ class OracleImportTask extends DefaultTask {
         println '...oracle import OK'
         print sout
     }
-
-
-    private void validateInput() {
-
-
-        if (project.hasProperty('dumpfile')) {
-            dumpfile = project.property('dumpfile')
-        } else {
-            throw new InvalidUserDataException("property 'dumpfile' not set!")
-        }
-
-        dumpfile = dumpfile.toUpperCase()
-        if (!dumpfile.endsWith('.DMP')) {
-            dumpfile += '.DMP'
-        }
-
-        if (project.hasProperty('directory')) {
-            directory = project.property('directory')
-        } else if (convention != null) {
-            directory = convention.directory
-        } else {
-            throw new InvalidUserDataException("property 'directory' not set!")
-        }
-
-
-        if (project.hasProperty('schemas')) {
-            schemas = project.property('schemas').split(',')
-        } else if (convention != null) {
-            schemas = convention.schemas
-        } else {
-            throw new InvalidUserDataException("property 'schemas' not set!")
-        }
-
-        if (project.hasProperty('schemaMapping')) {
-            schemaMapping = [:]
-            project.property('schemaMapping').split(',').each { it ->
-                schemaMapping.put([it.split(':')[0], it.split(':')[1]])
-            }
-        } else if (convention != null) {
-            schemaMapping = convention.schemaMapping
-        } else {
-            throw new InvalidUserDataException("property 'schemaMapping' not set!")
-        }
-
-        if (project.hasProperty('logfile')) {
-            logfile = project.property('logfile')
-        } else if (convention != null) {
-            logfile = convention.getLogfileImport(dumpfile)
-        } else {
-            throw new InvalidUserDataException("property 'logfile' not set!")
-        }
-
-        if (project.hasProperty('tableExistsAction')) {
-            tableExistsAction = project.property('tableExistsAction')
-        } else if (convention != null) {
-            tableExistsAction = convention.tableExistsAction
-        } else {
-            throw new InvalidUserDataException("property 'tableExistsAction' not set!")
-        }
-
-
-
-
-
-        if (username == null) {
-            if (convention != null) {
-                username = convention.credentials.username
-            } else {
-                throw new InvalidUserDataException("property 'username' not set!")
-            }
-        }
-
-        if (password == null) {
-            if (convention != null) {
-                password = convention.credentials.password
-            } else {
-                throw new InvalidUserDataException("property 'password' not set!")
-            }
-        }
-
-        if (tns == null) {
-            if (convention != null) {
-                tns = convention.tns
-            } else {
-                throw new InvalidUserDataException("property 'tns' not set!")
-            }
-        }
-
-    }
-
 
 }

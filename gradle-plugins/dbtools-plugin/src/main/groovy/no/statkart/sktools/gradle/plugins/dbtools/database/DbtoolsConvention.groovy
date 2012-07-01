@@ -170,7 +170,7 @@ configureDatabasePlugin {
 
         if (convention == null) {
             project.logger.info("Applying Oracle convention with name ${name} ...")
-            convention = new OracleTasksConvention(project, prefix)
+            convention = new OracleTasksConvention(project, prefix, name)
             dbToolSets.put(name, convention)
 
         }
@@ -185,7 +185,7 @@ configureDatabasePlugin {
 
         if (convention == null) {
             project.logger.info("Applying HSQLDB convention with name ${name} ...")
-            convention = new HsqldbTasksConvention(project, prefix)
+            convention = new HsqldbTasksConvention(project, prefix, name)
             dbToolSets.put(name, convention)
 
         }
