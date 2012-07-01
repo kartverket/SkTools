@@ -33,14 +33,15 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
         
         // setter konvensjonelle verdier
         project.afterEvaluate {
-            if (this.properties.containsKey('db_username')) {
-                
-                // passord er det samme som brukernavn dersom uspesifisert
-                addPropertyIfNotExist('db_password', property('db_username'))
 
-                // schema er det samme som brukernavn dersom uspesifisert
-                addPropertyIfNotExist('db_schema', property('db_username'))
-            }
+            // passord er det samme som brukernavn dersom spesifisert, ellers settes denne likt credentials
+            addPropertyIfNotExist('db_password', property('db_username') ?: credentials.password)
+
+            // benytter credentials username for dersom ikke spesifisert
+            addPropertyIfNotExist('db_username', credentials.username)
+
+            // schema er det samme som brukernavn dersom uspesifisert
+            addPropertyIfNotExist('db_schema', property('db_username'))
 
             // oradataNN settes enten til standard verdi, eller til hva som er angitt i oradata
             addPropertyIfNotExist('db_oradata01', property('db_oradata') ?: 'F:\\Oradata')
@@ -61,7 +62,7 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
         }
 
         // setter konvensjonelle verdier
-        // todo: properties med prefix kan trolig utgå ..
+        // todo: properties med prefix kan trolig utgå (etter endring i versjon 1.2)..
         project.afterEvaluate {
             if (this.properties.containsKey("${propertyPrefix}db_username")) {
 
