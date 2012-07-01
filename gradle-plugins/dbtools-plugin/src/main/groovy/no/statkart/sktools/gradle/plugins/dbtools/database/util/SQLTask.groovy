@@ -62,6 +62,8 @@ public class SQLTask extends ConventionTask {
         credentials.password = password
     }
 
+    //SKIF-206
+    boolean failOnError = true
 
 
     @TaskAction
@@ -80,6 +82,7 @@ public class SQLTask extends ConventionTask {
         specs.password = getPassword();
         specs.driver = getDriver();
         specs.url = getUrl();
+        specs.failOnError = failOnError
 
         executor.executeStatements(specs)
     }

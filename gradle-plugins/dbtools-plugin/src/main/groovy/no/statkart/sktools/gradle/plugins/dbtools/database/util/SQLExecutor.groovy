@@ -16,6 +16,7 @@ import groovy.sql.Sql
 import no.statkart.sktools.utils.parsers.sql.model.Statement
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.sql.SQLException
 
 /**
  * Eksekverer sql statements til basen.
@@ -33,7 +34,7 @@ class SQLExecutor {
     public void executeStatements(ExecSpecs specs) {
 
         if (logger.isDebugEnabled()) {
-            logger.debug("Kaller executeStatements() med parametere \n\t " + [username:specs.username, password:specs.password, driver:specs.driver, url:specs.url])
+            logger.debug("Calling executeStatements() with parameters \n\t " + [username:specs.username, password:specs.password, driver:specs.driver, url:specs.url])
         }
 
         def sql = Sql.newInstance(specs.url, specs.username, specs.password, specs.driver)
@@ -43,7 +44,18 @@ class SQLExecutor {
 
             logger.info("Executing ${statement.class.simpleName}: \n${statement.sql}")
 
-            sql.execute(statement.sql)
+            try {
+                sql.execute(statement.sql)
+            } catch (SQLException sqle) {
+                if (specs.failOnError) {
+                    logger.error("Error when executing statement at line#${statement.lineNumber}")
+                    throw sqle
+                }
+                logger.error("Error when executing statement at line#${statement.lineNumber}... failOnError is '${specs.failOnError}' so we ignore it!")
+                logger.error("Statement: \n${statement.sql.trim()}\n")
+                logger.error("Message: \n${sqle.message}\n")
+                logger.info("Exception: ", sqle)
+            }
         }
 
     }
@@ -59,4 +71,7 @@ public class ExecSpecs {
 
     String url
     String driver
+
+    //SKIF-206
+    boolean failOnError
 }
