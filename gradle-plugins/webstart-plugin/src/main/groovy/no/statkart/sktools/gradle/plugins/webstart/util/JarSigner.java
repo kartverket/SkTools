@@ -92,6 +92,7 @@ public class JarSigner {
                 try {
                     signJar(tempFile);
 
+                    signedJarFile.delete(); //SKIF-209: sletter evt eksisterende fil før move..
                     tempFile.renameTo(signedJarFile);
 
                 } finally {

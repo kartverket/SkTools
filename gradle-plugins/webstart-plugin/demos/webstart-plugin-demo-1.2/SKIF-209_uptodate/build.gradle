@@ -47,15 +47,16 @@ task runDemo(dependsOn:'clean') {
         println "Tømmer cache katalog"
         project.rootProject.delete('.cache')
 
+        cleanExtraResources.execute()
+
         println "Tester generering av client"
         forkGradle([
                 'release',
                 tasks['genWebstart'],
                 tasks['assertEchoClientClasses'],
-        ]) //'release' setter version uten SNAPSHOT
+        ]) //'release' version without SNAPSHOT
 
-        File file = project.project(':echo-client').file('src/main/SKIF-209/addedResource.txt')
-        file.parentFile.mkdirs()
+        createExtraResources.execute()
 
         println "Tester generering av client"
         forkGradle([
@@ -63,8 +64,20 @@ task runDemo(dependsOn:'clean') {
                 tasks['genWebstart'],
                 tasks['assertEchoClientClasses'],
                 tasks['assertAddedEchoClientClasses'],
-        ]) //'release' setter version uten SNAPSHOT
+        ]) //'release' version without SNAPSHOT
     }
+}
+
+task createExtraResources() << {
+    println "Oppretter genererte filer"
+    File file = project.project(':echo-client').file('src/main/SKIF-209/addedResource.txt')
+    file.parentFile.mkdirs()
+    file.createNewFile()
+}
+
+task cleanExtraResources() << {
+    println "Sletter genererte filer"
+    project.project(':echo-client').delete('src/main/SKIF-209')
 }
 
 
