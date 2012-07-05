@@ -37,11 +37,9 @@ class WebstartTask extends ConventionTask {
 
     /**
      * Ressurss-filer blir omdøpt og kopiert ut til lib kataloger.
-     * Dersom det blir bygget SNAPSHOT versjoner, vil versjons-delen av filnavnet inneholde et timestamp for bygget.
-     * Det er også tatt hensyn til skifte av sertifikat. For detaljer, se {@link #createFileNameForJar(File, ResourcesConfiguration, String) }
-     * <p>
-     * <p>
      *
+     * <br />
+     * Det er også tatt hensyn til skifte av sertifikat. For detaljer, se {@link #createFileNameForJar(File, ResourcesConfiguration, String) }
      */
     @TaskAction
     def generate() {
@@ -148,19 +146,10 @@ class WebstartTask extends ConventionTask {
         return mappedJarsForResources
     }
 
-    private static String TIMESTAMP = null;
-    protected static String getTimestamp() {
-        if (TIMESTAMP == null) {
-            TIMESTAMP = new Date().format('yyyy_MM_dd_HHmmss')
-        }
-        return TIMESTAMP;
-    }
-
 
     /**
      * Steg for mapping av navn for ressurs-filer til lib katalog
      * <p>
-     * Dersom jar filen inneholder 'SNAPSHOT' vil version få lagt til en timestamp-verdi. <br>
      * Versjonsfelt vil også få tillagt parameterisert {@code digest}. <br>
      */
     protected static String createFileNameForJar(File file, ResourcesConfiguration resourcesConfiguration, String digest) {
@@ -188,7 +177,6 @@ class WebstartTask extends ConventionTask {
             if (!version.contains("SNAPSHOT")) {
                 version += 'snapshot'
             }
-            version += getTimestamp();
         }
 
         //legger til digest
@@ -212,10 +200,6 @@ class WebstartTask extends ConventionTask {
         return value
     }
 
-    /**
-     *
-     * Dersom version inneholder {@code 'SNAPSHOT'} legges et timestamp til versionen.
-     */
     protected static String findJnlpResourceVersion(File file) {
         String value = file.getName()
         value = value.substring(value.indexOf("__V") + 3)
