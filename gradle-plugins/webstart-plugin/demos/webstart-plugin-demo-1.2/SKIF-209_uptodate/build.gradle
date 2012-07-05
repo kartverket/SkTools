@@ -1,0 +1,100 @@
+/******************************************************************************************************************** **
+ *
+ * SKIF-209: Verifiserer oppdaterte lib filer for relaterte prosjekter
+ *
+ ******************************************************************************************************************** */
+
+apply plugin: 'sktools-webstart-plugin'
+
+
+webstart {
+    client {
+        signJars false
+        outputPath 'build/unsigned'
+        jnlpFile 'echo-client.jnlp'
+        jnlp {
+            title 'Unsigned client'
+            application.mainClass 'WebstartTester'
+            resources {
+                jars project(':echo-client')
+                javaRuntime '1.6+', '64m', '64m'
+            }
+        }
+    }
+    client {
+        signJars true
+        outputPath 'build/signed'
+        jnlpFile 'echo-client-signed.jnlp'
+        jnlp {
+            title 'Signed client'
+            application.mainClass 'WebstartTester'
+            resources {
+                jars project(':echo-client')
+                javaRuntime '1.6+', '64m', '64m'
+            }
+        }
+    }
+}
+
+/******************************************************************************************************************** **
+ * Diverse tasker som tester og demonstrerer implementasjonen
+ ******************************************************************************************************************** */
+task runDemo(dependsOn:'clean') {
+    description = 'Tester at lib filer blir oppdaterte'
+
+    doLast {
+
+        println "Tømmer cache katalog"
+        project.rootProject.delete('.cache')
+
+        println "Tester generering av client"
+        forkGradle([
+                'release',
+                tasks['genWebstart'],
+                tasks['assertEchoClientClasses'],
+        ]) //'release' setter version uten SNAPSHOT
+
+        File file = project.project(':echo-client').file('src/main/SKIF-209/addedResource.txt')
+        file.parentFile.mkdirs()
+
+        println "Tester generering av client"
+        forkGradle([
+                'release',
+                tasks['genWebstart'],
+                tasks['assertEchoClientClasses'],
+                tasks['assertAddedEchoClientClasses'],
+        ]) //'release' setter version uten SNAPSHOT
+    }
+}
+
+
+
+task assertEchoClientClasses() << {
+    ["build/signed/lib", "build/unsigned/lib"].each {
+        def archive = project.files(it).asFileTree.filter({it.name.contains("echo-client")}).singleFile
+        assert archive.exists() //forventer at jar fil er opprettet
+
+        assert !project.zipTree(archive).matching {include '**/*.class'}.files.isEmpty()
+    }
+}
+
+task assertAddedEchoClientClasses() << {
+    ["build/signed/lib", "build/unsigned/lib"].each {
+        def archive = project.files(it).asFileTree.filter({it.name.contains("echo-client")}).singleFile
+        assert archive.exists() //forventer at jar fil er opprettet
+
+        assert project.zipTree(archive).matching {include 'addedResource.txt'}.files.size() == 1
+    }
+}
+
+
+/******************************************************************************************************************** **
+ * Hjelpemetode for forking av gradle eksekveringer
+ * Kun relevant for testing...
+ ******************************************************************************************************************** */
+void forkGradle(List tasks, Map props = [:]) {
+    StartParameter sp = gradle.startParameter.newInstance()
+    sp.taskNames = tasks.collect { it instanceof Task ? it.path : it.toString() }
+    sp.projectProperties = props
+    GradleLauncher.newInstance(sp).run().rethrowFailure();
+}
