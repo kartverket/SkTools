@@ -1,22 +1,6 @@
 //prosjekt logik for pakking og deploying av test-ear til weblogic server
 
-dependsOnChildren()
-
-subprojects.each {evaluationDependsOn(it.path)}
-
 apply plugin: 'ear'
-
-
-
-//dependencies - legger til alle subprosjekt
-subprojects.each { Project subProject ->
-    dependencies {
-        if (subProject.plugins.hasPlugin('war')) {
-            deploy project(path:subProject.path, configuration: 'archives')
-        }
-        earlib project(path:subProject.path)
-    }
-}
 
 
 project.ext.set('app_url', properties.get('wls.deploy.adminurl', "http://${project.HOSTNAME}:7001"))
@@ -24,6 +8,17 @@ def appName = 'webstart-plugin-demo'
 
 //legger til action etter at prosjektet er evaluert. Dette da for å få satt riktig navn/versjon på warfiler definert i konfigurasjonen her.
 afterEvaluate {
+
+    //dependencies - legger til alle subprosjekt med war plugin aktivert
+    subprojects.each { Project subProject ->
+        dependencies {
+            if (subProject.plugins.hasPlugin('war')) {
+                deploy project(path:subProject.path, configuration: 'archives')
+            }
+            earlib project(path:subProject.path)
+        }
+    }
+
 
     def warMap = subprojects.findAll { it.plugins.hasPlugin('war') }.collectEntries { Project subProject ->
             String warFileName = subProject.configurations['archives'].artifacts.files.singleFile.name
