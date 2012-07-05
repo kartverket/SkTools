@@ -182,12 +182,13 @@ class WebstartPlugin implements Plugin<Project> {
      */
     private void configureGenWebstartTask(final Project project, final WebstartConvention webstartConvention) {
         Task genWebstartTask = project.getTasks().getByName(WebstartPlugin.GEN_WEBSTART_TASK_NAME);
-        webstartConvention.clients.each {
-            Configuration configuration = project.getConfigurations().getByName(WebstartPlugin.CONFIGURATION_NAME)
-            genWebstartTask.dependsOn(configuration)
 
+        Configuration configuration = project.getConfigurations().getByName(WebstartPlugin.CONFIGURATION_NAME)
+        genWebstartTask.dependsOn(configuration)
+
+        webstartConvention.clients.each { client ->
             //registrerer output slik at enhver tukling med disse filer vil trigge ny bygging.
-            genWebstartTask.outputs.dir(it.outputDir)
+            genWebstartTask.outputs.dir({client.outputDir})
         }
 
     }

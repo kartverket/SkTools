@@ -22,8 +22,8 @@ libraries.weblogic = fileTree(dir:project.WEBLOGIC_HOME, includes:[
 assert gradle.gradleVersion == '1.0' || gradle.gradleVersion >= '1.0-rc-2'
 
 buildscript {
-    project.version = rootProject.getProperty('version')
-    if (project.version == Project.DEFAULT_VERSION) project.version = '1.2-SNAPSHOT' //nb - dersom ikke default version er satt riktig så blir kjøring ifra demo-katalog feil..
+    def version = rootProject.getProperty('version')
+    if (version == Project.DEFAULT_VERSION) version = '1.2-SNAPSHOT' //nb - dersom ikke default version er satt riktig så blir kjøring ifra demo-katalog feil..
 
     // Variables to grab from environment + defaults
     ['WEBLOGIC_HOME', 'COMPUTERNAME', 'PUBLIC_REPO'].each { val ->
