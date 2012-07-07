@@ -61,6 +61,10 @@ class WeblogicDeployConfiguration {
      * @see #getUrl()
      */
     private String url
+    /**
+     * Komma sepparert liste av targets for deployment. <br>
+     * Dersom ikke satt defaulter weblogic til Admin server instansen
+     */
     protected String targets
 
     protected String username
@@ -216,9 +220,13 @@ class WeblogicDeployConfiguration {
         this.password = password
     }
 
-
-    void setFile(Object artifact) {
-        this.file = artifact
+    /**
+     * File, artifakt, task
+     * @param buildable
+     */
+    void setFile(Object deployable) {
+        this.file = deployable
+        dependsOn((deployable instanceof org.gradle.api.Buildable || deployable instanceof Task) ? deployable : project.files(deployable))
     }
 
     void setName(String deploymentName) {

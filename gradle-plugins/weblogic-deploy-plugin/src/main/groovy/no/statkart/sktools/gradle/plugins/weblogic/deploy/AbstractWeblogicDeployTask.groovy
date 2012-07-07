@@ -6,6 +6,7 @@ import org.gradle.api.AntBuilder
 import org.gradle.api.tasks.Input
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
+import org.gradle.api.tasks.Optional
 
 /**
  * Alt som er felles for deploying og undeploying.
@@ -22,7 +23,12 @@ abstract class AbstractWeblogicDeployTask extends ConventionTask {
 
     @Input
     String deploymentName
+
+    @Optional
     @Input
+    String getTargets() {
+        targets == null || targets.isAllWhitespace() ? null : targets
+    }
     String targets
 
     @Input
