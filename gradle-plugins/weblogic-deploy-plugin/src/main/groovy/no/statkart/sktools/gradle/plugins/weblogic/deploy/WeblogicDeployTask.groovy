@@ -24,24 +24,24 @@ class WeblogicDeployTask extends AbstractWeblogicDeployTask {
 
     @TaskAction
     void deploy() {
-        logger.quiet("Deployment av ${deploymentName} til Weblogic paa ${url}")
+        logger.quiet("Deployment av ${getDeploymentName()} til Weblogic paa ${getUrl()}")
 
         ant.wldeploy(
                 action: 'deploy',
-                upload: upload,
+                upload: getUpload(),
 
-                name: deploymentName,
-                source: file,
-                targets: targets,
+                name: getDeploymentName(),
+                source: getFile(),
+                targets: getTargets(),
 
-                adminurl: url,
-                user: username,
-                password: password,
+                adminurl: getUrl(),
+                user: getUsername(),
+                password: getPassword(),
 
-                timeout: timeout,
+                timeout: getTimeout(),
 
-                failonerror: failOnError,
-                verbose: verbose,
+                failonerror: getFailOnError(),
+                verbose: getVerbose(),
         )
     }
 

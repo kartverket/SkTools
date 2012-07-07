@@ -18,21 +18,21 @@ class WeblogicUndeployTask extends AbstractWeblogicDeployTask {
 
     @TaskAction
     void deploy() {
-        logger.quiet("Undeployment av ${deploymentName} til Weblogic paa ${url}")
+        logger.quiet("Undeployment av ${getDeploymentName()} til Weblogic paa ${getUrl()}")
 
         ant.wldeploy(
                 action: 'undeploy',
-                name: deploymentName,
-                targets: targets,
+                name: getDeploymentName(),
+                targets: getTargets(),
 
-                adminurl: url,
-                user: username,
-                password: password,
+                adminurl: getUrl(),
+                user: getUsername(),
+                password: getPassword(),
 
-                graceful: graceful,
+                graceful: getGraceful(),
 
-                failonerror: failOnError,
-                verbose: verbose,
+                failonerror: getFailOnError(),
+                verbose: getVerbose(),
         )
     }
 
