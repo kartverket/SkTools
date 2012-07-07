@@ -1,6 +1,11 @@
 package no.statkart.sktools.gradle.plugins.weblogic.deploy
 
 import org.gradle.util.ConfigureUtil
+import org.gradle.api.Project
+import org.gradle.api.GradleException
+import org.gradle.api.internal.ConventionTask
+import org.gradle.api.file.FileCollection
+import org.gradle.api.Task
 
 /**
  * Convention for å konfigurere opp egenskaper felles for både deploy og undeploy
@@ -9,10 +14,14 @@ import org.gradle.util.ConfigureUtil
  * @since 1.2
  */
 class WeblogicDeployConvention {
-    final WeblogicDeployConfiguration weblogicDeploy = new WeblogicDeployConfiguration()
+    final private Project project
+
+    protected WeblogicDeployConvention(Project project) {
+        this.project = project
+    }
 
     public weblogicDeploy(Closure c) {
-        ConfigureUtil.configure(c, weblogicDeploy)
+        ConfigureUtil.configure(c, new WeblogicDeployConfiguration(project))
     }
 }
 
@@ -20,49 +29,112 @@ class WeblogicDeployConvention {
  * Konfigurasjon av weblogic-tjeneren det skal deployes på / undeployes fra.
  *
  * @author Tor Egil R. Strand
+ * @author Leif Lislegård
  * @since 1.2
  */
 class WeblogicDeployConfiguration {
-    private String protocol
-    private String host
-    private String port
+    final private Project project
+
+    protected String protocol
+    protected String host
+    protected String port
+
     /**
      * Hvis ikke satt, genereres en fra protocol, host og port.
+     * @see #getUrl()
      */
     private String url
-    private String targets
+    protected String targets
 
-    private String username
-    private String password
-
-    /**
-     * Det som skal deployes. Må inneholde bare én artefakt.
-     */
-    private Object artifact
+    protected String username
+    protected String password
 
     /**
      * Navn på deploymenten, slik at undeploy undeployer riktig deployment.
      */
-    private String moduleName
+    protected String name
 
-    String getProtocol() {
-        return protocol
+    /**
+     * Det som skal deployes. Må inneholde bare ett artefakt.
+     * @see #getFile()
+     */
+    protected Object file
+
+    /**
+     * @see #getClasspath()
+     */
+    private Object classpath
+
+    protected WeblogicDeployTask deployTask
+    protected WeblogicUndeployTask undeployTask
+
+
+
+    protected WeblogicDeployConfiguration(Project project) {
+        this.project = project
+    }
+
+
+    WeblogicUndeployTask undeployTask(String name, Closure config = null) {
+        return undeployTask([:], name, config)
+    }
+    WeblogicUndeployTask undeployTask(Map params, String name, Closure config = null) {
+        if (name == null || name.trim().isEmpty()) {
+            throw new GradleException('name parameter not supplied for task!')
+        }
+        undeployTask = (WeblogicUndeployTask) project.tasks.add(name: name, type: WeblogicUndeployTask.class)
+        setCommonConventionalValues(undeployTask)
+
+        ConfigureUtil.configureByMap(params, undeployTask)
+        ConfigureUtil.configure(config, undeployTask, false)
+        return undeployTask
+    }
+
+
+    WeblogicDeployTask deployTask(String name, Closure config = null) {
+        return deployTask([:], name, config)
+    }
+    WeblogicDeployTask deployTask(Map params, String name, Closure config = null) {
+        if (name == null || name.trim().isEmpty()) {
+            throw new GradleException('name parameter not supplied for task!')
+        }
+
+        Task task = project.tasks.add(name: name, type: WeblogicDeployTask.class)
+        deployTask = (WeblogicDeployTask) task
+        setCommonConventionalValues(deployTask)
+        deployTask.conventionMapping 'file', { this.getFile() }
+
+        ConfigureUtil.configureByMap(params, deployTask)
+        ConfigureUtil.configure(config, deployTask, false)
+        return deployTask
+    }
+
+    private ConventionTask setCommonConventionalValues(ConventionTask task) {
+        task.conventionMapping 'classpath', { this.getClasspath() }
+        task.conventionMapping 'deploymentName', { this.name }
+        task.conventionMapping 'url', { this.getUrl() }
+        task.conventionMapping 'targets', { this.targets }
+        task.conventionMapping 'username', { this.targets }
+        task.conventionMapping 'password', { this.targets }
+        task
+    }
+
+    WeblogicUndeployTask getUndeployTask() {
+        if (undeployTask == null) throw new GradleException("Undeploy task not yet configured!");
+        return undeployTask
+    }
+
+    WeblogicDeployTask getDeployTask() {
+        if (deployTask == null) throw new GradleException("Deploy task not yet configured!");
+        return deployTask
     }
 
     void setProtocol(String protocol) {
         this.protocol = protocol
     }
 
-    String getHost() {
-        return host
-    }
-
     void setHost(String host) {
         this.host = host
-    }
-
-    String getPort() {
-        return port
     }
 
     void setPort(String port) {
@@ -81,43 +153,36 @@ class WeblogicDeployConfiguration {
         this.url = url
     }
 
-    String getTargets() {
-        return targets
-    }
-
     void setTargets(String targets) {
         this.targets = targets
-    }
-
-    String getUsername() {
-        return username
     }
 
     void setUsername(String username) {
         this.username = username
     }
 
-    String getPassword() {
-        return password
-    }
-
     void setPassword(String password) {
         this.password = password
     }
 
-    Object getArtifact() {
-        return artifact
+
+    void setFile(Object artifact) {
+        this.file = artifact
     }
 
-    void setArtifact(Object artifact) {
-        this.artifact = artifact
+    void setName(String moduleName) {
+        this.name = moduleName
     }
 
-    String getModuleName() {
-        return moduleName
+    void setClasspath(String classpath) {
+        this.classpath = classpath
     }
 
-    void setModuleName(String moduleName) {
-        this.moduleName = moduleName
+    File getFile() {
+        return project.files(file).singleFile
+    }
+
+    FileCollection getClasspath() {
+        return project.files(classpath);
     }
 }

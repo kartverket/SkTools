@@ -13,8 +13,6 @@ dependencies {
     compile gradleApi()
 
 
-    compile project(':gradle-plugins:weblogic-plugin')
-
     //test
     testCompile project(':build-utils:test-utils')
 

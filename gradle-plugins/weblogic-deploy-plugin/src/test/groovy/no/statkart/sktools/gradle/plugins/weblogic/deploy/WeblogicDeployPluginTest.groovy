@@ -32,22 +32,56 @@ class WeblogicDeployPluginTest {
      * Tester og demonstrerer angivelse av konfigurasjon
      */
     @Test
-    void testConventionConfiguration() {
-        ProjectHelper projectHelper = WeblogicDeployProjectBuilder.builder().applyJavaPlugin().applyWeblogicDeployPlugin().build()
-        WeblogicDeployConvention convention = (WeblogicDeployConvention) projectHelper.project.convention.plugins.get(WeblogicDeployPlugin.WEBLOGIC_DEPLOY_CONVENTION_NAME)
-
-        projectHelper.initializeProject()
+    void testConfiguration() {
+        ProjectHelper projectHelper = WeblogicDeployProjectBuilder.builder().applyWeblogicDeployPlugin().build()
 
         projectHelper.configureProject {
             weblogicDeploy {
                 protocol = "a"
                 host = "b"
                 port = "c"
+
+                deployTask('myDeploy', description: 'Testkonfigurasjon av deploy task')
+                undeployTask('myUndeploy', description: 'Testkonfigurasjon av undeploy task') { url = 't3://test:port'}
             }
         }
 
-        assert convention.weblogicDeploy.protocol == "a"
-        assert convention.weblogicDeploy.host == "b"
-        assert convention.weblogicDeploy.port == "c"
+        Project project = projectHelper.project
+
+        assert project.tasks['myDeploy'].group == 'Deployment'
+        assert project.tasks['myUndeploy'].group == 'Deployment'
+
+        assert project.tasks['myDeploy'].description == 'Testkonfigurasjon av deploy task'
+        assert project.tasks['myUndeploy'].description == 'Testkonfigurasjon av undeploy task'
+
+
+        assert project.tasks['myDeploy'].url == 'a://b:c'
+        assert project.tasks['myUndeploy'].url == 't3://test:port'
     }
+
+    /**
+     * Tester angivelse av dependsOn
+     */
+    @Test
+    void testDependsOn() {
+        ProjectHelper projectHelper = WeblogicDeployProjectBuilder.builder().applyWeblogicDeployPlugin().build()
+
+        projectHelper.configureProject {
+
+            project.task 'myTask'
+
+            weblogicDeploy {
+                deployTask('deploy', dependsOn: [myTask])
+                undeployTask('undeploy') {
+                    dependsOn deployTask
+                }
+            }
+        }
+
+        Project project = projectHelper.project
+
+        assert project.tasks['deploy'].dependsOn.contains(project.tasks['myTask'])
+        assert project.tasks['undeploy'].dependsOn.contains(project.tasks['deploy'])
+    }
+
 }
