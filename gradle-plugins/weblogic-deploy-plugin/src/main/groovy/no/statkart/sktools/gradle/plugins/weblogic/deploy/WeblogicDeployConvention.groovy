@@ -6,6 +6,7 @@ import org.gradle.api.GradleException
 import org.gradle.api.internal.ConventionTask
 import org.gradle.api.file.FileCollection
 import org.gradle.api.Task
+import org.apache.commons.lang.StringUtils
 
 /**
  * Convention for å konfigurere opp egenskaper felles for både deploy og undeploy
@@ -20,8 +21,23 @@ class WeblogicDeployConvention {
         this.project = project
     }
 
+    /**
+     * Konfigurerer opp sett av tasker for deploy basert på 'weblogic.ant.taskdefs.management.WLDeploy'
+     * <p>
+     *     Dette er deploy tasker som er ment for bruk i utviklingsmiljøer for å understøtte iterativ utvikling.
+     *
+     * <p> Følgende tasker er implementert
+     * <ul>
+     *   <li> WeblogicDeployTask - deployer deployment
+     *   <li> WeblogicUndeployTask - undeployer deployment
+     * </ul>
+     */
     public weblogicDeploy(Closure c) {
         ConfigureUtil.configure(c, new WeblogicDeployConfiguration(project))
+    }
+
+    protected getTaskName(def verb, def target = project.name) {
+        return StringUtils.uncapitalize(String.format("%s%s", verb, StringUtils.capitalize(target)))
     }
 }
 
@@ -114,8 +130,8 @@ class WeblogicDeployConfiguration {
         task.conventionMapping 'deploymentName', { this.name }
         task.conventionMapping 'url', { this.getUrl() }
         task.conventionMapping 'targets', { this.targets }
-        task.conventionMapping 'username', { this.targets }
-        task.conventionMapping 'password', { this.targets }
+        task.conventionMapping 'username', { this.username }
+        task.conventionMapping 'password', { this.password }
         task
     }
 
@@ -170,11 +186,11 @@ class WeblogicDeployConfiguration {
         this.file = artifact
     }
 
-    void setName(String moduleName) {
-        this.name = moduleName
+    void setName(String deploymentName) {
+        this.name = deploymentName
     }
 
-    void setClasspath(String classpath) {
+    void setClasspath(Object classpath) {
         this.classpath = classpath
     }
 
