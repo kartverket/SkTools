@@ -33,7 +33,7 @@ class WeblogicDeployConvention {
      * </ul>
      */
     public weblogicDeploy(Closure c) {
-        ConfigureUtil.configure(c, new WeblogicDeployConfiguration(project))
+        ConfigureUtil.configure(c, new WeblogicDeployConfiguration(project, this))
     }
 
     protected getTaskName(def verb, def target = project.name) {
@@ -50,6 +50,7 @@ class WeblogicDeployConvention {
  */
 class WeblogicDeployConfiguration {
     final private Project project
+    final private WeblogicDeployConvention convention
 
     protected String protocol
     protected String host
@@ -83,11 +84,35 @@ class WeblogicDeployConfiguration {
 
     protected WeblogicDeployTask deployTask
     protected WeblogicUndeployTask undeployTask
+    protected Task askIfProdserverTask
+
+    protected def dependsOn = []
 
 
-
-    protected WeblogicDeployConfiguration(Project project) {
+    protected WeblogicDeployConfiguration(Project project, WeblogicDeployConvention convention) {
         this.project = project
+        this.convention = convention
+    }
+
+    /**
+     * Legger til task for interaksjon med bruker.
+     * <p>
+     *  Typisk legges denne til:
+     *  <code> onlyIf { productionServerList.find {it.equalsIgnoreCase(host)} == null } </code>
+     *
+     * @param config
+     * @return
+     */
+    Task askIfProdserverTask(Closure config) {
+        askIfProdserverTask = project.tasks.add(name: convention.getTaskName('askIfProdserver', name)) << {
+            def svar = System.console().readLine("\nDeploy til PRODSERVER (${url}), vil du fortsette? (j/n)")
+            if( !svar.equalsIgnoreCase("j") && !svar.equalsIgnoreCase("ja") ) {
+              println "Build aborted by user"
+              assert false
+            }
+        }
+        this.dependsOn askIfProdserverTask
+        ConfigureUtil.configure(config, askIfProdserverTask, false)
     }
 
 
@@ -126,6 +151,7 @@ class WeblogicDeployConfiguration {
     }
 
     private ConventionTask setCommonConventionalValues(ConventionTask task) {
+        task.dependsOn { this.dependsOn }
         task.conventionMapping 'classpath', { this.getClasspath() }
         task.conventionMapping 'deploymentName', { this.name }
         task.conventionMapping 'url', { this.getUrl() }
@@ -143,6 +169,11 @@ class WeblogicDeployConfiguration {
     WeblogicDeployTask getDeployTask() {
         if (deployTask == null) throw new GradleException("Deploy task not yet configured!");
         return deployTask
+    }
+
+    Task getAskIfProdserverTask() {
+        if (askIfProdserverTask == null) throw new GradleException("Ask if prodserver task not yet configured!");
+        return askIfProdserverTask
     }
 
     void setProtocol(String protocol) {
@@ -167,6 +198,10 @@ class WeblogicDeployConfiguration {
 
     void setUrl(String url) {
         this.url = url
+    }
+
+    void url(Map params) {
+        ConfigureUtil.configureByMap(params, this)
     }
 
     void setTargets(String targets) {
@@ -200,5 +235,9 @@ class WeblogicDeployConfiguration {
 
     FileCollection getClasspath() {
         return project.files(classpath);
+    }
+
+    void dependsOn(Object... objects) {
+        dependsOn << objects
     }
 }
