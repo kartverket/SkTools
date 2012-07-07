@@ -5,6 +5,7 @@ import org.gradle.api.internal.project.ProjectInternal
 import no.statkart.sktools.gradle.plugins.weblogic.WeblogicBasePlugin
 import org.gradle.api.tasks.Input
 import org.gradle.api.Task
+import org.gradle.api.tasks.TaskAction
 
 /**
  * Pluging for tasker for deploying til weblogic.
@@ -44,50 +45,114 @@ class WeblogicDeployPlugin implements Plugin<ProjectInternal> {
 }
 
 class WeblogicDeployTask extends AbstractWeblogicDeployTask {
+
     @Input
-    def getConfiguration() {
-        return weblogicServerConfiguration.artifact
-    }
+    File source
+    @Input
+    boolean upload = true
 
-    @Override
+    @Input
+    String name
+    @Input
+    String targets
+
+    @Input
+    String url
+    @Input
+    String username
+    @Input
+    String password
+
+
+    @Input
+    String timeout = '18000'
+
+    @Input
+    boolean failOnError = false
+    @Input
+    boolean verbose = true
+
+
+    @TaskAction
     void taskAction() {
-        super.taskAction()
+        source = project.files(weblogicServerConfiguration.artifact).singleFile
 
+        name = weblogicServerConfiguration.moduleName
+        targets = weblogicServerConfiguration.targets
+
+        url = weblogicServerConfiguration.url
+        username = weblogicServerConfiguration.username
+        password = weblogicServerConfiguration.password
+
+        def ant = getAnt()
         ant.wldeploy(
                 action: 'deploy',
-                source: project.files(weblogicServerConfiguration.artifact).singleFile,
-                name: weblogicServerConfiguration.moduleName,
-                user: weblogicServerConfiguration.username,
-                password: weblogicServerConfiguration.password,
-                adminurl: weblogicServerConfiguration.url,
-                targets: weblogicServerConfiguration.targets,
-                upload: 'true',
-                timeout: '18000',
-                verbose: 'true',
-                failonerror: 'true'
+                upload: upload,
+
+                name: name,
+                source: source,
+                targets: targets,
+
+                adminurl: url,
+                user: username,
+                password: password,
+
+                timeout: timeout,
+
+                failonerror: failOnError,
+                verbose: verbose,
         )
     }
 
 }
 
 class WeblogicUndeployTask extends AbstractWeblogicDeployTask {
-    public boolean failOnError = false
-    public boolean graceful = false
 
-    @Override
+    @Input
+    String name
+    @Input
+    String targets
+
+    @Input
+    String url
+    @Input
+    String username
+    @Input
+    String password
+
+    @Input
+    boolean graceful = false
+
+    @Input
+    boolean failOnError = false
+    @Input
+    boolean verbose = true
+
+
+    @TaskAction
     void taskAction() {
-        super.taskAction()
 
+        name = weblogicServerConfiguration.moduleName
+        targets = weblogicServerConfiguration.targets
+
+        url = weblogicServerConfiguration.url
+        username = weblogicServerConfiguration.username
+        password = weblogicServerConfiguration.password
+
+        def ant = getAnt()
         ant.wldeploy(
                 action: 'undeploy',
-                name: weblogicServerConfiguration.moduleName,
-                user: weblogicServerConfiguration.username,
-                password: weblogicServerConfiguration.password,
-                adminurl: weblogicServerConfiguration.url,
-                targets: weblogicServerConfiguration.targets,
+                name: name,
+                targets: targets,
+
+                adminurl: url,
+                user: username,
+                password: password,
+
                 graceful: graceful,
-                verbose: true,
-                failonerror: failOnError
+
+                failonerror: failOnError,
+                verbose: verbose,
         )
     }
 }

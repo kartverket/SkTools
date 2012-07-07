@@ -4,6 +4,7 @@ import org.gradle.api.internal.ConventionTask
 import no.statkart.sktools.gradle.plugins.weblogic.WeblogicTaskInterface
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.AntBuilder
 
 /**
  * Alt som er felles for deploying og undeploying.
@@ -33,8 +34,11 @@ abstract class AbstractWeblogicDeployTask extends ConventionTask implements Webl
         return weblogicServerConfiguration
     }
 
-    @TaskAction
-    public void taskAction() {
+    @Override
+    AntBuilder getAnt() {
+        AntBuilder ant = super.getAnt()
         ant.taskdef(name: 'wldeploy', classname: 'weblogic.ant.taskdefs.management.WLDeploy', classpath: getWeblogicClasspath().asPath)
+        return ant
     }
+
 }
