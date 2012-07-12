@@ -19,7 +19,7 @@ if (ext.has('hovedversjon')) {
 }
 
 // oppdaterer versjon properties i tilfeller der disse ikke er satt:
-allProjects {
+allprojects {
     it.afterEvaluate { p ->
         p.ext.set('hovedversjon', p.version.hovedversjon)
         p.ext.set('subversjon', p.version.subversjon)
