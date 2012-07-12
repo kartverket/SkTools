@@ -12,19 +12,19 @@ buildscript {
     if (version == Project.DEFAULT_VERSION) version = '1.2-SNAPSHOT' //nb - dersom ikke default version er satt riktig så blir kjøring ifra demo-katalog feil..
 
     // Variables to grab from environment + defaults
-    ['WEBLOGIC_HOME', 'COMPUTERNAME', 'PUBLIC_REPO', 'JAVA_HOME'].each { val ->
+    ['WEBLOGIC_HOME', 'COMPUTERNAME', 'MAVEN_REPO', 'JAVA_HOME'].each { val ->
         if (!rootProject.ext.has(val) && System.getenv(val) != null) {
             rootProject.ext.set(val, System.getenv(val))
         }
     }
 
-    project.ext.set('PUBLIC_REPO', project.ext.properties.get('PUBLIC_REPO', 'http://skrivap92.statkart.no:8001/nexus/content/groups/public/'))
+    project.ext.set('MAVEN_REPO', project.ext.properties.get('MAVEN_REPO', 'http://skrivap92.statkart.no:8001/nexus/content/groups/public/'))
 
     repositories {
         //bruker kun lokale filer her da dette er et demo prosjekt...
         mavenLocal()
 
-        mavenRepo name: 'public', url: PUBLIC_REPO
+        mavenRepo name: 'public', url: MAVEN_REPO
 
     }
 

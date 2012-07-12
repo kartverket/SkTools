@@ -17,7 +17,7 @@ buildscript {
     repositories {
         //bruker kun lokale filer her da dette er et demo prosjekt...
         mavenLocal()
-        mavenRepo name: 'public', url: PUBLIC_REPO
+        mavenRepo name: 'public', url: MAVEN_REPO
     }
 
     dependencies {

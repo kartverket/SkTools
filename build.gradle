@@ -3,15 +3,19 @@ assert gradle.gradleVersion == '1.0' || gradle.gradleVersion >= '1.0-rc-2'
 buildscript {
 
     // Variables to grab from environment
-    ['COMPUTERNAME', 'PUBLIC_REPO', 'GRADLE_HOME', 'GROOVY_HOME', 'WEBLOGIC_HOME'].each { val ->
+    ['COMPUTERNAME', 'MAVEN_REPO', 'GRADLE_HOME', 'GROOVY_HOME', 'WEBLOGIC_HOME'].each { val ->
         if (!project.ext.has(val) && System.getenv(val) != null) {
             project.ext.set(val, System.getenv(val))
         }
     }
 
-    project.ext.set('PUBLIC_REPO', project.properties.get('PUBLIC_REPO', 'http://skrivap92.statkart.no:8001/nexus/content/groups/public/'))
-
+    project.ext.set('MAVEN_REPO', project.ext.properties.get('MAVEN_REPO', 'http://skrivap92.statkart.no:8001/nexus/content/groups/public/'))
 }
+
+def REPO_UPLOAD_RELEASES = ext.properties.get('REPO_UPLOAD_RELEASES', 'http://skrivap92.statkart.no:8001/nexus/content/repositories/releases/')
+def REPO_UPLOAD_RELEASES_AUTHENTICATION = [userName: "admin", password: "admin123"]
+def REPO_UPLOAD_SNAPSHOTS = ext.properties.get('REPO_UPLOAD_RELEASES', 'http://skrivap92.statkart.no:8001/nexus/content/repositories/snapshots/')
+def REPO_UPLOAD_SNAPSHOTS_AUTHENTICATION = [userName: "admin", password: "admin123"]
 
 
 
@@ -24,14 +28,11 @@ allprojects {
     afterEvaluate {
         if (plugins.hasPlugin('maven')) {
             uploadArchives.repositories.mavenDeployer {
-                if (!version.contains("SNAPSHOT")) {
-                    repository(url: uri(properties.get('REPO_UPLOAD_RELEASES', 'http://skrivap92.statkart.no:8001/nexus/content/repositories/releases/'))) {
-                        authentication(userName: "admin", password: "admin123")
-                    }
-                } else {
-                    repository(url: uri(properties.get('REPO_UPLOAD_SNAPSHOTS', 'http://skrivap92.statkart.no:8001/nexus/content/repositories/snapshots/'))) {
-                        authentication(userName: "admin", password: "admin123")
-                    }
+                repository(url: uri(REPO_UPLOAD_RELEASES)) {
+                    authentication(REPO_UPLOAD_RELEASES_AUTHENTICATION)
+                }
+                snapshotRepository(url: uri(REPO_UPLOAD_SNAPSHOTS)) {
+                    authentication(REPO_UPLOAD_SNAPSHOTS_AUTHENTICATION)
                 }
             }
         }
@@ -81,7 +82,7 @@ subprojects { Project project ->
 
     repositories {
         mavenLocal()
-        mavenRepo name: 'public', url: "${rootProject.PUBLIC_REPO}"
+        mavenRepo name: 'public', url: "${rootProject.MAVEN_REPO}"
     }
 
 

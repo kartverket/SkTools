@@ -4,7 +4,7 @@
  *
  ******************************************************************************************************************** */
 
-project.ext.set('PUBLIC_REPO', project.properties.get('PUBLIC_REPO', 'http://skrivap92.statkart.no:8001/nexus/content/groups/public/'))
+project.ext.set('MAVEN_REPO', project.properties.get('MAVEN_REPO', 'http://skrivap92.statkart.no:8001/nexus/content/groups/public/'))
 
 
 apply from: rootProject.file('intellij/ideaProject.gradle')
@@ -23,7 +23,7 @@ subprojects { p ->
     }
 
     repositories {
-        mavenRepo name: 'public', url: "${rootProject.PUBLIC_REPO}"
+        mavenRepo name: 'public', url: "${rootProject.MAVEN_REPO}"
     }
 }
 

@@ -12,7 +12,7 @@ buildscript {
     if (project.version == Project.DEFAULT_VERSION) project.version = '1.1-SNAPSHOT' //nb - dersom ikke default version er satt riktig så blir kjøring ifra demo-katalog feil..
 
     // Variables to grab from environment + defaults
-    ['WEBLOGIC_HOME', 'COMPUTERNAME', 'PUBLIC_REPO', 'JAVA_HOME'].each { val ->
+    ['WEBLOGIC_HOME', 'COMPUTERNAME', 'MAVEN_REPO', 'JAVA_HOME'].each { val ->
         if (!rootProject.hasProperty(val) && System.getenv(val) != null) {
             if (gradle.gradleVersion >= '1.0-milestone-9') {
                 rootProject.ext.set(val, System.getenv(val))
@@ -22,16 +22,16 @@ buildscript {
         }
     }
     if (gradle.gradleVersion >= '1.0-milestone-9') {
-        project.ext.set('PUBLIC_REPO', project.properties.get('PUBLIC_REPO', 'http://skrivap92.statkart.no:8001/nexus/content/groups/public/'))
+        project.ext.set('MAVEN_REPO', project.properties.get('MAVEN_REPO', 'http://skrivap92.statkart.no:8001/nexus/content/groups/public/'))
     } else {
-        project.setProperty('PUBLIC_REPO', project.properties.get('PUBLIC_REPO', 'http://skrivap92.statkart.no:8001/nexus/content/groups/public/'))
+        project.setProperty('MAVEN_REPO', project.properties.get('MAVEN_REPO', 'http://skrivap92.statkart.no:8001/nexus/content/groups/public/'))
     }
 
     repositories {
         //bruker kun lokale filer her da dette er et demo prosjekt...
         mavenLocal()
 
-//        mavenRepo name: 'public', url: PUBLIC_REPO
+//        mavenRepo name: 'public', url: MAVEN_REPO
 
     }
 
