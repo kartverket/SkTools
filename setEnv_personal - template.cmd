@@ -13,8 +13,12 @@ rem set GROOVY_HOME=C:\bin\groovy-1.8.6
 set WEBLOGIC_HOME=C:\bea_wls10.3.1
 set WEBLOGIC_HOME=C:\bea_wls10.3.5
 
+@rem Definer felles nexus repo for utvikling
+set MAVEN_REPO=http://skrivap92.statkart.no:8001/nexus/content/groups/public/
+
+
 @rem Definer lokal nexus repo for offline utvikling (optional)
-@rem set REPO_PUBLIC=http://localhost:8081/nexus/content/repositories/statkart/
+@rem set MAVEN_REPO=http://localhost:8081/nexus/content/repositories/statkart/
 
 @rem Setup Perforce windows integrasjon (optional)
 p4 set P4USER=%USERNAME%
