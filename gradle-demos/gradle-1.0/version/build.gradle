@@ -1,0 +1,148 @@
+/******************************************************************************************************************** **
+ * Demonstrerer hvordan en best styrer versjon for prosjektet.
+ *
+ * Generelt:
+ * Version velges når man bygger en release. Dette settes da via properties.
+ * Byggesytemet og kildekoden bør ikke sette dette men heller definere en default verdi.
+ * Kandidater er "default", "dev", "${USERNAME} og "trunk". Sistnevnte bør ikke benyttes da dette strengt tatt er en kode-versjon.
+ *
+ ******************************************************************************************************************** */
+
+Version defaultVersion = new Version('1', ".dev-${System.getenv('USERNAME')}") // standard kode-versjon dersom ikke anngitt
+
+// version kan settes via properties (feks kommandolinje -P )
+if (ext.has('hovedversjon')) {
+    Version version = new Version(ext.get('hovedversjon'), ext.properties.get('subversjon', '.0'))
+    setVersion(version)
+} else {
+    project.setVersion(defaultVersion)
+}
+
+// oppdaterer versjon properties i tilfeller der disse ikke er satt:
+allProjects {
+    it.afterEvaluate { p ->
+        p.ext.set('hovedversjon', p.version.hovedversjon)
+        p.ext.set('subversjon', p.version.subversjon)
+    }
+}
+
+// optional hjelpeklasse for versjonsinformasjon
+protected class Version {
+    String hovedversjon
+    String subversjon
+
+    Version(String hovedversjon, String subversjon) {
+        this.hovedversjon = hovedversjon
+        this.subversjon = subversjon
+    }
+    Version copy() {new Version(hovedversjon, subversjon)}
+    String toString() { hovedversjon + subversjon }
+    boolean equals(def that) {
+        return that instanceof Version && hovedversjon == that.hovedversjon && subversjon == that.subversjon
+    }
+}
+
+
+allprojects { Project project ->
+    project.version = rootProject.version.copy() // initaliserer samme versjon i alle moduler
+}
+
+// overstyrer versjon for projectB
+project(':projectB').version.hovedversjon = '2.0'
+
+
+
+
+/******************************************************************************************************************** **
+ * Diverse tasker som tester og demonstrerer implementasjonen
+ ******************************************************************************************************************** */
+
+
+task demo(description: 'Kjører en enkel demo for å teste funksjonaliteten') {
+
+    doLast {
+        println "Tester std version..."
+        forkGradle(['assertDefaultVersionSnapshot'])
+
+        println "Tester std release version..."
+        forkGradle(['release', 'assertDefaultVersionRelease'])
+
+        println "Tester release version med angitt hovedversjon..."
+        forkGradle(['release', 'assertHovedversjonRelease'], [hovedversjon:'2.1'])
+        forkGradle(['release', 'assertHovedversjonAndSubversjonRelease'], [hovedversjon:'2.1', subversjon:'.1a'])
+    }
+
+}
+
+//legger til tasker for testing av std versjon
+project.task('assertDefaultVersionRelease') << {
+    assert project.version.hovedversjon == defaultVersion.hovedversjon
+    assert project.version.subversjon == defaultVersion.subversjon
+}
+project(':projectA').task('assertDefaultVersionRelease') << {
+    assert project.version.hovedversjon == defaultVersion.hovedversjon
+    assert project.version.subversjon == defaultVersion.subversjon
+}
+project(':projectB').task('assertDefaultVersionRelease') << {
+    assert project.version.hovedversjon == '2.0'
+    assert project.version.subversjon == defaultVersion.subversjon
+}
+
+
+project.task('assertDefaultVersionSnapshot') << {
+    assert project.version.hovedversjon == defaultVersion.hovedversjon
+    assert project.version.subversjon == defaultVersion.subversjon + '-SNAPSHOT'
+}
+project(':projectA').task('assertDefaultVersionSnapshot') << {
+    assert project.version.hovedversjon == defaultVersion.hovedversjon
+    assert project.version.subversjon == defaultVersion.subversjon + '-SNAPSHOT'
+}
+project(':projectB').task('assertDefaultVersionSnapshot') << {
+    assert project.version.hovedversjon == '2.0'
+    assert project.version.subversjon == defaultVersion.subversjon + '-SNAPSHOT'
+}
+
+
+project.task('assertHovedversjonRelease') << {
+    assert project.version.hovedversjon == '2.1'
+    assert project.version.subversjon == '.0'
+}
+project(':projectA').task('assertHovedversjonRelease') << {
+    assert project.version.hovedversjon == '2.1'
+    assert project.version.subversjon == '.0'
+}
+project(':projectB').task('assertHovedversjonRelease') << {
+    assert project.version.hovedversjon == '2.0'
+    assert project.version.subversjon == '.0'
+}
+
+
+project.task('assertHovedversjonAndSubversjonRelease') << {
+    assert project.version.hovedversjon == '2.1'
+    assert project.version.subversjon == '.1a'
+}
+project(':projectA').task('assertHovedversjonAndSubversjonRelease') << {
+    assert project.version.hovedversjon == '2.1'
+    assert project.version.subversjon == '.1a'
+}
+project(':projectB').task('assertHovedversjonAndSubversjonRelease') << {
+    assert project.version.hovedversjon == '2.0'
+    assert project.version.subversjon == '.1a'
+}
+
+
+
+
+/******************************************************************************************************************** **
+ * Hjelpemetode for forking av gradle eksekveringer
+ * Kun relevant for testing...
+ ******************************************************************************************************************** */
+void forkGradle(List taskNames, Map props = [:]) {
+    StartParameter sp = gradle.startParameter.newInstance()
+    sp.taskNames = taskNames
+    sp.projectProperties = props
+    GradleLauncher.newInstance(sp).run().rethrowFailure();
+}
+
+
+
