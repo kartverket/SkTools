@@ -39,6 +39,25 @@ if  not "%GROOVY_HOME%"=="" set PATH=%PATH%;%GROOVY_HOME%\bin
 
 @REM echo PATH=%PATH%
 
+if "%ORG_GRADLE_PROJECT_MAVEN_REPO%"=="" (
+   @echo Setter std Maven Repository for utvikling [felles]
+   set ORG_GRADLE_PROJECT_MAVEN_REPO=http://skrivap92.statkart.no:8001/nexus/content/groups/public/
+)
+
+if "%ORG_GRADLE_PROJECT_REPO_UPLOAD_RELEASES%"=="" (
+   @echo Setter std Maven Repository for releases
+   set ORG_GRADLE_PROJECT_REPO_UPLOAD_RELEASES=http://skrivap92.statkart.no:8001/nexus/content/repositories/releases/
+   set ORG_GRADLE_PROJECT_REPO_UPLOAD_RELEASES_USERNAME=admin
+   set ORG_GRADLE_PROJECT_REPO_UPLOAD_RELEASES_PASSWORD=admin123
+)
+
+if "%ORG_GRADLE_PROJECT_REPO_UPLOAD_SNAPSHOTS%"=="" (
+   @echo Setter std Maven Repository for snapshots
+   set ORG_GRADLE_PROJECT_REPO_UPLOAD_SNAPSHOTS=http://skrivap92.statkart.no:8001/nexus/content/repositories/snapshots/
+   set ORG_GRADLE_PROJECT_REPO_UPLOAD_SNAPSHOTS_USERNAME=admin
+   set ORG_GRADLE_PROJECT_REPO_UPLOAD_SNAPSHOTS_PASSWORD=admin123
+)
+
 @gradle --version
 
 :exit

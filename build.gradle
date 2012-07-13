@@ -3,20 +3,12 @@ assert gradle.gradleVersion == '1.0' || gradle.gradleVersion >= '1.0-rc-2'
 buildscript {
 
     // Variables to grab from environment
-    ['COMPUTERNAME', 'MAVEN_REPO', 'GRADLE_HOME', 'GROOVY_HOME', 'WEBLOGIC_HOME'].each { val ->
+    ['COMPUTERNAME', 'GRADLE_HOME', 'GROOVY_HOME'].each { val ->
         if (!project.ext.has(val) && System.getenv(val) != null) {
             project.ext.set(val, System.getenv(val))
         }
     }
-
-    project.ext.set('MAVEN_REPO', project.ext.properties.get('MAVEN_REPO', 'http://skrivap92.statkart.no:8001/nexus/content/groups/public/'))
 }
-
-def REPO_UPLOAD_RELEASES = ext.properties.get('REPO_UPLOAD_RELEASES', 'http://skrivap92.statkart.no:8001/nexus/content/repositories/releases/')
-def REPO_UPLOAD_RELEASES_AUTHENTICATION = [userName: "admin", password: "admin123"]
-def REPO_UPLOAD_SNAPSHOTS = ext.properties.get('REPO_UPLOAD_RELEASES', 'http://skrivap92.statkart.no:8001/nexus/content/repositories/snapshots/')
-def REPO_UPLOAD_SNAPSHOTS_AUTHENTICATION = [userName: "admin", password: "admin123"]
-
 
 
 allprojects {
@@ -29,10 +21,10 @@ allprojects {
         if (plugins.hasPlugin('maven')) {
             uploadArchives.repositories.mavenDeployer {
                 repository(url: uri(REPO_UPLOAD_RELEASES)) {
-                    authentication(REPO_UPLOAD_RELEASES_AUTHENTICATION)
+                    authentication([userName: REPO_UPLOAD_RELEASES_USERNAME, password: REPO_UPLOAD_RELEASES_PASSWORD])
                 }
                 snapshotRepository(url: uri(REPO_UPLOAD_SNAPSHOTS)) {
-                    authentication(REPO_UPLOAD_SNAPSHOTS_AUTHENTICATION)
+                    authentication([userName: REPO_UPLOAD_SNAPSHOTS_USERNAME, password: REPO_UPLOAD_SNAPSHOTS_PASSWORD])
                 }
             }
         }
