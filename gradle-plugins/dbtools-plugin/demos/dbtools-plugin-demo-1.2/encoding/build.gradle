@@ -1,0 +1,56 @@
+/******************************************************************************************************************** **
+ *
+ * Demonstrasjon av setting av encoding for kildefiler.
+ *
+ ******************************************************************************************************************** */
+
+apply plugin: 'sktools-dbtools-plugin'
+
+
+configureDatabasePlugin {
+
+    useDrivers 'org.hsqldb:hsqldb:2.2.8'
+
+    toolset( name:'assertutf8', type:'hsqldb', prefix:'') {
+
+        sqlTask('createTable', sqlString: '''
+            CREATE TABLE TABLE1 (
+                ID INTEGER NOT NULL,
+                TEXT VARCHAR(32) NOT NULL,
+                PRIMARY KEY (ID)
+            )
+        ''')
+        sqlTask('insertData', sqlFile: 'sql/insertData.sql')
+
+        properties = [CUSTOM:'ÆæØøÅå']
+
+        url = "jdbc:hsqldb:mem:testbase"
+
+        credentials.username = 'SA'
+        credentials.password = ''
+    }
+
+}
+
+
+/******************************************************************************************************************** **
+ * Diverse tasker som tester og demonstrerer implementasjonen
+ ******************************************************************************************************************** */
+
+task runDemo(dependsOn:['clean', 'createTable', 'insertData']) {
+    description = 'Kjører en enkel demo for å teste funksjonaliteten'
+
+    doLast {
+        println 'Verifiserer riktig encodede data i basen...'
+
+        def convention = project.convention.plugins['db'].dbToolSets['assertutf8']
+        def sql = groovy.sql.Sql.newInstance(convention.url, convention.credentials.username, convention.credentials.password, convention.driver)
+        sql.eachRow("select ID, TEXT from TABLE1") {
+            println "..asserting row ${it[0]}"
+            assert it[1].bytes == "\u00e6\u00c6\u00f8\u00d8\u00e5\u00c5".bytes // 'ÆæØøÅå' written with utf8 escaped values
+        }
+
+    }
+}
+
+

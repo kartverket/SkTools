@@ -1,5 +1,6 @@
 include ':simpledemo'
 include ':multiple_toolsets'
+include ':encoding'
 
 rootProject.name = 'dbtools-plugin-demos'
 

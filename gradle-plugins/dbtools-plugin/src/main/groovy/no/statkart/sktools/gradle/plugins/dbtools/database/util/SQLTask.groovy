@@ -71,10 +71,10 @@ public class SQLTask extends ConventionTask {
         validate()
 
         if (sqlFile) {
-            logger.info("parsing statements from file: ${sqlFile}");
-            executor.statements = SQLStatementParser.parseStatements(sqlFile);
+            logger.info("parsing statements from file: ${getSqlFile()}");
+            executor.statements = SQLStatementParser.parseStatements(getSqlFile());
         } else {
-            executor.statements = SQLStatementParser.parseStatements(sqlString);
+            executor.statements = SQLStatementParser.parseStatements(getSqlString());
         }
 
         ExecSpecs specs = new ExecSpecs();
@@ -82,33 +82,33 @@ public class SQLTask extends ConventionTask {
         specs.password = getPassword();
         specs.driver = getDriver();
         specs.url = getUrl();
-        specs.failOnError = failOnError
+        specs.failOnError = getFailOnError()
 
         executor.executeStatements(specs)
     }
 
 
     private void validate() {
-        if (sqlFile == null && sqlString == null) {
+        if (getSqlFile() == null && getSqlString() == null) {
             throw new Exception("sqlFile eller sqlString må anngis!")
         }
 
-        if (sqlFile != null) {
-            if (!sqlFile.exists()) {
-                throw new Exception("File does not exist! sqlFile=${sqlFile}")
+        if (getSqlFile() != null) {
+            if (!getSqlFile().exists()) {
+                throw new Exception("File does not exist! sqlFile=${getSqlFile()}")
             }
 
-            if (sqlString != null) {
+            if (getSqlString() != null) {
                 throw new Exception("Enten sqlFile eller sqlString kan anngis!")
             }
         }
 
-        if (sqlString != null) {
-            if (sqlString.trim().isEmpty()) {
-                throw new Exception("sqlString kan ikke være tom! sqlString='${sqlString}'")
+        if (getSqlString() != null) {
+            if (getSqlString().trim().isEmpty()) {
+                throw new Exception("sqlString kan ikke være tom! sqlString='${getSqlString()}'")
             }
 
-            if (sqlFile != null) {
+            if (getSqlFile() != null) {
                 throw new Exception("Enten sqlFile eller sqlString kan anngis!")
             }
         }

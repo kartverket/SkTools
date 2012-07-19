@@ -160,33 +160,22 @@ abstract class AbstractDatabaseConvention {
 
 
     /**
-     * Action for filtrering av sql (fil og/eller streng) satt på task
+     * Action for filtrering av sqlFile satt på task
      */
     private Closure filterClosure = { SQLTask task ->
 
-        File tempFile = null
-        if (task.sqlString) {
-            tempFile = project.file("${task.temporaryDir}/sqlString.sql")
-            tempFile.parentFile.mkdirs()
-            tempFile.createNewFile()
-            tempFile.withPrintWriter {
-                it.println task.sqlString
-            }
-        }
-
-        def buildDir = "${project.buildDir}/dbtools/${prefix}/${task.name}"
-        project.delete(buildDir)
-        project.copy {
-            from task.sqlFile, tempFile
-            into buildDir
-            filter([tokens: this.properties, beginToken: '@', endToken: '@'], org.apache.tools.ant.filters.ReplaceTokens)
-        }
-
         if (task.sqlFile) {
+            def buildDir = "${project.buildDir}/dbtools/${prefix}/${task.name}"
+
+            project.delete(buildDir)
+            project.copy {
+                from task.sqlFile
+                into buildDir
+                filter([tokens: this.properties, beginToken: '@', endToken: '@'], org.apache.tools.ant.filters.ReplaceTokens)
+            }
+
+
             task.sqlFile = project.file("${buildDir}/${task.sqlFile.name}")
-        }
-        if (task.sqlString) {
-            task.sqlString = project.file("${buildDir}/${tempFile.name}").text
         }
 
     }
