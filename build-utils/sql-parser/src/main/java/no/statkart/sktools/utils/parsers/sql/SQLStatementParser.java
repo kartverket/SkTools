@@ -4,6 +4,7 @@ import no.statkart.sktools.utils.parsers.sql.model.*;
 import no.statkart.sktools.utils.parsers.sql.parser.ParserVisitorFactory;
 
 import java.io.*;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -107,8 +108,8 @@ public class SQLStatementParser {
     }
 
 
-    public static List<Statement> parseStatements(File file) throws IOException {
-        LineNumberReader reader = new LineNumberReader(new FileReader(file));
+    public static List<Statement> parseStatements(File file, String charsetName) throws IOException {
+        LineNumberReader reader = getReader(file, charsetName);
         List<Statement> expressions = new ArrayList<Statement>();
         for (Expression expression : parseExpressions(reader)) {
             if (expression instanceof Statement) {
@@ -116,6 +117,14 @@ public class SQLStatementParser {
             }
         }
         return expressions;
+    }
+
+    private static LineNumberReader getReader(File file, String charsetName) throws FileNotFoundException {
+        if (charsetName == null) {
+            return new LineNumberReader(new InputStreamReader(new FileInputStream(file)));
+        } else {
+            return new LineNumberReader(new InputStreamReader(new FileInputStream(file), Charset.forName(charsetName)));
+        }
     }
 
 }

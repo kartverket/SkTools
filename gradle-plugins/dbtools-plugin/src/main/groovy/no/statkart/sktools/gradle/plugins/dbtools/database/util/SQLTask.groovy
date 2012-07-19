@@ -65,14 +65,17 @@ public class SQLTask extends ConventionTask {
     //SKIF-206
     boolean failOnError = true
 
+    //SKIF-211
+    String encoding
+
 
     @TaskAction
     def exec() {
         validate()
 
-        if (sqlFile) {
+        if (getSqlFile()) {
             logger.info("parsing statements from file: ${getSqlFile()}");
-            executor.statements = SQLStatementParser.parseStatements(getSqlFile());
+            executor.statements = SQLStatementParser.parseStatements(getSqlFile(), getEncoding());
         } else {
             executor.statements = SQLStatementParser.parseStatements(getSqlString());
         }

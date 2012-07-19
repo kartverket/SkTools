@@ -103,16 +103,15 @@ abstract class AbstractDatabaseConvention {
         task.doFirst(filterClosure)
 
         task.conventionMapping.with {
-            map 'url', {this.url}
-            map 'driver', {this.driver}
+            map 'url', { this.url }
+            map 'driver', { this.driver }
+            map 'encoding', { this.getEncoding() }
         }
         task.defaultCredentials = this.credentials
         task.useDefaultCredentials = true
 
         if (params.containsKey('sqlFile')) {
             params['sqlFile'] = project.file(params['sqlFile'])
-//            task.sqlFile = project.file(params['sqlFile'])
-//            params.remove('sqlFile')
         }
         ConfigureUtil.configureByMap(params, task)
 
@@ -167,17 +166,36 @@ abstract class AbstractDatabaseConvention {
         if (task.sqlFile) {
             def buildDir = "${project.buildDir}/dbtools/${prefix}/${task.name}"
 
-            project.delete(buildDir)
-            project.copy {
-                from task.sqlFile
-                into buildDir
-                filter([tokens: this.properties, beginToken: '@', endToken: '@'], org.apache.tools.ant.filters.ReplaceTokens)
+
+            //work around until GRADLE-1267
+            task.ant.copy(file: task.getSqlFile(), tofile: "${buildDir}/${task.getSqlFile().name}", encoding: task.getEncoding(), overwrite: true)
+            {
+                filterchain {
+                    replaceTokens {
+                        this.properties.each { key, value ->
+                            token(key: key, value: value)
+                        }
+                    }
+                }
             }
+
+//            project.delete(buildDir)
+//            project.copy {
+//                from task.getSqlFile()
+//                into buildDir
+//                filter([tokens: this.properties, beginToken: '@', endToken: '@'], org.apache.tools.ant.filters.ReplaceTokens)
+//            }
 
 
             task.sqlFile = project.file("${buildDir}/${task.sqlFile.name}")
         }
 
+    }
+
+    //SKIF-211
+    String getEncoding() {
+        Map<String, String> sysProperties = project.gradle.startParameter.getMergedSystemProperties()
+        sysProperties.get('sql.file.encoding') ?: sysProperties.get('file.encoding')
     }
 
 }

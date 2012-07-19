@@ -96,7 +96,7 @@ task assertTable1AccessForBruker1() << {
  * Hjelpemetode for forking av gradle eksekveringer
  * Kun relevant for testing...
  ******************************************************************************************************************** */
-void forkGradle(List tasks, Map props = [:]) {
+void forkGradle(Map props = [:], List tasks) {
     StartParameter sp = gradle.startParameter.newInstance()
     sp.taskNames = tasks.collect {"${project.path}:${it}".toString()}
     sp.projectProperties = props
