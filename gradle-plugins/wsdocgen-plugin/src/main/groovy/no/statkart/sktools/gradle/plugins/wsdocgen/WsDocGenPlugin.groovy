@@ -22,7 +22,7 @@ import org.gradle.api.internal.file.collections.SimpleFileCollection
 import java.util.concurrent.Callable
 
 /**
- * Dokumentasjon-generering av WSBean.java - JAX-WS implemntasjon på server.
+ * Dokumentasjon-generering av WSBean.java - JAX-WS implementasjon på server.
  *
  *
  * @since 1.0

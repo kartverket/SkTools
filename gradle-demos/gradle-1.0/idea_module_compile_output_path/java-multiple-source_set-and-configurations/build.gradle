@@ -66,7 +66,7 @@ task generateOtherGeneratedSources(){ Task it ->
 
 //task som pakker 'other' jar fil
 task jarOther(type: Jar, dependsOn: configurations.generated) {
-    classifier = 'special'
+    appendix = 'special'
     from project.convention.plugins.java.sourceSets.other.output
 
     project.tasks.gen.dependsOn(it) //skal med ved 'gen'

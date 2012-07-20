@@ -30,7 +30,7 @@ class WeblogicTaskTest {
         project.apply plugin: JavaPlugin
 
         //tenker oss at weblogic classpath configurasjon også skal inneholde alle compile time dependencies..
-        project.configurations.getByName(WeblogicBasePlugin.WEBLOGIC_CONFIGURATION_NAME).extendsFrom(project.configurations.getByName(JavaPlugin.COMPILE_CONFIGURATION_NAME))
+        project.configurations.getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME).extendsFrom(project.configurations.getByName(JavaPlugin.COMPILE_CONFIGURATION_NAME))
 
         //configure project
         project.with {

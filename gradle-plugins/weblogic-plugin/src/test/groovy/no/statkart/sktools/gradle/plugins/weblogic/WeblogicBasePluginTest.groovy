@@ -32,28 +32,28 @@ class WeblogicBasePluginTest {
         rootProjectHelper.configureProject {
             apply plugin: WeblogicBasePlugin
 
-            dependencies.weblogic files('some.jar')
+            dependencies.weblogicProvided files('some.jar')
         }
 
         //configures subproject
         subProjectHelper.configureProject {
             apply plugin: WeblogicBasePlugin
 
-            dependencies.weblogic files('../other.jar')
+            dependencies.weblogicProvided files('../other.jar')
         }
 
         //asserts
-        assert rootProjectHelper.project.configurations.getByName(WeblogicBasePlugin.WEBLOGIC_CONFIGURATION_NAME).files.contains(someJarFile)
-        assert !rootProjectHelper.project.configurations.getByName(WeblogicBasePlugin.WEBLOGIC_CONFIGURATION_NAME).files.contains(otherJarFile)
+        assert rootProjectHelper.project.configurations.getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME).files.contains(someJarFile)
+        assert !rootProjectHelper.project.configurations.getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME).files.contains(otherJarFile)
 
-        assert !subProjectHelper.project.configurations.getByName(WeblogicBasePlugin.WEBLOGIC_CONFIGURATION_NAME).files.contains(someJarFile)
-        assert subProjectHelper.project.configurations.getByName(WeblogicBasePlugin.WEBLOGIC_CONFIGURATION_NAME).files.contains(otherJarFile)
+        assert !subProjectHelper.project.configurations.getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME).files.contains(someJarFile)
+        assert subProjectHelper.project.configurations.getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME).files.contains(otherJarFile)
 
 
     }
 
     /**
-     * Demonstrerer integrasjon med JavaPlugin.
+     * Illustrerer integrasjon med JavaPlugin.
      *
      * Illustrert er at weblogic-configurasjonen arver ifra (java) compile konfigurasjonen.
      * Dependenices som legges til 'compile' skal da komme med i 'weblogic'
@@ -75,10 +75,10 @@ class WeblogicBasePluginTest {
         }
 
         //tenker oss at weblogic classpath configurasjon også skal inneholde alle compile time dependencies..
-        projectHelper.project.configurations.getByName(WeblogicBasePlugin.WEBLOGIC_CONFIGURATION_NAME).extendsFrom(projectHelper.project.configurations.getByName(JavaPlugin.COMPILE_CONFIGURATION_NAME))
+        projectHelper.project.configurations.getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME).extendsFrom(projectHelper.project.configurations.getByName(JavaPlugin.COMPILE_CONFIGURATION_NAME))
 
 
-        assert projectHelper.project.configurations.getByName(WeblogicBasePlugin.WEBLOGIC_CONFIGURATION_NAME).contains(somJarFile)
+        assert projectHelper.project.configurations.getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME).contains(somJarFile)
     }
 
 

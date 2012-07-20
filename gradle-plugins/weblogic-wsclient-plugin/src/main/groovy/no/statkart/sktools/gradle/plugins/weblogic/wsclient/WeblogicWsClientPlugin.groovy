@@ -53,7 +53,7 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
         //task for generering av client source
         WeblogicGenClientTask genClientSourceTask = (WeblogicGenClientTask) createGenerateSourceTask(wsClientConvention, sourceSet, provideSchema).dependsOn(
                 provideSchema.name,
-                project.getConfigurations().getByName(WeblogicBasePlugin.WEBLOGIC_CONFIGURATION_NAME), //tvinger rekompilering ved endring i classpath + weblogic jar filer.
+                project.getConfigurations().getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME), //tvinger rekompilering ved endring i classpath + weblogic jar filer.
         );
 
         Task compileTask = createCompileTask(wsClientConvention, sourceSet, genClientSourceTask).dependsOn(

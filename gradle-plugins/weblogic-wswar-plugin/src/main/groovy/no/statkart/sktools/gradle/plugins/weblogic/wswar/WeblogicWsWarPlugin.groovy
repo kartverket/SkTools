@@ -11,8 +11,6 @@ import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.artifacts.Configuration
 
-import org.gradle.api.tasks.bundling.War
-
 import org.gradle.api.internal.plugins.DefaultArtifactPublicationSet
 import org.gradle.api.internal.artifacts.publish.ArchivePublishArtifact
 import org.gradle.api.plugins.BasePlugin
@@ -30,13 +28,14 @@ import org.gradle.api.plugins.BasePlugin
  * <p>
  * Følgende kofigurasjoner defineres:
  * <ul>
- *   <li><code>weblogic</code> - legg alle weblogic jar avhengingheter for bygging/debug her.  
- *   <li><code>weblogicCompile</code> - legg kompile time avhengigheter her. 
- *   <li><code>weblogicRuntime</code> - legg evt runtime avhengigheter her. 
+ *   <li><code>weblogicCompile</code> - evt exstra jar libs
+ *   <li><code>weblogicRuntime</code> - evt exstra jar libs
+ *
+ *   <li><code>weblogic</code> - configuration for war artifakt (weblogicRuntime og weblogicCompile arver ifra denne).
+ *   <li><code>weblogicProvided</code> - legg alle weblogic jar avhengingheter for bygging/debug her.
+ *
  * </ul>
  *
- *
- * <p> todo: finne ut hvordan en fikser dependency/classpath for evt koblet 'main' sourceSet
  *
  * @since 1.0
  * @author Thor Åge Eldby
@@ -45,6 +44,9 @@ import org.gradle.api.plugins.BasePlugin
 class WeblogicWsWarPlugin implements Plugin<Project> {
 
     public static final String CONVENTION_NAME = 'weblogicWsWar'
+    public static final String WEBLOGIC_CONFIGURATION_NAME = 'weblogic'
+    public static final String WEBLOGIC_COMPILE_CONFIGURATION_NAME = 'weblogicCompile'
+    public static final String WEBLOGIC_RUNTIME_CONFIGURATION_NAME = 'weblogicRuntime'
     public static final String WEBLOGIC_SOURCE_SET_NAME = 'weblogic'
     public static final String WEBLOGIC_WAR_TASK_NAME = 'warWeblogic'
     public static final String WEBLOGIC_GEN_TASK_NAME = 'genWeblogic'
@@ -56,19 +58,22 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
 
         JavaPluginConvention javaConvention = project.getConvention().getPlugins().get("java");
 
-        SourceSet sourceSet = configureSourceSet(javaConvention);
-        configureConfigurations(javaConvention);
+        Configuration weblogicConfiguration = createWeblogicConfiguration(project);
+        SourceSet weblogicSourceSet = javaConvention.getSourceSets().add(WeblogicWsWarPlugin.WEBLOGIC_SOURCE_SET_NAME)
+
+        configureSourceSet(weblogicSourceSet, javaConvention);
+        configureConfigurations(weblogicSourceSet, javaConvention);
 
         WeblogicWsWarConvention convention = new WeblogicWsWarConvention(javaConvention);
         project.convention.plugins.put(WeblogicWsWarPlugin.CONVENTION_NAME, convention);
 
 
-        WeblogicWsCompileTask genTask = (WeblogicWsCompileTask) configureGenTask(project, sourceSet).dependsOn(
-                project.getConfigurations().getByName(WeblogicBasePlugin.WEBLOGIC_CONFIGURATION_NAME), //tvinger rekompilering ved endring i weblogicClasspath
+        WeblogicWsCompileTask genTask = (WeblogicWsCompileTask) configureGenTask(project, weblogicSourceSet).dependsOn(
+                project.getConfigurations().getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME), //tvinger rekompilering ved endring i weblogicClasspath
         )
 
         //task for bygging av war artifakt
-        WeblogicWarTask war = (WeblogicWarTask) configureArchives(javaConvention, sourceSet, genTask).dependsOn(
+        WeblogicWarTask war = (WeblogicWarTask) configureArchives(javaConvention, weblogicSourceSet, genTask).dependsOn(
                 genTask,
         )
 
@@ -84,7 +89,7 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
 
         WeblogicWarTask war = project.getTasks().add(WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME, WeblogicWarTask.class);
         war.setDescription("Assembles a war archive containing the main classes.");
-        war.setClassifier(WeblogicWsWarPlugin.WEBLOGIC_SOURCE_SET_NAME)
+        war.setAppendix(WeblogicWsWarPlugin.WEBLOGIC_SOURCE_SET_NAME)
         war.setGroup(BasePlugin.BUILD_GROUP);
 
         //evt duplikate entries blir forkastes.. vær derfor obs på rekkefølgen!
@@ -102,7 +107,7 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
 
         ArchivePublishArtifact artifact = new ArchivePublishArtifact(war)
         project.getExtensions().getByType(DefaultArtifactPublicationSet.class).addCandidate(artifact);
-        project.getArtifacts().add(WeblogicBasePlugin.WEBLOGIC_CONFIGURATION_NAME, artifact);
+        project.getArtifacts().add(WeblogicWsWarPlugin.WEBLOGIC_CONFIGURATION_NAME, artifact);
 
         return war;
     }
@@ -137,10 +142,32 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
     }
 
     /**
-     * Oppretter og registrerer nytt source sett i javaconvention
+     * Konfigurerer source set for weblogic kode
+     *
+     * Legger til filer for weblogic provided til classpath
      */
-    private SourceSet configureSourceSet(final JavaPluginConvention javaConvention) {
-        SourceSet weblogicSourceSet = javaConvention.getSourceSets().add(WeblogicWsWarPlugin.WEBLOGIC_SOURCE_SET_NAME)
+    private SourceSet configureSourceSet(SourceSet weblogicSourceSet, JavaPluginConvention javaConvention) {
+        Project project = javaConvention.project
+        Configuration weblogicProvidedConfiguration = project.getConfigurations().getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME);
+        Configuration weblogicCompileConfiguration = project.getConfigurations().getByName(weblogicSourceSet.getCompileConfigurationName());
+        Configuration weblogicRuntimeConfiguration = project.getConfigurations().getByName(weblogicSourceSet.getRuntimeConfigurationName());
+
+        SourceSet mainSourceSet = javaConvention.getSourceSets().findByName(SourceSet.MAIN_SOURCE_SET_NAME);
+
+
+        //legger til weblogicProvided til compile og runtime classpath
+        //legger til main sourceset til compile og runtime classpath
+        weblogicSourceSet.setCompileClasspath(project.files(
+                { mainSourceSet?.getOutput() },
+                weblogicCompileConfiguration,
+                weblogicProvidedConfiguration
+        ));
+        weblogicSourceSet.setRuntimeClasspath(project.files(
+                { mainSourceSet?.getOutput() },
+                weblogicSourceSet.getOutput(),
+                weblogicRuntimeConfiguration,
+                weblogicProvidedConfiguration
+        ));
 
         return weblogicSourceSet;
     }
@@ -148,21 +175,23 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
     /**
      * Konfigurerer avhengigheter slik at <br/>
      * <ul>
-     *  <li><code>weblogicCompile</code> arver ifra <code>weblogic</code>
+     *  <li><code>weblogic</code> arver ifra <code>weblogicRuntime</code>
+     *  <li><code>weblogicRuntime</code> arver ifra <code>weblogicCompile</code> (default behaviour)
      *  <li><code>weblogicCompile</code> arver ifra <code>compile</code> (dersom definert)
      *  <li><code>weblogicRuntime</code> arver ifra <code>runtime</code> (dersom definert)
      * </ul>
      */
-    private void configureConfigurations(final JavaPluginConvention javaConvention) {
+    private void configureConfigurations(SourceSet weblogicSourceSet, JavaPluginConvention javaConvention) {
         Project project = javaConvention.project
 
-        SourceSet weblogicSourceSet = javaConvention.getSourceSets().getByName(WeblogicWsWarPlugin.WEBLOGIC_SOURCE_SET_NAME);
-        Configuration weblogicConfiguration = project.getConfigurations().getByName(WeblogicBasePlugin.WEBLOGIC_CONFIGURATION_NAME);
+        Configuration weblogicConfiguration = project.getConfigurations().getByName(WeblogicWsWarPlugin.WEBLOGIC_CONFIGURATION_NAME);
         Configuration weblogicCompileConfiguration = project.getConfigurations().getByName(weblogicSourceSet.getCompileConfigurationName());
         Configuration weblogicRuntimeConfiguration = project.getConfigurations().getByName(weblogicSourceSet.getRuntimeConfigurationName());
 
-        weblogicCompileConfiguration.extendsFrom(weblogicConfiguration)
+        weblogicConfiguration.extendsFrom(weblogicRuntimeConfiguration);
+        weblogicRuntimeConfiguration.extendsFrom(weblogicCompileConfiguration);
 
+        //dersom javaplugin er aktivert..
         SourceSet mainSourceSet = javaConvention.getSourceSets().findByName(SourceSet.MAIN_SOURCE_SET_NAME);
         if (mainSourceSet != null) {
             Configuration compileConfiguration = project.getConfigurations().findByName(mainSourceSet.getCompileConfigurationName());
@@ -177,5 +206,14 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
         }
 
     }
+
+    private Configuration createWeblogicConfiguration(Project project) {
+        Configuration weblogicConfiguration = project.getConfigurations().findByName(WEBLOGIC_CONFIGURATION_NAME);
+        if (weblogicConfiguration == null) {
+            weblogicConfiguration = project.getConfigurations().add(WeblogicWsWarPlugin.WEBLOGIC_CONFIGURATION_NAME);
+        }
+        return weblogicConfiguration;
+    }
+
 
 }

@@ -74,7 +74,7 @@ task generateSpecialSource { Task it ->
 
 //task som pakker 'special' jar fil
 task jarSpecial(type: Jar, dependsOn: configurations.specialRuntime) {
-    classifier = 'special'
+    appendix = 'special'
     from project.convention.plugins.java.sourceSets.special.output
 }
 

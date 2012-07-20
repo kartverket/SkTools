@@ -4,9 +4,10 @@ apply plugin: 'sktools-weblogic-wswar-plugin'
 description = "Web modul med webservice implementasjon"
 
 dependencies {
-    weblogic libraries.weblogic
-    weblogicCompile libraries['tools.jar']
     weblogicCompile project(path: project.path, configuration:'runtime')
+
+    weblogicProvided libraries.weblogic
+    weblogicProvided libraries['tools.jar']
 }
 
 

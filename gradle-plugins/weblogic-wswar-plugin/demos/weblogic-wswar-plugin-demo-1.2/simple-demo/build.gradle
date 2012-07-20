@@ -13,10 +13,11 @@ apply plugin: 'sktools-weblogic-wswar-plugin'
 
 
 dependencies {
-    weblogic libraries.weblogic
-    weblogicCompile libraries.'tools.jar'
     weblogicCompile project(path: project.path)
 //    weblogicCompile project(path: project.path, configuration:'default')  //samme som project
+
+    weblogicProvided libraries.weblogic
+    weblogicProvided libraries.'tools.jar'
 }
 
 
