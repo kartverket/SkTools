@@ -94,7 +94,7 @@ class WebstartPlugin implements Plugin<Project> {
                     warTask.dependsOn(WebstartPlugin.JNLP_SERVLET_JARS_TASK_NAME)
 
                     //adding files generated from webstart task
-                    warTask.from(project.tasks.getByName(WebstartPlugin.GEN_WEBSTART_TASK_NAME))
+                    warTask.from(project.tasks.getByName(WebstartPlugin.GEN_WEBSTART_TASK_NAME).outputs)
                 }
             }
         }
@@ -188,9 +188,8 @@ class WebstartPlugin implements Plugin<Project> {
 
         webstartConvention.clients.each { client ->
             //registrerer output slik at enhver tukling med disse filer vil trigge ny bygging.
-            genWebstartTask.outputs.dir({client.outputDir})
+            genWebstartTask.outputs.dir(client.outputDir)
         }
-
     }
 
 
