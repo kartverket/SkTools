@@ -41,13 +41,13 @@ class WeblogicWsClientProjectBuilder<T extends WeblogicWsClientProjectBuilder> e
         if (setWeblogicClasspath) {
             closures.add {
                 //set dependency
-                dependencies.weblogic projectHelper.weblogicClasspath
+                dependencies.weblogicProvided projectHelper.weblogicClasspath
             }
         }
         if (addToolsJar) {
             closures.add {
                 //sets dependency
-                dependencies.weblogic projectHelper.toolsJar
+                dependencies.weblogicProvided projectHelper.toolsJar
             }
         }
         return this
