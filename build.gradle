@@ -1,4 +1,4 @@
-assert gradle.gradleVersion == '1.0' || gradle.gradleVersion >= '1.0-rc-2'
+assert gradle.gradleVersion == '1.0' || gradle.gradleVersion >= '1.1'
 
 buildscript {
 
@@ -145,6 +145,9 @@ subprojects { Project project ->
 
 
         test {
+            // Vi ønsker vanligvis å kjøre alle tester i alle moduler.
+            ignoreFailures = true
+
             useTestNG() {
                 excludeGroups('broken')
             }
@@ -159,7 +162,7 @@ subprojects { Project project ->
 
             //listening to test execution events
             afterTest { descriptor, result  ->
-              logger.lifecycle("Executing: ${descriptor.className}.${descriptor.name} \t\t: ${result}" )
+              logger.lifecycle("${result.toString() == 'SUCCESS' ? ' Sucessfully tested' : 'Failed testing'} : ${descriptor.className}#${descriptor.name}")
               if (result.resultType.name() == 'FAILURE') {
                   logger.error("${result.exception}")
               }
