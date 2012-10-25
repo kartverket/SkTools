@@ -212,7 +212,7 @@ class WeblogicWsClientPluginTest {
 
         projectHelper.configureProject {
             dependencies {
-                weblogic files(someJarFile)
+                weblogicProvided files(someJarFile)
             }
         }
 
