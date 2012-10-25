@@ -31,7 +31,7 @@ buildscript {
         }
     }
 
-    project.setProperty('HOSTNAME', project.properties.get('HOSTNAME', "${project.COMPUTERNAME}.${System.getenv('USERDNSDOMAIN').toLowerCase()}"))
+    project.setProperty('HOSTNAME', project.properties.get('HOSTNAME', "${project.COMPUTERNAME}"))
     project.setProperty('MAVEN_REPO', project.properties.get('MAVEN_REPO', 'http://skrivap92.statkart.no:8001/nexus/content/groups/public/'))
 
     //repository for plugin + jar filer for byggesystem
