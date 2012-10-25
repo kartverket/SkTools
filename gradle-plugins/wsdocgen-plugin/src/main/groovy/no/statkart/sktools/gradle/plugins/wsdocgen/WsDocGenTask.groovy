@@ -73,7 +73,7 @@ class WsDocGenTask extends SourceTask {
 
             project.copy {
                 into(group.targetDir)
-                from(getClasspath().filter {File file -> file.getPath().contains('wsdocgen') && !file.getPath().contains('gradle')}.collect {project.zipTree(it)})
+                from(getClasspath().filter {File file -> file.getPath().contains('wsdocgen')}.collect {project.zipTree(it)})
 //                from(getClasspath().collect {project.zipTree(it)})
                 include('ws-style.css')
             }
