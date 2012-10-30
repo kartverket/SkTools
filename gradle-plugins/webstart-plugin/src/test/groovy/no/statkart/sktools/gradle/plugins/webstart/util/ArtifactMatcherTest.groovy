@@ -13,6 +13,7 @@ import org.gradle.api.tasks.util.PatternSet
  * Test av {@link ArtifactMatcher}
  *
  * @author Leif Lislegård
+ * @author Tor Egil R. Strand
  */
 class ArtifactMatcherTest {
 
@@ -78,15 +79,15 @@ class ArtifactMatcherTest {
     }
 
     /**
-     * Tester RC navngivning som classifier
+     * Tester RC navngivning adskilt med bindestrek
      */
     @Test
     void testFilnameRC2() {
 
         File file = new File('weblogic-wswar-plugin-1.1-RC1.jar')
 
-        assert ArtifactMatcher.getArtifactName(file) == 'weblogic-wswar-plugin-RC1'
-        assert ArtifactMatcher.getArtifactVersion(file) == '1.1'
+        assert ArtifactMatcher.getArtifactName(file) == 'weblogic-wswar-plugin'
+        assert ArtifactMatcher.getArtifactVersion(file) == '1.1-RC1'
     }
 
     /**
@@ -97,8 +98,8 @@ class ArtifactMatcherTest {
 
         File file = new File('weblogic-wswar-plugin-1.1-someclassifier.jar')
 
-        assert ArtifactMatcher.getArtifactName(file) == 'weblogic-wswar-plugin-someclassifier'
-        assert ArtifactMatcher.getArtifactVersion(file) == '1.1'
+        assert ArtifactMatcher.getArtifactName(file) == 'weblogic-wswar-plugin'
+        assert ArtifactMatcher.getArtifactVersion(file) == '1.1-someclassifier'
     }
 
     /**
@@ -109,8 +110,8 @@ class ArtifactMatcherTest {
 
         File file = new File('weblogic-wswar-plugin-1.1RC1-someclassifier.jar')
 
-        assert ArtifactMatcher.getArtifactName(file) == 'weblogic-wswar-plugin-someclassifier'
-        assert ArtifactMatcher.getArtifactVersion(file) == '1.1RC1'
+        assert ArtifactMatcher.getArtifactName(file) == 'weblogic-wswar-plugin'
+        assert ArtifactMatcher.getArtifactVersion(file) == '1.1RC1-someclassifier'
     }
 
     /**
@@ -142,5 +143,27 @@ class ArtifactMatcherTest {
 
     }
 
+    /**
+     * Tester utviklingsversjonering av SKIF.
+     */
+    @Test
+    void testSkifVersion() {
+        File file = new File('skif-placeholder-trunk-build42.jar')
 
+        assert ArtifactMatcher.getArtifactName(file) == 'skif-placeholder'
+        assert ArtifactMatcher.getArtifactVersion(file) == 'trunk-build42'
+        assert ArtifactMatcher.getArtifactType(file) == 'jar'
+    }
+
+    /**
+     * Tester filnavnet til javax inject.
+     */
+    @Test
+    void testJavaxInject() {
+        File file = new File('javax.inject-1.jar')
+
+        assert ArtifactMatcher.getArtifactName(file) == 'javax.inject'
+        assert ArtifactMatcher.getArtifactVersion(file) == '1'
+        assert ArtifactMatcher.getArtifactType(file) == 'jar'
+    }
 }

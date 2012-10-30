@@ -13,6 +13,7 @@ import java.util.regex.Pattern;
  * Hjelpeklasse for å finne navn og versjon utifra filnavn til jar-biblioteker.
  *
  * @author Leif Lislegård
+ * @author Tor Egil R. Strand
  */
 public class ArtifactMatcher {
 
@@ -26,8 +27,9 @@ public class ArtifactMatcher {
      *     <li><b>classifier</b>
      *     <li><b>type/extension</b>
      * </ol>
+     * Classifier anses som del av versjon.
      */
-    public static Pattern artifactPattern = Pattern.compile("^(.*?)(?:-v?(\\d[^-]*(?:-SNAPSHOT)?(?:-[^-]*)*?))(-[A-Za-z][^-]*)?\\.([\\w][^\\.]*)$");
+    public static Pattern artifactPattern = Pattern.compile("^([A-Za-z]\\w*(?:(?:-|\\.)[A-Za-z]\\w*)*)-((?:(?:\\d[^-]*)|(?:trunk))[^\\.]*)\\.(\\w*)$");
 
 
     public static String getArtifactVersion(File file) {
@@ -47,8 +49,7 @@ public class ArtifactMatcher {
         Matcher matcher = artifactPattern.matcher(file.getName());
 
         if (matcher.matches()) {
-            String classifier = matcher.group(3);
-            return matcher.group(1) + (classifier != null ? classifier : "");
+            return matcher.group(1);
         } else {
             throw new GradleException(String.format("Unable to extract artifact-name from filename %s", file.getPath()));
         }
@@ -59,7 +60,7 @@ public class ArtifactMatcher {
         Matcher matcher = artifactPattern.matcher(file.getName());
 
         if (matcher.matches()) {
-            return matcher.group(4).toLowerCase();
+            return matcher.group(3).toLowerCase();
         } else {
             throw new GradleException(String.format("Unable to extract artifact-type from filename %s", file.getPath()));
         }
