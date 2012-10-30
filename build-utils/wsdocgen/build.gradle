@@ -1,8 +1,6 @@
 apply plugin: 'maven'
 apply plugin: 'groovy'
 
-project.version = '0.3'
-
 dependencies {
     compile libraries.'tools.jar'
 
