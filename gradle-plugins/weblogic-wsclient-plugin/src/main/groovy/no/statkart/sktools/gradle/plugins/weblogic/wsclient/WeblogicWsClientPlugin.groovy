@@ -202,13 +202,17 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
             }
         });
 
-        // kopierer inn ressurser
         compile.doLast {
-            project.copy {  //class files
+            // Kopier ressurser generert av genTask inn i compile sin output.
+            // Java-kildekode skal ikke med, ei heller class-filene weblogic har generert fra upatchede java-filer.
+            project.copy {
                 into compile.getDestinationDir()
                 from genTask.getDestinationDir()
                 exclude '**/*.java'
+                exclude '**/*.class'
             }
+
+            // Kopier ressurser og patchede java-filer inn i gen-katalogen slik at IntelliJ IDEA ser dem.
             project.copy { //source files
                 into wsClientConvention.genDir
                 from genTask.getDestinationDir()

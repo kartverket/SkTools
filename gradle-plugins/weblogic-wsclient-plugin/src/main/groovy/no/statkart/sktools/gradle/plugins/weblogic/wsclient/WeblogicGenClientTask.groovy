@@ -66,14 +66,14 @@ class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInter
         WorkResult result = compiler.execute(spec);
         setDidWork(result.getDidWork());
 
-
+        fixResourceLoaders() // Som egen @TaskAction virker det ikke av en eller annen grunn
     }
 
     /**
      * Action som retter loading av wsdl filer ifra webstart klienter osv.
      * Rettinger blir påført i klikdekoden.
      */
-    @TaskAction
+//    @TaskAction
     protected void fixResourceLoaders() {
         ant.replaceregexp {
             regexp(pattern: /URL baseUrl;[^=]+\s(.*getResource).*;[^=]*.*baseUrl, "(.*)".*;([^{]*)MalformedURL/)
