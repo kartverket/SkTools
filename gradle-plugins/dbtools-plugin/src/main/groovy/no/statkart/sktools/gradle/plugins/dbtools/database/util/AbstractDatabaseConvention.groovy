@@ -13,7 +13,7 @@ abstract class AbstractDatabaseConvention {
 
     protected final String name
     protected final Project project
-    protected final Map<String, Object> properties = new Hashtable<String, Object>()
+    protected final Map<String, Object> properties = new HashMap<String, Object>() // HashMap allows null values
 
     /**
      * Prefix for alle tasks for tilknyttet denne konvensjonen
