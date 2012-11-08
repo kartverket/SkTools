@@ -41,6 +41,10 @@ class OracleImportTask extends ConventionTask {
     @Input
     Collection<String> exclude
 
+    //SKTOOLS-30
+    @Optional
+    @Input
+    Collection<String> include
 
 
     @Input
@@ -76,6 +80,9 @@ class OracleImportTask extends ConventionTask {
 
         if (getExclude() != null && !getExclude().isEmpty()) {
             command += "EXCLUDE=${getExclude().join(',')}"
+        }
+        if (getInclude() != null && !getInclude().isEmpty()) {
+            command += "INCLUDE=${getInclude().join(',')}"
         }
 
         def impdb = Runtime.runtime.exec(command as String[], null, getProject().getProjectDir())

@@ -30,7 +30,13 @@ class OracleExportTask extends ConventionTask {
     String logfile
 
     @Input
+    @Optional
     Collection<String> exclude
+
+    //SKTOOLS-30
+    @Optional
+    @Input
+    Collection<String> include
 
     @Input
     String compression
@@ -65,9 +71,16 @@ class OracleExportTask extends ConventionTask {
                 "SCHEMAS=${getSchemas().join(',')}",
                 "DUMPFILE=${getDumpfile()}",
                 "LOGFILE=${getLogfile()}",
-                "EXCLUDE=${getExclude().join(',')}",
                 "COMPRESSION=${getCompression()}"
         ]
+
+        if (getExclude() != null && !getExclude().isEmpty()) {
+            command += "EXCLUDE=${getExclude().join(',')}"
+        }
+        if (getInclude() != null && !getInclude().isEmpty()) {
+            command += "INCLUDE=${getInclude().join(',')}"
+        }
+
         def impdb = Runtime.runtime.exec(command, null, getProject().getProjectDir())
 
         logger.debug('Kaller impdp.exe med bruker ' + getUsername() + ', tns ' + getTns());

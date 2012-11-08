@@ -42,6 +42,14 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
             // schema er det samme som brukernavn dersom uspesifisert
             addPropertyIfNotExist('db_schema', property('db_username'))
 
+            // db_oradata defaultes til prosjekt property med samme navn
+            addPropertyIfNotExist('db_oradata', project.ext.properties['db_oradata'])
+
+            // dersom db_oradata er blank settes denne til null
+            if ("${this.property('db_oradata')}".trim().isEmpty()) {
+                getProperties().put('db_oradata', null)
+            }
+
             // oradataNN settes enten til standard verdi, eller til hva som er angitt i oradata
             addPropertyIfNotExist('db_oradata01', property('db_oradata') ?: 'F:\\Oradata')
             addPropertyIfNotExist('db_oradata02', property('db_oradata') ?: 'G:\\Oradata')
@@ -217,7 +225,7 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
         task.conventionMapping('dumpfile', { getDumpfile() })
         task.conventionMapping('schemas', { getSchemas() })
         task.conventionMapping('logfile', { "${dumpfile}.export.${dateString}.LOG" })
-        task.conventionMapping('exclude', { ['STATISTICS', 'TABLESPACE_QUOTA', 'SYNONYM', 'VIEW'] })
+        task.conventionMapping('exclude', { ['STATISTICS', 'INDEX'] })
         task.conventionMapping('compression', { 'DATA_ONLY' })
 
         task.conventionMapping('username', { getUsername() })
