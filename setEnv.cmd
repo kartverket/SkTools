@@ -39,6 +39,13 @@ if  not "%GROOVY_HOME%"=="" set PATH=%PATH%;%GROOVY_HOME%\bin
 
 @REM echo PATH=%PATH%
 
+if "%ORG_GRADLE_PROJECT_sktools_versjon%"=="" (
+   for /D %%P in (%PROJECT_ROOT%) do (
+      set ORG_GRADLE_PROJECT_sktools_versjon=%%~nP
+      @echo Setter sktools_versjon til '%%~nP'
+   )
+)
+
 if "%ORG_GRADLE_PROJECT_MAVEN_REPO%"=="" (
    @echo Setter std Maven Repository for utvikling [felles]
    set ORG_GRADLE_PROJECT_MAVEN_REPO=http://nexus.statkart.no:8090/nexus/content/groups/public/

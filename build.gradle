@@ -17,6 +17,9 @@ allprojects {
     defaultTasks 'build'
     group = 'no.statkart.sktools'
 
+    // version kan settes via properties (feks kommandolinje -P )
+    if (ext.has('sktools_versjon')) { version = sktools_versjon }
+
     afterEvaluate {
         if (plugins.hasPlugin('maven')) {
             uploadArchives.repositories.mavenDeployer {
