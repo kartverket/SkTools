@@ -65,7 +65,7 @@ class OracleExportTask extends ConventionTask {
 
         def sout = new StringBuffer()
         def serr = new StringBuffer()
-        String[] command = ['expdp.exe',
+        List<String> command = ['expdp.exe',
                 "USERID=${getUsername()}/${getPassword()}@${getTns()}",
                 "DIRECTORY=${getDirectory()}",
                 "SCHEMAS=${getSchemas().join(',')}",
@@ -81,7 +81,7 @@ class OracleExportTask extends ConventionTask {
             command += "INCLUDE=${getInclude().join(',')}"
         }
 
-        def impdb = Runtime.runtime.exec(command, null, getProject().getProjectDir())
+        def impdb = Runtime.runtime.exec(command as String[], null, getProject().getProjectDir())
 
         logger.debug('Kaller impdp.exe med bruker ' + getUsername() + ', tns ' + getTns());
 
