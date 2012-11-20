@@ -47,6 +47,14 @@ abstract class AbstractDatabaseConvention {
 
     public abstract AbstractDatabaseTasks getTasks()
 
+    /**
+     * SKTOOLS-32: Mulighet til referering av toolset ifra andre scope
+     * @return referanse til toolset som blir konfigurert
+     */
+    public AbstractDatabaseConvention getToolset() {
+        return this;
+    }
+
     public Map<String, Object> getProperties() {
         return properties;
     }
