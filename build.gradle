@@ -35,9 +35,19 @@ allprojects {
 }
 
 
+// Optional configuration of library versions to use. (not production)
+// Values will be read from project.properties with naming convention "version.<key>"
+// Simply add version properties to your gradle-user.property file to use this feature.
+def libVersion(String name, String defaultValue) {
+    project.ext.properties.get('version.' + name, defaultValue) //development mode only
+}
+
+
 // build a map of the dependency artifacts to use. Allows centralized definition of the versions of artifacts to
 // use. In that respect it serves a role similar to <dependencyManagement> in Maven
 project.ext.set('libraries', [
+
+        log4j: "log4j:log4j:${libVersion('log4j', '1.2.15')}@jar",
 
         groovy: dependencies.localGroovy(),
 

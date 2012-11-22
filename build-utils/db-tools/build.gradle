@@ -2,6 +2,7 @@ apply plugin: 'maven'
 apply plugin: 'groovy'
 
 dependencies {
+    compile libraries.log4j
     compile project(':build-utils:sql-parser')
 
     groovy libraries.groovy
