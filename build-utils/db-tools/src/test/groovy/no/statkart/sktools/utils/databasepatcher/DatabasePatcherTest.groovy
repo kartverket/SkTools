@@ -6,9 +6,9 @@ import junit.framework.Assert
 /**
  * Tester funksjonaliteten til {@link DatabasePatcher}
  */
-@Test
 class DatabasePatcherTest {
 
+    @Test
     public void testParsing() {
 
         List<SqlExecutor.ScriptLine> lines = SqlExecutor.parseSQL('''--kommentar
