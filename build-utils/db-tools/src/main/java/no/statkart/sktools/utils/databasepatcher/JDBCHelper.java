@@ -1,12 +1,10 @@
-package no.statkart.matrikkel.util.db;
+package no.statkart.sktools.utils.databasepatcher;
 
-import no.statkart.matrikkel.util.exception.OperationalException;
-import no.statkart.matrikkel.util.log.LoggerFactory;
-import no.statkart.matrikkel.util.log.Logger;
+import no.statkart.sktools.utils.databasepatcher.exception.OperationalException;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 
 import java.sql.*;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 
 /**
  * Hjelpeklasser for bruk av JDBC api'et. Har metoder for å frigjøre JDBC ressurser på korrekt måte.
@@ -14,7 +12,7 @@ import java.lang.reflect.InvocationTargetException;
  * @author Aksel Hilde
  */
 public class JDBCHelper {
-   private static Logger logger = LoggerFactory.getInstance().getLogger(JDBCHelper.class);
+   private static Logger logger = LogManager.getLogger(JDBCHelper.class);
 
    /**
     * Tilbyr bare statiske metoder, skal ikke instansieres.
@@ -25,7 +23,7 @@ public class JDBCHelper {
    /**
     * Frigjør en connection
     * @param connection
-    * @throws no.statkart.matrikkel.util.exception.OperationalException dersom frigjøring av ressurser feilet.
+    * @throws OperationalException dersom frigjøring av ressurser feilet.
     */
    public static void close(Connection connection){
       try {
@@ -39,7 +37,7 @@ public class JDBCHelper {
     * Frigjør en statement og en connection
     * @param statement
     * @param connection
-    * @throws no.statkart.matrikkel.util.exception.OperationalException dersom frigjøring av ressurser feilet.
+    * @throws OperationalException dersom frigjøring av ressurser feilet.
     */
    public static void close(Statement statement, Connection connection){
       try {
@@ -53,7 +51,7 @@ public class JDBCHelper {
    /**
     * Frigjør en statement
     * @param statement
-    * @throws no.statkart.matrikkel.util.exception.OperationalException dersom frigjøring av ressurser feilet.
+    * @throws OperationalException dersom frigjøring av ressurser feilet.
     */
    public static void close(Statement statement){
       try {
@@ -67,7 +65,7 @@ public class JDBCHelper {
     * Frigjør et resultatsett og en statement.
     * @param resultSet
     * @param statement
-    * @throws no.statkart.matrikkel.util.exception.OperationalException dersom frigjøring av ressurser feilet.
+    * @throws OperationalException dersom frigjøring av ressurser feilet.
     */
    public static void close(ResultSet resultSet, Statement statement){
       try {
@@ -83,7 +81,7 @@ public class JDBCHelper {
     * @param resultSet
     * @param statement
     * @param connection
-    * @throws no.statkart.matrikkel.util.exception.OperationalException dersom frigjøring av ressurser feilet.
+    * @throws OperationalException dersom frigjøring av ressurser feilet.
     */
    public static void close(ResultSet resultSet, Statement statement, Connection connection){
       try {

@@ -1,4 +1,4 @@
-package no.statkart.matrikkel.util.db;
+package no.statkart.sktools.utils.databasepatcher;
 
 import org.apache.log4j.Logger;
 
@@ -14,10 +14,10 @@ import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
 /**
- * Eksekverer en sql patch fil som er inndelt i patchblokke via patch kommentar direktiver. Patchblokker
+ * Eksekverer en sql patch fil som er inndelt i patchblokker via patch kommentar direktiver. Patchblokker
  * som er eldre enn database nåværende patchversjon blir ikke utført. Hvis databasen har satt et flagg om
- * at indexer ikke er i synk blir alle index patch blokke utført. Hvis indexer er i sync blir indexer i
- * eldre patch blokke skippet.
+ * at indexer ikke er i synk blir alle index patch blokker utført. Hvis indexer er i sync blir indexer i
+ * eldre patch blokker skippet.
  */
 public class DatabasePatcher {
    private static Logger logger = Logger.getLogger(DatabasePatcher.class);
@@ -28,7 +28,7 @@ public class DatabasePatcher {
    static Pattern pStartsWithPatch = Pattern.compile("^--\\s*PATCH[\\s\\n]");
 
    /**
-    * Angir versjonsinformasjon om en patchblock samt patchblok type
+    * Angir versjonsinformasjon om en patchblock samt patchblokk type
     */
    private static class PatchVersion implements Comparable {
       // Angir om det er en data eller index patchblock
@@ -191,17 +191,17 @@ public class DatabasePatcher {
          }
 
          for( PatchVersion p : patches.keySet() ) {
-            List<SqlExecutor.ScriptLine> patchBlok = patches.get(p);
+            List<SqlExecutor.ScriptLine> patchBlock = patches.get(p);
 
             // Sjekke om databasen allerede er patchet med denne patch og om indexer er i sync.
             if( p.compareTo(currentPatchInfo.patchVersion) < 1 ) {
                // Patch har allerede blitt utført, men skal utføres på nytt hvis det er en index patch og indexer ikke er i sync
                if( !p.isDataPatch && !currentPatchInfo.indexesInSyncWithPatch ) {
-                  executePatchBlock(con, p, patchBlok, false);
+                  executePatchBlock(con, p, patchBlock, false);
                }
             } else {
                // Ny patch. Utfør alltid.
-               executePatchBlock(con, p, patchBlok, true);
+               executePatchBlock(con, p, patchBlock, true);
                if( singleStepPatches ) break;
             }
          }
@@ -214,18 +214,18 @@ public class DatabasePatcher {
       }
    }
 
-   private static void executePatchBlock(Connection con, PatchVersion p, List<SqlExecutor.ScriptLine> patchBlok, boolean isNewPatch) {
+   private static void executePatchBlock(Connection con, PatchVersion p, List<SqlExecutor.ScriptLine> patchBlock, boolean isNewPatch) {
       try {
          if( isNewPatch ) {
-            logger.info("Utfører patchblok: " + p + ((p.kommentar == null) ? "" : " " + p.kommentar));
-            SqlExecutor.runScript(con, patchBlok, false);
+            logger.info("Utfører patchblokk: " + p + ((p.kommentar == null) ? "" : " " + p.kommentar));
+            SqlExecutor.runScript(con, patchBlock, false);
             updatePatchInfo(con, p);
          } else {
             if( p.isDataPatch ) {
-               throw new RuntimeException("Forsøk på å utføre data patch block flere ganger på samme database");
+               throw new RuntimeException("Forsøk på å utføre data patch blokk flere ganger på samme database");
             }
-            logger.info("Utfører index patchblok på nytt. Noen index statements kan feile : " + p);
-            SqlExecutor.runScript(con, patchBlok, false);
+            logger.info("Utfører index patchblokk på nytt. Noen index statements kan feile : " + p);
+            SqlExecutor.runScript(con, patchBlock, false);
          }
       } catch( Exception e ) {
          throw new RuntimeException(e.getMessage(), e);
@@ -233,7 +233,7 @@ public class DatabasePatcher {
    }
 
    /**
-    * Parser en liste av script lines og deler dem opp i patchblokke.
+    * Parser en liste av script lines og deler dem opp i patchblokker.
     *
     * @param scriptLines
     */
@@ -260,12 +260,12 @@ public class DatabasePatcher {
          i++;
       }
 
-      // Parse patchblokke
+      // Parse patchblokker
       while( i < scriptLines.size() && isPatchVersion(scriptLines.get(i)) ) {
          PatchVersion patchVersion = parsePatchVersion(scriptLines.get(i));
 
          if( lastPatchVersion.compareTo(patchVersion) != -1 ) {
-            throw new RuntimeException("Feil: Patchblokke må ha stigende versjonsnr i fil (forrige var: " + lastPatchVersion + " ): " + scriptLines.get(i));
+            throw new RuntimeException("Feil: Patchblokker må ha stigende versjonsnr i fil (forrige var: " + lastPatchVersion + " ): " + scriptLines.get(i));
          }
          lastPatchVersion = patchVersion;
          i++;
@@ -280,7 +280,7 @@ public class DatabasePatcher {
          if( isMinDbVersion(scriptLines.get(i)) ) {
             throw new RuntimeException("Feil: '-- PATCH DB.MIN.VERSION=\"<streng>\" allerede spesifisert: " + scriptLines.get(i));
          } else if( isSqlCommand(scriptLines.get(i)) ) {
-            throw new RuntimeException("Feil: SQL tilhører ingen patchblok: " + scriptLines.get(i));
+            throw new RuntimeException("Feil: SQL tilhører ingen patchblokk: " + scriptLines.get(i));
          } else {
             throw new RuntimeException("Feil i '-- PATCH direktiv': " + scriptLines.get(i));
          }

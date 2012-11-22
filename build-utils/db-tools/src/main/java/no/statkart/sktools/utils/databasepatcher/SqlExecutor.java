@@ -1,7 +1,7 @@
-package no.statkart.matrikkel.util.db;
+package no.statkart.sktools.utils.databasepatcher;
 
-import no.statkart.matrikkel.util.exception.ImplementationException;
-import no.statkart.matrikkel.util.exception.OperationalException;
+import no.statkart.sktools.utils.databasepatcher.exception.ConfigurationException;
+import no.statkart.sktools.utils.databasepatcher.exception.OperationalException;
 import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;
@@ -145,160 +145,7 @@ public class SqlExecutor {
       }
    }
 
-   /**
-    * Sletter alle Tabeller for en bruker.
-    * Sletter alle Views for en bruker.
-    * Sletter alle BIN$ Tabeller for en bruker (purge recyclebin).
-    * <p/>
-    * Hvis parameteren FailOnError er med, vil det bli kastet en exception ved ORACLE SQL error
-    * fra feil med andre feilkoder en: 02443, 02275, 00955, 01418, 00942
-    * <p/>
-    * Kjører ett sql script på database anngitt som VM-Parametere, parameterebrukt:
-    * -Dhibernate.dialect=${bp.hibernate.dialect}
-    * -Dhibernate.connection.driver_class=${bp.hibernate.connection.driver_class}
-    * -Dhibernate.connection.url=${bp.hibernate.connection.url}
-    * -Dhibernate.connection.username=${bp.hibernate.connection.username}
-    * -Dhibernate.connection.password=${bp.hibernate.connection.password}
-    * -DFailOnError=true
-    */
-   public static void deleteAllUserTablesAndViews() throws Exception {
-      Connection con = null;
-      ArrayList scriptLines = new ArrayList();
-      try {
-         con = JDBCHelper.createConnection();
-         scriptLines.addAll(runStatement(con, "select 'drop view ', view_name, ';' from user_views"));
-         scriptLines.addAll(runStatement(con, "select 'drop table ', table_name, 'cascade constraints;' from user_tables"));
-         logger.info("Fant " + scriptLines.size() + " tabeler og views. Sletter disse og purger recyclebin etterpå");
-         scriptLines.add("PURGE RECYCLEBIN;");
-         StringBuffer deleteScript = new StringBuffer();
-         Iterator it = scriptLines.iterator();
-         while( it.hasNext() ) {
-            String deleteStatement = (String) it.next();
-            deleteScript.append(deleteStatement);
-            deleteScript.append('\n');
-         }
-         runScript(con, deleteScript.toString());
 
-      } finally {
-         if( con != null ) {
-            con.close();
-         }
-      }
-   }
-
-
-   /**
-    * Sletter alle Tabeller for en bruker.
-    * Sletter alle Views for en bruker.
-    * Sletter alle BIN$ Tabeller for en bruker (purge recyclebin).
-    * <p/>
-    * Hvis parameteren FailOnError er med, vil det bli kastet en exception ved ORACLE SQL error
-    * fra feil med andre feilkoder en: 02443, 02275, 00955, 01418, 00942
-    * <p/>
-    * Kjører ett sql script på database anngitt som VM-Parametere, parameterebrukt:
-    * -Dhibernate.dialect=${bp.hibernate.dialect}
-    * -Dhibernate.connection.driver_class=${bp.hibernate.connection.driver_class}
-    * -Dhibernate.connection.url=${bp.hibernate.connection.url}
-    * -Dhibernate.connection.username=${bp.hibernate.connection.username}
-    * -Dhibernate.connection.password=${bp.hibernate.connection.password}
-    * -DFailOnError=true
-    */
-   public static void deleteNormalIndexes() throws Exception {
-      Connection con = null;
-      ArrayList scriptLines = new ArrayList();
-      try {
-         con = JDBCHelper.createConnection();
-         scriptLines.addAll(runStatement(con, "select 'drop index ', index_name, ';' from user_indexes where index_type like '%NORMAL' and index_name not like 'SYS%' and index_name not like '%_PK'"));
-         logger.info("Fant " + scriptLines.size() + " normale indexes. Sletter disse.");
-         StringBuffer deleteScript = new StringBuffer();
-         Iterator it = scriptLines.iterator();
-         while( it.hasNext() ) {
-            String deleteStatement = (String) it.next();
-            deleteScript.append(deleteStatement);
-            deleteScript.append('\n');
-         }
-         runScript(con, deleteScript.toString());
-
-      } finally {
-         if( con != null ) {
-            con.close();
-         }
-      }
-   }
-
-   /**
-    * Sletter alle data for en kommune
-    * <p/>
-    * Kjører ett sql script på database anngitt som VM-Parametere, parameterebrukt:
-    * -Dhibernate.dialect=${bp.hibernate.dialect}
-    * -Dhibernate.connection.driver_class=${bp.hibernate.connection.driver_class}
-    * -Dhibernate.connection.url=${bp.hibernate.connection.url}
-    * -Dhibernate.connection.username=${bp.hibernate.connection.username}
-    * -Dhibernate.connection.password=${bp.hibernate.connection.password}
-    * -DFailOnError=true
-    */
-   public static void deleteKommune(String kommunenr) throws Exception {
-      Connection con = null;
-      try {
-         con = JDBCHelper.createConnection();
-         runScript(con, "{call matr_slett.slettKommune('" + kommunenr + "')}");
-//con.rollback();
-         con.commit();
-      } catch( Exception e ) {
-         logger.error("Feil under sletting av kommune " + kommunenr, e);
-         throw e;
-      } finally {
-         if( con != null ) {
-            con.close();
-         }
-      }
-   }
-
-   /**
-    * Metode for å hente ut alle drop tabels statements i ett resultatsett.
-    *
-    * @param resultSet
-    * @return
-    * @throws java.sql.SQLException
-    */
-   private static ArrayList getAllObjectsToDrop(ResultSet resultSet) throws SQLException {
-      ArrayList scriptLines = new ArrayList();
-      while( resultSet.next() ) {
-         String linje = resultSet.getString(1) + " " + resultSet.getString(2) + " " + resultSet.getString(3);
-         logger.debug("linje: " + linje);
-         scriptLines.add(linje);
-      }
-      return scriptLines;
-   }
-
-   /**
-    * Denne klassen er brukt i fra ConvertWeb.
-    * <p/>
-    * Hvis parameteren FailOnError er med, vil det bli kastet en exception ved ORACLE SQL error
-    * fra feil med andre feilkoder en: 02443, 02275, 00955, 01418, 00942
-    * <p/>
-    * Kjører ett sql setning på database anngitt som VM-Parametere, parameterebrukt:
-    * -Dhibernate.dialect=${bp.hibernate.dialect}
-    * -Dhibernate.connection.driver_class=${bp.hibernate.connection.driver_class}
-    * -Dhibernate.connection.url=${bp.hibernate.connection.url}
-    * -Dhibernate.connection.username=${bp.hibernate.connection.username}
-    * -Dhibernate.connection.password=${bp.hibernate.connection.password}
-    * -DFailOnError=true
-    *
-    * @param sql, som skal kjøres.
-    */
-   public static void runSQL(String sql) throws Exception {
-      Connection con = null;
-      try {
-         con = JDBCHelper.createConnection();
-         logger.error("Midlertidig: kjører sql: " + sql);
-         runStatement(con, sql);
-      } finally {
-         if( con != null ) {
-            con.close();
-         }
-      }
-   }
 
    /**
     * Denne klassen er brukt i fra Ant.
@@ -407,64 +254,6 @@ public class SqlExecutor {
       return tmpScript.toString();
    }
 
-   /**
-    * Brukes til hente ut alle tabeller eller views som skal slettes.
-    *
-    * @param connection
-    * @param statementLine
-    * @return
-    * @throws Exception
-    */
-   private static ArrayList runStatement(Connection connection, String statementLine) throws Exception {
-      ArrayList resultLines = new ArrayList();
-      boolean feilet = false;
-      if( connection == null ) {
-         throw new ImplementationException("Kan ikke kjøre statement med connection = null");
-      }
-      if( statementLine == null ) {
-         throw new ImplementationException("Det må anngis ett sql statement, sqlSript = null.");
-      }
-
-      if( statementLine.length() == 0 ) {
-         throw new ImplementationException("SqlStatement må ha innhold.");
-      }
-      //kjøre en og en linje i skriptet.
-      Statement statement = null;
-      ResultSet rs = null;
-      try {
-         statement = connection.createStatement();
-         try {
-            logger.info("Executing SQL: " + statementLine);
-            rs = statement.executeQuery(statementLine);
-            resultLines.addAll(getAllObjectsToDrop(rs));
-         } catch( SQLException e ) {
-            String msg = e.getMessage();
-            if( msg.contains("02443") || msg.contains("02275") || msg.contains("00955") || msg.contains("01418") || msg.contains("00942") )
-            {
-               logger.warn("Warning: " + statementLine + ". Oracle feil: " + msg);
-            } else {
-               logger.error("Feilet: " + statementLine + ". Oracle feil: " + msg);
-               feilet = true;
-               if( "true".equals(System.getProperty("FailOnError")) ) {
-                  throw new Exception("Feil under kjøring av script.", e);
-               }
-            }
-         }
-      } finally {
-         //forsikre seg at de er stengt ved feil. Ok og kalle close på closed connection.
-         if( statement != null ) {
-            if( rs != null ) {
-               JDBCHelper.close(rs, statement);
-            } else {
-               JDBCHelper.close(statement);
-            }
-         }
-      }
-      if( feilet ) {
-         logger.error("Statement feilet!");
-      }
-      return resultLines;
-   }
 
    /**
     * Kjører ett sql script på anngit database kobling.
@@ -478,10 +267,10 @@ public class SqlExecutor {
     */
    public static ResultSet[] runScript(Connection connection, String sqlScript) throws Exception {
       if( connection == null ) {
-         throw new ImplementationException("Kan ikke kjøre databasescript med connection = null");
+         throw new ConfigurationException("Kan ikke kjøre databasescript med connection = null");
       }
       if( sqlScript == null ) {
-         throw new ImplementationException("Det må anngis ett sqlscript, sqlSript = null.");
+         throw new ConfigurationException("Det må anngis ett sqlscript, sqlSript = null.");
       }
       boolean failOnWarning = "true".equals(System.getProperty("FailOnWarning"));
       List<ScriptLine> scriptLines = parseSQL(sqlScript);
@@ -577,15 +366,6 @@ public class SqlExecutor {
       }
    }
 
-   private static void printScriptlines(List<ScriptLine> lines) {
-      int x = 1;
-      for( Iterator<ScriptLine> iterator = lines.iterator(); iterator.hasNext(); ) {
-         ScriptLine scriptLine = iterator.next();
-         System.out.println("ScriptLine " + x++);
-         System.out.println(scriptLine);
-
-      }
-   }
 
 
 }
