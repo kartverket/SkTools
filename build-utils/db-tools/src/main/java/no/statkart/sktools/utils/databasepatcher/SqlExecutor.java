@@ -154,11 +154,6 @@ public class SqlExecutor {
     * fra feil med andre feilkoder en: 02443, 02275, 00955, 01418, 00942
     * <p/>
     * Kjører ett sql script på database anngitt som VM-Parametere, parameterebrukt:
-    * -Dhibernate.dialect=${bp.hibernate.dialect}
-    * -Dhibernate.connection.driver_class=${bp.hibernate.connection.driver_class}
-    * -Dhibernate.connection.url=${bp.hibernate.connection.url}
-    * -Dhibernate.connection.username=${bp.hibernate.connection.username}
-    * -Dhibernate.connection.password=${bp.hibernate.connection.password}
     * -DFailOnError=true
     *
     * @param sqlScriptNavn, navn på filen som skal lastes.

@@ -123,7 +123,7 @@ public class JDBCHelper {
     * -Dhibernate.connection.driver_class
     * -Dhibernate.connection.url
     * -Dhibernate.connection.username
-    * -Dhibernate.connection.password=
+    * -Dhibernate.connection.password
     */
    public static Connection createConnection() throws SQLException {
       String driver = System.getProperty("hibernate.connection.driver_class");

@@ -7,6 +7,7 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.ResultSet;
 import java.sql.PreparedStatement;
+import java.util.Date;
 import java.util.List;
 import java.util.LinkedHashMap;
 import java.util.ArrayList;
@@ -169,14 +170,14 @@ public class DatabasePatcher {
    /**
     * Patcher eksisterende database i henhold til patchfil og eksisterende patcher som allerede er installert i databasen
     *
-    * @param sqlScriptNavn
+    * @param patchFilePath
     * @param singleStepPatches true hvis kun en ny patch skal utføres. Hvis false utføres alle patcher
     */
-   private static void patch(String sqlScriptNavn, boolean singleStepPatches) {
+   private static void patch(String patchFilePath, boolean singleStepPatches) {
       Connection con = null;
 
       try {
-         List<SqlExecutor.ScriptLine> scriptLines = SqlExecutor.parseSQL(SqlExecutor.lesFilFraClasspath(sqlScriptNavn));
+         List<SqlExecutor.ScriptLine> scriptLines = SqlExecutor.parseSQL(SqlExecutor.lesFilFraWorkingDir(patchFilePath));
          LinkedHashMap<PatchVersion, List<SqlExecutor.ScriptLine>> patches = parsePatches(scriptLines);
 
          con = JDBCHelper.createConnection();
@@ -379,11 +380,10 @@ public class DatabasePatcher {
       try {
          stmt = con.createStatement();
 
-         stmt.execute("select count(*) from user_tables where table_name='PATCHINFO'");
-         rs = stmt.getResultSet();
-         rs.next();
-         boolean patchTableExists = rs.getInt(1) == 1;
-         rs.close();
+          //finner ut om tabell finnes i databasen ved å spørre på metadata
+         rs = con.getMetaData().getTables(con.getCatalog(), null, "PATCHINFO", null);
+          boolean patchTableExists = rs.next();
+          rs.close();
          if( !patchTableExists ) {
             createPatchInfoTable(con);
          }
@@ -425,8 +425,8 @@ public class DatabasePatcher {
       ResultSet rs = null;
       try {
          stmt = con.createStatement();
-         stmt.execute("create table PATCHINFO (dbVersion varchar2(255), patchNo number(19,0) not null, indexesInSyncWithPatch number(1,0) not null, kommentar varchar2(255))");
-         stmt.executeUpdate("insert into PATCHINFO (dbVersion, patchNo, indexesInSyncWithPatch, kommentar) values (null, -1, 1, null)");
+         stmt.execute("CREATE TABLE PATCHINFO (dbVersion varchar(255), patchNo INTEGER NOT NULL, indexesInSyncWithPatch BOOLEAN NOT NULL, kommentar VARCHAR(255))");
+         stmt.executeUpdate("insert into PATCHINFO (dbVersion, patchNo, indexesInSyncWithPatch, kommentar) values (null, -1, 1, 'Automatisk opprettet tabell for patchistorikk den " + new Date() + "')");
       } catch( SQLException e ) {
          throw new RuntimeException(e);
       } finally {
@@ -488,7 +488,7 @@ public class DatabasePatcher {
       PreparedStatement stmt = null;
       ResultSet rs = null;
       try {
-         stmt = con.prepareStatement("update PATCHINFO set DBVERSION=?, PATCHNO=?, INDEXESINSYNCWITHPATCH=1, KOMMENTAR=?");
+         stmt = con.prepareStatement("update PATCHINFO set dbVersion=?, patchNo=?, indexesInSyncWithPatch=1, kommentar=?");
          stmt.setString(1, p.dbVersion);
          stmt.setInt(2, p.patchNo);
          stmt.setString(3, p.kommentar);

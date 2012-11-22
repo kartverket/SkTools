@@ -117,7 +117,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
 
         try {
             def row = sql.firstRow('select ID, NAVN from TEST_TABLE where ID = 1')
-            Assert.assertNotNull row, 'Forventer en rader'
+            Assert.assertNotNull row, 'Forventer en rad'
             Assert.assertEquals row.ID, 1, 'forventet verdi'
             Assert.assertEquals row.NAVN, 'CHUCK NORRIS', 'forventet verdi'
         } catch (SQLSyntaxErrorException sqlsee) {
