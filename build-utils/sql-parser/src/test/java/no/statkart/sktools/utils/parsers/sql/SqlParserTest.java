@@ -36,7 +36,7 @@ public class SqlParserTest {
         LineNumberReader reader = new LineNumberReader(stringReader);
 
 
-        List<Expression> list = SQLStatementParser.parseExpressions(reader);
+        List<? extends Expression> list = SQLStatementParser.parseExpressions(reader);
 
         int debuggy = 0;
 

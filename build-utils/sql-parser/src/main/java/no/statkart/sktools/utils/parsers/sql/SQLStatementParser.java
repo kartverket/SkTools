@@ -30,7 +30,7 @@ import java.util.List;
  */
 public class SQLStatementParser {
 
-    public static List<Expression> parseExpressions(LineNumberReader reader) throws IOException {
+    public static List<? extends Expression> parseExpressions(LineNumberReader reader) throws IOException {
 
         reader.setLineNumber(1);    //begynner på linje 1 ...
 

@@ -7,6 +7,8 @@ import no.statkart.sktools.utils.parsers.sql.model.DefaultStatement
 import no.statkart.sktools.utils.parsers.sql.model.Statement
 import no.statkart.sktools.utils.parsers.sql.model.PLSQLStatement
 import no.statkart.sktools.utils.parsers.sql.model.PromptStatement
+import no.statkart.sktools.utils.parsers.sql.model.Comment
+import no.statkart.sktools.utils.parsers.sql.model.LineComment
 
 /**
  * Tester parsing av sql setninger ifra flatfil.
@@ -76,15 +78,15 @@ select --slett;
 """)
         LineNumberReader reader = new LineNumberReader(stringReader)
 
-        List<Expression> list = SQLStatementParser.parseExpressions(reader)
-        list.each { Assert.assertTrue(it instanceof Statement, "Expected Statement instance, but was ${it.class}")}
-
-        List<Statement> statementList = list
+        List<? extends Expression> list = SQLStatementParser.parseExpressions(reader)
         int i = 0
-        Assert.assertEquals(statementList[i].sql.trim(), 'select * from dual')
-        Assert.assertEquals(statementList[i].lineNumber, 2, 'linjenr for første statement')
+        Assert.assertEquals(list[i].text.trim(), '--slett;')
+        Assert.assertEquals(list[i].lineNumber, 1, 'linjenr for kommentar')
         i++
-        Assert.assertEquals(statementList.size(), i, 'antall statements')
+        Assert.assertEquals(list[i].sql.trim(), 'select * from dual')
+        Assert.assertEquals(list[i].lineNumber, 2, 'linjenr for første statement')
+        i++
+        Assert.assertEquals(list.size(), i, 'antall statements')
 
     }
 
@@ -173,7 +175,7 @@ BEGIN
 END
 /
 select column from TESTTABLE;
---kommentar strippes vekk
+--kommentar som eget element som ikke er Statement
 yes;
 PROMPT no
 
@@ -182,20 +184,23 @@ select slutt
         List<Expression> list = SQLStatementParser.parseExpressions(reader)
 
         int i = 0
-        Assert.assertTrue(list[i].sql.contains("EXECUTE IMMEDIATE('select * from dual')"), 'innhold')
         Assert.assertTrue(list[i] instanceof PLSQLStatement, "instanceof ${PLSQLStatement.class}")
+        Assert.assertTrue(((PLSQLStatement)list[i]).sql.contains("EXECUTE IMMEDIATE('select * from dual')"), 'innhold')
         i++
-        Assert.assertEquals(list[i].sql.trim(), 'select column from TESTTABLE')
         Assert.assertTrue(list[i] instanceof DefaultStatement, "instanceof ${DefaultStatement.class}")
+        Assert.assertEquals(((DefaultStatement)list[i]).sql.trim(), 'select column from TESTTABLE')
         i++
-        Assert.assertEquals(list[i].sql.trim(), 'yes')
-        Assert.assertTrue(list[i] instanceof DefaultStatement, "instanceof ${DefaultStatement.class}")
+        Assert.assertTrue(list[i] instanceof LineComment, "instanceof ${LineComment.class}")
+        Assert.assertEquals(((LineComment)list[i]).text.trim(), '--kommentar som eget element som ikke er Statement')
         i++
-        Assert.assertEquals(list[i].text.trim(), 'PROMPT no')
+        Assert.assertTrue(list[i] instanceof Statement, "instanceof ${Statement.class}")
+        Assert.assertEquals(((Statement)list[i]).sql.trim(), 'yes')
+        i++
         Assert.assertTrue(list[i] instanceof PromptStatement, "instanceof ${PromptStatement.class}")
+        Assert.assertEquals(((PromptStatement)list[i]).text.trim(), 'PROMPT no')
         i++
-        Assert.assertEquals(list[i].sql.trim(), 'select slutt')
         Assert.assertTrue(list[i] instanceof DefaultStatement, "instanceof ${DefaultStatement.class}")
+        Assert.assertEquals(((DefaultStatement)list[i]).sql.trim(), 'select slutt')
         i++
         Assert.assertEquals(list.size(), i, 'antall statements')
     }
