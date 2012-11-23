@@ -2,6 +2,10 @@ package no.statkart.sktools.utils.databasepatcher;
 
 import no.statkart.sktools.utils.databasepatcher.exception.ConfigurationException;
 import no.statkart.sktools.utils.databasepatcher.exception.OperationalException;
+import no.statkart.sktools.utils.parsers.sql.SQLStatementParser;
+import no.statkart.sktools.utils.parsers.sql.model.Comment;
+import no.statkart.sktools.utils.parsers.sql.model.Expression;
+import no.statkart.sktools.utils.parsers.sql.model.Statement;
 import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;
@@ -14,7 +18,6 @@ import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -56,94 +59,9 @@ public class SqlExecutor {
       public String toString() {
          return "Line " + lineno + "\n" + line;
       }
-   }
+   };
 
-   ;
 
-   /**
-    * Parser sqlscript og deler det opp i ScriptLiner. Hver script linje er enten eller en kommentar eller en enkelt
-    * sql statement.
-    * <p/>
-    * Kommentarlinjer er linjer som starter med "--". Sqlstatements er linjer som ikke starter med "--". En sqlstatement
-    * kan bestå av en eller flere linjer og må avsluttes med ";" og kan ikke inneholde kommentarlinjer. Det kan godt stå
-    * flere sqlstatements på en linje.
-    *
-    * @param sqlScript
-    * @return Liste av scriptlinjer hvor hver linje enten er en kommentar eller en enklet sqlstatement.
-    */
-   static List<ScriptLine> parseSQL(String sqlScript) {
-      List<ScriptLine> scriptLines = new LinkedList<ScriptLine>();
-      String[] lines = sqlScript.trim().split("\n");
-      StringBuffer lineUnderConstruction = null;
-      int startLineNo = 0;
-      for( int i = 0; i < lines.length; i++ ) {
-         // Fjern spacer før og etter
-         String line = lines[i].trim();
-         if( line.startsWith("--") ) {
-            // Det er en kommentar linje, sjekk om kommentaren kommer midt i en sql setning som strekker seg over flere linjer
-            if( lineUnderConstruction != null ) {
-               throw new OperationalException("Feil i parsing av sql, linje " + (i + 1) + ": kommentar inne i en sql statements som strekker seg over flere linjer støttes ikke. Sjekk om det mangler en \";\". SQL:\n" + lineUnderConstruction);
-            }
-            scriptLines.add(new ScriptLine(i + 1, true, line));
-         } else if( line.length() != 0 ) {
-            // Det er ikke en kommentar.
-            // Split linjen etter hver ";" og opprett en sql scriptLine per ";"
-            int currPos = 0;
-            int nextPos = 0;
-            while( (nextPos = findEndOfStatement(line, currPos)) != -1 ) {
-               String subLine;
-               // ';' skal ikke være med, men '}' skal
-               if( line.charAt(nextPos) == ';' ) {
-                  subLine = line.substring(currPos, nextPos);
-               } else {
-                  subLine = line.substring(currPos, nextPos + 1);
-               }
-
-               if( subLine.contains("--") ) {
-                  throw new OperationalException("Feil i parsing av sql, linje " + (i + 1) + ": Kommentarer må stå først på linjen. SQL:\n" + subLine);
-               }
-               if( lineUnderConstruction != null ) {
-                  lineUnderConstruction.append('\n');
-                  lineUnderConstruction.append(subLine);
-               } else {
-                  lineUnderConstruction = new StringBuffer(subLine);
-                  startLineNo = i;
-               }
-               currPos = nextPos + 1;
-               scriptLines.add(new ScriptLine(startLineNo, false, lineUnderConstruction.toString()));
-               lineUnderConstruction = null;
-               startLineNo = 0;
-            }
-            if( currPos < line.length() ) {
-               String subLine = line.substring(currPos);
-               if( subLine.contains("--") ) {
-                  throw new OperationalException("Feil i parsing av sql, linje " + (i + 1) + ": Kommentarer må stå først på linjen. SQL:\n" + subLine);
-               }
-               if( lineUnderConstruction != null ) {
-                  lineUnderConstruction.append('\n');
-                  lineUnderConstruction.append(subLine);
-               } else {
-                  lineUnderConstruction = new StringBuffer(subLine);
-                  startLineNo = i + 1;
-               }
-            }
-         }
-      }
-      if( lineUnderConstruction != null ) {
-         throw new OperationalException("Feil i parsing av sql, linje " + (lines.length) + ": Sql er ikke avsluttet med \";\". SQL:" + lineUnderConstruction);
-      }
-      return scriptLines;
-   }
-
-   private static int findEndOfStatement(String line, int currPos) {
-      if( currPos >= line.length() ) {
-         return -1;
-      } else if( line.charAt(currPos) == '{' ) {
-         return line.indexOf("}", currPos);
-      } else {
-         return line.indexOf(";", currPos);
-      }
-   }
 
 
 
@@ -162,7 +80,7 @@ public class SqlExecutor {
       Connection con = null;
       try {
          con = JDBCHelper.createConnection();
-         runScript(con, lesFilFraClasspath(sqlScriptNavn));
+         runScript(con, lesFilFraWorkingDir(sqlScriptNavn));
       } finally {
          if( con != null ) {
             con.close();
@@ -268,12 +186,13 @@ public class SqlExecutor {
          throw new ConfigurationException("Det må anngis ett sqlscript, sqlSript = null.");
       }
       boolean failOnWarning = "true".equals(System.getProperty("FailOnWarning"));
-      List<ScriptLine> scriptLines = parseSQL(sqlScript);
 
-      return runScript(connection, scriptLines, failOnWarning);
+       List<? extends Expression> expressions = SQLStatementParser.parseExpressions(sqlScript);
+
+       return runScript(connection, expressions, failOnWarning);
    }
 
-   public static ResultSet[] runScript(Connection connection, List<ScriptLine> scriptLines, boolean failOnWarning) throws Exception {
+   public static ResultSet[] runScript(Connection connection, List<? extends Expression> scriptLines, boolean failOnWarning) throws Exception {
       List rsList = new ArrayList();
       boolean feilet = false;
       int antallFeil = 0;
@@ -281,44 +200,49 @@ public class SqlExecutor {
       int antallStatements = 0;
 
       //Kjøre en og en linje i skriptet.
-      Statement statement = null;
+       java.sql.Statement statement = null;
       try {
          statement = connection.createStatement();
 
-         for( Iterator<ScriptLine> iterator = scriptLines.iterator(); iterator.hasNext(); ) {
-            ScriptLine scriptLine = iterator.next();
+         for( Iterator<? extends Expression> iterator = scriptLines.iterator(); iterator.hasNext(); ) {
+             Expression scriptLine = iterator.next();
 
-            if( scriptLine.isComment ) {
-               logger.debug("Comment: " + scriptLine.line);
-               continue;
+            if( scriptLine instanceof Comment) {
+               logger.debug("Comment: " + ((Comment) scriptLine).getText());
+               continue; // gjør ikke noe mer for kommentarer
             }
-            antallStatements++;
-            if( scriptLine.line.startsWith("{") ) {
-               callCallable(scriptLine.line, connection, rsList);
-            } else {
-               try {
-                  statement.executeUpdate(scriptLine.line);
-                  logger.debug("Executed : " + scriptLine);
-               } catch( SQLException e ) {
-                  String msg = e.getMessage();
-                  if( msg.contains("02443") || msg.contains("02275") || msg.contains("00955") || msg.contains("01418") || msg.contains("00942") )
-                  {
-                     logger.warn("Warning: " + scriptLine + ". Oracle feil: " + msg);
-                     antallWarnings++;
 
-                     if( failOnWarning ) {
-                        throw new Exception("Feil under kjøring av script.", e);
-                     }
-                  } else {
-                     logger.error("Error: " + scriptLine + "\nOracle feil: " + msg);
-                     feilet = true;
-                     antallFeil++;
-                     if( "true".equals(System.getProperty("FailOnError")) ) {
-                        throw new Exception("Feil under kjøring av script.", e);
-                     }
-                  }
+            if (scriptLine instanceof Statement) {
+                Statement sqlStatement = (Statement) scriptLine;
+                antallStatements++;
 
-               }
+                if (sqlStatement.getSql().startsWith("{")) {
+                    callCallable(sqlStatement.getSql(), connection, rsList);
+                } else {
+                    try {
+                        statement.executeUpdate(sqlStatement.getSql());
+                        logger.debug("Executed : " + scriptLine);
+                    } catch( SQLException e ) {
+                        String msg = e.getMessage();
+                        if( msg.contains("02443") || msg.contains("02275") || msg.contains("00955") || msg.contains("01418") || msg.contains("00942") )
+                        {
+                            logger.warn("Warning: " + scriptLine + ". Oracle feil: " + msg);
+                            antallWarnings++;
+
+                            if( failOnWarning ) {
+                                throw new Exception("Feil under kjøring av script.", e);
+                            }
+                        } else {
+                            logger.error("Error: " + scriptLine + "\nOracle feil: " + msg);
+                            feilet = true;
+                            antallFeil++;
+                            if( "true".equals(System.getProperty("FailOnError")) ) {
+                                throw new Exception("Feil under kjøring av script.", e);
+                            }
+                        }
+
+                    }
+                }
             }
          }
       } finally {

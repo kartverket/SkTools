@@ -1,12 +1,15 @@
-package no.statkart.sktools.gradle.plugins.dbtools
+package no.statkart.sktools.utils.databasepatcher
 
 import org.testng.annotations.Test
-import no.statkart.sktools.utils.databasepatcher.DatabasePatcher
 import org.testng.Assert
-import org.gradle.api.internal.file.BaseDirFileResolver
+import no.statkart.sktools.gradle.plugins.dbtools.HSQLDBTest
+import no.statkart.sktools.utils.parsers.sql.SQLStatementParser
+import no.statkart.sktools.utils.parsers.sql.model.Expression
 
 /**
+ * Tester funksjonaliteten til {@link no.statkart.sktools.utils.databasepatcher.DatabasePatcher}
  *
+ * NB: Denne testen tilhører db-tools men er lagt her for enkelhetens skyld (alternativet er å opprette en egen test-modul)
  */
 class DatabasePatcherTest extends HSQLDBTest {
 
@@ -76,7 +79,24 @@ class DatabasePatcherTest extends HSQLDBTest {
 
     }
 
+    /**
+     * Verifiserer intern parse-mekanikk
+     */
+    @Test
+    public void testParsing() {
+        File patchFile = createSimplePatchFile();
 
+        List<? extends Expression> expressions = SQLStatementParser.parseExpressions(SqlExecutor.lesFilFraWorkingDir(patchFile.absolutePath));
+
+
+        int lineno
+
+        Assert.assertTrue(expressions.get(lineno++).text.trim().startsWith("--kommentar"));
+        Assert.assertTrue(expressions.get(lineno++).text.trim().startsWith("-- PATCH DB.MIN.VERSION"));
+        Assert.assertTrue(expressions.get(lineno++).text.trim().startsWith("-- PATCH DATA DB.VERSION"));
+        Assert.assertTrue(expressions.get(lineno++).sql.trim().startsWith("CREATE TABLE TEST_TABLE"));
+
+    }
 
     // helper methods -->
 
@@ -89,6 +109,8 @@ class DatabasePatcherTest extends HSQLDBTest {
         File patchFile = File.createTempFile("patch", ".sql", dir)
         patchFile.withPrintWriter {
             it.println '''
+
+--kommentar
 
 -- PATCH DB.MIN.VERSION="<any>"
 -- PATCH DATA DB.VERSION="1.0" PATCH.NO="1" "Create test table"

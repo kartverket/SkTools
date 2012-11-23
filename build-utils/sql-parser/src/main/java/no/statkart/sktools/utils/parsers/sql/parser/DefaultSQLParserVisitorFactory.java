@@ -16,17 +16,18 @@ import java.util.Collections;
  * @author Leif Lislegård
  * @since 0.1
  */
-public class ParserVisitorFactory extends AbstractParserVisitorFactory {
+public class DefaultSQLParserVisitorFactory extends AbstractParserVisitorFactory {
 
     /**
      * Factory chain der første element er siste ledd i hht chain of responsibility pattern.
      */
     private ArrayList<AbstractParserVisitorFactory> factories = new ArrayList<AbstractParserVisitorFactory>();
 
-    public ParserVisitorFactory(LineNumberReader reader) {
+    public DefaultSQLParserVisitorFactory(LineNumberReader reader) {
         super(reader);
         factories.add(new PLSQLStatementFactory(reader));
         factories.add(new PromptStatementFactory(reader));
+        factories.add(new LineCommentFactory(reader));
         factories.add(new DefaultStatementFactory(reader));
 
         Collections.reverse(factories);
@@ -153,7 +154,7 @@ public class ParserVisitorFactory extends AbstractParserVisitorFactory {
 
                 @Override
                 public Object defaultCase(Expression host, Object param) {
-                    throw new RuntimeException("shoult not happen!");
+                    throw new RuntimeException("implementation error: this should never happen!");
                 }
             };
         }
@@ -188,7 +189,7 @@ public class ParserVisitorFactory extends AbstractParserVisitorFactory {
 
                 @Override
                 public Object defaultCase(Expression host, Object param) {
-                    throw new RuntimeException("shoult not happen!");
+                    throw new RuntimeException("implementation error: this should never happen!");
                 }
             };
         }
@@ -210,4 +211,44 @@ public class ParserVisitorFactory extends AbstractParserVisitorFactory {
             };
         }
     }
+
+    private class LineCommentFactory extends AbstractParserVisitorFactory {
+        private LineCommentFactory(LineNumberReader reader) {
+            super(reader);
+        }
+
+        @Override
+        public ExpressionVisitor makeVisitor() {
+            return new LineCommentVisitor() {
+                @Override
+                public Object commentCase(LineComment host, Object param) {
+                    throw new RuntimeException("not implemented");
+                }
+
+                @Override
+                public Object defaultCase(Expression host, Object param) {
+                    throw new RuntimeException("implementation error: this should never happen!");
+                }
+            };
+        }
+
+        @Override
+        public ExpressionVisitor makeChainedVisitor(final ExpressionVisitor successor) {
+            return new LineCommentChainVisitor(successor) {
+                @Override
+                public Object commentCase(LineComment host, Object param) {
+                    host.setLineNumber(reader.getLineNumber());
+                    try {
+                        String text = reader.readLine();
+                        host.setText(text);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    return host;
+                }
+            };
+        }
+    }
+
+
 }

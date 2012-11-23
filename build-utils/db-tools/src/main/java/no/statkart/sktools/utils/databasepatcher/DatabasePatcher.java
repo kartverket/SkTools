@@ -1,10 +1,13 @@
 package no.statkart.sktools.utils.databasepatcher;
 
+import no.statkart.sktools.utils.parsers.sql.SQLStatementParser;
+import no.statkart.sktools.utils.parsers.sql.model.Comment;
+import no.statkart.sktools.utils.parsers.sql.model.Expression;
+import no.statkart.sktools.utils.parsers.sql.model.Statement;
 import org.apache.log4j.Logger;
 
 import java.sql.SQLException;
 import java.sql.Connection;
-import java.sql.Statement;
 import java.sql.ResultSet;
 import java.sql.PreparedStatement;
 import java.util.Date;
@@ -57,7 +60,7 @@ public class DatabasePatcher {
       }
 
       /**
-       * Patchversjons sammenlikning: DB.VERSION="<any>" < DB.VERSION=null <  DB.VERSION="<streng> PATCH.NO="<number>"
+       * Patchversjons sammenlikning: {@code DB.VERSION="<any>"} < {@code DB.VERSION=null} < {@code DB.VERSION="<streng>" PATCH.NO="<number>"}
        */
       private int compareTo(PatchVersion o) {
          // Check null
@@ -177,8 +180,9 @@ public class DatabasePatcher {
       Connection con = null;
 
       try {
-         List<SqlExecutor.ScriptLine> scriptLines = SqlExecutor.parseSQL(SqlExecutor.lesFilFraWorkingDir(patchFilePath));
-         LinkedHashMap<PatchVersion, List<SqlExecutor.ScriptLine>> patches = parsePatches(scriptLines);
+         List<? extends Expression> statements = SQLStatementParser.parseExpressions(SqlExecutor.lesFilFraWorkingDir(patchFilePath));
+
+         LinkedHashMap<PatchVersion, List<? extends Expression>> patches = parsePatches(statements);
 
          con = JDBCHelper.createConnection();
          PatchInfo currentPatchInfo = getOrCreatePatchInfo(con);
@@ -192,7 +196,7 @@ public class DatabasePatcher {
          }
 
          for( PatchVersion p : patches.keySet() ) {
-            List<SqlExecutor.ScriptLine> patchBlock = patches.get(p);
+            List<? extends Expression> patchBlock = patches.get(p);
 
             // Sjekke om databasen allerede er patchet med denne patch og om indexer er i sync.
             if( p.compareTo(currentPatchInfo.patchVersion) < 1 ) {
@@ -215,7 +219,7 @@ public class DatabasePatcher {
       }
    }
 
-   private static void executePatchBlock(Connection con, PatchVersion p, List<SqlExecutor.ScriptLine> patchBlock, boolean isNewPatch) {
+   private static void executePatchBlock(Connection con, PatchVersion p, List<? extends Expression> patchBlock, boolean isNewPatch) {
       try {
          if( isNewPatch ) {
             logger.info("Utfører patchblokk: " + p + ((p.kommentar == null) ? "" : " " + p.kommentar));
@@ -238,8 +242,8 @@ public class DatabasePatcher {
     *
     * @param scriptLines
     */
-   private static LinkedHashMap<PatchVersion, List<SqlExecutor.ScriptLine>> parsePatches(List<SqlExecutor.ScriptLine> scriptLines) {
-      LinkedHashMap<PatchVersion, List<SqlExecutor.ScriptLine>> result = new LinkedHashMap<PatchVersion, List<SqlExecutor.ScriptLine>>();
+   private static LinkedHashMap<PatchVersion, List<? extends Expression>> parsePatches(List<? extends Expression> scriptLines) {
+      LinkedHashMap<PatchVersion, List<? extends Expression>> result = new LinkedHashMap<PatchVersion, List<? extends Expression>>();
 
       PatchVersion minPatchVersion = new PatchVersion(null, -1, null);
       PatchVersion lastPatchVersion = null;
@@ -270,8 +274,8 @@ public class DatabasePatcher {
          }
          lastPatchVersion = patchVersion;
          i++;
-         List<SqlExecutor.ScriptLine> patchScriptLines = new ArrayList<SqlExecutor.ScriptLine>();
-         while( i < scriptLines.size() && (isOrdinaryComment(scriptLines.get(i)) || isSqlCommand(scriptLines.get(i))) ) {
+         List<Expression> patchScriptLines = new ArrayList<Expression>();
+         while( i < scriptLines.size() && (isOrdinaryComment(scriptLines.get(i)) || isStatement(scriptLines.get(i))) ) {
             patchScriptLines.add(scriptLines.get(i));
             i++;
          }
@@ -280,7 +284,7 @@ public class DatabasePatcher {
       if( i != scriptLines.size() ) {
          if( isMinDbVersion(scriptLines.get(i)) ) {
             throw new RuntimeException("Feil: '-- PATCH DB.MIN.VERSION=\"<streng>\" allerede spesifisert: " + scriptLines.get(i));
-         } else if( isSqlCommand(scriptLines.get(i)) ) {
+         } else if( isStatement(scriptLines.get(i)) ) {
             throw new RuntimeException("Feil: SQL tilhører ingen patchblokk: " + scriptLines.get(i));
          } else {
             throw new RuntimeException("Feil i '-- PATCH direktiv': " + scriptLines.get(i));
@@ -293,78 +297,97 @@ public class DatabasePatcher {
    /**
     * Returnerer true hvis linjen er en sql kommando
     *
-    * @param scriptLine
+    * @param expression
     */
-   private static boolean isSqlCommand(SqlExecutor.ScriptLine scriptLine) {
-      return !scriptLine.isComment;
+   private static boolean isStatement(Expression expression) {
+      return expression instanceof Statement;
    }
 
    /**
     * Parser en kommentarlinje med format: '-- PATCH DB.VERSION="<streng>" PATCH.NO="<number>" [<kommentar>]
     *
-    * @param scriptLine
+    * @param expression
     */
-   private static PatchVersion parsePatchVersion(SqlExecutor.ScriptLine scriptLine) {
-      Matcher m = pParsePatchDBVersion.matcher(scriptLine.line);
-      if( m.find() ) {
-         boolean isDataPatch = m.group(1).equals("DATA");
-         String version = m.group(2);
-         int patchNo = Integer.parseInt(m.group(3));
-         String kommentar = null;
-         if( m.groupCount() == 5 ) {
-            kommentar = m.group(4).trim();
-            if( kommentar.equals("") ) kommentar = null;
-         }
-         return new PatchVersion(version, patchNo, kommentar, isDataPatch);
-      } else {
-         throw new RuntimeException("Feil: forventet -- PATCH (INDEX|DATA) DB.VERSION=\"<streng>\" PATCH.NO=\"<number>\": " + scriptLine);
-      }
+   private static PatchVersion parsePatchVersion(Expression expression) {
+       if (expression instanceof Comment) {
+           Comment comment = (Comment) expression;
+
+           Matcher m = pParsePatchDBVersion.matcher(comment.getText());
+           if (m.find()) {
+               boolean isDataPatch = m.group(1).equals("DATA");
+               String version = m.group(2);
+               int patchNo = Integer.parseInt(m.group(3));
+               String kommentar = null;
+               if (m.groupCount() == 5) {
+                   kommentar = m.group(4).trim();
+                   if (kommentar.equals("")) kommentar = null;
+               }
+               return new PatchVersion(version, patchNo, kommentar, isDataPatch);
+           }
+       }
+       throw new RuntimeException("Feil: forventet -- PATCH (INDEX|DATA) DB.VERSION=\"<streng>\" PATCH.NO=\"<number>\": " + expression);
    }
 
    /**
     * Returnerer true hvis linje er en kommentar som starter med: '-- PATCH DB.VERSION...'
     *
-    * @param scriptLine
+    * @param expression
     */
-   private static boolean isPatchVersion(SqlExecutor.ScriptLine scriptLine) {
-      Matcher m = pPatchDBVersion.matcher(scriptLine.line);
-      return m.find();
+   private static boolean isPatchVersion(Expression expression) {
+       if (expression instanceof Comment) {
+           Comment comment = (Comment) expression;
+           Matcher m = pPatchDBVersion.matcher(comment.getText());
+           return m.find();
+       }
+       return false;
+
    }
 
 
    /**
     * Parser en kommentarlinje med format: '-- PATCH DB.MIN.VERSION="<streng>"
     *
-    * @param scriptLine
+    * @param expression
     */
-   private static PatchVersion parseMinPatchVersion(SqlExecutor.ScriptLine scriptLine) {
-      Matcher m = pParsePatchMinVersion.matcher(scriptLine.line);
-      if( m.find() ) {
-         String version = m.group(1);
-         return new PatchVersion(version, -1, null);
-      } else {
-         throw new RuntimeException("Feil: forventet -- PATCH DB.MIN.VERSION=\"<streng>\": " + scriptLine);
-      }
+   private static PatchVersion parseMinPatchVersion(Expression expression) {
+       if (expression instanceof Comment) {
+           Comment comment = (Comment) expression;
+           Matcher m = pParsePatchMinVersion.matcher(comment.getText());
+           if (m.find()) {
+               String version = m.group(1);
+               return new PatchVersion(version, -1, null);
+           }
+       }
+       throw new RuntimeException("Feil: forventet -- PATCH DB.MIN.VERSION=\"<streng>\": " + expression);
    }
 
    /**
     * Returnerer true hvis linjen er en kommentar som starter med: '-- PATCH DB.MIN.VERSION..."
     *
-    * @param scriptLine
+    * @param expression
     */
-   private static boolean isMinDbVersion(SqlExecutor.ScriptLine scriptLine) {
-      Matcher m = pPatchDBMinVersion.matcher(scriptLine.line);
-      return m.find();
+   private static boolean isMinDbVersion(Expression expression) {
+       if (expression instanceof Comment) {
+           Comment comment = (Comment) expression;
+           Matcher m = pPatchDBMinVersion.matcher(comment.getText());
+           return m.find();
+       }
+       return false;
    }
 
    /**
     * Returnerer true hvis linjen er en kommentart som ikke starter med: '-- PATCH ...'
     *
-    * @param scriptLine
+    * @param expression
     */
-   private static boolean isOrdinaryComment(SqlExecutor.ScriptLine scriptLine) {
-      Matcher m = pStartsWithPatch.matcher(scriptLine.line);
-      return scriptLine.isComment && !m.find();
+   private static boolean isOrdinaryComment(Expression expression) {
+       if (expression instanceof Comment) {
+           Comment comment = (Comment) expression;
+           Matcher m = pStartsWithPatch.matcher(comment.getText());
+           return !m.find();
+       }
+       return false;
+
    }
 
    /**
@@ -375,7 +398,7 @@ public class DatabasePatcher {
     * @return patch info for databasen.
     */
    private static PatchInfo getOrCreatePatchInfo(Connection con) {
-      Statement stmt = null;
+       java.sql.Statement stmt = null;
       ResultSet rs = null;
       try {
          stmt = con.createStatement();
@@ -421,7 +444,7 @@ public class DatabasePatcher {
     * @param con
     */
    private static void createPatchInfoTable(Connection con) {
-      Statement stmt = null;
+      java.sql.Statement stmt = null;
       ResultSet rs = null;
       try {
          stmt = con.createStatement();
@@ -464,7 +487,7 @@ public class DatabasePatcher {
    }
 
    private static void setIndexesInSyncWithPatch(Connection con, boolean value) {
-      Statement stmt = null;
+      java.sql.Statement stmt = null;
       ResultSet rs = null;
       try {
          stmt = con.createStatement();

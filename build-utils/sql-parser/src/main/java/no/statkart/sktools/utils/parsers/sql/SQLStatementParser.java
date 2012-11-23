@@ -1,7 +1,7 @@
 package no.statkart.sktools.utils.parsers.sql;
 
 import no.statkart.sktools.utils.parsers.sql.model.*;
-import no.statkart.sktools.utils.parsers.sql.parser.ParserVisitorFactory;
+import no.statkart.sktools.utils.parsers.sql.parser.DefaultSQLParserVisitorFactory;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -39,7 +39,7 @@ public class SQLStatementParser {
         }
 
         ArrayList<Expression> expressions = new ArrayList<Expression>();
-        ParserVisitorFactory visitorFactory = new ParserVisitorFactory(reader);
+        DefaultSQLParserVisitorFactory visitorFactory = new DefaultSQLParserVisitorFactory(reader);
 
         boolean eof = false;
 
@@ -53,9 +53,9 @@ public class SQLStatementParser {
                 reader.mark(1024*8);
                 nextLine = reader.readLine();
                 if (nextLine != null) {
-                    if (nextLine.matches("^\\s*--.*")) {  //ignorerer kommentar-linjer
-                        nextLine = "";
-                    }
+//                    if (nextLine.matches("^\\s*--.*")) {  //ignorerer kommentar-linjer
+//                        nextLine = "";
+//                    }
                     nextLine = nextLine.trim().toUpperCase();
                 }
 
@@ -73,6 +73,8 @@ public class SQLStatementParser {
                 newExpression = new PLSQLStatement();
             } else if (nextLine.matches("PROMPT .*")) {
                 newExpression = new PromptStatement();
+            } else if (nextLine.matches("--.*")) {
+                newExpression = new LineComment();
             } else {
                 newExpression = new DefaultStatement();
             }
@@ -94,30 +96,49 @@ public class SQLStatementParser {
         return expressions;
     }
 
-
-    public static List<Statement> parseStatements(String sqlString) throws IOException {
+    /**
+     * Parser ut alle typer
+     */
+    public static List<? extends Expression> parseExpressions(String sqlString) throws IOException {
         LineNumberReader reader = new LineNumberReader(new StringReader(sqlString));
-
-        List<Statement> expressions = new ArrayList<Statement>();
-        for (Expression expression : parseExpressions(reader)) {
-            if (expression instanceof Statement) {
-                expressions.add((Statement) expression);
-            }
-        }
-        return expressions;
+        return parseExpressions(reader);
     }
 
-
-    public static List<Statement> parseStatements(File file, String charsetName) throws IOException {
+    /**
+     * Parser ut alle typer
+     */
+    public static List<? extends Expression> parseExpressions(File file, String charsetName) throws IOException {
         LineNumberReader reader = getReader(file, charsetName);
+        return parseExpressions(reader);
+    }
+
+    /**
+     * Parser ut typer kun av subtype {@link Statement}
+     */
+    public static List<? extends Statement> parseStatements(String sqlString) throws IOException {
         List<Statement> expressions = new ArrayList<Statement>();
-        for (Expression expression : parseExpressions(reader)) {
+        for (Expression expression : parseExpressions(sqlString)) {
             if (expression instanceof Statement) {
                 expressions.add((Statement) expression);
             }
         }
         return expressions;
     }
+
+    /**
+     * Parser ut typer kun av subtype {@link Statement}
+     */
+    public static List<? extends Statement> parseStatements(File file, String charsetName) throws IOException {
+        List<Statement> expressions = new ArrayList<Statement>();
+        for (Expression expression : parseExpressions(file, charsetName)) {
+            if (expression instanceof Statement) {
+                expressions.add((Statement) expression);
+            }
+        }
+        return expressions;
+    }
+
+
 
     private static LineNumberReader getReader(File file, String charsetName) throws FileNotFoundException {
         if (charsetName == null) {
