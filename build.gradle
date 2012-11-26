@@ -47,7 +47,7 @@ def libVersion(String name, String defaultValue) {
 // use. In that respect it serves a role similar to <dependencyManagement> in Maven
 project.ext.set('libraries', [
 
-        log4j: "log4j:log4j:${libVersion('log4j', '1.2.15')}@jar",
+        log4j: "log4j:log4j:${libVersion('log4j', '1.2.17')}@jar",
 
         groovy: dependencies.localGroovy(),
 

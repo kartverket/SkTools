@@ -2,8 +2,10 @@ apply plugin: 'maven'
 apply plugin: 'groovy'
 
 dependencies {
-    compile libraries.log4j
     compile project(':build-utils:sql-parser')
+
+    compile gradleApi()
+//    provided libraries.log4j //forutsetter at denne finnes på classpath
 
     groovy libraries.groovy
 
