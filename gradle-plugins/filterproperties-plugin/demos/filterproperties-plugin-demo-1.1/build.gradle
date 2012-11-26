@@ -19,9 +19,9 @@ buildscript {
         }
     }
     if (gradle.gradleVersion >= '1.0-milestone-9') {
-        project.ext.set('MAVEN_REPO', project.properties.get('MAVEN_REPO', 'http://skrivap92.statkart.no:8001/nexus/content/groups/public/'))
+        project.ext.set('MAVEN_REPO', project.properties.get('MAVEN_REPO', 'http://nexus.statkart.no:8090/nexus/content/groups/public/'))
     } else {
-        project.setProperty('MAVEN_REPO', project.properties.get('MAVEN_REPO', 'http://skrivap92.statkart.no:8001/nexus/content/groups/public/'))
+        project.setProperty('MAVEN_REPO', project.properties.get('MAVEN_REPO', 'http://nexus.statkart.no:8090/nexus/content/groups/public/'))
     }
 
     repositories {

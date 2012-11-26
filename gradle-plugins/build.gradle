@@ -50,6 +50,7 @@ task('testDemos', dependsOn:'cleanDemos') {
 //                sp.setTaskNames(['clean', 'runDemo'])
             sp.setTaskNames(['runDemo'])
             sp.projectProperties.put('version', values[1].version)
+            sp.projectProperties.put('MAVEN_REPO', MAVEN_REPO)
             GradleLauncher.newInstance(sp).run().rethrowFailure();
         }
         println "\n${i} demos executed!"

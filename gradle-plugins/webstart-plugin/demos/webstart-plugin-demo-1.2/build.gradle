@@ -33,7 +33,7 @@ buildscript {
     }
 
     project.ext.set('HOSTNAME', project.properties.get('HOSTNAME', "${COMPUTERNAME}"))
-    project.ext.set('MAVEN_REPO', project.properties.get('MAVEN_REPO', 'http://skrivap92.statkart.no:8001/nexus/content/groups/public/'))
+    project.ext.set('MAVEN_REPO', project.properties.get('MAVEN_REPO', 'http://nexus.statkart.no:8090/nexus/content/groups/public/'))
 
     //repository for plugin + jar filer for byggesystem
     repositories {

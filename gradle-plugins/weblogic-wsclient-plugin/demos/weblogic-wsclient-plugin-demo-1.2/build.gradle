@@ -36,7 +36,7 @@ buildscript {
         }
     }
 
-    project.ext.set('MAVEN_REPO', project.properties.get('MAVEN_REPO', 'http://skrivap92.statkart.no:8001/nexus/content/groups/public/'))
+    project.ext.set('MAVEN_REPO', project.properties.get('MAVEN_REPO', 'http://nexus.statkart.no:8090/nexus/content/groups/public/'))
 
     repositories {
         //bruker kun lokale filer her da dette er et demo prosjekt...

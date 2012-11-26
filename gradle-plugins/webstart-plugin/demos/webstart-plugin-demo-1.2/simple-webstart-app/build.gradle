@@ -106,5 +106,5 @@ task testClean(dependsOn: ['testGenWebstart', 'clean']) << {
 }
 
 repositories {
-    mavenRepo name: 'public', url: 'http://skrivap92.statkart.no:8001/nexus/content/groups/public/'
+    mavenRepo name: 'public', url: rootProject.MAVEN_REPO
 }
