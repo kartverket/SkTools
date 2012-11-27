@@ -6,7 +6,7 @@ package no.statkart.sktools.gradle.testutils.builder
  */
 class WeblogicDeployProjectBuilder<T extends WeblogicDeployProjectBuilder> extends GradleProjectBuilder<T> {
 
-    public static WeblogicDeployProjectBuilder<WeblogicDeployProjectBuilder> builder() {
+    public static WeblogicDeployProjectBuilder<? extends WeblogicDeployProjectBuilder> builder() {
         return new WeblogicDeployProjectBuilder();
     }
 

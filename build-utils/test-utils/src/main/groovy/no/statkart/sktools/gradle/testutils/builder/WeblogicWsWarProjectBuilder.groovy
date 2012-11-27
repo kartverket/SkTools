@@ -12,7 +12,7 @@ class WeblogicWsWarProjectBuilder<T extends WeblogicWsWarProjectBuilder> extends
     private boolean addToolsJar
 
 
-    public static WeblogicWsWarProjectBuilder<WeblogicWsWarProjectBuilder> builder() {
+    public static WeblogicWsWarProjectBuilder<? extends WeblogicWsWarProjectBuilder> builder() {
         return new WeblogicWsWarProjectBuilder();
     }
 

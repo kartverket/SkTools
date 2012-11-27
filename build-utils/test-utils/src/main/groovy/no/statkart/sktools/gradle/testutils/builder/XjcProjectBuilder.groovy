@@ -7,7 +7,7 @@ package no.statkart.sktools.gradle.testutils.builder
  */
 class XjcProjectBuilder<T extends XjcProjectBuilder> extends GradleProjectBuilder<T> {
 
-    public static XjcProjectBuilder<XjcProjectBuilder> builder() {
+    public static XjcProjectBuilder<? extends XjcProjectBuilder> builder() {
         return new XjcProjectBuilder();
     }
 

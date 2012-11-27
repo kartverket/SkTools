@@ -7,7 +7,7 @@ package no.statkart.sktools.gradle.testutils.builder
  */
 class WebstartProjectBuilder<T extends WebstartProjectBuilder> extends GradleProjectBuilder<T> {
 
-    public static WebstartProjectBuilder<WebstartProjectBuilder> builder() {
+    public static WebstartProjectBuilder<? extends WebstartProjectBuilder> builder() {
         return new WebstartProjectBuilder();
     }
 

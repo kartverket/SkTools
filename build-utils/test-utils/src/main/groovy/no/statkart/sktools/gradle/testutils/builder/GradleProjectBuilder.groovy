@@ -30,11 +30,11 @@ class GradleProjectBuilder<T extends GradleProjectBuilder> {
         builder = ProjectBuilder.builder().withName(getClass().getSimpleName())
     }
 
-    public static GradleProjectBuilder<GradleProjectBuilder> builder() {
+    public static GradleProjectBuilder<? extends GradleProjectBuilder> builder() {
         return new GradleProjectBuilder();
     }
 
-    public static GradleProjectBuilder<GradleProjectBuilder> builder(String projectName) {
+    public static GradleProjectBuilder<? extends GradleProjectBuilder> builder(String projectName) {
         return builder().withName(projectName)
     }
 

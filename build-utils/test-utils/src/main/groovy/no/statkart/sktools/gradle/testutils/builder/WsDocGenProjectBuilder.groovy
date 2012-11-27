@@ -7,7 +7,7 @@ package no.statkart.sktools.gradle.testutils.builder
 class WsDocGenProjectBuilder<T extends WsDocGenProjectBuilder> extends GradleProjectBuilder<T> {
 
 
-    public static WsDocGenProjectBuilder<WsDocGenProjectBuilder> builder() {
+    public static WsDocGenProjectBuilder<? extends WsDocGenProjectBuilder> builder() {
         return new WsDocGenProjectBuilder();
     }
 

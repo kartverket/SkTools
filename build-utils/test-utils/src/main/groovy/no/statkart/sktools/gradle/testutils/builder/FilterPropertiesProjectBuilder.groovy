@@ -6,7 +6,7 @@ package no.statkart.sktools.gradle.testutils.builder
  */
 class FilterPropertiesProjectBuilder <T extends FilterPropertiesProjectBuilder> extends GradleProjectBuilder<T> {
 
-    public static FilterPropertiesProjectBuilder<FilterPropertiesProjectBuilder> builder() {
+    public static FilterPropertiesProjectBuilder<? extends FilterPropertiesProjectBuilder> builder() {
         return new FilterPropertiesProjectBuilder();
     }
 
