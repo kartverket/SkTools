@@ -10,3 +10,9 @@ dependencies {
     //gradle api til byggesystemm blir benyttet som std
     compile gradleApi()
 }
+
+// Testfunksjonalitet som avgjør om en kjører tester ifra IntelliJ eller ikke.
+// NB: Denne kildekoden skal IKKE med i gradle bygget!!
+idea.module {
+    testSourceDirs += file('src/idea/test-source')
+}
