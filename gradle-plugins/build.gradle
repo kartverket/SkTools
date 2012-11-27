@@ -20,7 +20,7 @@ tasks.test.dependsOn('testDemos')
 //closure som collecter alle demo-prosjekter som evt måtte finnes
 groovy.lang.Closure findDemoDirs = { project ->
     return project.childProjects.values().collectMany { Project childProject ->
-        File demoDir = childProject.file("demos/${childProject.name}-demo-${childProject.version.replace('-SNAPSHOT', '')}")
+        File demoDir = childProject.file("demos/${childProject.name}-demo-${childProject.version.replaceAll(/-.*/, '')}")
         if (!demoDir.exists()) println "..no demo found for ${childProject.getPath()}"
         return demoDir.exists() ? [[demoDir, childProject]] : []
     }
@@ -49,7 +49,7 @@ task('testDemos', dependsOn:'cleanDemos') {
             sp.setCurrentDir(values[0])
 //                sp.setTaskNames(['clean', 'runDemo'])
             sp.setTaskNames(['runDemo'])
-            sp.projectProperties.put('version', values[1].version)
+            sp.projectProperties.put('sktools_versjon', values[1].version)
             sp.projectProperties.put('MAVEN_REPO', MAVEN_REPO)
             GradleLauncher.newInstance(sp).run().rethrowFailure();
         }
@@ -58,12 +58,11 @@ task('testDemos', dependsOn:'cleanDemos') {
 }
 
 //task som cleaner demo-prosjekter som evt måtte finnes
-task('cleanDemos') {
+task('cleanDemos') { Task me ->
 
-    //clean install før kjøring av demos
-    childProjects.values().each { Project childProject ->
-        dependsOn("${childProject.path}:install")
-
+    // Vi må installere alle artefakter før noe kan kjøres på demoene, inkludert clean
+    gradle.projectsEvaluated {
+        me.dependsOn rootProject.getTasksByName('install', true)
     }
 
 
@@ -74,7 +73,7 @@ task('cleanDemos') {
             StartParameter sp = new StartParameter()
             sp.setCurrentDir(values[0])
             sp.setTaskNames(['clean'])
-            sp.projectProperties.put('version', values[1].version)
+            sp.projectProperties.put('sktools_versjon', values[1].version)
             GradleLauncher.newInstance(sp).run().rethrowFailure();
         }
     }

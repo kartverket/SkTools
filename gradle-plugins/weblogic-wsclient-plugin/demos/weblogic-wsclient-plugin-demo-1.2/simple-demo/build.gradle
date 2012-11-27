@@ -88,6 +88,6 @@ task assertBuild() {
 void forkGradle(List tasks, Map props = [:]) {
     StartParameter sp = gradle.startParameter.newInstance()
     sp.taskNames = tasks.collect {"${project.path}:${it}".toString()}
-    sp.projectProperties = props
+    sp.projectProperties << props
     GradleLauncher.newInstance(sp).run().rethrowFailure();
 }

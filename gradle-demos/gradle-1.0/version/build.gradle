@@ -140,7 +140,7 @@ project(':projectB').task('assertHovedversjonAndSubversjonRelease') << {
 void forkGradle(List taskNames, Map props = [:]) {
     StartParameter sp = gradle.startParameter.newInstance()
     sp.taskNames = taskNames
-    sp.projectProperties = props
+    sp.projectProperties << props
     GradleLauncher.newInstance(sp).run().rethrowFailure();
 }
 

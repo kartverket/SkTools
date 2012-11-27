@@ -26,7 +26,10 @@ assert gradle.gradleVersion == '1.0' || gradle.gradleVersion >= '1.0-rc-2'
 
 //innkobling av plugin jar filer for gradle byggesystem
 buildscript {
-    def version = rootProject.getProperty('version')
+    println '-----------------------'
+    println gradle.startParameter.projectProperties
+    println '-----------------------'
+    if (rootProject.ext.has('sktools_versjon')) version = rootProject.ext.get('sktools_versjon')
     if (version == Project.DEFAULT_VERSION) version = '1.2-SNAPSHOT' //nb - dersom ikke default version er satt riktig så blir kjøring ifra demo-katalog feil..
 
     // Variables to grab from environment + defaults
