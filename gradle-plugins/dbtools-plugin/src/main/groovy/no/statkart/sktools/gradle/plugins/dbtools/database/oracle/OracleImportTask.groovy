@@ -58,9 +58,6 @@ class OracleImportTask extends ConventionTask {
 
 
 
-    OracleImportTask() {
-        description = 'Import av dump via Oracles eget verktøy'
-    }
 
     @TaskAction
     def exec() {

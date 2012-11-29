@@ -54,10 +54,6 @@ class OracleExportTask extends ConventionTask {
 
 
 
-    OracleExportTask() {
-        description = 'Export av dump via Oracles eget verktøy'
-    }
-
 
     @TaskAction
     def exec() {
