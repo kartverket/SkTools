@@ -49,3 +49,7 @@ buildscript {
         classpath "no.statkart.sktools.gradle:weblogic-wswar-plugin:${version}"
     }
 }
+
+allprojects {
+    setVersion(rootProject.version)
+}

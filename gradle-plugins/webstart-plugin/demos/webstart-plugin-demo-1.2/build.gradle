@@ -48,7 +48,10 @@ buildscript {
         classpath "no.statkart.sktools.gradle:webstart-plugin:${version}"
     }
 
+}
 
+allprojects {
+    setVersion(rootProject.version)
 }
 
 

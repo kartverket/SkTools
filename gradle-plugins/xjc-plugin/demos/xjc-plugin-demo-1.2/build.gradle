@@ -42,3 +42,7 @@ buildscript {
 //    println "Using artifacts \n\t" + configurations.classpath.files.join("\n\t")
 
 }
+
+allprojects {
+    setVersion(rootProject.version)
+}

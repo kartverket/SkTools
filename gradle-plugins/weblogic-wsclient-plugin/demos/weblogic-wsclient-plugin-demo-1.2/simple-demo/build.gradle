@@ -74,7 +74,7 @@ task assertGenWeblogicWsClient() {
 task assertBuild() {
     dependsOn assertGenWeblogicWsClient
     doLast {
-        assert file("build/libs/${project.name}.jar").exists()
+        assert file("build/libs/${project.name}-${project.version}.jar").exists()
     }
 }
 

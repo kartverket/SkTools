@@ -38,3 +38,7 @@ buildscript {
     }
 
 }
+
+allprojects {
+    setVersion(rootProject.version)
+}

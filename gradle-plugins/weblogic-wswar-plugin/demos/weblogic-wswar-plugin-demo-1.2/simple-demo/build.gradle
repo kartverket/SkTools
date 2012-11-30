@@ -78,7 +78,7 @@ void clean() {
 }
 
 task assertWarWeblogic() << {
-    def war = project.file("build/libs/${project.name}-weblogic.war")
+    def war = project.file("build/libs/${project.name}-weblogic-${project.version}.war")
     assert war.exists() //forventer at war fil er opprettet
 
     assert !project.zipTree(war).matching {include 'WEB-INF/classes/WebConfig.class'}.files.isEmpty()
