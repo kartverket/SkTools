@@ -27,9 +27,11 @@ buildscript {
 }
 
 allprojects {
+    setVersion(rootProject.version)
+
     repositories {
-        mavenRepo name: 'public', url: "${rootProject.MAVEN_REPO}"
         mavenLocal()
+        mavenRepo name: 'public', url: "${rootProject.MAVEN_REPO}"
     }
 }
 

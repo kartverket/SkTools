@@ -193,6 +193,28 @@ subprojects { Project project ->
     }	
 }
 
+allprojects {
+    afterEvaluate {
+        tasks.withType(Jar) {
+            it.manifest {
+                attributes([
+                        'Specification-Title': project.name,
+                        'Specification-Vendor': 'Statens kartverk',
+                        'Specification-Version': sktools_versjon,
+
+                        //misc build info
+                        'Build-By': System.getenv('USERNAME'),
+                        'Build-Machine': System.getenv('COMPUTERNAME'),
+                        'Build-Repo': MAVEN_REPO,
+
+                        'Implementation-Title': "${project.name} bygget for ${version.contains('-SNAPSHOT') ? 'TEST' : 'Produksjon'}",
+                        'Implementation-Version': project.version,
+                        'Implementation-Vendor': 'Statens kartverk',
+                ])
+            }
+        }
+    }
+}
 
 idea.project {
     jdkName = '1.6'

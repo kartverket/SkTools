@@ -1,0 +1,148 @@
+import groovy.sql.Sql
+import java.sql.SQLException
+
+apply plugin: 'sktools-dbtools-plugin'
+
+
+ // Kort intro til HSQLDB - http://hsqldb.org
+ /**
+  * Hsqldb er en liten lettvekts database som kan kjøres in memory eller som stand alone.
+  * En har mulighet til å persistere informasjon til disk.
+  *
+  * Dersom en kjører in memory kan en aksessere databasen innenfor samme javavm.
+  *
+  * Ved aksessering ifra flere prosesser bør en kjøre basen i "stand alone" mode. En har her fortsatt mulighet til
+  * å kjøre denne som in memory. Databasen kjører da i en frittstående prosess.
+  */
+configurations {
+    hsqldb
+}
+
+dependencies {
+    hsqldb 'org.hsqldb:hsqldb:2.2.9'
+}
+
+
+//see DbtoolsConvention#ConfigureDatabasePlugin
+configureDatabasePlugin {
+
+    useDrivers project.configurations.hsqldb
+
+    toolset( name:'sa', type:'hsqldb', prefix:'') {
+        //;shutdown=true
+        url = "jdbc:hsqldb:hsql://localhost/testPatching${project.version}"
+        credentials.username = 'SA'
+        credentials.password = ''
+
+
+        patch {
+            patchTask('patchSchema1', sqlFile:'src/sql/schema1/patch.sql', description: 'Databasepatcher for schema1')
+        }
+
+        sqlTask('tearDownDatabase', sqlString: "SHUTDOWN;", failOnError:false).doFirst {
+            println "Tar ned database ${url}" //får noen ganger EOFException her..
+        }
+
+        properties = [:]
+
+    }
+
+}
+
+
+task startUpDatabase(description: 'Forker database i subprosess') {
+
+    //forking the groovy way until GRADLE-1254
+    doFirst {
+        def cmd = ['java', '-cp', configurations.hsqldb.asPath, 'org.hsqldb.Server',
+                '-database.0', 'mem:test', '-dbname.0', "testPatching${project.version}" //definisjon for database med navn "test"
+        ]
+
+        println "Starter opp database via kommando: \n\t${cmd.join(' ')}"
+        def process = cmd.execute()
+
+        process.in.close()
+        process.out.close()
+        process.err.close()
+    }
+
+    doLast {
+//        System.console().readLine('pause for debug..')
+    }
+}
+
+
+
+/******************************************************************************************************************** **
+ * Diverse tasker som tester og demonstrerer implementasjonen
+ ******************************************************************************************************************** */
+
+task runDemo(dependsOn:[clean]) {
+    description = 'Kjører en enkel demo for å teste funksjonaliteten'
+
+
+
+    doLast {
+        forkGradle(['startUpDatabase'])
+
+        println 'Tester patchSchema1...'
+
+        forkGradle(['assertNoTestTable', 'assertNoPatchTable'])
+        forkGradle(['patchSchema1', 'assertPatchnummer4', 'assertPatchSchema1'])
+
+        forkGradle(['tearDownDatabase']) //avslutter prosess for databasen sammen med demo
+    }
+}
+
+
+task assertPatchnummer4() << {
+    def sql = getSql()
+    sql.eachRow("select count(*) from PATCHINFO where dbVersion='1.0' and patchNo=4") {
+        assert it[0] == 1
+    }
+}
+
+
+task assertPatchSchema1() << {
+    def sql = getSql()
+    sql.eachRow("select count(*) from TEST_TABLE where ID = 1") {
+        assert it[0] == 1
+    }
+}
+
+task assertNoTestTable() << {
+    def sql = getSql()
+    try {
+        sql.eachRow("select count(*) from TEST_TABLE") { }
+        assert false //forventer ikke at tabell finnes
+    } catch (SQLException e) {
+        assert true
+    }
+}
+
+task assertNoPatchTable() << {
+    def sql = getSql()
+    try {
+        sql.eachRow("select count(*) from PATCHINFO") { }
+        assert false //forventer ikke at tabell finnes
+    } catch (SQLException e) {
+        assert true
+    }
+}
+
+private def getSql() {
+    def convention = project.convention.plugins['db'].dbToolSets['sa']
+    def sql = Sql.newInstance(convention.url, convention.credentials.username, convention.credentials.password, convention.driver)
+    sql
+}
+
+/******************************************************************************************************************** **
+ * Hjelpemetode for forking av gradle eksekveringer
+ * Kun relevant for testing...
+ ******************************************************************************************************************** */
+void forkGradle(Map props = [:], List tasks) {
+    StartParameter sp = gradle.startParameter.newInstance()
+    sp.taskNames = tasks.collect {"${project.path}:${it}".toString()}
+    sp.projectProperties << props
+    GradleLauncher.newInstance(sp).run().rethrowFailure();
+}

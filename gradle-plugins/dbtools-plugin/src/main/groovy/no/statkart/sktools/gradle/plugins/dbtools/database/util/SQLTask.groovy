@@ -12,24 +12,9 @@ import org.gradle.api.tasks.Optional
  * @author Leif Lislegård
  * @since 1.0
  */
-public class SQLTask extends ConventionTask {
+public class SQLTask extends AbstractSQLTask {
 
     private final SQLExecutor executor = new SQLExecutor()
-
-    /**
-     * Disse credentials blir benyttet dersom {@code useTaskCredentials == true}
-     *
-     * Dersom {@code useDefaultCredentials == true}, så blir konversjonelle verdier benyttet. Dvs credentials ifra koblet dbTool-set
-     */
-    final Credentials credentials = new Credentials("task:${name}", project.properties)
-    Credentials defaultCredentials = null
-    boolean useDefaultCredentials = false
-
-    @Input
-    String url
-
-    @Input
-    String driver
 
     @Optional
     @Input
@@ -39,34 +24,8 @@ public class SQLTask extends ConventionTask {
     @Input
     String sqlString
 
-    @Input
-    String getUsername() {
-        if (useDefaultCredentials && credentials.isEmpty()) {  //dersom en ikke skal benytte alternative credentials for task
-            return defaultCredentials.getUsername()
-        }
-        return credentials.getUsername()
-    }
-    void setUsername(String username) {
-        credentials.username = username
-    }
-
-
-    @Input
-    String getPassword() {
-        if (useDefaultCredentials && credentials.isEmpty()) {  //dersom en ikke skal benytte alternative credentials for task
-            return defaultCredentials.getPassword()
-        }
-        return credentials.getPassword()
-    }
-    void setPassword(String password) {
-        credentials.password = password
-    }
-
     //SKIF-206
     boolean failOnError = true
-
-    //SKIF-211
-    String encoding
 
 
     @TaskAction

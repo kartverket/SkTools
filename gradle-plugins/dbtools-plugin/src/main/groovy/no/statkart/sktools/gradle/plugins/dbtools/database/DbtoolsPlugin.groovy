@@ -30,14 +30,16 @@ configureDatabasePlugin {
  *     @see DbtoolsConvention
  */
 class DbtoolsPlugin implements Plugin<Project>  {
+    public final static String CONVENTION_NAME = "db";
+
     private static final Set<String> loadedDrivers = new HashSet<String>();
 
-    public DbtoolsConvention convention
+    public DbtoolsConvention dbtoolsConvention
 
 
     def void apply(final Project project) {
-        convention = new DbtoolsConvention(project)
-        project.convention.plugins.db = convention
+        dbtoolsConvention = new DbtoolsConvention(project)
+        project.getConvention().getPlugins().put(CONVENTION_NAME, dbtoolsConvention);
 
         project.afterEvaluate {
             assignConventionalValues(project);
@@ -46,7 +48,7 @@ class DbtoolsPlugin implements Plugin<Project>  {
     }
 
     void assignConventionalValues(Project project) {
-        convention.dbToolSets.values().each {
+        dbtoolsConvention.dbToolSets.values().each {
 
             //setter default properties
             if (it.properties == null) {
@@ -64,7 +66,7 @@ class DbtoolsPlugin implements Plugin<Project>  {
     }
 
     private void registerDrivers(Project project) {
-        convention.dbToolSets.values().collect { it.driver }.each {
+        dbtoolsConvention.dbToolSets.values().collect { it.driver }.each {
             String driverAsString = it
 
             if (!loadedDrivers.contains(driverAsString)) {

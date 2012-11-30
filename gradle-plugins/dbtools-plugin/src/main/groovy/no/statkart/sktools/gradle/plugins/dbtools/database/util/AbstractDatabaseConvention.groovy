@@ -7,7 +7,7 @@ import org.apache.commons.lang.StringUtils
 import org.gradle.api.Task
 
 /**
- *
+ * Felles funksjonalitet for toolsets
  */
 abstract class AbstractDatabaseConvention {
 
@@ -99,7 +99,30 @@ abstract class AbstractDatabaseConvention {
         return null
     }
 
+    /**
+     * @since 1.2 - SKTOOLS-33
+     */
+    public def patch(Closure closure) {
+        PatchConfiguration patch = new PatchConfiguration(this);
+        patch.printPatchVersionTaskName = patch.getPatchTaskName('PrintPatchVersion')
+        patch.setIndexesInSyncWithPatchTaskName = patch.getPatchTaskName('SetIndexInSyncWithPatch')
+        patch.unSetIndexesInSyncWithPatchTaskName = patch.getPatchTaskName('UnSetIndexInSyncWithPatch')
+        ConfigureUtil.configure(closure, patch, false);
+
+        patch.addDefaultTasks();
+    }
+
+
+
+
+
+
     public SQLTask sqlTask(Map params, String name, Closure closure = null) {
+        SQLTask task = configureAbstractSQLTask(params, name, SQLTask.class, closure)
+        return task
+    }
+
+    AbstractSQLTask configureAbstractSQLTask(Map params, String name, Class type, Closure closure) {
         validate()
 
         if (name == null || name.trim().isEmpty()) {
@@ -107,7 +130,7 @@ abstract class AbstractDatabaseConvention {
         }
 
         String taskName = getTaskName(name);
-        SQLTask task = (SQLTask) project.tasks.add(name:taskName, type:SQLTask);
+        AbstractSQLTask task = (AbstractSQLTask) project.tasks.add(name:taskName, type:type);
         task.doFirst(filterClosure)
 
         task.conventionMapping.with {
@@ -169,7 +192,7 @@ abstract class AbstractDatabaseConvention {
     /**
      * Action for filtrering av sqlFile satt på task
      */
-    private Closure filterClosure = { SQLTask task ->
+    private Closure filterClosure = { AbstractSQLTask task ->
 
         if (task.sqlFile) {
             def buildDir = "${project.buildDir}/dbtools/${prefix}/${task.name}"
@@ -207,3 +230,4 @@ abstract class AbstractDatabaseConvention {
     }
 
 }
+

@@ -154,6 +154,9 @@ class XjcPlugin implements Plugin<ProjectInternal> {
 
 
     //todo: en bedre strategi her er eksplisitt å legge til dependencies. Dette kunne feks leses inn via en property fil for pluginet?
+    // Ovenstående strategi har utfordring da en i test sammenheng ikke kan deklarere dependencies. Disse vil da feile når man ikke
+    // har noe installert i noen repositories som er tilgjengelige.
+    // TIPS: se hva som er gjort for dbtools-plugin
     private static FileCollection findPluginClasspath(final Project project) {
 
         Closure<Boolean> pluginDependencyMatcher = {Dependency dependency -> dependency.getGroup() == 'no.statkart.sktools.gradle' && dependency.getName() == 'xjc-plugin'}
@@ -176,7 +179,7 @@ class XjcPlugin implements Plugin<ProjectInternal> {
         }
 
         FileCollection candidate = candidateFileCollections.find { !it.isEmpty() }
-        if (candidate == null) candidate = project.files(); //ok under eksekvering av test
+        if (candidate == null) candidate = project.files(); //ok under eksekvering av test da man ikke bruker noen filer her.
 
         return candidate;
     }

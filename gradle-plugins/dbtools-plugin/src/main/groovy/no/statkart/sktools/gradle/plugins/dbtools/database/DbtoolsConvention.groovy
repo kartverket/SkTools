@@ -41,6 +41,8 @@ configureDatabasePlugin {
 public class DbtoolsConvention {
     protected final Project project;
 
+    protected final List<Dependency> jdbcDependencies = new ArrayList<Dependency>(4);
+
     public final Map<String, ?> dbToolSets = new HashMap<String, Object>()
 
     DbtoolsConvention(Project project) {
@@ -157,6 +159,7 @@ configureDatabasePlugin {
      */
     def useDrivers(Object dependencyNotation) {
         List<Dependency> dependencies = [dependencyNotation].flatten().collect { project.dependencies.create(it)}
+        jdbcDependencies.addAll(dependencies)
         def configuration = project.configurations.detachedConfiguration(dependencies.toArray(new Dependency[dependencies.size()]) )
 
         URLClassLoader loader = GroovyObject.class.classLoader
