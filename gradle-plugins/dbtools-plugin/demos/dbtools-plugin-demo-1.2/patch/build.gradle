@@ -83,6 +83,9 @@ task runDemo(dependsOn:[clean]) {
 
 
     doLast {
+        println 'Forsøker å ta ned evt allerede kjørende database-instans. (forventer feilmelding)'
+        forkGradle(['startUpDatabase', 'tearDownDatabase'])
+
         forkGradle(['startUpDatabase'])
 
         println 'Tester patchSchema1...'
