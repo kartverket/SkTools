@@ -114,9 +114,11 @@ class PropertyUtilsTest {
         //demonstrerer expanding der en substituerer inn verdier ifra prosjekt-properties
         myProps += [
                 heiarop: '${hei} ${hei} ${hopp}!',
+                'systemProp.file.encoding': 'UTF-8',
         ]
         propertyUtils.expandProperties(myProps)
         Assert.assertEquals(myProps['heiarop'], 'heisann! heisann! sann!', "Forventet value")
+        Assert.assertEquals(myProps['systemProp.file.encoding'], 'UTF-8', "Forventet value")
 
 
         //demonstrerer expanding der en overstyrer property verdi (key:'hei')
