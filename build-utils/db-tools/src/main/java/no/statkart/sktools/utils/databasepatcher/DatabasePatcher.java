@@ -150,27 +150,37 @@ public class DatabasePatcher {
 
    ;
 
-   public static void main(String... args) {
-      String commandName = args.length > 0 ? args[0] : "";
-      if( commandName.equals("getVersion") ) {
-         getVersion();
-      } else if( commandName.equals("setIndexesInSyncWithPatch") ) {
-         setIndexesInSyncWithPatch(args[1].equals("true"));
-      } else if( commandName.equals("patch") ) {
-         boolean singleStepPatches = "true".equalsIgnoreCase(System.getProperty("singlestep"));
-         if( singleStepPatches ) {
-            logger.info("Kjøre patcher i singlestep mode slik at kun en ny patch blir utført per kall");
-         }
-         patch(args[1], singleStepPatches);
-      } else {
-         System.out.println("Usage: DatabasePatcher getVersion");
-         System.out.println("Usage: DatabasePatcher patch sqlPatchfil");
-         System.out.println("Usage: DatabasePatcher setIndexesInSyncWithPatch true|false");
-      }
+    private static void printUsage() {
+        System.out.println("Usage: DatabasePatcher getVersion");
+        System.out.println("Usage: DatabasePatcher patch sqlPatchfil");
+        System.out.println("Usage: DatabasePatcher setIndexesInSyncWithPatch true|false");
+    }
+
+    public static void main(String... args) {
+       if (args.length > 0) {
+           String commandName = args[0];
+           if( commandName.equals("getVersion") ) {
+               getVersion();
+           } else if( commandName.equals("setIndexesInSyncWithPatch") ) {
+               setIndexesInSyncWithPatch(args[1].equals("true"));
+           } else if( commandName.equals("patch") ) {
+               boolean singleStepPatches = "true".equalsIgnoreCase(System.getProperty("singlestep"));
+               if( singleStepPatches ) {
+                   logger.info("Kjøre patcher i singlestep mode slik at kun en ny patch blir utført per kall");
+               }
+               patch(args[1], singleStepPatches);
+           } else {
+               printUsage();
+               System.exit(1);
+           }
+           System.exit(0);
+       }
+       printUsage();
+       System.exit(1);
    }
 
 
-   /**
+    /**
     * Patcher eksisterende database i henhold til patchfil og eksisterende patcher som allerede er installert i databasen
     *
     * @param patchFilePath
