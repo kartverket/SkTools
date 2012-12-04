@@ -6,10 +6,7 @@ import no.statkart.sktools.utils.parsers.sql.model.Expression;
 import no.statkart.sktools.utils.parsers.sql.model.Statement;
 import org.apache.log4j.Logger;
 
-import java.sql.SQLException;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.PreparedStatement;
+import java.sql.*;
 import java.util.Date;
 import java.util.List;
 import java.util.LinkedHashMap;
@@ -31,10 +28,18 @@ public class DatabasePatcher {
    static Pattern pParsePatchMinVersion = Pattern.compile("^--\\s*PATCH\\s+DB\\.MIN\\.VERSION\\s*=\\s*\"([<>\\w\\.-]+)\"");
    static Pattern pStartsWithPatch = Pattern.compile("^--\\s*PATCH[\\s\\n]");
 
-   /**
+   //SKTOOLS-34: modulbasert patching
+   String component = PatchInfo.DEFAULT_MODULE;
+
+
+    /**
     * Angir versjonsinformasjon om en patchblock samt patchblokk type
     */
    private static class PatchVersion implements Comparable {
+
+      public static final String DEFAULT_DB_VERSION = null;
+      public static final int DEFAULT_PATCH_NO = -1;
+
       // Angir om det er en data eller index patchblock
       boolean isDataPatch;
       // Versjonsinfo
@@ -139,37 +144,64 @@ public class DatabasePatcher {
     * Angir nåverende patchinfo i databasen
     */
    private static class PatchInfo {
+      public static final String DEFAULT_MODULE = "null";
+
       public PatchVersion patchVersion;
       public boolean indexesInSyncWithPatch;
+      public String component;
 
-      public PatchInfo(PatchVersion patchVersion, boolean indexesInSyncWithPatch) {
-         this.patchVersion = patchVersion;
-         this.indexesInSyncWithPatch = indexesInSyncWithPatch;
+      public PatchInfo(String component, PatchVersion patchVersion, boolean indexesInSyncWithPatch) {
+          this.component = component != null ? component : PatchInfo.DEFAULT_MODULE;
+          this.patchVersion = patchVersion;
+          this.indexesInSyncWithPatch = indexesInSyncWithPatch;
+      }
+
+      public String toString() {
+          return String.format("DB.MODULE=%s %s IndexesInSyncWithPatch=%s", component, patchVersion, indexesInSyncWithPatch);
       }
    }
 
    ;
 
     private static void printUsage() {
-        System.out.println("Usage: DatabasePatcher getVersion");
-        System.out.println("Usage: DatabasePatcher patch sqlPatchfil");
-        System.out.println("Usage: DatabasePatcher setIndexesInSyncWithPatch true|false");
+        System.out.println("Usage: DatabasePatcher getVersion [-component <component>]");
+        System.out.println("Usage: DatabasePatcher patch sqlPatchfil [-component <component>]");
+        System.out.println("Usage: DatabasePatcher setIndexesInSyncWithPatch (true|false) [-component <component>]");
     }
 
     public static void main(String... args) {
-       if (args.length > 0) {
-           String commandName = args[0];
+
+        if (args.length > 0) {
+            DatabasePatcher databasePatcher = new DatabasePatcher();
+            String commandName = args[0];
+
+           //finner optionalt nivå
+           for (int i = 0; i < args.length; i++) {
+               String arg = args[i];
+               if ("-component".equals(arg) && args.length > i+1) {
+                   databasePatcher.component = args[i+1];
+               }
+           }
+
+           //parser kommando
            if( commandName.equals("getVersion") ) {
-               getVersion();
+               databasePatcher.getVersion();
+
            } else if( commandName.equals("setIndexesInSyncWithPatch") ) {
-               setIndexesInSyncWithPatch(args[1].equals("true"));
+               if (args.length > 1 && ("true".equalsIgnoreCase(args[1]) || "false".equalsIgnoreCase(args[1]))) {
+                   boolean value = "true".equalsIgnoreCase(args[1]);
+                   databasePatcher.setIndexesInSyncWithPatch(value);
+               }
+
            } else if( commandName.equals("patch") ) {
                boolean singleStepPatches = "true".equalsIgnoreCase(System.getProperty("singlestep"));
                if( singleStepPatches ) {
                    logger.info("Kjøre patcher i singlestep mode slik at kun en ny patch blir utført per kall");
                }
-               patch(args[1], singleStepPatches);
+               databasePatcher.patch(args[1], singleStepPatches);
+
            } else {
+               //feil ved parsing av kommando
                printUsage();
                System.exit(1);
            }
@@ -185,8 +217,9 @@ public class DatabasePatcher {
     *
     * @param patchFilePath
     * @param singleStepPatches true hvis kun en ny patch skal utføres. Hvis false utføres alle patcher
+    * @return antall patchblokker påført (inkludert indekser dersom indexesInSyncWithPatch != true)
     */
-   private static void patch(String patchFilePath, boolean singleStepPatches) {
+   int patch(String patchFilePath, boolean singleStepPatches) {
       Connection con = null;
 
       try {
@@ -196,15 +229,16 @@ public class DatabasePatcher {
 
          con = JDBCHelper.createConnection();
          PatchInfo currentPatchInfo = getOrCreatePatchInfo(con);
-         logger.info("Nåværende database versjon: " + currentPatchInfo.patchVersion + ". IndexesInSyncWithPatch=" + currentPatchInfo.indexesInSyncWithPatch);
+         logger.info("Nåværende patchinformasjon: " + currentPatchInfo);
 
          // Første entry inneholder min version.
          PatchVersion minVersion = patches.entrySet().iterator().next().getKey();
          patches.remove(minVersion);
          if( currentPatchInfo.patchVersion.compareTo(minVersion) == -1 ) {
-            throw new RuntimeException("Kan ikke patch database. Krevet minimum versjon: " + minVersion);
+            throw new RuntimeException("Kan ikke patch database. Krever minimum versjon: " + minVersion);
          }
 
+         int executedPatchesCount = 0;
          for( PatchVersion p : patches.keySet() ) {
             List<? extends Expression> patchBlock = patches.get(p);
 
@@ -213,14 +247,18 @@ public class DatabasePatcher {
                // Patch har allerede blitt utført, men skal utføres på nytt hvis det er en index patch og indexer ikke er i sync
                if( !p.isDataPatch && !currentPatchInfo.indexesInSyncWithPatch ) {
                   executePatchBlock(con, p, patchBlock, false);
+                  executedPatchesCount++;
                }
             } else {
                // Ny patch. Utfør alltid.
                executePatchBlock(con, p, patchBlock, true);
+               executedPatchesCount++;
                if( singleStepPatches ) break;
             }
          }
+
          setIndexesInSyncWithPatch(true);
+         return executedPatchesCount;
       } catch( SQLException e ) {
          JDBCHelper.close(con);
          throw new RuntimeException(e);
@@ -229,7 +267,7 @@ public class DatabasePatcher {
       }
    }
 
-   private static void executePatchBlock(Connection con, PatchVersion p, List<? extends Expression> patchBlock, boolean isNewPatch) {
+   private void executePatchBlock(Connection con, PatchVersion p, List<? extends Expression> patchBlock, boolean isNewPatch) {
       try {
          if( isNewPatch ) {
             logger.info("Utfører patchblokk: " + p + ((p.kommentar == null) ? "" : " " + p.kommentar));
@@ -407,40 +445,74 @@ public class DatabasePatcher {
     * @param con
     * @return patch info for databasen.
     */
-   private static PatchInfo getOrCreatePatchInfo(Connection con) {
-       java.sql.Statement stmt = null;
+   private PatchInfo getOrCreatePatchInfo(Connection con) {
+      PreparedStatement stmt = null;
       ResultSet rs = null;
       try {
-         stmt = con.createStatement();
 
           //finner ut om tabell finnes i databasen ved å spørre på metadata
-         rs = con.getMetaData().getTables(con.getCatalog(), null, "PATCHINFO", null);
-          boolean patchTableExists = rs.next();
-          rs.close();
-         if( !patchTableExists ) {
-            createPatchInfoTable(con);
-         }
+          {
+              rs = con.getMetaData().getTables(con.getCatalog(), null, "PATCHINFO", new String[]{"TABLE"});
+              boolean patchTableExists = rs.next();
+              JDBCHelper.close(rs, stmt);
+              if (!patchTableExists) {
+                  createPatchInfoTable(con);
+              }
+          }
 
-         stmt.execute("select count(*) from PATCHINFO");
-         rs = stmt.getResultSet();
+          //finner ut om en evt trenger å utvide tabell
+          {
+              rs = con.getMetaData().getColumns(con.getCatalog(), null, "PATCHINFO", null);
+              boolean hasComponentColumn = false;
+              while (rs.next()) {
+                  if ("COMPONENT".equals(rs.getString("COLUMN_NAME"))) {
+                      hasComponentColumn = true;
+                  }
+              }
+              JDBCHelper.close(rs, stmt);
+              if (!hasComponentColumn) {
+                  addComponentColumn(con);
+
+
+                  //har maks en rad. Endrer evt rad.
+                  stmt = con.prepareStatement("update PATCHINFO set component=?");
+                  stmt.setString(1, component);
+                  stmt.executeUpdate();
+
+                  JDBCHelper.close(rs, stmt);
+              }
+          }
+
+
+         stmt = con.prepareStatement("SELECT count(*) FROM PATCHINFO WHERE component=?");
+         stmt.setString(1, component);
+         rs = stmt.executeQuery();
+
          rs.next();
          int rowCount = rs.getInt(1);
+         JDBCHelper.close(rs, stmt);
+
          if( rowCount == 0 ) {
-            throw new RuntimeException("Fant ingen rader i tabell PATCHINFO");
+
+             //todo: spørre etter patchnummer
+
+             stmt = con.prepareStatement("insert into PATCHINFO (component, dbVersion, patchNo, indexesInSyncWithPatch, kommentar) values (?, ?, ?, ?, ?)");
+             stmt.setString(1, component);
+             stmt.setString(2, PatchVersion.DEFAULT_DB_VERSION);
+             stmt.setInt(3, PatchVersion.DEFAULT_PATCH_NO);
+             stmt.setInt(4, 1); //indexes up to date by default
+             stmt.setString(5, String.format("Automatisk opprettet tabell for patchistorikk den %s", new Date()));
+
+             stmt.executeUpdate();
+             JDBCHelper.close(rs, stmt);
+
          } else if( rowCount > 1 ) {
             throw new RuntimeException("Fant mer enn en rad i tabell PATCHINFO");
          }
-         rs.close();
 
          // PatchVersion tabell finnes, hent ut versjon
-         stmt.execute("SELECT dbVersion, patchNo, indexesInSyncWithPatch, kommentar from PATCHINFO");
-         rs = stmt.getResultSet();
-         rs.next();
-         String dbVersion = rs.getString(1);
-         int patchNo = rs.getInt(2);
-         boolean indexesInSyncWithPatch = rs.getBoolean(3);
-         String kommentar = rs.getString(4);
-         return new PatchInfo(new PatchVersion(dbVersion, patchNo, kommentar), indexesInSyncWithPatch);
+         return getPatchInfo(con);
+
       } catch( SQLException e ) {
          throw new RuntimeException(e);
       } finally {
@@ -448,7 +520,40 @@ public class DatabasePatcher {
       }
    }
 
-   /**
+
+    /**
+     * Henter ut nåværende PatchVersion for en database.
+     *
+     * @param con
+     * @return patch info for databasen.
+     */
+    private PatchInfo getPatchInfo(Connection con) {
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+
+            stmt = con.prepareStatement("SELECT dbVersion, patchNo, indexesInSyncWithPatch, kommentar FROM PATCHINFO WHERE component=?");
+            stmt.setString(1, component);
+            rs = stmt.executeQuery();
+
+            rs.next();
+            String dbVersion = rs.getString("dbVersion");
+            int patchNo = rs.getInt("patchNo");
+            boolean indexesInSyncWithPatch = rs.getBoolean("indexesInSyncWithPatch");
+            String kommentar = rs.getString("kommentar");
+
+            JDBCHelper.close(rs, stmt);
+
+            return new PatchInfo(component, new PatchVersion(dbVersion, patchNo, kommentar), indexesInSyncWithPatch);
+
+        } catch( SQLException e ) {
+            throw new RuntimeException(e);
+        } finally {
+            JDBCHelper.close(rs, stmt);
+        }
+    }
+
+    /**
     * Oppretter tabell 'PatchVersion' og legger inn initiell rad.
     *
     * @param con
@@ -459,7 +564,6 @@ public class DatabasePatcher {
       try {
          stmt = con.createStatement();
          stmt.execute("CREATE TABLE PATCHINFO (dbVersion varchar(255), patchNo INTEGER NOT NULL, indexesInSyncWithPatch BOOLEAN NOT NULL, kommentar VARCHAR(255))");
-         stmt.executeUpdate("insert into PATCHINFO (dbVersion, patchNo, indexesInSyncWithPatch, kommentar) values (null, -1, 1, 'Automatisk opprettet tabell for patchistorikk den " + new Date() + "')");
       } catch( SQLException e ) {
          throw new RuntimeException(e);
       } finally {
@@ -467,13 +571,32 @@ public class DatabasePatcher {
       }
    }
 
+    /**
+     * Utvider tabell 'PatchVersion' med rad for "component"/komponent.
+     *
+     * @param con
+     */
+    private static void addComponentColumn(Connection con) {
+        java.sql.Statement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = con.createStatement();
+            stmt.execute("ALTER TABLE PATCHINFO ADD component varchar(64) NOT NULL");
+        } catch( SQLException e ) {
+            throw new RuntimeException(e);
+        } finally {
+            JDBCHelper.close(stmt);
+        }
+    }
 
-   private static void getVersion() {
+
+    PatchInfo getVersion() {
       Connection con = null;
       try {
          con = JDBCHelper.createConnection();
          PatchInfo patchInfo = getOrCreatePatchInfo(con);
-         System.out.println(String.format("Database versjon: db.version=%s patch.no=%d indexesInSyncWithPatch=%b", patchInfo.patchVersion.dbVersion, patchInfo.patchVersion.patchNo, patchInfo.indexesInSyncWithPatch));
+         System.out.println(String.format("Database versjon: component=%s db.version=%s patch.no=%d indexesInSyncWithPatch=%b", component, patchInfo.patchVersion.dbVersion, patchInfo.patchVersion.patchNo, patchInfo.indexesInSyncWithPatch));
+         return patchInfo;
       } catch( SQLException e ) {
          JDBCHelper.close(con);
          throw new RuntimeException(e);
@@ -482,11 +605,11 @@ public class DatabasePatcher {
       }
    }
 
-   private static void setIndexesInSyncWithPatch(boolean value) {
+   void setIndexesInSyncWithPatch(boolean value) {
       Connection con = null;
       try {
          con = JDBCHelper.createConnection();
-         PatchInfo patchInfo = getOrCreatePatchInfo(con);
+         PatchInfo patchInfo = getPatchInfo(con);   //feiler dersom ikke versjon finnes
          setIndexesInSyncWithPatch(con, value);
       } catch( SQLException e ) {
          JDBCHelper.close(con);
@@ -496,13 +619,15 @@ public class DatabasePatcher {
       }
    }
 
-   private static void setIndexesInSyncWithPatch(Connection con, boolean value) {
-      java.sql.Statement stmt = null;
+   private void setIndexesInSyncWithPatch(Connection con, boolean value) {
+      PreparedStatement stmt = null;
       ResultSet rs = null;
       try {
-         stmt = con.createStatement();
+         stmt = con.prepareStatement("update PATCHINFO set indexesInSyncWithPatch=? WHERE component=?");
+         stmt.setInt(1, value ? 1 : 0);
+         stmt.setString(2, component);
 
-         int res = stmt.executeUpdate("update PATCHINFO set indexesInSyncWithPatch=" + ((value) ? "1" : "0"));
+         int res = stmt.executeUpdate();
          if( res != 1 ) {
             throw new RuntimeException("Oppdaterte feil antall rader i tabell PATCHINFO. Forventet 1 oppdatering, fikk " + res);
          }
@@ -517,14 +642,15 @@ public class DatabasePatcher {
    /**
     * Oppdatere patchinfo rad i databasen
     */
-   private static void updatePatchInfo(Connection con, PatchVersion p) {
+   private void updatePatchInfo(Connection con, PatchVersion p) {
       PreparedStatement stmt = null;
       ResultSet rs = null;
       try {
-         stmt = con.prepareStatement("update PATCHINFO set dbVersion=?, patchNo=?, indexesInSyncWithPatch=1, kommentar=?");
+         stmt = con.prepareStatement("update PATCHINFO set dbVersion=?, patchNo=?, indexesInSyncWithPatch=1, kommentar=? WHERE component=?");
          stmt.setString(1, p.dbVersion);
          stmt.setInt(2, p.patchNo);
          stmt.setString(3, p.kommentar);
+         stmt.setString(4, component);
          int res = stmt.executeUpdate();
          if( res != 1 ) {
             throw new RuntimeException("Oppdaterte feil antall rader i tabell PATCHINFO. Forventet 1 oppdatering, fikk " + res);

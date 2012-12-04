@@ -36,7 +36,12 @@ configureDatabasePlugin {
 
 
         patch {
-            patchTask('patchSchema1', sqlFile:'src/sql/schema1/patch.sql', description: 'Databasepatcher for schema1')
+            patchTask('patchComponent1', sqlFile:'src/sql/schema1/patch.sql', description: 'Databasepatcher for schema1')
+        }
+
+        patch {
+            name = 'Component2'
+            patchTask('patch', sqlFile:'src/sql/schema2/patch.sql', description: 'Databasepatcher for schema2')
         }
 
         sqlTask('tearDownDatabase', sqlString: "SHUTDOWN;", failOnError:false).doFirst {
@@ -87,28 +92,63 @@ task runDemo(dependsOn:[clean]) {
         forkGradle(['startUpDatabase', 'tearDownDatabase'])
 
         forkGradle(['startUpDatabase'])
+        forkGradle(['assertNoPatchTable'])
 
-        println 'Tester patchSchema1...'
+        println 'Tester patchComponent1...'
 
-        forkGradle(['assertNoTestTable', 'assertNoPatchTable'])
-        forkGradle(['patchSchema1', 'assertPatchnummer4', 'assertPatchSchema1'])
+        forkGradle(['assertNoTestTable'])
+        forkGradle(['patchComponent1', 'assertComponent1Patchnummer4', 'assertPatchComponent1'])
+
+
+        forkGradle(['assertNoTestTable2'])
+        forkGradle(['patchComponent2', 'assertComponent2Patchnummer4', 'assertPatchComponent2'])
+
 
         forkGradle(['tearDownDatabase']) //avslutter prosess for databasen sammen med demo
     }
 }
 
+// --
 
-task assertPatchnummer4() << {
+task assertComponent2Patchnummer4() << {
     def sql = getSql()
-    sql.eachRow("select count(*) from PATCHINFO where dbVersion='1.0' and patchNo=4") {
+    sql.eachRow("select count(*) from PATCHINFO where dbVersion='2.0' and patchNo=4 AND component='Component2'") {
         assert it[0] == 1
     }
 }
 
 
-task assertPatchSchema1() << {
+task assertPatchComponent2() << {
     def sql = getSql()
-    sql.eachRow("select count(*) from TEST_TABLE where ID = 1") {
+    sql.eachRow("select count(*) from TEST_TABLE2 where ID=1") {
+        assert it[0] == 1
+    }
+}
+
+task assertNoTestTable2() << {
+    def sql = getSql()
+    try {
+        sql.eachRow("select count(*) from TEST_TABLE2") { }
+        assert false //forventer ikke at tabell finnes
+    } catch (SQLException e) {
+        assert true
+    }
+}
+
+
+// --
+
+task assertComponent1Patchnummer4() << {
+    def sql = getSql()
+    sql.eachRow("select count(*) from PATCHINFO where dbVersion='1.0' and patchNo=4 AND component='null'") {
+        assert it[0] == 1
+    }
+}
+
+
+task assertPatchComponent1() << {
+    def sql = getSql()
+    sql.eachRow("select count(*) from TEST_TABLE where ID=1") {
         assert it[0] == 1
     }
 }
@@ -122,6 +162,9 @@ task assertNoTestTable() << {
         assert true
     }
 }
+
+
+//--
 
 task assertNoPatchTable() << {
     def sql = getSql()

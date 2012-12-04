@@ -23,10 +23,11 @@ class IndexesInSyncWithPatchTask extends DatabasePatchTask {
 
         project.javaexec { JavaExecSpec spec ->
 
-            configureDefaultSpec(spec)
-
             /** {@link no.statkart.sktools.utils.databasepatcher.DatabasePatcher#main } */
             spec.setArgs(['setIndexesInSyncWithPatch', getIndexesUpToDate()])
+
+            configureDefaultSpec(spec)
+
         }
     }
 

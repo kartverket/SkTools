@@ -104,9 +104,11 @@ abstract class AbstractDatabaseConvention {
      */
     public def patch(Closure closure) {
         PatchConfiguration patch = new PatchConfiguration(this);
+        patch.name = 'null' //for bakoverkompabilitet, se PatchInfo#DEFAULT_MODULE
         patch.printPatchVersionTaskName = patch.getPatchTaskName('PrintPatchVersion')
         patch.setIndexesInSyncWithPatchTaskName = patch.getPatchTaskName('SetIndexInSyncWithPatch')
         patch.unSetIndexesInSyncWithPatchTaskName = patch.getPatchTaskName('UnSetIndexInSyncWithPatch')
+
         ConfigureUtil.configure(closure, patch, false);
 
         patch.addDefaultTasks();

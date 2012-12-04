@@ -40,10 +40,10 @@ class PatchTask extends DatabasePatchTask {
 
         project.javaexec { JavaExecSpec spec ->
 
-            configureDefaultSpec(spec)
-
             /** {@link no.statkart.sktools.utils.databasepatcher.DatabasePatcher#main } */
             spec.setArgs(['patch', sqlFile.absolutePath])
+
+            configureDefaultSpec(spec)
 
             spec.systemProperties.put('singlestep', getSinglestep())
         }

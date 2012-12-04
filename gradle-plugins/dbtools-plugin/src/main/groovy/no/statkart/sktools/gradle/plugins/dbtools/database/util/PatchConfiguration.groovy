@@ -4,6 +4,7 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.artifacts.Dependency
 import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsConvention
 import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsPlugin
+import org.apache.commons.lang.StringUtils
 
 /**
  *
@@ -13,6 +14,9 @@ import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsPlugin
  */
 class PatchConfiguration {
     private final AbstractDatabaseConvention databaseConvention
+
+    //SKTOOLS-34: navn for komponent som skal patches
+    protected String name
 
     //default metodenavn
     protected String printPatchVersionTaskName,
@@ -38,8 +42,12 @@ class PatchConfiguration {
     }
 
 
-    String getPatchTaskName(String name) {
-        name
+    String getPatchTaskName(String verb) {
+        String.format("%s%s", StringUtils.capitalize(verb), 'null'.equals(name) ? '' : StringUtils.capitalize(name))
+    }
+
+    String getName() {
+        return name
     }
 
     /**
@@ -48,6 +56,7 @@ class PatchConfiguration {
     public PatchTask patchTask(Map params, String name, Closure closure = null) {
         PatchTask task = databaseConvention.configureAbstractSQLTask(params, getPatchTaskName(name), PatchTask.class, closure)
         task.conventionMapping.with {
+            map 'component', { getName() }
             map 'classpath', { findJdbcDependencies() + findDbToolsDependencies() }
         }
         return task
@@ -62,6 +71,7 @@ class PatchConfiguration {
         }
         PrintPatchversionTask task = databaseConvention.configureAbstractSQLTask(params, printPatchVersionTaskName, PrintPatchversionTask.class, closure)
         task.conventionMapping.with {
+            map 'component', { getName() }
             map 'classpath', { findJdbcDependencies() + findDbToolsDependencies() }
         }
         return task
@@ -76,6 +86,7 @@ class PatchConfiguration {
         }
         IndexesInSyncWithPatchTask task = databaseConvention.configureAbstractSQLTask(params, setIndexesInSyncWithPatchTaskName, IndexesInSyncWithPatchTask.class, closure)
         task.conventionMapping.with {
+            map 'component', { getName() }
             map 'classpath', { findJdbcDependencies() + findDbToolsDependencies() }
             map 'indexesUpToDate', { Boolean.TRUE }
         }

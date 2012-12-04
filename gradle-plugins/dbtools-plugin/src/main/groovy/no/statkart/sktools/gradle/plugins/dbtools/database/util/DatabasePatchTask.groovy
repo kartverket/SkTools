@@ -13,6 +13,8 @@ import org.gradle.api.tasks.Optional
  */
 abstract class DatabasePatchTask extends AbstractSQLTask {
 
+    @Input
+    String component
 
     @Input
     FileCollection classpath
@@ -20,6 +22,9 @@ abstract class DatabasePatchTask extends AbstractSQLTask {
 
     protected JavaExecSpec configureDefaultSpec(JavaExecSpec spec) {
         spec.setMain("no.statkart.sktools.utils.databasepatcher.DatabasePatcher")
+
+        spec.args('-component', getComponent())
+
         spec.setClasspath(getClasspath())
 
         spec.setDefaultCharacterEncoding(getEncoding())
