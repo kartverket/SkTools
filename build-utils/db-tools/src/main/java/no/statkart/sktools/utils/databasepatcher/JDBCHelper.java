@@ -5,6 +5,7 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
 import java.sql.*;
+import java.util.Properties;
 
 /**
  * Hjelpeklasser for bruk av JDBC api'et. Har metoder for å frigjøre JDBC ressurser på korrekt måte.
@@ -118,7 +119,14 @@ public class JDBCHelper {
       return connection;
    }
 
-   /**
+
+    /**
+     * Mulighet for programatisk konfigurering av properties
+     * @since 1.2
+     */
+    public static Properties connectionProperties = System.getProperties();
+
+    /**
     * Oppretter en connection basert på system properties for database connection:
     * -Dhibernate.connection.driver_class
     * -Dhibernate.connection.url
@@ -126,10 +134,10 @@ public class JDBCHelper {
     * -Dhibernate.connection.password
     */
    public static Connection createConnection() throws SQLException {
-      String driver = System.getProperty("hibernate.connection.driver_class");
-      String url = System.getProperty("hibernate.connection.url");
-      String usr = System.getProperty("hibernate.connection.username");
-      String pwd = System.getProperty("hibernate.connection.password");
+      String driver = connectionProperties.getProperty("hibernate.connection.driver_class");
+      String url = connectionProperties.getProperty("hibernate.connection.url");
+      String usr = connectionProperties.getProperty("hibernate.connection.username");
+      String pwd = connectionProperties.getProperty("hibernate.connection.password");
       Connection con = JDBCHelper.createConnection(driver, url, usr, pwd);
       if( con == null ) {
          throw new OperationalException(logger, "Klarte ikke opprette connection til " + url + " med bruker " + usr);
