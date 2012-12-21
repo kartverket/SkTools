@@ -3,6 +3,7 @@ include ':multiple_toolsets'
 include ':encoding'
 include ':properties'
 include ':patch'
+include ':patch:multimodule'
 
 rootProject.name = 'dbtools-plugin-demos'
 

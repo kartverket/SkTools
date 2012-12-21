@@ -29,28 +29,36 @@ configureDatabasePlugin {
     useDrivers project.configurations.hsqldb
 
     toolset( name:'sa', type:'hsqldb', prefix:'') {
-        //;shutdown=true
         url = "jdbc:hsqldb:hsql://localhost/testPatching${project.version}"
         credentials.username = 'SA'
         credentials.password = ''
 
-
         patch {
-            patchTask('patchComponent1', sqlFile:'src/sql/schema1/patch.sql', description: 'Databasepatcher for schema1')
+            name = 'Module1'
+            patchTask('Patch_1.9.1', sqlFile: 'src/sql/system_1.9.1/patch/patchModule1_1.9.1.sql')
+            patchTask('Patch_1.10', sqlFile: 'src/sql/system_1.10/patch/patchModule1_1.10.sql')
         }
 
         patch {
-            name = 'Component2'
-            patchTask('patch', sqlFile:'src/sql/schema2/patch.sql', description: 'Databasepatcher for schema2')
+            name = 'Module2'
+            patchTask('Patch_1.9.1', sqlFile: 'src/sql/system_1.9.1/patch/patchModule2_1.9.1.sql')
+            patchTask('Patch_1.10', sqlFile: 'src/sql/system_1.10/patch/patchModule2_1.10.sql')
         }
 
-        patch {
-            // patch for tomt skjema. Demoen illustrerer funksjonalitet benyttet rundt import
-            name = 'Empty'
-            definePatchVersionTask('SetPatchversionFor2_2', dbVersion: '2.2', patchNumber: 34)
-//            assertPatchVersionTaskName = 'AssertPatchVersionEmpty'
-            assertPatchVersionTask('AssertPatchVersion', dbVersion: '2.2', patchNumber: 34)
+        sqlTask('assertMinPatchVersion', sqlString: '-- verifies min patch version').doLast {
+            patch['Module1'].assertMinVersion '1.9.1' //minste versjon støttet i dette bygget
+            patch['Module2'].assertMinVersion '1.9.1' //minste versjon støttet i dette bygget
+        }
 
+        taskSequence('createViews', dependsOn: [tasks['assertMinPatchVersion']]) {
+            dependsOn sqlTask('createTestTableView_1.9.1', sqlFile: 'src/sql/system_1.9.1/view/createTestTableView_1.9.1.sql') {
+                onlyIf { patch['Module1'].currentVersion == '1.9.1' }
+                onlyIf { patch['Module2'].currentVersion == '1.9.1' }
+            }
+            dependsOn sqlTask('createTestTableView_1.10', sqlFile: 'src/sql/system_1.10/view/createTestTableView_1.10.sql') {
+                onlyIf { patch['Module1'].currentVersion == '1.10' }
+                onlyIf { patch['Module2'].currentVersion == '1.10' }
+            }
         }
 
         sqlTask('ImportEmpty', sqlString:'PROMPT Pseudo task for import')
@@ -63,12 +71,20 @@ configureDatabasePlugin {
 
     }
 
+    task dbPatch(description: 'Patcher databasen opp til siste versjon') {
+        int i = 0 //hacker til nytt lag av tasker da gradle 1.9.1 eksekverer dependencies i alfabetisk rekkefølge
 
-    taskSequence('dbImportEmpty', description: "Import of 'Empty' schema.") {
-        dependsOn dbToolSets['sa'].tasks['ImportEmpty']
-        dependsOn dbToolSets['sa'].tasks['SetPatchversionFor2_2Empty']  // "${'SetPatchversionFor2_2'}${'Empty'}"
+        dependsOn project.task(String.format('%s_step%02d', it.name, ++i), dependsOn: dbToolSets['sa'].tasks['Patch_1.9.1Module1'])
+        dependsOn project.task(String.format('%s_step%02d', it.name, ++i), dependsOn: dbToolSets['sa'].tasks['Patch_1.9.1Module2'])
+        dependsOn project.task(String.format('%s_step%02d', it.name, ++i), dependsOn: dbToolSets['sa'].tasks['Patch_1.10Module1'])
+        dependsOn project.task(String.format('%s_step%02d', it.name, ++i), dependsOn: dbToolSets['sa'].tasks['Patch_1.10Module2'])
     }
 
+}
+
+
+task dbImportEmpty(description: "Import of 'Empty' schema.") {
+    dependsOn dbToolSets['sa'].tasks['ImportEmpty']
 }
 
 
@@ -109,54 +125,38 @@ task runDemo(dependsOn:[clean]) {
         forkGradle(['startUpDatabase', 'tearDownDatabase'])
 
         forkGradle(['startUpDatabase'])
-        forkGradle(['_assertNoPatchTable'])
 
-        println 'Tester patchComponent1...'
+        //verifiserer førtilstand
+        forkGradle(['_assertNoTestTable1', '_assertNoTestTable2'])
+        
+        //kjører inn en patch
+        forkGradle(['Patch_1.9.1Module1'])
+        forkGradle(['_assertModule1_version1', '_assertNoTestTable2'])
 
-        forkGradle(['_assertNoTestTable'])
-        forkGradle(['patchComponent1', '_assertComponent1Patchnummer4', '_assertPatchComponent1'])
+        //kjører inn alle patcher
+        forkGradle(['dbPatch'])
+        forkGradle(['_assertModule1_version2', '_assertModule2_version2'])
 
+        //tester at man kan kjøre inn alle patcher igjen og igjen..
+        forkGradle(['dbPatch'])
+        forkGradle(['_assertModule1_version2', '_assertModule2_version2'])
 
-        forkGradle(['_assertNoTestTable2'])
-        forkGradle(['patchComponent2', '_assertComponent2Patchnummer4', '_assertPatchComponent2'])
-
-
-        //illustrerer mekanikk for setting etter import
-        forkGradle(['dbImportEmpty'])
-        forkGradle(['_assertPatchVersionEmpty'])
 
         forkGradle(['tearDownDatabase']) //avslutter prosess for databasen sammen med demo
     }
 }
 
-// --
-
-task _assertPatchVersionEmpty() {
-    dependsOn dbToolSets['sa'].tasks['AssertPatchVersionEmpty']
-}
 
 
+// -- tilstand før patching
 
-// --
-
-task _assertComponent2Patchnummer4() << {
+task _assertNoTestTable1() << {
     def sql = getSql()
-    sql.eachRow("select count(*) from PATCHINFO where dbVersion='0.2' and patchNo=4 AND component='Component2'") {
-        if (it[0] >= 1) {
-            assert true
-        } else {
-            listPatchInfoTableForComponent(sql, 'Component2') //print debug info
-            listPatchInfoTableForComponent(sql) //print debug info
-            assert false //forventet a finne versjon for komponent
-        }
-    }
-}
-
-
-task _assertPatchComponent2() << {
-    def sql = getSql()
-    sql.eachRow("select count(*) from TEST_TABLE2 where ID=1") {
-        assert it[0] == 1
+    try {
+        sql.eachRow("select count(*) from TEST_TABLE1") { }
+        assert false //forventer ikke at tabell finnes
+    } catch (SQLException e) {
+        assert true
     }
 }
 
@@ -170,33 +170,37 @@ task _assertNoTestTable2() << {
     }
 }
 
+// -- tilstand versjon 1.9.1
 
-// --
-
-task _assertComponent1Patchnummer4() << {
+task _assertModule1_version1() << {
     def sql = getSql()
-    sql.eachRow("select count(*) from PATCHINFO where dbVersion='1.0' and patchNo=4 AND component='null'") {
+    sql.eachRow("select count(*) from TEST_TABLE1 where ID=1") {
+        assert it[0] == 0
+    }
+}
+task _assertModule2_version1() << {
+    def sql = getSql()
+    sql.eachRow("select count(*) from TEST_TABLE2 where ID=1") {
+        assert it[0] == 0
+    }
+}
+
+
+// -- tilstand versjon 2.0
+
+task _assertModule1_version2() << {
+    def sql = getSql()
+    sql.eachRow("select count(*) from TEST_TABLE1 where ID=1") {
+        assert it[0] == 1
+    }
+}
+task _assertModule2_version2() << {
+    def sql = getSql()
+    sql.eachRow("select count(*) from TEST_TABLE2 where ID=1") {
         assert it[0] == 1
     }
 }
 
-
-task _assertPatchComponent1() << {
-    def sql = getSql()
-    sql.eachRow("select count(*) from TEST_TABLE where ID=1") {
-        assert it[0] == 1
-    }
-}
-
-task _assertNoTestTable() << {
-    def sql = getSql()
-    try {
-        sql.eachRow("select count(*) from TEST_TABLE") { }
-        assert false //forventer ikke at tabell finnes
-    } catch (SQLException e) {
-        assert true
-    }
-}
 
 
 //--
