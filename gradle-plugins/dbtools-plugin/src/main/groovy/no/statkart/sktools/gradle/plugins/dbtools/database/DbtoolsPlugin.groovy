@@ -4,6 +4,11 @@ import java.sql.Driver
 import java.sql.DriverManager
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import no.statkart.sktools.gradle.plugins.dbtools.database.util.PatchConfiguration
+import org.gradle.api.artifacts.Configuration
+
+import org.gradle.api.initialization.dsl.ScriptHandler
+import org.gradle.api.invocation.Gradle
 
 /**
  * Gradle plugin for database-moduler.
@@ -31,6 +36,7 @@ configureDatabasePlugin {
  */
 class DbtoolsPlugin implements Plugin<Project>  {
     public final static String CONVENTION_NAME = "db";
+    public final static String DBTOOLS_CONFIGURATION = "dbTools";
 
     private static final Set<String> loadedDrivers = new HashSet<String>();
 
@@ -41,10 +47,22 @@ class DbtoolsPlugin implements Plugin<Project>  {
         dbtoolsConvention = new DbtoolsConvention(project)
         project.getConvention().getPlugins().put(CONVENTION_NAME, dbtoolsConvention);
 
+        configureConfigurations(project)
+
+        assignConventionMappings(project)
+
         project.afterEvaluate {
             assignConventionalValues(project);
             registerDrivers(project);
         }
+    }
+
+    private void configureConfigurations(Project project) {
+        Configuration configuration = project.configurations.add(DBTOOLS_CONFIGURATION);
+    }
+
+    void assignConventionMappings(Project project) {
+        PatchConfiguration.assignConventionMappings(project)
     }
 
     void assignConventionalValues(Project project) {
@@ -66,6 +84,13 @@ class DbtoolsPlugin implements Plugin<Project>  {
     }
 
     private void registerDrivers(Project project) {
+
+        //For å kunne benytte jdbc funksjonalitet, må jdbc klasser være lastet inn i classloader til groovy.
+        URLClassLoader groovyClassloader = GroovyObject.class.classLoader
+        project.configurations[DBTOOLS_CONFIGURATION].files.each {File file ->
+            groovyClassloader.addURL(file.toURL())
+        }
+
         dbtoolsConvention.dbToolSets.values().collect { it.driver }.each {
             String driverAsString = it
 

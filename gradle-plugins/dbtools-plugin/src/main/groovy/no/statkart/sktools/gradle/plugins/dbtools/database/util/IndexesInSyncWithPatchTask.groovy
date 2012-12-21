@@ -12,8 +12,6 @@ import org.gradle.api.tasks.Input
  */
 class IndexesInSyncWithPatchTask extends DatabasePatchTask {
 
-    //bruker ikke denne
-    File sqlFile
 
     @Input
     Boolean indexesUpToDate
@@ -28,8 +26,12 @@ class IndexesInSyncWithPatchTask extends DatabasePatchTask {
 
             configureDefaultSpec(spec)
 
+            logger.debug("Executing databasepatcher with command: " + (spec.getArgs() + spec.getAllJvmArgs()).join('\n\t'))
         }
     }
 
+
+    //bruker ikke denne
+    File getSqlFile() { }
 
 }

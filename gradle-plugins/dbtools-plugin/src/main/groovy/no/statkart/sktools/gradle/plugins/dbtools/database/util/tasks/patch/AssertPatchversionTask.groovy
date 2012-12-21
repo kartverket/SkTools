@@ -1,17 +1,27 @@
-package no.statkart.sktools.gradle.plugins.dbtools.database.util
+package no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch
 
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.JavaExecSpec
 import no.statkart.sktools.utils.databasepatcher.exception.ConfigurationException
 import org.gradle.api.tasks.Input
+import no.statkart.sktools.gradle.plugins.dbtools.database.util.DatabasePatchTask
+import org.gradle.api.tasks.Optional
 
 /**
- * Task som gir deg siste patchversjon.
+ * SKTOOLS-34 - Task som gir deg siste patchversjon.
  *
  * @author Leif Lislegård
  * @since 1.2
  */
-class PrintPatchversionTask extends DatabasePatchTask {
+class AssertPatchversionTask extends DatabasePatchTask {
+
+    @Input
+    String dbVersion
+
+    @Optional
+    @Input
+    String patchNumber
+
 
     @TaskAction
     def exec() {
@@ -19,7 +29,11 @@ class PrintPatchversionTask extends DatabasePatchTask {
         project.javaexec { JavaExecSpec spec ->
 
             /** {@link no.statkart.sktools.utils.databasepatcher.DatabasePatcher#main } */
-            spec.setArgs(['getVersion'])
+            spec.setArgs(['assertVersion', getDbVersion()])
+
+            if (getPatchNumber() != null) {
+                spec.args(getPatchNumber())
+            }
 
             configureDefaultSpec(spec)
 
@@ -27,9 +41,7 @@ class PrintPatchversionTask extends DatabasePatchTask {
         }
     }
 
-
     //bruker ikke denne
     File getSqlFile() { }
-
 
 }

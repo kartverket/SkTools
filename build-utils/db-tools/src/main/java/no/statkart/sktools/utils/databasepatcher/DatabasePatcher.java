@@ -1,16 +1,20 @@
 package no.statkart.sktools.utils.databasepatcher;
 
+import no.statkart.sktools.utils.databasepatcher.exception.ConfigurationException;
+import no.statkart.sktools.utils.databasepatcher.exception.DatabasePatcherException;
+import no.statkart.sktools.utils.databasepatcher.exception.NotFoundException;
+import no.statkart.sktools.utils.databasepatcher.exception.OperationalException;
+import no.statkart.sktools.utils.databasepatcher.util.CompareUtil;
 import no.statkart.sktools.utils.parsers.sql.SQLStatementParser;
 import no.statkart.sktools.utils.parsers.sql.model.Comment;
 import no.statkart.sktools.utils.parsers.sql.model.Expression;
 import no.statkart.sktools.utils.parsers.sql.model.Statement;
 import org.apache.log4j.Logger;
 
+import java.io.IOException;
 import java.sql.*;
+import java.util.*;
 import java.util.Date;
-import java.util.List;
-import java.util.LinkedHashMap;
-import java.util.ArrayList;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
@@ -29,13 +33,24 @@ public class DatabasePatcher {
    static Pattern pStartsWithPatch = Pattern.compile("^--\\s*PATCH[\\s\\n]");
 
    //SKTOOLS-34: modulbasert patching
-   String component = PatchInfo.DEFAULT_MODULE;
+   public String component = PatchInfo.DEFAULT_MODULE;
+
+
+    /**
+     * Mulighet for programatisk konfigurering av properties.
+     *
+     * Dette kan feks gjøres ved å selv opprette en Connection instans, eller å sette {@code JDBCHelper.connectionProperties}
+     * @since 1.2
+     */
+    protected Connection createConnection() throws SQLException {
+        return JDBCHelper.createConnection();
+    }
 
 
     /**
     * Angir versjonsinformasjon om en patchblock samt patchblokk type
     */
-   private static class PatchVersion implements Comparable {
+   static class PatchVersion implements Comparable {
 
       public static final String DEFAULT_DB_VERSION = null;
       public static final int DEFAULT_PATCH_NO = -1;
@@ -87,7 +102,7 @@ public class DatabasePatcher {
             return 1;
          }
 
-         int i = compareDBVersions(this.dbVersion, o.dbVersion);
+         int i = CompareUtil.compareDBVersions(this.dbVersion, o.dbVersion);
          if( i == 0 ) {
             if( this.patchNo < o.patchNo ) {
                i = -1;
@@ -98,42 +113,7 @@ public class DatabasePatcher {
          return i;
       }
 
-      /**
-       * Sjekker DB versjonsnumre mot hverandre slik at:
-       * <ul>
-       * <li>1.8 < 1.9
-       * <li>1.9 = 1.9
-       * <li>1.9 < 1.9.1
-       * <li>1.9.1 < 1.10
-       * <li>1.9.1 < 1.9.2
-       */
-      private static int compareDBVersions(String dbVersion1, String dbVersion2) {
-         String[] s1 = dbVersion1.split("\\.");
-         String[] s2 = dbVersion2.split("\\.");
-         for( int i = 0; i < s1.length; i++ ) {
-            if( i == s2.length ) {
-               return 1; // dbVersion1 er størst siden den har flest "."
-            }
-            int res = 0;
-            try {
-               int int1 = Integer.parseInt(s1[i]);
-               int int2 = Integer.parseInt(s2[i]);
-               res = (int1 == int2) ? 0 : (int1 < int2) ? -1 : 1;
-            } catch( NumberFormatException e ) {
-               throw new RuntimeException("Kan ikke sammenlikne " + dbVersion1 + " mot " + dbVersion2);
-            }
-            if (res!=0) {
-               return res;
-            }
-         }
-         if( s1.length == s2.length ) {
-            return 0;
-         } else {
-            return -1;  // dbVersion2 er størst siden den har flest "."
-         }
-      }
-
-      public String toString() {
+        public String toString() {
          return "DB.VERSION=\"" + dbVersion + "\" PATCH.NO=\"" + patchNo + "\"";
       }
    }
@@ -164,33 +144,41 @@ public class DatabasePatcher {
    ;
 
     private static void printUsage() {
-        System.out.println("Usage: DatabasePatcher getVersion [-component <component>]");
-        System.out.println("Usage: DatabasePatcher patch sqlPatchfil [-component <component>]");
-        System.out.println("Usage: DatabasePatcher setIndexesInSyncWithPatch (true|false) [-component <component>]");
+        System.err.println("Usage: DatabasePatcher getVersion [-component <component>]");
+        System.err.println("Usage: DatabasePatcher patch sqlPatchfil [-component <component>]");
+        System.err.println("Usage: DatabasePatcher setIndexesInSyncWithPatch (true|false) [-component <component>]");
+        System.err.println("Usage: DatabasePatcher defineVersion DB.VERSION [PATCH.NO] -component <component>");
+        System.err.println("Usage: DatabasePatcher assertVersion DB.VERSION [PATCH.NO] -component <component>");
     }
 
     public static void main(String... args) {
 
+        int idx = 0;
+        boolean hasComponentArg = false;
+
         if (args.length > 0) {
             DatabasePatcher databasePatcher = new DatabasePatcher();
-            String commandName = args[0];
+            String commandName = args[idx++];
 
            //finner optionalt nivå
-           for (int i = 0; i < args.length; i++) {
+           for (int i = idx; i < args.length; i++) {
                String arg = args[i];
                if ("-component".equals(arg) && args.length > i+1) {
                    databasePatcher.component = args[i+1];
+                   hasComponentArg = true;
                }
            }
 
            //parser kommando
            if( commandName.equals("getVersion") ) {
-               databasePatcher.getVersion();
+               databasePatcher.getOrCreateVersion(databasePatcher.getDefaultVersion());
+               System.exit(0);
 
            } else if( commandName.equals("setIndexesInSyncWithPatch") ) {
-               if (args.length > 1 && ("true".equalsIgnoreCase(args[1]) || "false".equalsIgnoreCase(args[1]))) {
-                   boolean value = "true".equalsIgnoreCase(args[1]);
+               if (args.length > idx && ("true".equalsIgnoreCase(args[idx]) || "false".equalsIgnoreCase(args[idx]))) {
+                   boolean value = "true".equalsIgnoreCase(args[idx++]);
                    databasePatcher.setIndexesInSyncWithPatch(value);
+                   System.exit(0);
                }
 
            } else if( commandName.equals("patch") ) {
@@ -198,15 +186,55 @@ public class DatabasePatcher {
                if( singleStepPatches ) {
                    logger.info("Kjøre patcher i singlestep mode slik at kun en ny patch blir utført per kall");
                }
-               databasePatcher.patch(args[1], singleStepPatches);
+               databasePatcher.patch(args[idx++], singleStepPatches);
+               System.exit(0);
 
-           } else {
-               //feil ved parsing av kommando
-               printUsage();
-               System.exit(1);
+           } else if( commandName.equals("assertVersion") ) {
+               if (hasComponentArg && args.length > idx && !args[idx].startsWith("-")) {
+                   String dbVersion = args[idx++];
+
+                   //finner valgfri patch#
+                   Integer patchNumber = null;
+                   if (args.length > idx && !args[idx].startsWith("-")) {
+                       try {
+                           patchNumber = Integer.parseInt(args[idx++]);
+                       } catch (NumberFormatException nfe) {
+                           System.err.println(String.format("Error parsing patch#! (%s)", args[idx-1]));
+                           printUsage();
+                           System.exit(2);
+                       }
+                   }
+
+                   boolean noError = databasePatcher.assertVersion(dbVersion, patchNumber);
+                   System.exit(noError ? 0 : 2);
+               }
+           } else if( commandName.equals("defineVersion") ) {
+               if (hasComponentArg && args.length > idx && !args[idx].startsWith("-")) {
+                   String dbVersion = args[idx++];
+
+                   //finner valgfri patch#
+                   int patchNumber = PatchVersion.DEFAULT_PATCH_NO;
+                   if (args.length > idx && !args[idx].startsWith("-")) {
+                       try {
+                           patchNumber = Integer.parseInt(args[idx++]);
+                       } catch (NumberFormatException nfe) {
+                           System.err.println(String.format("Error parsing patch#! (%s)", args[idx-1]));
+                           printUsage();
+                           System.exit(2);
+                       }
+                   }
+
+                   boolean ok = databasePatcher.defineVersion(dbVersion, patchNumber);
+                   if (!ok) {
+                       System.err.println("Version already exists: " + databasePatcher.getVersion());
+                       System.exit(2);
+                   }
+                   System.exit(0);
+
+               }
            }
-           System.exit(0);
-       }
+        }
+       //feil ved parsing av kommando
        printUsage();
        System.exit(1);
    }
@@ -219,7 +247,7 @@ public class DatabasePatcher {
     * @param singleStepPatches true hvis kun en ny patch skal utføres. Hvis false utføres alle patcher
     * @return antall patchblokker påført (inkludert indekser dersom indexesInSyncWithPatch != true)
     */
-   int patch(String patchFilePath, boolean singleStepPatches) {
+   public int patch(String patchFilePath, boolean singleStepPatches) {
       Connection con = null;
 
       try {
@@ -227,8 +255,8 @@ public class DatabasePatcher {
 
          LinkedHashMap<PatchVersion, List<? extends Expression>> patches = parsePatches(statements);
 
-         con = JDBCHelper.createConnection();
-         PatchInfo currentPatchInfo = getOrCreatePatchInfo(con);
+         con = createConnection();
+         PatchInfo currentPatchInfo = getOrCreatePatchInfo(con, getDefaultVersion());
          logger.info("Nåværende patchinformasjon: " + currentPatchInfo);
 
          // Første entry inneholder min version.
@@ -260,10 +288,11 @@ public class DatabasePatcher {
          setIndexesInSyncWithPatch(true);
          return executedPatchesCount;
       } catch( SQLException e ) {
-         JDBCHelper.close(con);
-         throw new RuntimeException(e);
-      } catch( Exception e ) {
-         throw new RuntimeException(e);
+          throw new OperationalException(logger, "Feil ved sql", e);
+      } catch (IOException e) {
+          throw new OperationalException(logger, "Feil ved parsing av sql-fil", e);
+      } finally {
+          JDBCHelper.close(con);
       }
    }
 
@@ -318,7 +347,7 @@ public class DatabasePatcher {
          PatchVersion patchVersion = parsePatchVersion(scriptLines.get(i));
 
          if( lastPatchVersion.compareTo(patchVersion) != -1 ) {
-            throw new RuntimeException("Feil: Patchblokker må ha stigende versjonsnr i fil (forrige var: " + lastPatchVersion + " ): " + scriptLines.get(i));
+            throw new ConfigurationException("Feil: Patchblokker må ha stigende versjonsnr i fil (forrige var: " + lastPatchVersion + " ): " + scriptLines.get(i));
          }
          lastPatchVersion = patchVersion;
          i++;
@@ -331,11 +360,11 @@ public class DatabasePatcher {
       }
       if( i != scriptLines.size() ) {
          if( isMinDbVersion(scriptLines.get(i)) ) {
-            throw new RuntimeException("Feil: '-- PATCH DB.MIN.VERSION=\"<streng>\" allerede spesifisert: " + scriptLines.get(i));
+            throw new ConfigurationException("Feil: '-- PATCH DB.MIN.VERSION=\"<streng>\" allerede spesifisert: " + scriptLines.get(i));
          } else if( isStatement(scriptLines.get(i)) ) {
-            throw new RuntimeException("Feil: SQL tilhører ingen patchblokk: " + scriptLines.get(i));
+            throw new ConfigurationException("Feil: SQL tilhører ingen patchblokk: " + scriptLines.get(i));
          } else {
-            throw new RuntimeException("Feil i '-- PATCH direktiv': " + scriptLines.get(i));
+            throw new ConfigurationException("Feil i '-- PATCH direktiv': " + scriptLines.get(i));
          }
       }
 
@@ -373,7 +402,7 @@ public class DatabasePatcher {
                return new PatchVersion(version, patchNo, kommentar, isDataPatch);
            }
        }
-       throw new RuntimeException("Feil: forventet -- PATCH (INDEX|DATA) DB.VERSION=\"<streng>\" PATCH.NO=\"<number>\": " + expression);
+       throw new ConfigurationException("Feil: forventet -- PATCH (INDEX|DATA) DB.VERSION=\"<streng>\" PATCH.NO=\"<number>\": " + expression);
    }
 
    /**
@@ -406,7 +435,7 @@ public class DatabasePatcher {
                return new PatchVersion(version, -1, null);
            }
        }
-       throw new RuntimeException("Feil: forventet -- PATCH DB.MIN.VERSION=\"<streng>\": " + expression);
+       throw new ConfigurationException("Feil: forventet -- PATCH DB.MIN.VERSION=\"<streng>\": " + expression);
    }
 
    /**
@@ -445,7 +474,7 @@ public class DatabasePatcher {
     * @param con
     * @return patch info for databasen.
     */
-   private PatchInfo getOrCreatePatchInfo(Connection con) {
+   private PatchInfo getOrCreatePatchInfo(Connection con, PatchInfo candidatePatchInfo) {
       PreparedStatement stmt = null;
       ResultSet rs = null;
       try {
@@ -474,7 +503,7 @@ public class DatabasePatcher {
                   addComponentColumn(con);
 
 
-                  //har maks en rad. Endrer evt rad.
+                  //har maks en komponent. Endrer evt rader for denne.
                   stmt = con.prepareStatement("update PATCHINFO set component=?");
                   stmt.setString(1, component);
                   stmt.executeUpdate();
@@ -493,18 +522,21 @@ public class DatabasePatcher {
          JDBCHelper.close(rs, stmt);
 
          if( rowCount == 0 ) {
+             if (candidatePatchInfo == null) {
+                 throw new NotFoundException("Fant ikke versjon for komponent: " + component);
+             } else {
+                 stmt = con.prepareStatement("insert into PATCHINFO (component, dbVersion, patchNo, indexesInSyncWithPatch, kommentar) values (?, ?, ?, ?, ?)");
+                 stmt.setString(1, candidatePatchInfo.component);
+                 stmt.setString(2, candidatePatchInfo.patchVersion.dbVersion);
+                 stmt.setInt(3, candidatePatchInfo.patchVersion.patchNo);
+                 stmt.setInt(4, candidatePatchInfo.indexesInSyncWithPatch ? 0 : 1);
+                 stmt.setString(5, candidatePatchInfo.patchVersion.kommentar);
 
-             //todo: spørre etter patchnummer
+                 logger.info(String.format("Defining patchInfo: %s", candidatePatchInfo));
 
-             stmt = con.prepareStatement("insert into PATCHINFO (component, dbVersion, patchNo, indexesInSyncWithPatch, kommentar) values (?, ?, ?, ?, ?)");
-             stmt.setString(1, component);
-             stmt.setString(2, PatchVersion.DEFAULT_DB_VERSION);
-             stmt.setInt(3, PatchVersion.DEFAULT_PATCH_NO);
-             stmt.setInt(4, 1); //indexes up to date by default
-             stmt.setString(5, String.format("Automatisk opprettet tabell for patchistorikk den %s", new Date()));
-
-             stmt.executeUpdate();
-             JDBCHelper.close(rs, stmt);
+                 stmt.executeUpdate();
+                 JDBCHelper.close(rs, stmt);
+             }
 
          } else if( rowCount > 1 ) {
             throw new RuntimeException("Fant mer enn en rad i tabell PATCHINFO");
@@ -563,6 +595,7 @@ public class DatabasePatcher {
       ResultSet rs = null;
       try {
          stmt = con.createStatement();
+          logger.info("Creating table PATCHINFO");
          stmt.execute("CREATE TABLE PATCHINFO (dbVersion varchar(255), patchNo INTEGER NOT NULL, indexesInSyncWithPatch BOOLEAN NOT NULL, kommentar VARCHAR(255))");
       } catch( SQLException e ) {
          throw new RuntimeException(e);
@@ -581,6 +614,7 @@ public class DatabasePatcher {
         ResultSet rs = null;
         try {
             stmt = con.createStatement();
+            logger.info("Adding column component to PATCHINFO");
             stmt.execute("ALTER TABLE PATCHINFO ADD component varchar(64) NOT NULL");
         } catch( SQLException e ) {
             throw new RuntimeException(e);
@@ -590,32 +624,120 @@ public class DatabasePatcher {
     }
 
 
-    PatchInfo getVersion() {
-      Connection con = null;
-      try {
-         con = JDBCHelper.createConnection();
-         PatchInfo patchInfo = getOrCreatePatchInfo(con);
-         System.out.println(String.format("Database versjon: component=%s db.version=%s patch.no=%d indexesInSyncWithPatch=%b", component, patchInfo.patchVersion.dbVersion, patchInfo.patchVersion.patchNo, patchInfo.indexesInSyncWithPatch));
-         return patchInfo;
-      } catch( SQLException e ) {
-         JDBCHelper.close(con);
-         throw new RuntimeException(e);
-      } catch( Exception e ) {
-         throw new RuntimeException(e);
-      }
-   }
+    public PatchInfo getVersion() {
+        return getOrCreateVersion(null);
+    }
 
-   void setIndexesInSyncWithPatch(boolean value) {
+    public PatchInfo getOrCreateVersion(PatchInfo patchInfo) {
+        Connection con = null;
+        try {
+            con = createConnection();
+
+            PatchInfo currentPatchInfo = getOrCreatePatchInfo(con, patchInfo);
+            logger.info(String.format("Database versjon: component=%s db.version=%s patch.no=%d indexesInSyncWithPatch=%b", currentPatchInfo.component, currentPatchInfo.patchVersion.dbVersion, currentPatchInfo.patchVersion.patchNo, currentPatchInfo.indexesInSyncWithPatch));
+
+            return currentPatchInfo;
+        } catch( SQLException e ) {
+            throw new OperationalException(logger, "Feil ved connection", e);
+        } finally {
+            JDBCHelper.close(con);
+        }
+    }
+
+    PatchInfo getDefaultVersion() {
+        PatchVersion patchVersion = new PatchVersion(PatchVersion.DEFAULT_DB_VERSION, PatchVersion.DEFAULT_PATCH_NO, String.format("Automatisk opprettet tabell for patchistorikk den %s", new Date()));
+        PatchInfo patchInfo = new PatchInfo(component, patchVersion, true);
+        patchInfo.indexesInSyncWithPatch = true; //indexes up to date by default
+        return patchInfo;
+    }
+
+
+    /**
+     * Asserts that the given version parameters exists
+     * @param patchNumber asserted only if not <code>null</code>
+     * @return <code>true</code> if no error found
+     */
+    public boolean assertVersion(String dbVersion, Integer patchNumber) {
+        try {
+            PatchInfo patchInfo = getVersion();
+            if ( !dbVersion.equals(patchInfo.patchVersion.dbVersion)) {
+                return false;
+            }
+            if (patchNumber != null ) {
+                if (patchNumber.intValue() != patchInfo.patchVersion.patchNo) {
+                    return false;
+                }
+            }
+            return true;
+        } catch (NotFoundException nfe) {
+            return false;
+        }
+
+    }
+
+    /**
+     * Inserts the version.
+     * @return {@code false} if the version already exists
+     */
+    public boolean defineVersion(String dbVersion, int patchNumber) {
+        Connection con = null;
+        try {
+            con = createConnection();
+
+            if (!hasVersion(con, dbVersion)) {
+
+                PatchInfo patchInfo = getDefaultVersion();
+                patchInfo.indexesInSyncWithPatch = false;
+
+                PatchVersion patchVersion = patchInfo.patchVersion;
+                patchVersion.dbVersion = dbVersion;
+                patchVersion.patchNo = patchNumber;
+
+                PatchInfo currentPatchInfo = getOrCreatePatchInfo(con, patchInfo);
+                logger.info((String.format("Database versjon: component=%s db.version=%s patch.no=%d indexesInSyncWithPatch=%b", currentPatchInfo.component, currentPatchInfo.patchVersion.dbVersion, currentPatchInfo.patchVersion.patchNo, currentPatchInfo.indexesInSyncWithPatch)));
+
+                return true;
+            } else {
+                return false;
+            }
+
+
+        } catch( SQLException e ) {
+            throw new OperationalException(logger, "Feil ved sql-connection", e);
+        } finally {
+            JDBCHelper.close(con);
+        }
+    }
+
+    boolean hasVersion(Connection con, String dbVersion) {
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = con.prepareStatement("SELECT count(*) FROM PATCHINFO WHERE dbVersion=? AND component=?");
+            stmt.setString(1, dbVersion);
+            stmt.setString(2, component);
+            rs = stmt.executeQuery();
+
+            rs.next();
+            return rs.getLong(1) > 0;
+
+        } catch( SQLException e ) {
+            return false;
+        } finally {
+            JDBCHelper.close(rs, stmt);
+        }
+    }
+
+    public void setIndexesInSyncWithPatch(boolean value) {
       Connection con = null;
       try {
-         con = JDBCHelper.createConnection();
+         con = createConnection();
          PatchInfo patchInfo = getPatchInfo(con);   //feiler dersom ikke versjon finnes
          setIndexesInSyncWithPatch(con, value);
       } catch( SQLException e ) {
-         JDBCHelper.close(con);
-         throw new RuntimeException(e);
-      } catch( Exception e ) {
-         throw new RuntimeException(e);
+          throw new OperationalException(logger, "Feil ved sql-connection", e);
+      } finally {
+          JDBCHelper.close(con);
       }
    }
 

@@ -100,6 +100,14 @@ abstract class AbstractDatabaseConvention {
     }
 
     /**
+     * @since 1.2 - SKTOOLS-34
+     */
+    private final HashMap<String, PatchUtil> patch = new HashMap<String, PatchUtil>();
+    public HashMap<String, PatchUtil> getPatch() {
+        return patch;
+    }
+
+    /**
      * @since 1.2 - SKTOOLS-33
      */
     public def patch(Closure closure) {
@@ -108,13 +116,14 @@ abstract class AbstractDatabaseConvention {
         patch.printPatchVersionTaskName = patch.getPatchTaskName('PrintPatchVersion')
         patch.setIndexesInSyncWithPatchTaskName = patch.getPatchTaskName('SetIndexInSyncWithPatch')
         patch.unSetIndexesInSyncWithPatchTaskName = patch.getPatchTaskName('UnSetIndexInSyncWithPatch')
+        patch.assertPatchVersionTaskName = patch.getPatchTaskName('AssertPatchVersion')
 
         ConfigureUtil.configure(closure, patch, false);
 
         patch.addDefaultTasks();
+
+        getPatch().put(patch.name, new PatchUtil(patch));
     }
-
-
 
 
 

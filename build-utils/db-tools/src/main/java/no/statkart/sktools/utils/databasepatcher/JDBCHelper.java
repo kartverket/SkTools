@@ -124,7 +124,7 @@ public class JDBCHelper {
      * Mulighet for programatisk konfigurering av properties
      * @since 1.2
      */
-    public static Properties connectionProperties = System.getProperties();
+    static Properties connectionProperties = System.getProperties();
 
     /**
     * Oppretter en connection basert på system properties for database connection:

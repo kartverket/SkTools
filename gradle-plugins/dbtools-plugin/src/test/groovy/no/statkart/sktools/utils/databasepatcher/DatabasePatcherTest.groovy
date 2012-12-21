@@ -117,11 +117,11 @@ class DatabasePatcherTest extends HSQLDBTest {
 
             def result = sql.firstRow('select * from PATCHINFO where component=?', 'modulB')
             Assert.assertNotNull(result, 'Forventer en rad')
-            Assert.assertEquals(result.dbVersion, "2.0", "Patchversjon/dbVersion")
+            Assert.assertEquals(result.dbVersion, "0.2", "Patchversjon/dbVersion")
 
         }
 
-        Assert.assertEquals(databasePatcher.getVersion().patchVersion.dbVersion, '2.0', "forventet patchversjon/dbVersion")
+        Assert.assertEquals(databasePatcher.getVersion().patchVersion.dbVersion, '0.2', "forventet patchversjon/dbVersion")
         Assert.assertEquals(databasePatcher.getVersion().patchVersion.patchNo, 4, "forventet patchnummer")
 
     }
@@ -219,9 +219,9 @@ INSERT INTO A_TABLE (ID, NAVN) VALUES (1, 'valueA');
      * <p>
      * Patchnummer:
      * <ul>
-     *     <li> 2.0 patch# 1
-     *     <li> 2.0 patch# 3
-     *     <li> 2.0 patch# 4
+     *     <li> 0.2 patch# 1
+     *     <li> 0.2 patch# 3
+     *     <li> 0.2 patch# 4
      * </ul>
      *
      */
@@ -233,7 +233,7 @@ INSERT INTO A_TABLE (ID, NAVN) VALUES (1, 'valueA');
 --kommentar
 
 -- PATCH DB.MIN.VERSION="<any>"
--- PATCH DATA DB.VERSION="2.0" PATCH.NO="1" "Create Btable"
+-- PATCH DATA DB.VERSION="0.2" PATCH.NO="1" "Create Btable"
 
 CREATE TABLE B_TABLE (
    ID INTEGER NOT NULL,
@@ -241,10 +241,10 @@ CREATE TABLE B_TABLE (
    PRIMARY KEY (ID)
 );
 
--- PATCH DATA DB.VERSION="2.0" PATCH.NO="3" "Inserting valueA"
+-- PATCH DATA DB.VERSION="0.2" PATCH.NO="3" "Inserting valueA"
 INSERT INTO B_TABLE (ID, NAVN) VALUES (1, 'valueA');
 
--- PATCH DATA DB.VERSION="2.0" PATCH.NO="4" "Inserting valueB"
+-- PATCH DATA DB.VERSION="0.2" PATCH.NO="4" "Inserting valueB"
 INSERT INTO B_TABLE (ID, NAVN) VALUES (2, 'valueB');
 
 '''

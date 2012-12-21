@@ -8,6 +8,7 @@ import org.gradle.api.GradleException
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractDatabaseConvention
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.Task
+import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.SequenceTask
 
 /**
  * Pluginen kan konfigureres til å håndtere flere ulike databaser og flere instanser av denne.
@@ -155,16 +156,14 @@ configureDatabasePlugin {
 
 
     /**
-     *  For å kunne benytte jdbc funksjonalitet, må jdbc klasser være lastet inn i classloader til gradle/groovy.
+     *  For å kunne benytte jdbc funksjonalitet, må jdbc klasser registreres i classloader til groovy.
      */
-    def useDrivers(Object dependencyNotation) {
-        List<Dependency> dependencies = [dependencyNotation].flatten().collect { project.dependencies.create(it)}
-        jdbcDependencies.addAll(dependencies)
-        def configuration = project.configurations.detachedConfiguration(dependencies.toArray(new Dependency[dependencies.size()]) )
+    protected void useDrivers(Object dependencyNotation) {
+        [dependencyNotation].flatten().each {
+            Dependency dependency = project.dependencies.create(it)
 
-        URLClassLoader loader = GroovyObject.class.classLoader
-        configuration.files.each {File file ->
-            loader.addURL(file.toURL())
+            project.dependencies.add(DbtoolsPlugin.DBTOOLS_CONFIGURATION, dependency)
+            jdbcDependencies.add(dependency)
         }
     }
 
@@ -198,8 +197,10 @@ configureDatabasePlugin {
         return convention
     }
 
-    private Task sequenceTask(String name, List tasks, Closure config = null) {
-
+    protected Task taskSequence(Map params = [], String name, Closure config = null) {
+        params['name'] = name
+        params['type'] = SequenceTask.class
+        project.tasks.add(params, config)
     }
 
 }
