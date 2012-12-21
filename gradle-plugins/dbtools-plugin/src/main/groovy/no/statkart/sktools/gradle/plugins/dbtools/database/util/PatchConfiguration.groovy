@@ -9,6 +9,10 @@ import org.gradle.api.Project
 import no.statkart.sktools.utils.databasepatcher.exception.ConfigurationException
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.AssertPatchversionTask
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.DefinePatchversionTask
+import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.PrintPatchversionTask
+import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.DatabasePatchTask
+import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.IndexesInSyncWithPatchTask
+import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.PatchTask
 
 /**
  *

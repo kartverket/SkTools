@@ -1,4 +1,4 @@
-package no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch
+package no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.Task

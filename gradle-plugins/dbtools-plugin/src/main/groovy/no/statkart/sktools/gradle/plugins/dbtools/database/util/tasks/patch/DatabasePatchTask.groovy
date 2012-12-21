@@ -1,9 +1,9 @@
-package no.statkart.sktools.gradle.plugins.dbtools.database.util
+package no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch
 
 import org.gradle.api.tasks.Input
 import org.gradle.process.JavaExecSpec
 import org.gradle.api.file.FileCollection
-import org.gradle.api.tasks.Optional
+import no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractSQLTask
 
 /**
  * Task for patching av schema over JDBC.

@@ -8,7 +8,7 @@ import org.gradle.api.GradleException
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractDatabaseConvention
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.Task
-import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.SequenceTask
+import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.SequenceTask
 
 /**
  * Pluginen kan konfigureres til å håndtere flere ulike databaser og flere instanser av denne.

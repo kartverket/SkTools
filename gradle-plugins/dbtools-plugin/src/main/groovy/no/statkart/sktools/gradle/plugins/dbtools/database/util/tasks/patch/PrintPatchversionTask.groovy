@@ -1,20 +1,15 @@
-package no.statkart.sktools.gradle.plugins.dbtools.database.util
+package no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch
 
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.JavaExecSpec
-import org.gradle.api.tasks.Input
 
 /**
- * Task som setter flagg i databasen om indexer er up-to-date for gjeldende patch eller ikke.
+ * Task som gir deg siste patchversjon.
  *
  * @author Leif Lislegård
  * @since 1.2
  */
-class IndexesInSyncWithPatchTask extends DatabasePatchTask {
-
-
-    @Input
-    Boolean indexesUpToDate
+class PrintPatchversionTask extends DatabasePatchTask {
 
     @TaskAction
     def exec() {
@@ -22,7 +17,7 @@ class IndexesInSyncWithPatchTask extends DatabasePatchTask {
         project.javaexec { JavaExecSpec spec ->
 
             /** {@link no.statkart.sktools.utils.databasepatcher.DatabasePatcher#main } */
-            spec.setArgs(['setIndexesInSyncWithPatch', getIndexesUpToDate()])
+            spec.setArgs(['getVersion'])
 
             configureDefaultSpec(spec)
 
@@ -33,5 +28,6 @@ class IndexesInSyncWithPatchTask extends DatabasePatchTask {
 
     //bruker ikke denne
     File getSqlFile() { }
+
 
 }
