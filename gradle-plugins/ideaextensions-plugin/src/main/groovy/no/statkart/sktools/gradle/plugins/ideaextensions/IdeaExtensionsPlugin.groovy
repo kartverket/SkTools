@@ -37,13 +37,15 @@ class IdeaExtensionsPlugin implements Plugin<Project> {
         project.convention.plugins."${CONVENTION_NAME}" = convention
 
         if (project.parent == null) { //root
-            project.tasks.idea.doLast {
 
-                FileUtil.modifyXmlFile(project.file("${project.name}.iws")) { xml ->
+            project.tasks.ideaWorkspace.doLast {
+                FileUtil.modifyXmlFile(project.file(it.outputFile)) { xml ->
                     addIgnoreMasksAndPaths(xml, convention)
                 }
+            }
 
-                FileUtil.modifyXmlFile(project.file("${project.name}.ipr")) { xml ->
+            project.tasks.ideaProject.doLast {
+                FileUtil.modifyXmlFile(it.outputFile) { xml ->
                     addVcsMappings(xml, convention)
                 }
             }
