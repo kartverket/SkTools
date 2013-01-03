@@ -615,7 +615,7 @@ public class DatabasePatcher {
         try {
             stmt = con.createStatement();
             logger.info("Adding column component to PATCHINFO");
-            stmt.execute("ALTER TABLE PATCHINFO ADD component varchar(64) NOT NULL");
+            stmt.execute(String.format("ALTER TABLE PATCHINFO ADD component varchar(64) DEFAULT '%s' NOT NULL", PatchInfo.DEFAULT_MODULE));
         } catch( SQLException e ) {
             throw new RuntimeException(e);
         } finally {
