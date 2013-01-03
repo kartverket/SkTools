@@ -56,8 +56,8 @@ class PatchConfiguration {
     }
 
 
-    String getPatchTaskName(String verb) {
-        String.format("%s%s", StringUtils.capitalize(verb), 'null'.equals(name) ? '' : StringUtils.capitalize(name))
+    String getPatchTaskName(String verb, String target = '') {
+        String.format("%s%s%s", StringUtils.capitalize(verb), 'null'.equals(name) ? '' : StringUtils.capitalize(name), StringUtils.capitalize(target))
     }
 
     String getName() {
@@ -68,7 +68,7 @@ class PatchConfiguration {
      * @since 1.2 - SKTOOLS-33
      */
     public PatchTask patchTask(Map params, String name, Closure closure = null) {
-        PatchTask task = databaseConvention.configureAbstractSQLTask(params, getPatchTaskName(name), PatchTask.class, closure)
+        PatchTask task = databaseConvention.configureAbstractSQLTask(params, getPatchTaskName('patch', name), PatchTask.class, closure)
         task.conventionMapping.with {
             map 'component', { this.getName() }
             map 'classpath', { findJdbcDependencies() + findDbToolsDependencies() }
