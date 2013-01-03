@@ -171,7 +171,11 @@ public class DatabasePatcher {
 
            //parser kommando
            if( commandName.equals("getVersion") ) {
-               databasePatcher.getOrCreateVersion(databasePatcher.getDefaultVersion());
+               try {
+                   databasePatcher.getVersion();
+               } catch (NotFoundException nfe) {
+                   logger.error(String.format("Versjon ikke definert for '%s'", databasePatcher.component), nfe);
+               }
                System.exit(0);
 
            } else if( commandName.equals("setIndexesInSyncWithPatch") ) {
@@ -501,13 +505,6 @@ public class DatabasePatcher {
               JDBCHelper.close(rs, stmt);
               if (!hasComponentColumn) {
                   addComponentColumn(con);
-
-
-                  //har maks en komponent. Endrer evt rader for denne.
-                  stmt = con.prepareStatement("update PATCHINFO set component=?");
-                  stmt.setString(1, component);
-                  stmt.executeUpdate();
-
                   JDBCHelper.close(rs, stmt);
               }
           }
@@ -522,9 +519,7 @@ public class DatabasePatcher {
          JDBCHelper.close(rs, stmt);
 
          if( rowCount == 0 ) {
-             if (candidatePatchInfo == null) {
-                 throw new NotFoundException("Fant ikke versjon for komponent: " + component);
-             } else {
+             if (candidatePatchInfo != null) {
                  stmt = con.prepareStatement("insert into PATCHINFO (component, dbVersion, patchNo, indexesInSyncWithPatch, kommentar) values (?, ?, ?, ?, ?)");
                  stmt.setString(1, candidatePatchInfo.component);
                  stmt.setString(2, candidatePatchInfo.patchVersion.dbVersion);
@@ -536,6 +531,8 @@ public class DatabasePatcher {
 
                  stmt.executeUpdate();
                  JDBCHelper.close(rs, stmt);
+             } else {
+                 throw new NotFoundException("Fant ikke versjon for komponent: " + component);
              }
 
          } else if( rowCount > 1 ) {
@@ -645,7 +642,7 @@ public class DatabasePatcher {
     }
 
     PatchInfo getDefaultVersion() {
-        PatchVersion patchVersion = new PatchVersion(PatchVersion.DEFAULT_DB_VERSION, PatchVersion.DEFAULT_PATCH_NO, String.format("Automatisk opprettet tabell for patchistorikk den %s", new Date()));
+        PatchVersion patchVersion = new PatchVersion(PatchVersion.DEFAULT_DB_VERSION, PatchVersion.DEFAULT_PATCH_NO, String.format("Automatisk opprettet patchistorikk den %s", new Date()));
         PatchInfo patchInfo = new PatchInfo(component, patchVersion, true);
         patchInfo.indexesInSyncWithPatch = true; //indexes up to date by default
         return patchInfo;
