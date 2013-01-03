@@ -40,7 +40,7 @@ configureDatabasePlugin {
  *
  */
 public class DbtoolsConvention {
-    protected final Project project;
+    public final Project project;
 
     protected final List<Dependency> jdbcDependencies = new ArrayList<Dependency>(4);
 
@@ -172,7 +172,7 @@ configureDatabasePlugin {
 
         if (convention == null) {
             project.logger.info("Applying Oracle convention with name ${name} ...")
-            convention = new OracleTasksConvention(project, prefix, name)
+            convention = new OracleTasksConvention(this, prefix, name)
             dbToolSets.put(name, convention)
 
         }
@@ -187,7 +187,7 @@ configureDatabasePlugin {
 
         if (convention == null) {
             project.logger.info("Applying HSQLDB convention with name ${name} ...")
-            convention = new HsqldbTasksConvention(project, prefix, name)
+            convention = new HsqldbTasksConvention(this, prefix, name)
             dbToolSets.put(name, convention)
 
         }
@@ -200,7 +200,7 @@ configureDatabasePlugin {
     protected Task taskSequence(Map params = [], String name, Closure config = null) {
         params['name'] = name
         params['type'] = SequenceTask.class
-        project.tasks.add(params, config)
+        return project.tasks.add(params, config)
     }
 
 }

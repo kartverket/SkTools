@@ -8,6 +8,7 @@ import org.gradle.api.Task
 import org.gradle.api.plugins.ExtraPropertiesExtension
 import org.gradle.api.GradleException
 import org.gradle.util.ConfigureUtil
+import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsConvention
 
 /**
  * Convention object for Oracle database tools
@@ -20,8 +21,8 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
 
     protected OracleTasks tasks = new OracleTasks(this);
 
-    OracleTasksConvention(Project project, String propertyPrefix, String name) {
-        super(project, propertyPrefix, name, 'oracle.jdbc.OracleDriver')
+    OracleTasksConvention(DbtoolsConvention dbtoolsConvention, String propertyPrefix, String name) {
+        super(dbtoolsConvention, propertyPrefix, name, 'oracle.jdbc.OracleDriver')
         addInfoTask(project)
 
         ExtraPropertiesExtension ext = project.getExtensions().getExtraProperties()

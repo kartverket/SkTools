@@ -35,14 +35,14 @@ configureDatabasePlugin {
 
         patch {
             name = 'Module1'
-            patchTask('Patch_1.9.1', sqlFile: 'src/sql/system_1.9.1/patch/patchModule1_1.9.1.sql')
-            patchTask('Patch_1.10', sqlFile: 'src/sql/system_1.10/patch/patchModule1_1.10.sql')
+            patchTask('_1.9.1', sqlFile: 'src/sql/system_1.9.1/patch/patchModule1_1.9.1.sql')
+            patchTask('_1.10', sqlFile: 'src/sql/system_1.10/patch/patchModule1_1.10.sql')
         }
 
         patch {
             name = 'Module2'
-            patchTask('Patch_1.9.1', sqlFile: 'src/sql/system_1.9.1/patch/patchModule2_1.9.1.sql')
-            patchTask('Patch_1.10', sqlFile: 'src/sql/system_1.10/patch/patchModule2_1.10.sql')
+            patchTask('_1.9.1', sqlFile: 'src/sql/system_1.9.1/patch/patchModule2_1.9.1.sql')
+            patchTask('_1.10', sqlFile: 'src/sql/system_1.10/patch/patchModule2_1.10.sql')
         }
 
         sqlTask('assertMinPatchVersion', sqlString: '-- verifies min patch version').doLast {
@@ -71,13 +71,12 @@ configureDatabasePlugin {
 
     }
 
-    task dbPatch(description: 'Patcher databasen opp til siste versjon') {
-        int i = 0 //hacker til nytt lag av tasker da gradle 1.9.1 eksekverer dependencies i alfabetisk rekkefølge
+    taskSequence('dbPatch', description: 'Patcher databasen opp til siste versjon') {
 
-        dependsOn project.task(String.format('%s_step%02d', it.name, ++i), dependsOn: dbToolSets['sa'].tasks['Patch_1.9.1Module1'])
-        dependsOn project.task(String.format('%s_step%02d', it.name, ++i), dependsOn: dbToolSets['sa'].tasks['Patch_1.9.1Module2'])
-        dependsOn project.task(String.format('%s_step%02d', it.name, ++i), dependsOn: dbToolSets['sa'].tasks['Patch_1.10Module1'])
-        dependsOn project.task(String.format('%s_step%02d', it.name, ++i), dependsOn: dbToolSets['sa'].tasks['Patch_1.10Module2'])
+        dependsOn dbToolSets['sa'].patch['Module1'].tasks['_1.9.1']
+        dependsOn dbToolSets['sa'].patch['Module2'].tasks['_1.9.1']
+        dependsOn dbToolSets['sa'].patch['Module1'].tasks['_1.10']
+        dependsOn dbToolSets['sa'].patch['Module2'].tasks['_1.10']
     }
 
 }
@@ -130,7 +129,7 @@ task runDemo(dependsOn:[clean]) {
         forkGradle(['_assertNoTestTable1', '_assertNoTestTable2'])
         
         //kjører inn en patch
-        forkGradle(['Patch_1.9.1Module1'])
+        forkGradle(['PatchModule1_1.9.1'])
         forkGradle(['_assertModule1_version1', '_assertNoTestTable2'])
 
         //kjører inn alle patcher

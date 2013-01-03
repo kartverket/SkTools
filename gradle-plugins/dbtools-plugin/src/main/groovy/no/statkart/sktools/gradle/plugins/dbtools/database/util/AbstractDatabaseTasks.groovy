@@ -1,15 +1,14 @@
 package no.statkart.sktools.gradle.plugins.dbtools.database.util
 
-import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.UnknownDomainObjectException
 
 /**
  * Samling av tasks
  *
- * Denne klasen er noe kilen da all property aksess blir styrt via #getProperty
+ * Denne klassen er noe kilen da all property aksess blir styrt via #getProperty
  */
-abstract class AbstractDatabaseTasks<I extends AbstractDatabaseConvention> extends AbstractCollection<Task> implements DatabaseTasksInterface<I> {
+abstract class AbstractDatabaseTasks<I> extends AbstractCollection<Task> {
 
     private final Map<String, Task> tasks = new LinkedHashMap<String, Task>()
     private final I convention

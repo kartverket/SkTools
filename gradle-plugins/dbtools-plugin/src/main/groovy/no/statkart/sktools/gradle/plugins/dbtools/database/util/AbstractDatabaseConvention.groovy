@@ -6,13 +6,16 @@ import org.gradle.api.GradleException
 import org.apache.commons.lang.StringUtils
 import org.gradle.api.Task
 
+import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsConvention
+
 /**
  * Felles funksjonalitet for toolsets
  */
 abstract class AbstractDatabaseConvention {
 
+    protected final DbtoolsConvention dbtoolsConvention
+
     protected final String name
-    protected final Project project
     protected final Map<String, Object> properties = new HashMap<String, Object>() // HashMap allows null values
 
     /**
@@ -28,9 +31,9 @@ abstract class AbstractDatabaseConvention {
     /** kan settes via {@link #config(Closure) config closure} definert i prosjekt */
     public String url
 
-    AbstractDatabaseConvention(Project project, String propertyPrefix, String name, String driver) {
+    AbstractDatabaseConvention(DbtoolsConvention dbtoolsConvention, String propertyPrefix, String name, String driver) {
+        this.dbtoolsConvention = dbtoolsConvention
         this.name = name
-        this.project = project
         this.prefix = propertyPrefix
 
         this.credentials = new Credentials("toolset:${prefix}", properties)
@@ -43,9 +46,13 @@ abstract class AbstractDatabaseConvention {
         closure.setDelegate(this)
         closure.resolveStrategy = Closure.DELEGATE_FIRST
         closure()
-   }
+    }
 
     public abstract AbstractDatabaseTasks getTasks()
+
+    protected Project getProject() {
+        return dbtoolsConvention.project
+    }
 
     /**
      * SKTOOLS-32: Mulighet til referering av toolset ifra andre scope
@@ -113,10 +120,10 @@ abstract class AbstractDatabaseConvention {
     public def patch(Closure closure) {
         PatchConfiguration patch = new PatchConfiguration(this);
         patch.name = 'null' //for bakoverkompabilitet, se PatchInfo#DEFAULT_MODULE
-        patch.printPatchVersionTaskName = patch.getPatchTaskName('PrintPatchVersion')
-        patch.setIndexesInSyncWithPatchTaskName = patch.getPatchTaskName('SetIndexInSyncWithPatch')
-        patch.unSetIndexesInSyncWithPatchTaskName = patch.getPatchTaskName('UnSetIndexInSyncWithPatch')
-        patch.assertPatchVersionTaskName = patch.getPatchTaskName('AssertPatchVersion')
+        patch.printPatchVersionTaskName = 'PrintPatchVersion';
+        patch.setIndexesInSyncWithPatchTaskName = 'SetIndexInSyncWithPatch';
+        patch.unSetIndexesInSyncWithPatchTaskName = 'UnSetIndexInSyncWithPatch';
+        patch.assertPatchVersionTaskName = 'AssertPatchVersion';
 
         ConfigureUtil.configure(closure, patch, false);
 
@@ -239,6 +246,14 @@ abstract class AbstractDatabaseConvention {
         Map<String, String> sysProperties = project.gradle.startParameter.getMergedSystemProperties()
         sysProperties.get('sql.file.encoding') ?: sysProperties.get('file.encoding')
     }
+
+    protected Task taskSequence(Map params = [], String verb, Closure config = null) {
+        def taskName = getTaskName(verb)
+        def task = dbtoolsConvention.taskSequence(params, taskName, config)
+
+        getTasks().addTask(taskName, task)
+    }
+
 
 }
 

@@ -13,6 +13,7 @@ import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.Prin
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.DatabasePatchTask
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.IndexesInSyncWithPatchTask
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.PatchTask
+import org.gradle.api.Task
 
 /**
  *
@@ -31,6 +32,8 @@ class PatchConfiguration {
     protected String setIndexesInSyncWithPatchTaskName
     protected String unSetIndexesInSyncWithPatchTaskName
     protected String assertPatchVersionTaskName
+
+    protected final AbstractDatabaseTasks<PatchConfiguration> tasks = new AbstractDatabaseTasks(this) { }
 
 
     PatchConfiguration(AbstractDatabaseConvention databaseConvention) {
@@ -56,7 +59,7 @@ class PatchConfiguration {
     }
 
 
-    String getPatchTaskName(String verb, String target = '') {
+    String getTaskName(String verb, String target = '') {
         String.format("%s%s%s", StringUtils.capitalize(verb), 'null'.equals(name) ? '' : StringUtils.capitalize(name), StringUtils.capitalize(target))
     }
 
@@ -68,7 +71,7 @@ class PatchConfiguration {
      * @since 1.2 - SKTOOLS-33
      */
     public PatchTask patchTask(Map params, String name, Closure closure = null) {
-        PatchTask task = databaseConvention.configureAbstractSQLTask(params, getPatchTaskName('patch', name), PatchTask.class, closure)
+        PatchTask task = configureAbstractSQLTask(params, name, 'patch', PatchTask.class, closure)
         task.conventionMapping.with {
             map 'component', { this.getName() }
             map 'classpath', { findJdbcDependencies() + findDbToolsDependencies() }
@@ -81,9 +84,9 @@ class PatchConfiguration {
      */
     public PrintPatchversionTask printPatchVersionTask(Map params, String name = null, Closure closure = null) {
         if (name != null) {
-            printPatchVersionTaskName = getPatchTaskName(name)
+            printPatchVersionTaskName = name
         }
-        PrintPatchversionTask task = databaseConvention.configureAbstractSQLTask(params, printPatchVersionTaskName, PrintPatchversionTask.class, closure)
+        PrintPatchversionTask task = configureAbstractSQLTask(params, printPatchVersionTaskName, PrintPatchversionTask.class, closure)
         task.conventionMapping.with {
             map 'component', { this.getName() }
             map 'classpath', { findJdbcDependencies() + findDbToolsDependencies() }
@@ -97,9 +100,9 @@ class PatchConfiguration {
      */
     public AssertPatchversionTask assertPatchVersionTask(Map params, String name, Closure closure = null) {
         if (name != null) {
-            assertPatchVersionTaskName = getPatchTaskName(name)
+            assertPatchVersionTaskName = name
         }
-        AssertPatchversionTask task = databaseConvention.configureAbstractSQLTask(params, assertPatchVersionTaskName, AssertPatchversionTask.class, closure)
+        AssertPatchversionTask task = configureAbstractSQLTask(params, assertPatchVersionTaskName, AssertPatchversionTask.class, closure)
         task.conventionMapping.with {
             map 'component', { this.getName() }
             map 'classpath', { findJdbcDependencies() + findDbToolsDependencies() }
@@ -115,9 +118,9 @@ class PatchConfiguration {
         if (name == null) {
             throw new ConfigurationException("Name is mandatory and have to be declared!")
         }
-        String definePatchVersionTaskName = getPatchTaskName(name)
+        String definePatchVersionTaskName = name
 
-        DefinePatchversionTask task = databaseConvention.configureAbstractSQLTask(params, definePatchVersionTaskName, DefinePatchversionTask.class, closure)
+        DefinePatchversionTask task = configureAbstractSQLTask(params, definePatchVersionTaskName, DefinePatchversionTask.class, closure)
         task.conventionMapping.with {
             map 'component', { this.getName() }
             map 'classpath', { findJdbcDependencies() + findDbToolsDependencies() }
@@ -131,9 +134,9 @@ class PatchConfiguration {
      */
     public IndexesInSyncWithPatchTask setIndexesInSyncWithPatchTask(Map params, String name = null, Closure closure = null) {
         if (name != null) {
-            setIndexesInSyncWithPatchTaskName = getPatchTaskName(name)
+            setIndexesInSyncWithPatchTaskName = name
         }
-        IndexesInSyncWithPatchTask task = databaseConvention.configureAbstractSQLTask(params, setIndexesInSyncWithPatchTaskName, IndexesInSyncWithPatchTask.class, closure)
+        IndexesInSyncWithPatchTask task = configureAbstractSQLTask(params, setIndexesInSyncWithPatchTaskName, IndexesInSyncWithPatchTask.class, closure)
         task.conventionMapping.with {
             map 'component', { this.getName() }
             map 'classpath', { findJdbcDependencies() + findDbToolsDependencies() }
@@ -147,9 +150,9 @@ class PatchConfiguration {
      */
     public IndexesInSyncWithPatchTask unSetIndexesInSyncWithPatchTask(Map params, String name = null, Closure closure = null) {
         if (name != null) {
-            unSetIndexesInSyncWithPatchTaskName = getPatchTaskName(name)
+            unSetIndexesInSyncWithPatchTaskName = name
         }
-        IndexesInSyncWithPatchTask task = databaseConvention.configureAbstractSQLTask(params, unSetIndexesInSyncWithPatchTaskName, IndexesInSyncWithPatchTask.class, closure)
+        IndexesInSyncWithPatchTask task = configureAbstractSQLTask(params, unSetIndexesInSyncWithPatchTaskName, IndexesInSyncWithPatchTask.class, closure)
         task.conventionMapping.with {
             map 'component', { this.getName() }
             map 'classpath', { findJdbcDependencies() + findDbToolsDependencies() }
@@ -158,6 +161,13 @@ class PatchConfiguration {
         return task
     }
 
+
+    protected Task taskSequence(Map params = [], String name, Closure config = null) {
+        def taskName = getTaskName(name)
+        def task = databaseConvention.taskSequence(params, taskName, config)
+
+        getTasks().addTask(name, task)
+    }
 
 
     // util funksjoner
@@ -182,6 +192,16 @@ class PatchConfiguration {
                 map 'component', { 'null' }
             }
         }
+    }
+
+    AbstractSQLTask configureAbstractSQLTask(Map params, String target, String verb = '', Class type, Closure closure) {
+        def taskName = getTaskName(verb, target)
+        def task = databaseConvention.configureAbstractSQLTask(params, taskName, type, closure)
+        getTasks().addTask(target, task)
+    }
+
+    public AbstractDatabaseTasks getTasks() {
+        return tasks;
     }
 
 }

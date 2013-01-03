@@ -46,6 +46,9 @@ public class PatchUtil {
         }
     }
 
+    public AbstractDatabaseTasks getTasks() {
+        return configuration.getTasks();
+    }
 
     private DatabasePatcher setUpDatabasePatcher(Closure config) {
         def wrapper = new DatabasePatcherWrapper();

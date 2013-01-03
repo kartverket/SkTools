@@ -36,12 +36,12 @@ configureDatabasePlugin {
 
 
         patch {
-            patchTask('patchComponent1', sqlFile:'src/sql/schema1/patch.sql', description: 'Databasepatcher for schema1')
+            patchTask('Latest', sqlFile:'src/sql/schema1/patch.sql', description: 'Databasepatcher for schema1')
         }
 
         patch {
             name = 'Component2'
-            patchTask('patch', sqlFile:'src/sql/schema2/patch.sql', description: 'Databasepatcher for schema2')
+            patchTask('Latest', sqlFile:'src/sql/schema2/patch.sql', description: 'Databasepatcher for schema2')
         }
 
         patch {
@@ -66,7 +66,7 @@ configureDatabasePlugin {
 
     taskSequence('dbImportEmpty', description: "Import of 'Empty' schema.") {
         dependsOn dbToolSets['sa'].tasks['ImportEmpty']
-        dependsOn dbToolSets['sa'].tasks['SetPatchversionFor2_2Empty']  // "${'SetPatchversionFor2_2'}${'Empty'}"
+        dependsOn dbToolSets['sa'].patch['Empty'].tasks['SetPatchversionFor2_2']  // "EmptySetPatchversionFor2_2"
     }
 
 }
@@ -114,11 +114,11 @@ task runDemo(dependsOn:[clean]) {
         println 'Tester patchComponent1...'
 
         forkGradle(['_assertNoTestTable'])
-        forkGradle(['patchComponent1', '_assertComponent1Patchnummer4', '_assertPatchComponent1'])
+        forkGradle(['patchLatest', '_assertComponent1Patchnummer4', '_assertPatchComponent1'])
 
 
         forkGradle(['_assertNoTestTable2'])
-        forkGradle(['patchComponent2', '_assertComponent2Patchnummer4', '_assertPatchComponent2'])
+        forkGradle(['patchComponent2Latest', '_assertComponent2Patchnummer4', '_assertPatchComponent2'])
 
 
         //illustrerer mekanikk for setting etter import
@@ -132,7 +132,7 @@ task runDemo(dependsOn:[clean]) {
 // --
 
 task _assertPatchVersionEmpty() {
-    dependsOn dbToolSets['sa'].tasks['AssertPatchVersionEmpty']
+    dependsOn dbToolSets['sa'].patch['Empty'].tasks['AssertPatchVersion']
 }
 
 

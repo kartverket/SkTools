@@ -80,14 +80,14 @@ class DbToolsPluginPatchTest extends HSQLDBTest {
                 driver = jdbcDriverClassString
 
                 patch {
-                    patchTask('PatchOppTestSchema', sqlFile:patchFile)
+                    patchTask('TestSchema', sqlFile:patchFile)
                 }
 
             }
         }
 
         // STEG 3 - tester
-        Task printPatchVersionTask = project.tasks.getByName('prefixPatchOppTestSchema')
+        Task printPatchVersionTask = project.tasks.getByName('prefixPatchTestSchema')
 
         //
 //        if (IntelliJTestUtil.isIntelliJTestRuntime) {
