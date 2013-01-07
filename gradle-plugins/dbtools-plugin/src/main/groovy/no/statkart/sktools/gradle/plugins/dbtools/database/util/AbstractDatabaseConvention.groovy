@@ -251,7 +251,7 @@ abstract class AbstractDatabaseConvention {
         def taskName = getTaskName(verb)
         def task = dbtoolsConvention.taskSequence(params, taskName, config)
 
-        getTasks().addTask(taskName, task)
+        getTasks().addTask(verb, task)
     }
 
 
