@@ -114,7 +114,7 @@ class PatchConfiguration {
      * Task som setter pathcversjon for component.
      * @since 1.2 - SKTOOLS-34
      */
-    public DefinePatchversionTask definePatchVersionTask(Map params, String name, Closure closure = null) {
+    public DefinePatchversionTask definePatchVersionTask(Map params = [:], String name, Closure closure = null) {
         if (name == null) {
             throw new ConfigurationException("Name is mandatory and have to be declared!")
         }
@@ -126,6 +126,9 @@ class PatchConfiguration {
             map 'classpath', { findJdbcDependencies() + findDbToolsDependencies() }
         }
         return task
+    }
+    public DefinePatchversionTask definePatchVersionTask(String name, Closure closure) {
+        return definePatchVersionTask([:], name, closure)
     }
 
 

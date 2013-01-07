@@ -230,7 +230,6 @@ public class DatabasePatcher {
 
                    boolean ok = databasePatcher.defineVersion(dbVersion, patchNumber);
                    if (!ok) {
-                       System.err.println("Version already exists: " + databasePatcher.getVersion());
                        System.exit(2);
                    }
                    System.exit(0);
@@ -477,8 +476,9 @@ public class DatabasePatcher {
     *
     * @param con
     * @return patch info for databasen.
+    * @throws NotFoundException if no patchinfo for component exists
     */
-   private PatchInfo getOrCreatePatchInfo(Connection con, PatchInfo candidatePatchInfo) {
+   private PatchInfo getOrCreatePatchInfo(Connection con, PatchInfo candidatePatchInfo) throws NotFoundException {
       PreparedStatement stmt = null;
       ResultSet rs = null;
       try {
@@ -625,7 +625,11 @@ public class DatabasePatcher {
         return getOrCreateVersion(null);
     }
 
-    public PatchInfo getOrCreateVersion(PatchInfo patchInfo) {
+    /**
+     *
+     * @throws NotFoundException if no patchinfo for component exists
+     */
+    public PatchInfo getOrCreateVersion(PatchInfo patchInfo) throws NotFoundException {
         Connection con = null;
         try {
             con = createConnection();
@@ -673,7 +677,10 @@ public class DatabasePatcher {
     }
 
     /**
-     * Inserts the version.
+     * Inserts or updates the version information.
+     * If no version for component exists, then a new info is added.
+     * Else if version exists, then the info is updated according to parameteres.
+     *
      * @return {@code false} if the version already exists
      */
     public boolean defineVersion(String dbVersion, int patchNumber) {
@@ -681,8 +688,39 @@ public class DatabasePatcher {
         try {
             con = createConnection();
 
-            if (!hasVersion(con, dbVersion)) {
+            if (hasVersion(con, null)) { //version info for component exists
+                PatchInfo currentPatchInfo = getOrCreatePatchInfo(con, null);
 
+                if (currentPatchInfo.patchVersion.dbVersion.equals(dbVersion)) {
+                    if (currentPatchInfo.patchVersion.patchNo != patchNumber) { //allows update across the same dbversion
+                        //update version
+                        PatchVersion patchVersion = currentPatchInfo.patchVersion;
+
+                        patchVersion.dbVersion = dbVersion;
+                        patchVersion.patchNo = patchNumber;
+
+                        updatePatchInfo(con, patchVersion);
+
+                        currentPatchInfo = getOrCreatePatchInfo(con, null);
+                        logger.info((String.format("Database versjon: component=%s db.version=%s patch.no=%d indexesInSyncWithPatch=%b", currentPatchInfo.component, currentPatchInfo.patchVersion.dbVersion, currentPatchInfo.patchVersion.patchNo, currentPatchInfo.indexesInSyncWithPatch)));
+
+                        return true;
+
+                    } else {
+                        //har allerede versjon
+                        logger.info(String.format("Patchversjon allerede definert!"));
+                        return true;
+                    }
+
+                } else {
+                    logger.error("Kan ikke definere patchversjon da versjonsinfomasjon for komponent allerede finnes.");
+                    logger.info((String.format("Database versjon: component=%s db.version=%s patch.no=%d indexesInSyncWithPatch=%b", currentPatchInfo.component, currentPatchInfo.patchVersion.dbVersion, currentPatchInfo.patchVersion.patchNo, currentPatchInfo.indexesInSyncWithPatch)));
+
+                    return false;
+                }
+
+            } else {
+                //legger inn versjon
                 PatchInfo patchInfo = getDefaultVersion();
                 patchInfo.indexesInSyncWithPatch = false;
 
@@ -694,8 +732,6 @@ public class DatabasePatcher {
                 logger.info((String.format("Database versjon: component=%s db.version=%s patch.no=%d indexesInSyncWithPatch=%b", currentPatchInfo.component, currentPatchInfo.patchVersion.dbVersion, currentPatchInfo.patchVersion.patchNo, currentPatchInfo.indexesInSyncWithPatch)));
 
                 return true;
-            } else {
-                return false;
             }
 
 
@@ -706,13 +742,23 @@ public class DatabasePatcher {
         }
     }
 
+    /**
+     *
+     * @param dbVersion ignores dbVersion if {@code null}
+     */
     boolean hasVersion(Connection con, String dbVersion) {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = con.prepareStatement("SELECT count(*) FROM PATCHINFO WHERE dbVersion=? AND component=?");
-            stmt.setString(1, dbVersion);
-            stmt.setString(2, component);
+            String sqlString = "SELECT count(*) FROM PATCHINFO WHERE component=?";
+            if (dbVersion != null) {
+                sqlString += " AND dbVersion=?";
+            }
+            stmt = con.prepareStatement(sqlString);
+            stmt.setString(1, component);
+            if (dbVersion != null) {
+                stmt.setString(2, dbVersion);
+            }
             rs = stmt.executeQuery();
 
             rs.next();
