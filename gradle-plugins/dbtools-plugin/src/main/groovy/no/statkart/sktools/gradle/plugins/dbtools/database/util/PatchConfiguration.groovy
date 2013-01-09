@@ -165,8 +165,12 @@ class PatchConfiguration {
     }
 
 
+    //registrerer opprettelse av taskSequence til dette toolset
     protected Task taskSequence(String verb, Closure config = null) {
-        return taskSequence([:], verb, config)
+        def taskName = getTaskName(name)
+        def task = databaseConvention.taskSequence(taskName, config)
+
+        getTasks().addTask(name, task)
     }
     protected Task taskSequence(Map params, String name, Closure config = null) {
         def taskName = getTaskName(name)
@@ -175,6 +179,19 @@ class PatchConfiguration {
         getTasks().addTask(name, task)
     }
 
+    //registrerer opprettelse av task til dette toolset
+    protected Task task(String verb, Closure config = null) {
+        def taskName = getTaskName(verb)
+        def task = databaseConvention.task(taskName, config)
+
+        getTasks().addTask(verb, task)
+    }
+    protected Task task(Map params, String verb, Closure config = null) {
+        def taskName = getTaskName(verb)
+        def task = databaseConvention.task(params, taskName, config)
+
+        getTasks().addTask(verb, task)
+    }
 
     // util funksjoner
 

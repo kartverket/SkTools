@@ -247,8 +247,12 @@ abstract class AbstractDatabaseConvention {
         sysProperties.get('sql.file.encoding') ?: sysProperties.get('file.encoding')
     }
 
+    //registrerer opprettelse av sequence-task til dette toolset
     protected Task taskSequence(String verb, Closure config = null) {
-        return taskSequence([:], verb, config)
+        def taskName = getTaskName(verb)
+        def task = dbtoolsConvention.taskSequence(taskName, config)
+
+        getTasks().addTask(verb, task)
     }
     protected Task taskSequence(Map params, String verb, Closure config = null) {
         def taskName = getTaskName(verb)
@@ -257,6 +261,19 @@ abstract class AbstractDatabaseConvention {
         getTasks().addTask(verb, task)
     }
 
+    //registrerer opprettelse av task til dette toolset
+    protected Task task(String verb, Closure config = null) {
+        def taskName = getTaskName(verb)
+        def task = project.task(taskName, config)
+
+        getTasks().addTask(verb, task)
+    }
+    protected Task task(Map params, String verb, Closure config = null) {
+        def taskName = getTaskName(verb)
+        def task = project.task(params, taskName, config)
+
+        getTasks().addTask(verb, task)
+    }
 
 }
 
