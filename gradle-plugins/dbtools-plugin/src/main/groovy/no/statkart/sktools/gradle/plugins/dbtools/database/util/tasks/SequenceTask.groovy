@@ -46,7 +46,6 @@ class SequenceTask extends DefaultTask {
         TaskDependency taskDependencies = task.getTaskDependencies()
 
         if (task != thisTask && depth > 1 ) {
-            println "legger til onlyIf for " + task
             task.onlyIf(new Spec<Task>() {
                 boolean isSatisfiedBy(Task childTask) {
                     return thisTask.getOnlyIf().isSatisfiedBy(thisTask)
