@@ -165,7 +165,10 @@ class PatchConfiguration {
     }
 
 
-    protected Task taskSequence(Map params = [], String name, Closure config = null) {
+    protected Task taskSequence(String verb, Closure config = null) {
+        return taskSequence([:], verb, config)
+    }
+    protected Task taskSequence(Map params, String name, Closure config = null) {
         def taskName = getTaskName(name)
         def task = databaseConvention.taskSequence(params, taskName, config)
 

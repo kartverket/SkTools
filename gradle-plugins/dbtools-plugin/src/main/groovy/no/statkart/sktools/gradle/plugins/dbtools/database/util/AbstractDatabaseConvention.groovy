@@ -247,7 +247,10 @@ abstract class AbstractDatabaseConvention {
         sysProperties.get('sql.file.encoding') ?: sysProperties.get('file.encoding')
     }
 
-    protected Task taskSequence(Map params = [], String verb, Closure config = null) {
+    protected Task taskSequence(String verb, Closure config = null) {
+        return taskSequence([:], verb, config)
+    }
+    protected Task taskSequence(Map params, String verb, Closure config = null) {
         def taskName = getTaskName(verb)
         def task = dbtoolsConvention.taskSequence(params, taskName, config)
 

@@ -197,7 +197,10 @@ configureDatabasePlugin {
         return convention
     }
 
-    protected Task taskSequence(Map params = [], String name, Closure config = null) {
+    protected Task taskSequence(String verb, Closure config = null) {
+        return taskSequence([:], verb, config)
+    }
+    protected Task taskSequence(Map params, String name, Closure config = null) {
         params['name'] = name
         params['type'] = SequenceTask.class
         return project.tasks.add(params, config)
