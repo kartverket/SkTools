@@ -9,6 +9,9 @@ import org.gradle.api.artifacts.Configuration
 
 import org.gradle.api.initialization.dsl.ScriptHandler
 import org.gradle.api.invocation.Gradle
+import no.statkart.sktools.gradle.plugins.dbtools.database.oracle.OracleExportTask
+import org.gradle.api.internal.ConventionTask
+import no.statkart.sktools.gradle.plugins.dbtools.database.oracle.OracleImportTask
 
 /**
  * Gradle plugin for database-moduler.
@@ -63,6 +66,21 @@ class DbtoolsPlugin implements Plugin<Project>  {
 
     void assignConventionMappings(Project project) {
         PatchConfiguration.assignConventionMappings(project)
+
+        //SKTOOLS-40: setter parallell dersom -Dparallel=<nr> er angitt
+        def setParallelClosure = { ConventionTask it ->
+            def systemProperties = project.gradle.getStartParameter().getMergedSystemProperties()
+            if (systemProperties.containsKey('parallel')) {
+                it.conventionMapping.with {
+                    map 'parallel', {
+                        Integer.parseInt(systemProperties.get('parallel'))
+                    }
+                }
+            }
+        }
+
+        project.tasks.withType(OracleExportTask.class, setParallelClosure)
+        project.tasks.withType(OracleImportTask.class, setParallelClosure)
     }
 
     void assignConventionalValues(Project project) {

@@ -38,6 +38,11 @@ class OracleExportTask extends ConventionTask {
     @Input
     Collection<String> include
 
+    //SKTOOLS-40
+    @Optional
+    @Input
+    Integer parallel
+
     @Input
     String compression
 
@@ -75,6 +80,9 @@ class OracleExportTask extends ConventionTask {
         }
         if (getInclude() != null && !getInclude().isEmpty()) {
             command += "INCLUDE=${getInclude().join(',')}"
+        }
+        if (getParallel() != null) {
+            command += "PARALLEL=${getParallel()}"
         }
 
         def impdb = Runtime.runtime.exec(command as String[], null, getProject().getProjectDir())
