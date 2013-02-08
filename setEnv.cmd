@@ -41,8 +41,8 @@ if  not "%GROOVY_HOME%"=="" set PATH=%PATH%;%GROOVY_HOME%\bin
 
 if "%ORG_GRADLE_PROJECT_sktools_versjon%"=="" (
    for /D %%P in (%PROJECT_ROOT%) do (
-      set ORG_GRADLE_PROJECT_sktools_versjon=%%~nP
-      @echo Setter sktools_versjon til '%%~nP'
+      set ORG_GRADLE_PROJECT_sktools_versjon=%%~nxP
+      @echo Setter sktools_versjon til '%%~nxP'
    )
 )
 
