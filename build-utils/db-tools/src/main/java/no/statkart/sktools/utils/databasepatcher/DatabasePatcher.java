@@ -593,7 +593,7 @@ public class DatabasePatcher {
       try {
          stmt = con.createStatement();
           logger.info("Creating table PATCHINFO");
-         stmt.execute("CREATE TABLE PATCHINFO (dbVersion varchar(255), patchNo INTEGER NOT NULL, indexesInSyncWithPatch BOOLEAN NOT NULL, kommentar VARCHAR(255))");
+         stmt.execute("CREATE TABLE PATCHINFO (dbVersion varchar(255), patchNo INTEGER NOT NULL, indexesInSyncWithPatch SMALLINT NOT NULL, kommentar VARCHAR(255))");
       } catch( SQLException e ) {
          throw new RuntimeException(e);
       } finally {
