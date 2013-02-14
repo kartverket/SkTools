@@ -1,13 +1,10 @@
 package no.statkart.sktools.gradle.plugins.webstart.util
 
-import org.testng.annotations.Test
-import org.gradle.api.Project
-import org.gradle.testfixtures.ProjectBuilder
-import org.testng.Assert
-import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
 import no.statkart.sktools.gradle.testutils.ProjectHelper
+import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
 import org.gradle.api.internal.artifacts.dependencies.DefaultSelfResolvingDependency
 import org.gradle.api.tasks.util.PatternSet
+import org.testng.annotations.Test
 
 /**
  * Test av {@link ArtifactMatcher}
@@ -64,7 +61,6 @@ class ArtifactMatcherTest {
         assert ArtifactMatcher.getArtifactName(file) == 'weblogic-wswar-plugin'
         assert ArtifactMatcher.getArtifactVersion(file) == '1.1beta-SNAPSHOT'
     }
-
 
     /**
      * Tester RC navngivning
@@ -125,7 +121,6 @@ class ArtifactMatcherTest {
         assert ArtifactMatcher.getArtifactVersion(file) == '1.0-milestone-7'
     }
 
-
     /**
      * Tester alternativ henting av version
      */
@@ -134,7 +129,7 @@ class ArtifactMatcherTest {
 
         ProjectHelper projectHelper = GradleProjectBuilder.builder().build()
 
-        File gradleJarFile = ((DefaultSelfResolvingDependency)projectHelper.project.getDependencies().gradleApi()).getSource().getAsFileTree().matching(new PatternSet(includes: ['**/*gradle-core*.jar'])).files.iterator().next()
+        File gradleJarFile = ((DefaultSelfResolvingDependency) projectHelper.project.getDependencies().gradleApi()).getSource().getAsFileTree().matching(new PatternSet(includes: ['**/*gradle-core*.jar'])).files.iterator().next()
 
         assert gradleJarFile
 
@@ -152,6 +147,18 @@ class ArtifactMatcherTest {
 
         assert ArtifactMatcher.getArtifactName(file) == 'skif-placeholder'
         assert ArtifactMatcher.getArtifactVersion(file) == 'trunk-build42'
+        assert ArtifactMatcher.getArtifactType(file) == 'jar'
+    }
+
+    /**
+     * Tester utviklingsversjonering av SKIF.
+     */
+    @Test
+    void testDevVersion() {
+        File file = new File('matrikkelspif-dev2.10.jar')
+
+        assert ArtifactMatcher.getArtifactName(file) == 'matrikkelspif'
+        assert ArtifactMatcher.getArtifactVersion(file) == 'dev2.10'
         assert ArtifactMatcher.getArtifactType(file) == 'jar'
     }
 

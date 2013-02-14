@@ -29,7 +29,7 @@ public class ArtifactMatcher {
      * </ol>
      * Classifier anses som del av versjon.
      */
-    public static Pattern artifactPattern = Pattern.compile("^([A-Za-z]\\w*(?:(?:-|\\.)[A-Za-z]\\w*)*)-((?:(?:\\d[^-]*)|(?:trunk))[^\\.]*)\\.(\\w*)$");
+    public static Pattern artifactPattern = Pattern.compile("^([A-Za-z]\\w*(?:(?:-|\\.)[A-Za-z]\\w*)*)-((?:(?:(?:dev)?\\d[^-]*)|(?:trunk))[^\\.]*)\\.(\\w*)$");
 
 
     public static String getArtifactVersion(File file) {
