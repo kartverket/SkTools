@@ -20,13 +20,14 @@ class WeblogicDeployTask extends AbstractWeblogicDeployTask {
     @Input
     String timeout = '18000'
 
-
+    @Input
+    boolean library = false
 
     @TaskAction
     void deploy() {
         logger.quiet("Deployment av ${getDeploymentName()} til Weblogic paa ${getUrl()}")
 
-        ant.wldeploy(
+        Map args = [
                 action: 'deploy',
                 upload: getUpload(),
 
@@ -42,7 +43,13 @@ class WeblogicDeployTask extends AbstractWeblogicDeployTask {
 
                 failonerror: getFailOnError(),
                 verbose: getVerbose(),
-        )
+        ]
+
+        if (library) {
+            args.library = true
+        }
+
+        ant.wldeploy(args)
     }
 
 }
