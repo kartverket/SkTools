@@ -14,7 +14,7 @@ import java.util.concurrent.Callable
 import org.gradle.api.Action
 import org.gradle.api.internal.project.ProjectInternal
 import org.gradle.api.internal.HasConvention
-import org.gradle.api.tasks.compile.Compile
+import org.gradle.api.tasks.compile.AbstractCompile
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.file.ConfigurableFileCollection
 
@@ -133,7 +133,7 @@ class XjcPlugin implements Plugin<ProjectInternal> {
                     }
 
                     private Task createCompileXjcTaskForSchema(XjcSchema xjcSchema, Task xjcTask, File buildOutputDir) {
-                        Compile compile = (Compile) project.task(xjcSchema.getCompileXjcSchemaTaskName(), type: XjcCompile.class)
+                        AbstractCompile compile = (AbstractCompile) project.task(xjcSchema.getCompileXjcSchemaTaskName(), type: XjcCompile.class)
                         javaBasePlugin.configureForSourceSet(sourceSet, compile);
 
                         compile.setDescription("Compiles the XCJ generated schema files");
