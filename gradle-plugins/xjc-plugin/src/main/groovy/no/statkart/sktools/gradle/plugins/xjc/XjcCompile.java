@@ -1,6 +1,6 @@
 package no.statkart.sktools.gradle.plugins.xjc;
 
-import org.gradle.api.tasks.compile.Compile;
+import org.gradle.api.tasks.compile.JavaCompile;
 
 /**
  * Task for kompilerings-steg.
@@ -10,5 +10,5 @@ import org.gradle.api.tasks.compile.Compile;
  * @since 1.2
  * @author Leif Lislegård
  */
-public class XjcCompile extends Compile {
+public class XjcCompile extends JavaCompile {
 }

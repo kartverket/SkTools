@@ -21,6 +21,9 @@ public class DefaultWeblogicCompileSpec extends DefaultJavaCompileSpec implement
      */
     private File tempDir;
 
+    public DefaultWeblogicCompileSpec() {
+        setCompileOptions(new CompileOptions());
+    }
 
     @Override
     public Iterable<File> getWeblogicClasspath() {

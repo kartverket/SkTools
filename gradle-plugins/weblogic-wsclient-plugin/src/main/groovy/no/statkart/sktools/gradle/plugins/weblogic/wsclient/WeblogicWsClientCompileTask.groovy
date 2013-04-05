@@ -1,6 +1,6 @@
 package no.statkart.sktools.gradle.plugins.weblogic.wsclient
 
-import org.gradle.api.tasks.compile.Compile
+import org.gradle.api.tasks.compile.JavaCompile
 
 /**
  * Type for generering av WsClient
@@ -8,5 +8,5 @@ import org.gradle.api.tasks.compile.Compile
  * @since 1.2
  * @author Leif Lislegård
  */
-class WeblogicWsClientCompileTask extends Compile {
+class WeblogicWsClientCompileTask extends JavaCompile {
 }
