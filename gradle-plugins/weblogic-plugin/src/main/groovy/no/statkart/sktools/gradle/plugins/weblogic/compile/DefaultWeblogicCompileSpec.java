@@ -21,6 +21,26 @@ public class DefaultWeblogicCompileSpec extends DefaultJavaCompileSpec implement
      */
     private File tempDir;
 
+    /**
+     * @deprecated backwards compability to grade.version < 1.2
+     */
+    private CompileOptions compileOptions;
+
+    /**
+     * @deprecated backwards compability to grade.version < 1.2
+     */
+    public CompileOptions getCompileOptions() {
+        return compileOptions;
+    }
+
+    /**
+     * @deprecated backwards compability to grade.version < 1.2
+     */
+    public void setCompileOptions(CompileOptions compileOptions) {
+        this.compileOptions = compileOptions;
+    }
+
+
     public DefaultWeblogicCompileSpec() {
         setCompileOptions(new CompileOptions());
     }

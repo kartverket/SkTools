@@ -18,6 +18,9 @@ import org.gradle.api.tasks.compile.AbstractCompile
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.file.ConfigurableFileCollection
 
+import no.statkart.sktools.gradle.plugins.xjc.internal.XjcCompileTaskImpl
+import org.gradle.api.internal.ConventionMapping
+
 /**
  * Genererer JAXB java klasser basert på <code>*.xsd<code> filer. <br />
  * Pluginen baserer seg på {@code JavaBasePlugin} og integrerer seg med deklarerte {@link SourceSet}s.
@@ -57,7 +60,9 @@ class XjcPlugin implements Plugin<ProjectInternal> {
         final JavaBasePlugin javaBasePlugin = project.getPlugins().getPlugin(JavaBasePlugin.class)
 
         //for hvert source sett som finnes/blir lagt til
-        project.getConvention().getPlugin(JavaPluginConvention.class).getSourceSets().all(new Action<SourceSet>() {
+        final JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class)
+
+        javaConvention.getSourceSets().all(new Action<SourceSet>() {
             public void execute(final SourceSet sourceSet) {
                 XjcSourceSetExtention xjcSourceSet = new XjcSourceSetExtention(sourceSet, project.getFileResolver());
 
@@ -133,7 +138,7 @@ class XjcPlugin implements Plugin<ProjectInternal> {
                     }
 
                     private Task createCompileXjcTaskForSchema(XjcSchema xjcSchema, Task xjcTask, File buildOutputDir) {
-                        AbstractCompile compile = (AbstractCompile) project.task(xjcSchema.getCompileXjcSchemaTaskName(), type: XjcCompile.class)
+                        AbstractCompile compile = (AbstractCompile) project.tasks.add(xjcSchema.getCompileXjcSchemaTaskName(), XjcCompileTaskImpl.class)
                         javaBasePlugin.configureForSourceSet(sourceSet, compile);
 
                         compile.setDescription("Compiles the XCJ generated schema files");
@@ -148,6 +153,18 @@ class XjcPlugin implements Plugin<ProjectInternal> {
                 });
             }
         });
+
+        project.getTasks().withType(XjcCompileTaskImpl.class, new Action<XjcCompileTaskImpl>() {
+            public void execute(final XjcCompileTaskImpl compile) {
+                ConventionMapping conventionMapping = compile.getConventionMapping();
+                conventionMapping.map("dependencyCacheDir", new Callable<Object>() {
+                    public Object call() throws Exception {
+                        return javaConvention.getDependencyCacheDir();
+                    }
+                });
+            }
+        });
+
 
     }
 

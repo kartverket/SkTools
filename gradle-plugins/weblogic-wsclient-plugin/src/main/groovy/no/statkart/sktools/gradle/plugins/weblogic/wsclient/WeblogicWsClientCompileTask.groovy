@@ -1,12 +1,30 @@
 package no.statkart.sktools.gradle.plugins.weblogic.wsclient
 
-import org.gradle.api.tasks.compile.JavaCompile
-
 /**
- * Type for generering av WsClient
+ * Task for kompilerings-steg.
+ *
+ * Dette interfacet kan benyttes for å huke inn xjc funksjonalitet slik at:
+ *
+ * <pre><code>
+ task('gen').description = "Genererte ressurser"
+
+
+ //integrasjon med plugin
+ afterEvaluate {
+   if (project.plugins.hasPlugin('sktools-weblogic-wsclient-plugin')) {
+     project.tasks.withType(no.statkart.sktools.gradle.plugins.weblogic.wsclient.WeblogicWsClientCompileTask.class) {
+       project.tasks.gen.dependsOn it
+     }
+   }
+ }
+
+ * </code></pre>
+ *
+ * }
+ *
  *
  * @since 1.2
  * @author Leif Lislegård
  */
-class WeblogicWsClientCompileTask extends JavaCompile {
+public interface WeblogicWsClientCompileTask {
 }
