@@ -146,15 +146,19 @@ class ProjectHelper {
      * Setter {@code WEBLOGIC_HOME} property for prosjekt
      */
     ProjectHelper defineWEBLOGIC_HOME() {
-        ['WEBLOGIC_HOME'].each { val ->
-            if (!project.ext.has(val) && System.getenv(val) != null) {
-                project.ext.set(val, System.getenv(val))
-            }
+        //foretrekker satt verdi satt i setEnv_Personal
+        if (System.getenv('ORG_GRADLE_PROJECT_WEBLOGIC_HOME') != null) {
+            project.ext.set('WEBLOGIC_HOME', System.getenv('ORG_GRADLE_PROJECT_WEBLOGIC_HOME'))
         }
-        if (!project.hasProperty('WEBLOGIC_HOME')) {
-            //todo: finne en løsning her
-            println 'Setting WEBLOGIC_HOME for IntelliJ...'
-            project.WEBLOGIC_HOME = 'C:\\bea_wls10.3.1'
+
+        ['WEBLOGIC_HOME'].each { val ->
+            if (!project.ext.has(val)) {
+                if (System.getenv(val) != null) {
+                    project.ext.set(val, System.getenv(val))
+                } else {
+                    throw new Error("Env variabel for ${val} ikke satt!")
+                }
+            }
         }
 
         return this
