@@ -238,4 +238,11 @@ afterEvaluate {
         outputFile = file("${project.name}-${project.version.toString().replace('-SNAPSHOT', '')}-gradle${gradle.gradleVersion}.ipr")
     }
 
+    // gradle spesifik iml fil da gradle dependencies ligger på hver modul
+    allprojects {
+        idea.module {
+            outputFile = file("${project.name}-gradle${gradle.gradleVersion}.ipr")
+        }
+    }
+
 }
