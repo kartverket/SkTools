@@ -4,7 +4,9 @@
 
 @rem Java, Gradle
 set JAVA_HOME=C:\Program Files\Java\jdk1.6.0_21
-set GRADLE_HOME=C:\bin\gradle-1.0
+set GRADLE_HOME=C:\bin\gradle\gradle-1.0
+set GRADLE_HOME=C:\bin\gradle\gradle-1.2
+set GRADLE_HOME=C:\bin\gradle\gradle-1.5
 
 @rem Groovy (optional)
 rem set GROOVY_HOME=C:\bin\groovy-1.8.6
