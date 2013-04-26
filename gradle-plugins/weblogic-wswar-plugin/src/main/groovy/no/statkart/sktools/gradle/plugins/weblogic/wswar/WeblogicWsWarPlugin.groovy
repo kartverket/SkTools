@@ -85,8 +85,7 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
         project.plugins.withType(IdeaPlugin.class) {
             project.afterEvaluate { // Så vi vet at det ikke blir lagt på noe JavaPlugin senere. Hvis det skjer, så overskriver IdeaPlugin scope-greiene
                 project.idea.module {
-//                    sourceDirs -= sourceSet.allSource.srcDirs
-                    sourceDirs += sourceSet.java.srcDirs
+                    sourceDirs += sourceSet.allSource.srcDirs
 
                     def weblogicConfiguration = project.getConfigurations().getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME)
 
