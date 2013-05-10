@@ -21,8 +21,8 @@ class IdeaExtensionPluginTest {
         project.apply plugin: 'sktools-ideaextensions-plugin'
 
 
-        assert project.convention.plugins.ideaExtensions != null
-        Assert.assertTrue(project.convention.plugins.ideaExtensions instanceof IdeaExtensionsConvention)
+        assert project.ideaExtensions != null
+        Assert.assertTrue(project.ideaExtensions instanceof IdeaExtensionsPluginExtension)
 
     }
 

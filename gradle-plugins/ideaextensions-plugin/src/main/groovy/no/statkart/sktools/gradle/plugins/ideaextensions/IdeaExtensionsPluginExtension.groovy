@@ -10,11 +10,13 @@ import org.gradle.api.Project
  * @since 1.0
  * @author Thor Åge Eldby
  * @author Leif Lislegård
+ * @author Tor Egil R. Strand
  */
-class IdeaExtensionsConvention {
+class IdeaExtensionsPluginExtension {
     final Project project
 
-    Collection<String> masks = ['*.iws', '*.ipr', '*.iml', '*.log']
+    Set<String> ignoreMasks = ['*.iws', '*.ipr', '*.iml', '*.log']
+    Set<File> ignorePaths = []
 
     /**
      * Gyldige verdier og VCS systemer som intellij kjenner til som default er:
@@ -24,26 +26,20 @@ class IdeaExtensionsConvention {
      */
     Map<String, String> vcsDirectoryMappings = new LinkedHashMap<String,String>(1)
 
-
-    IdeaExtensionsConvention(Project project) {
-        this.project = project
-
-        //anngir Perforce som vcs for hele filstrukturen
-        vcs('Perforce')
-    }
+    /**
+     * Angir om plugin-et skal opprette alle source-kataloger ved kjøring av ideaModule.
+     * Standardverdi er <code>true</code> for bakoverkompatibilitet.
+     *
+     * @since 1.2
+     */
+    boolean createAllSourceDirs = true
 
     /**
-     * Konfigurasjon-closure av plugin.
+     * Angir en valgfri fil som inneholder inspection-instillinger eksportert fra IntelliJ.
+     *
+     * @since 1.2
      */
-    def ideaExtensions(Closure closure) {
-        closure.setResolveStrategy(Closure.DELEGATE_FIRST);
-        closure.delegate = this
-        closure()
-    }
-
-
-
-    //metoder for bruk i konfigurasjon -->
+    File inspectionsFile = null
 
     /**
      * Setter default VCS mapping
