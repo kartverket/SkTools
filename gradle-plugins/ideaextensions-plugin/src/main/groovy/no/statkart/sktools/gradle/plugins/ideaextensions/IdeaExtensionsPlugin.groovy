@@ -130,7 +130,9 @@ class IdeaExtensionsPlugin implements Plugin<Project> {
                     vcs = 'svn'
                 }
 
-                it.appendNode { mapping(directory: path, vcs: vcs) }
+                def builder = new NodeBuilder()
+
+                it.append(builder.mapping(directory: path, vcs: vcs) )
             }
         }
     }
