@@ -9,7 +9,7 @@ targetCompatibility = '1.6'
  * Tester at Perforce blir koblet inn som vcs
  */
 ideaExtensions {
-    masks += '*.tmp'
+    ignoreMasks += '*.tmp'
     vcs 'Perforce'
 }
 
