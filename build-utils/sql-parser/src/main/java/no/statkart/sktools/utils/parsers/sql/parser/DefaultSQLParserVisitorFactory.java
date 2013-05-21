@@ -165,7 +165,7 @@ public class DefaultSQLParserVisitorFactory extends AbstractParserVisitorFactory
                 @Override
                 public Object plsqlCase(PLSQLStatement host, Object param) {
                     host.setLineNumber(reader.getLineNumber());
-                    String sql = scanner.getInput("/", false);
+                    String sql = scanner.getInput("\n/", false);
                     host.setSql(sql);
                     return host;
                 }

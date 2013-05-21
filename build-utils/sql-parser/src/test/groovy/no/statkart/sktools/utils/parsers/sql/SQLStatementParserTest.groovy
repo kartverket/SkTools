@@ -161,7 +161,41 @@ CREATE OR REPLACE Function tt;
 
     }
 
-    
+
+    /**
+     * Tester parsing av PL/SQL setninger
+     */
+    @Test
+    void testParsing_PLSQL_delimiter() {
+        StringReader stringReader = new StringReader("""\
+CREATE FUNCTION DEGREES_(pin_Degree IN NUMBER)
+      RETURN NUMBER
+  IS
+    BEGIN
+      RETURN (pin_Degree / 3.14159265430711) * 180;
+  END DEGREES_;
+
+/
+
+CREATE OR REPLACE FUNCTION DEGREES_(pin_Degree IN NUMBER);
+/
+""")
+        LineNumberReader reader = new LineNumberReader(stringReader)
+        List<Expression> list = SQLStatementParser.parseExpressions(reader)
+        list.each { Assert.assertTrue(it instanceof PLSQLStatement, "Expected PLSQLStatement instance, but was ${it.class}")}
+
+        List<Statement> statementList = list
+        int i = 0
+        Assert.assertTrue(statementList[i].sql.trim().startsWith("CREATE FUNCTION DEGREES_("))
+        Assert.assertEquals(statementList[i].lineNumber, 1, 'linjenr for statement')
+        i++
+        Assert.assertTrue(statementList[i].sql.trim().startsWith("CREATE OR REPLACE FUNCTION DEGREES_("))
+        Assert.assertEquals(statementList[i].lineNumber, 10, 'linjenr for statement')
+        i++
+
+        Assert.assertEquals(statementList.size(), i, 'antall statements')
+
+    }
     
     /**
      * Tester parsing av statements av ulike typer. 
