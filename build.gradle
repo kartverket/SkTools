@@ -241,7 +241,7 @@ afterEvaluate {
     // gradle spesifik iml fil da gradle dependencies ligger på hver modul
     allprojects {
         idea.module {
-            outputFile = file("${project.name}-gradle${gradle.gradleVersion}.ipr")
+            outputFile = file("${project.name}-gradle${gradle.gradleVersion}.iml")
         }
     }
 
