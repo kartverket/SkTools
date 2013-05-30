@@ -12,7 +12,7 @@ import org.gradle.api.tasks.TaskAction
 class WeblogicDeployTask extends AbstractWeblogicDeployTask {
 
     @Input
-    File file
+    Object file
 
     @Input
     boolean upload = true
@@ -32,7 +32,7 @@ class WeblogicDeployTask extends AbstractWeblogicDeployTask {
                 upload: getUpload(),
 
                 name: getDeploymentName(),
-                source: getFile(),
+                source: project.file(getFile()),
                 targets: getTargets(),
 
                 adminurl: getUrl(),
