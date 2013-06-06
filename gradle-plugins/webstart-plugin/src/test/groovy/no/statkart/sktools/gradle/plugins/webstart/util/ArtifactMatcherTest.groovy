@@ -4,6 +4,7 @@ import no.statkart.sktools.gradle.testutils.ProjectHelper
 import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
 import org.gradle.api.internal.artifacts.dependencies.DefaultSelfResolvingDependency
 import org.gradle.api.tasks.util.PatternSet
+import org.testng.Assert
 import org.testng.annotations.Test
 
 /**
@@ -20,10 +21,10 @@ class ArtifactMatcherTest {
     @Test
     void testFilname() {
 
-        File file = new File('weblogic-wswar-plugin-1.1.jar')
+        ArtifactMatcher matcher = new ArtifactMatcher(new File('weblogic-wswar-plugin-1.1.jar'))
 
-        assert ArtifactMatcher.getArtifactName(file) == 'weblogic-wswar-plugin'
-        assert ArtifactMatcher.getArtifactVersion(file) == '1.1'
+        Assert.assertEquals(matcher.getName(), 'weblogic-wswar-plugin')
+        Assert.assertEquals(matcher.getVersion(), '1.1')
     }
 
     /**
@@ -32,10 +33,10 @@ class ArtifactMatcherTest {
     @Test
     void testFilnameSNAPSHOT() {
 
-        File file = new File('weblogic-wswar-plugin-1.1SNAPSHOT.jar')
+        ArtifactMatcher matcher = new ArtifactMatcher(new File('weblogic-wswar-plugin-1.1SNAPSHOT.jar'))
 
-        assert ArtifactMatcher.getArtifactName(file) == 'weblogic-wswar-plugin'
-        assert ArtifactMatcher.getArtifactVersion(file) == '1.1SNAPSHOT'
+        Assert.assertEquals(matcher.getName(), 'weblogic-wswar-plugin')
+        Assert.assertEquals(matcher.getVersion(), '1.1SNAPSHOT')
     }
 
     /**
@@ -44,10 +45,10 @@ class ArtifactMatcherTest {
     @Test
     void testFilnameSNAPSHOT_Classifier() {
 
-        File file = new File('weblogic-wswar-plugin-1.1-SNAPSHOT.jar')
+        ArtifactMatcher matcher = new ArtifactMatcher(new File('weblogic-wswar-plugin-1.1-SNAPSHOT.jar'))
 
-        assert ArtifactMatcher.getArtifactName(file) == 'weblogic-wswar-plugin'
-        assert ArtifactMatcher.getArtifactVersion(file) == '1.1-SNAPSHOT'
+        Assert.assertEquals(matcher.getName(), 'weblogic-wswar-plugin')
+        Assert.assertEquals(matcher.getVersion(), '1.1-SNAPSHOT')
     }
 
     /**
@@ -56,10 +57,10 @@ class ArtifactMatcherTest {
     @Test
     void testFilnameBetaSNAPSHOT_Classifier() {
 
-        File file = new File('weblogic-wswar-plugin-1.1beta-SNAPSHOT.jar')
+        ArtifactMatcher matcher = new ArtifactMatcher(new File('weblogic-wswar-plugin-1.1beta-SNAPSHOT.jar'))
 
-        assert ArtifactMatcher.getArtifactName(file) == 'weblogic-wswar-plugin'
-        assert ArtifactMatcher.getArtifactVersion(file) == '1.1beta-SNAPSHOT'
+        Assert.assertEquals(matcher.getName(), 'weblogic-wswar-plugin')
+        Assert.assertEquals(matcher.getVersion(), '1.1beta-SNAPSHOT')
     }
 
     /**
@@ -68,10 +69,10 @@ class ArtifactMatcherTest {
     @Test
     void testFilnameRC() {
 
-        File file = new File('weblogic-wswar-plugin-1.1RC1.jar')
+        ArtifactMatcher matcher = new ArtifactMatcher(new File('weblogic-wswar-plugin-1.1RC1.jar'))
 
-        assert ArtifactMatcher.getArtifactName(file) == 'weblogic-wswar-plugin'
-        assert ArtifactMatcher.getArtifactVersion(file) == '1.1RC1'
+        Assert.assertEquals(matcher.getName(), 'weblogic-wswar-plugin')
+        Assert.assertEquals(matcher.getVersion(), '1.1RC1')
     }
 
     /**
@@ -80,10 +81,10 @@ class ArtifactMatcherTest {
     @Test
     void testFilnameRC2() {
 
-        File file = new File('weblogic-wswar-plugin-1.1-RC1.jar')
+        ArtifactMatcher matcher = new ArtifactMatcher(new File('weblogic-wswar-plugin-1.1-RC1.jar'))
 
-        assert ArtifactMatcher.getArtifactName(file) == 'weblogic-wswar-plugin'
-        assert ArtifactMatcher.getArtifactVersion(file) == '1.1-RC1'
+        Assert.assertEquals(matcher.getName(), 'weblogic-wswar-plugin')
+        Assert.assertEquals(matcher.getVersion(), '1.1-RC1')
     }
 
     /**
@@ -92,10 +93,10 @@ class ArtifactMatcherTest {
     @Test
     void testFilnameClassifier() {
 
-        File file = new File('weblogic-wswar-plugin-1.1-someclassifier.jar')
+        ArtifactMatcher matcher = new ArtifactMatcher(new File('weblogic-wswar-plugin-1.1-someclassifier.jar'))
 
-        assert ArtifactMatcher.getArtifactName(file) == 'weblogic-wswar-plugin'
-        assert ArtifactMatcher.getArtifactVersion(file) == '1.1-someclassifier'
+        Assert.assertEquals(matcher.getName(), 'weblogic-wswar-plugin')
+        Assert.assertEquals(matcher.getVersion(), '1.1-someclassifier')
     }
 
     /**
@@ -104,10 +105,10 @@ class ArtifactMatcherTest {
     @Test
     void testFilnameClassifierRC() {
 
-        File file = new File('weblogic-wswar-plugin-1.1RC1-someclassifier.jar')
+        ArtifactMatcher matcher = new ArtifactMatcher(new File('weblogic-wswar-plugin-1.1RC1-someclassifier.jar'))
 
-        assert ArtifactMatcher.getArtifactName(file) == 'weblogic-wswar-plugin'
-        assert ArtifactMatcher.getArtifactVersion(file) == '1.1RC1-someclassifier'
+        Assert.assertEquals(matcher.getName(), 'weblogic-wswar-plugin')
+        Assert.assertEquals(matcher.getVersion(), '1.1RC1-someclassifier')
     }
 
     /**
@@ -115,10 +116,10 @@ class ArtifactMatcherTest {
      */
     @Test
     void testFilenameGradleStyle() {
-        File file = new File('gradle-cli-1.0-milestone-7.jar')
+        ArtifactMatcher matcher = new ArtifactMatcher(new File('gradle-cli-1.0-milestone-7.jar'))
 
-        assert ArtifactMatcher.getArtifactName(file) == 'gradle-cli'
-        assert ArtifactMatcher.getArtifactVersion(file) == '1.0-milestone-7'
+        Assert.assertEquals(matcher.getName(), 'gradle-cli')
+        Assert.assertEquals(matcher.getVersion(), '1.0-milestone-7')
     }
 
     /**
@@ -131,10 +132,7 @@ class ArtifactMatcherTest {
 
         File gradleJarFile = ((DefaultSelfResolvingDependency) projectHelper.project.getDependencies().gradleApi()).getSource().getAsFileTree().matching(new PatternSet(includes: ['**/*gradle-core*.jar'])).files.iterator().next()
 
-        assert gradleJarFile
-
-
-        assert ArtifactMatcher.findImplementationVersionInManifest(gradleJarFile) == projectHelper.project.gradle.getGradleVersion()
+        Assert.assertEquals(ArtifactMatcher.findImplementationVersionInManifest(gradleJarFile), projectHelper.project.gradle.getGradleVersion())
 
     }
 
@@ -143,11 +141,11 @@ class ArtifactMatcherTest {
      */
     @Test
     void testSkifVersion() {
-        File file = new File('skif-placeholder-trunk-build42.jar')
+        ArtifactMatcher matcher = new ArtifactMatcher(new File('skif-placeholder-trunk-build42.jar'))
 
-        assert ArtifactMatcher.getArtifactName(file) == 'skif-placeholder'
-        assert ArtifactMatcher.getArtifactVersion(file) == 'trunk-build42'
-        assert ArtifactMatcher.getArtifactType(file) == 'jar'
+        Assert.assertEquals(matcher.getName(), 'skif-placeholder')
+        Assert.assertEquals(matcher.getVersion(), 'trunk-build42')
+        Assert.assertEquals(matcher.getType(), 'jar')
     }
 
     /**
@@ -155,11 +153,11 @@ class ArtifactMatcherTest {
      */
     @Test
     void testDevVersion() {
-        File file = new File('matrikkelspif-dev2.10.jar')
+        ArtifactMatcher matcher = new ArtifactMatcher(new File('matrikkelspif-dev2.10.jar'))
 
-        assert ArtifactMatcher.getArtifactName(file) == 'matrikkelspif'
-        assert ArtifactMatcher.getArtifactVersion(file) == 'dev2.10'
-        assert ArtifactMatcher.getArtifactType(file) == 'jar'
+        Assert.assertEquals(matcher.getName(), 'matrikkelspif')
+        Assert.assertEquals(matcher.getVersion(), 'dev2.10')
+        Assert.assertEquals(matcher.getType(), 'jar')
     }
 
     /**
@@ -167,10 +165,10 @@ class ArtifactMatcherTest {
      */
     @Test
     void testJavaxInject() {
-        File file = new File('javax.inject-1.jar')
+        ArtifactMatcher matcher = new ArtifactMatcher(new File('javax.inject-1.jar'))
 
-        assert ArtifactMatcher.getArtifactName(file) == 'javax.inject'
-        assert ArtifactMatcher.getArtifactVersion(file) == '1'
-        assert ArtifactMatcher.getArtifactType(file) == 'jar'
+        Assert.assertEquals(matcher.getName(), 'javax.inject')
+        Assert.assertEquals(matcher.getVersion(), '1')
+        Assert.assertEquals(matcher.getType(), 'jar')
     }
 }

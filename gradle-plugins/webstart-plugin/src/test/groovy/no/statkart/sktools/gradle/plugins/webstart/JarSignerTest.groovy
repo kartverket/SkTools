@@ -1,4 +1,6 @@
-package no.statkart.sktools.gradle.plugins.webstart.util
+package no.statkart.sktools.gradle.plugins.webstart
+
+import no.statkart.sktools.gradle.plugins.webstart.util.FileHashIdent
 
 import java.util.jar.JarFile
 import no.statkart.sktools.gradle.testutils.ProjectHelper
@@ -19,22 +21,21 @@ class JarSignerTest {
     /**
      * Instansierer opp en standard JarSigner med sertifikatfil, passord og alias.
      */
-    private JarSigner buildDefaultJarSigner(ProjectHelper projectHelper, File cacheDir) {
+    private JarSigner buildDefaultJarSigner(ProjectHelper projectHelper, String name) {
 
         //jks certificate
         use(WebstartTestutilFilewriter) {
             projectHelper.writeKodesignerinSertifikat('.')
         }
         File certificateFile = projectHelper.project.file('kodesignering.jks')
-        assert certificateFile.exists()
+        Assert.assertTrue(certificateFile.exists());
 
         //configures the jar signer
-        JarSigner jarSigner = new JarSigner(cacheDir)
-        jarSigner.setAnt(projectHelper.project.getAnt());
-        jarSigner.setCertificateFile(certificateFile)
-        jarSigner.setPassword('SagZ45_p1')
-        jarSigner.setAlias('statenskartverk')
-        return jarSigner
+        return projectHelper.project.task(name, type: JarSigner) {
+            setCertificateFile(certificateFile)
+            setPassword('SagZ45_p1')
+            setAlias('statenskartverk')
+        } as JarSigner
     }
 
     /**
@@ -50,42 +51,39 @@ class JarSignerTest {
                 projectHelper.gradleJars[0],
         ]
 
-        JarSigner jarSigner1 = buildDefaultJarSigner(projectHelper, project.file('cache'))
-        jarSigner1.setJarfilesToSign(jarFilesToSign)
+        JarSigner jarSigner1 = buildDefaultJarSigner(projectHelper, 'sign1')
+        jarSigner1.setJarFilesToSign(jarFilesToSign)
 
-        assert jarSigner1.signedArtifactsForCertificates.size() == 0   //forventer tomt cache
+        Assert.assertEquals(jarSigner1.signedArtifactsForCertificates.size(), 0, 'forventet tomt cache')
 
         //testing signed file
-        Map<File, File> signing1Map = jarSigner1.signJars()
-        long modified1 = signing1Map[projectHelper.gradleJars[0]].lastModified()
+        jarSigner1.signJars()
+        long modified1 = jarSigner1.outputs.files.singleFile.lastModified()
         jarSigner1.with { JarSigner jarSigner ->
-            assert jarSigner.signedArtifactsForCertificates.size() == 1
-            assert jarSigner.signedArtifactsForCertificates.values().asList()[0].size() == 1
-            assert jarSigner.signedArtifactsForCertificates.values().asList()[0].values().collect {it.file}.size() == 1
-            assert jarSigner.signedArtifactsForCertificates.values().asList()[0].values().collect {it.file}.containsAll(signing1Map.values())
+            Assert.assertEquals(jarSigner.signedArtifactsForCertificates.size(), 1)
+            Assert.assertEquals(jarSigner.signedArtifactsForCertificates.values().asList()[0].size(), 1)
+            Assert.assertEquals(jarSigner.signedArtifactsForCertificates.values().asList()[0].values().collect {it.file}.size(), 1)
+            Assert.assertTrue(jarSigner.signedArtifactsForCertificates.values().asList()[0].values().collect {it.file}.containsAll(jarSigner1.outputs.files.files))
         }
 
-        JarSigner jarSigner2 = buildDefaultJarSigner(projectHelper, project.file('cache'))
+        JarSigner jarSigner2 = buildDefaultJarSigner(projectHelper, 'sign2')
         //forventer at ny instans konstruerer samme cache..
         jarSigner2.with { JarSigner jarSigner ->
-            assert jarSigner.signedArtifactsForCertificates.size() == 1
-            assert jarSigner.signedArtifactsForCertificates.values().asList()[0].size() == 1
-            assert jarSigner.signedArtifactsForCertificates.values().asList()[0].values().collect {it.file}.size() == 1
-            assert jarSigner.signedArtifactsForCertificates.values().asList()[0].values().collect {it.file}.containsAll(signing1Map.values())
+            Assert.assertEquals(jarSigner.signedArtifactsForCertificates.size(), 1)
+            Assert.assertEquals(jarSigner.signedArtifactsForCertificates.values().asList()[0].size(), 1)
+            Assert.assertEquals(jarSigner.signedArtifactsForCertificates.values().asList()[0].values().collect {it.file}.size(), 1)
+            Assert.assertTrue(jarSigner.signedArtifactsForCertificates.values().asList()[0].values().collect {it.file}.containsAll(jarSigner1.outputs.files.files))
         }
 
         Thread.sleep(1000) //venter ett sekund for evt ulik timestamp
 
-        jarSigner2.setJarfilesToSign(jarFilesToSign)
-        Map<File, File> signing2Map = jarSigner2.signJars();
-        long modified2 = signing2Map[projectHelper.gradleJars[0]].lastModified()
+        jarSigner2.setJarFilesToSign(jarFilesToSign)
+        jarSigner2.signJars();
+        long modified2 = jarSigner2.outputs.files.singleFile.lastModified()
 
 
-        assert signing1Map == signing2Map   //forventer samme sett av filer
-        assert modified1 == modified2   //forventer at cached fil er urørt
-
-        def debug = 0
-
+        Assert.assertEquals(jarSigner2.outputs.files.files, jarSigner1.outputs.files.files, 'forventet samme sett av filer')
+        Assert.assertEquals(modified2, modified1, 'forventer at cached fil er urørt')
     }
 
 
@@ -102,21 +100,23 @@ class JarSignerTest {
                 projectHelper.gradleJars[0],
         ]
 
-        JarSigner jarSigner = buildDefaultJarSigner(projectHelper, project.file('cache'))
-        jarSigner.setJarfilesToSign(jarFilesToSign)
+        JarSigner jarSigner = buildDefaultJarSigner(projectHelper, 'sign')
+        jarSigner.setJarFilesToSign(jarFilesToSign)
 
         //testing signed file
-        Map<File, File> signing1Map = jarSigner.signJars().each {File unsignedFile, File signedFile ->
+        jarSigner.signJars()
 
-            assert jarFilesToSign.contains(unsignedFile)
+        def jarNames = jarFilesToSign.collect {it.name}
+
+        jarSigner.outputs.files.each { File signedFile ->
+
+            Assert.assertTrue(jarNames.contains(signedFile.name))
             assertSignedJar(signedFile)
 
             String md5 = new File("${signedFile.path}.md5").text
+            File unsignedFile = jarFilesToSign.find {it.name == signedFile.name}
             assertMd5(unsignedFile, md5)
         }
-
-        def debug = 0
-
     }
 
     /**
@@ -149,36 +149,40 @@ class JarSignerTest {
 
 
 
-        JarSigner jarSigner = buildDefaultJarSigner(rootProjectHelper, destinationDir)
-        jarSigner.setJarfilesToSign(jarFilesToSign)
+        JarSigner jarSigner = buildDefaultJarSigner(rootProjectHelper, 'sign')
+        jarSigner.setJarFilesToSign(jarFilesToSign)
 
         //testing signed file
-        Map<File, File> signing1Map = jarSigner.signJars().each {File unsignedFile, File signedFile ->
+        jarSigner.signJars()
 
-            assert jarFilesToSign.contains(unsignedFile)
-            assertSignedJar(signedFile)
-            assertJarFileContainsAllEntries(signedFile, unsignedFile)
+        File unsignedFile1 = java1JarFile
+        File signedFile1 = jarSigner.outputs.files.singleFile
 
-            String md5 = new File(signedFile.getPath()+'.md5').text
-            assertMd5(unsignedFile, md5)
-        }
+        Assert.assertTrue(jarFilesToSign.contains(unsignedFile1))
+        assertSignedJar(signedFile1)
+        assertJarFileContainsAllEntries(signedFile1, unsignedFile1)
+
+        String md51 = new File(signedFile1.getPath()+'.md5').text
+        assertMd5(unsignedFile1, md51)
 
         //updating 'java1' project jar by swapping it with jar produced by 'java2'
         File oldFile = new File(java1JarFile.parentFile, java1JarFile.getName() + ".old")
         FileUtils.copyFile(java1JarFile, oldFile)
         FileUtils.copyFile(java2JarFile, java1JarFile)
-        assert java1JarFile.exists()
+        Assert.assertTrue(java1JarFile.exists())
 
         //testing signed file - java1 should now ble updated
-        Map<File, File> signing2Map = jarSigner.signJars().each {File unsignedFile, File signedFile ->
+        jarSigner.signJars()
 
-            assert jarFilesToSign.contains(unsignedFile)
-            assertSignedJar(signedFile)
-            assertJarFileContainsAllEntries(signedFile, unsignedFile)
+        File unsignedFile2 = java1JarFile
+        File signedFile2 = jarSigner.outputs.files.singleFile
 
-            String md5 = new File("${signedFile.path}.md5").text
-            assertMd5(unsignedFile, md5)
-        }
+        Assert.assertTrue(jarFilesToSign.contains(unsignedFile2))
+        assertSignedJar(signedFile2)
+        assertJarFileContainsAllEntries(signedFile2, unsignedFile2)
+
+        String md52 = new File(signedFile2.getPath()+'.md5').text
+        assertMd5(unsignedFile2, md52)
 
     }
 
