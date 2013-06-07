@@ -5,6 +5,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.ExecTask;
 import org.gradle.api.DefaultTask;
+import org.gradle.api.GradleException;
 import org.gradle.api.tasks.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,72 +56,66 @@ public class JarSigner extends DefaultTask {
      */
     @TaskAction
     public void signJars() throws Exception {
-        //sertifikat ident er streng representasjon av hash verdi + alias  - dette danner da mappenavn i cache dir
-        FileHashIdent certificateFileIdent = new FileHashIdent(getCertificateFile(), FileHashIdent.createChecksum(getCertificateFile(), getAlias()));
+        if (getCertificateFile() != null) {
+            //sertifikat ident er streng representasjon av hash verdi + alias  - dette danner da mappenavn i cache dir
+            FileHashIdent certificateFileIdent = new FileHashIdent(getCertificateFile(), FileHashIdent.createChecksum(getCertificateFile(), getAlias()));
 
-        File certDirectory = new File(getCacheDir(), certificateFileIdent.hash());
-        certDirectory.mkdirs();
+            File certDirectory = new File(getCacheDir(), certificateFileIdent.hash());
+            certDirectory.mkdirs();
 
-        Map<String, FileHashIdent> signedArtifacts = getSignedArtifactsForCertificates().get(certificateFileIdent);
-        if (signedArtifacts == null) {
-            signedArtifacts = new HashMap<String, FileHashIdent>();
-            getSignedArtifactsForCertificates().put(certificateFileIdent, signedArtifacts);
-        }
-
-        Set<File> filesToSign = getProject().files(getJarFilesToSign()).getFiles();
-        for (File unsignedJar : filesToSign) {
-            FileHashIdent jarFileIdent = new FileHashIdent(unsignedJar);
-
-            File signedJarFile = null;
-
-            //forsøker cache
-            FileHashIdent cachedFileIdent = signedArtifacts.get(unsignedJar.getName());
-            if (cachedFileIdent != null) {
-                if (cachedFileIdent.equals(jarFileIdent)) {
-                    signedJarFile = cachedFileIdent.getFile();
-                    logger.info("...using cached jar " + signedJarFile.getAbsolutePath());
-                }
+            Map<String, FileHashIdent> signedArtifacts = getSignedArtifactsForCertificates().get(certificateFileIdent);
+            if (signedArtifacts == null) {
+                signedArtifacts = new HashMap<String, FileHashIdent>();
+                getSignedArtifactsForCertificates().put(certificateFileIdent, signedArtifacts);
             }
 
-            //dersom fortsatt ikke funnet - signer filen
-            if (signedJarFile == null) {
+            Set<File> filesToSign = getProject().files(getJarFilesToSign()).getFiles();
+            for (File unsignedJar : filesToSign) {
+                FileHashIdent jarFileIdent = new FileHashIdent(unsignedJar);
 
-                File tempFile = new File(certDirectory, unsignedJar.getName() + ".tmp");
-                signedJarFile = new File(certDirectory, unsignedJar.getName());
+                File signedJarFile = null;
 
-
-                //kopiere via URL for å overkomme evt symlink filer.
-                FileUtils.copyURLToFile(unsignedJar.toURI().toURL(), tempFile);
-
-                //signing jar
-                try {
-                    signJar(tempFile);
-
-                    signedJarFile.delete(); //SKIF-209: sletter evt eksisterende fil før move..
-                    tempFile.renameTo(signedJarFile);
-
-                } finally {
-                    if (tempFile.exists()) {
-                        tempFile.delete();
+                //forsøker cache
+                FileHashIdent cachedFileIdent = signedArtifacts.get(unsignedJar.getName());
+                if (cachedFileIdent != null) {
+                    if (cachedFileIdent.equals(jarFileIdent)) {
+                        signedJarFile = cachedFileIdent.getFile();
+                        logger.info("...using cached jar " + signedJarFile.getAbsolutePath());
                     }
                 }
 
-                //updating cache...
-                if (cachedFileIdent != null) {
-                    logger.debug("updating cache-entry for " + unsignedJar);
-                }
-                cachedFileIdent = new FileHashIdent(signedJarFile, jarFileIdent.hash());
-                cachedFileIdent.writeChecksumToFile();
-                signedArtifacts.put(unsignedJar.getName(), cachedFileIdent);
-            }
-        }
-    }
+                //dersom fortsatt ikke funnet - signer filen
+                if (signedJarFile == null) {
 
-    public String getDigest() throws Exception {
-        if (getCertificateFile() != null) {
-            return FileHashIdent.createChecksum(getCertificateFile(), getAlias());
-        } else {
-            return null;
+                    File tempFile = new File(certDirectory, unsignedJar.getName() + ".tmp");
+                    signedJarFile = new File(certDirectory, unsignedJar.getName());
+
+
+                    //kopiere via URL for å overkomme evt symlink filer.
+                    FileUtils.copyURLToFile(unsignedJar.toURI().toURL(), tempFile);
+
+                    //signing jar
+                    try {
+                        signJar(tempFile);
+
+                        signedJarFile.delete(); //SKIF-209: sletter evt eksisterende fil før move..
+                        tempFile.renameTo(signedJarFile);
+
+                    } finally {
+                        if (tempFile.exists()) {
+                            tempFile.delete();
+                        }
+                    }
+
+                    //updating cache...
+                    if (cachedFileIdent != null) {
+                        logger.debug("updating cache-entry for " + unsignedJar);
+                    }
+                    cachedFileIdent = new FileHashIdent(signedJarFile, jarFileIdent.hash());
+                    cachedFileIdent.writeChecksumToFile();
+                    signedArtifacts.put(unsignedJar.getName(), cachedFileIdent);
+                }
+            }
         }
     }
 
@@ -163,7 +158,7 @@ public class JarSigner extends DefaultTask {
 //
     }
 
-    @InputFile
+    @InputFile @Optional
     public File getCertificateFile() {
         return certificateFile;
     }
@@ -183,7 +178,7 @@ public class JarSigner extends DefaultTask {
         this.cacheDir = cacheDir;
     }
 
-    @Input
+    @Input @Optional
     public String getPassword() {
         return password;
     }
@@ -192,7 +187,7 @@ public class JarSigner extends DefaultTask {
         this.password = password;
     }
 
-    @Input
+    @Input @Optional
     public String getAlias() {
         return alias;
     }
@@ -247,27 +242,27 @@ public class JarSigner extends DefaultTask {
     }
 
     @OutputFiles
-    public Callable<Collection<File>> getSignedJars() {
-        return new Callable<Collection<File>>() {
-            @Override
-            public Collection<File> call() throws Exception {
-                if (getCertificateFile() == null) {
-                    // Kan ikke signere noe uten sertifikat
-                    return Collections.emptyList();
-                }
+    public Collection<File> getSignedJars() {
+        try {
+            Set<File> unsignedFiles = getProject().files(jarFilesToSign).getFiles();
 
-                FileHashIdent certificateFileIdent = new FileHashIdent(getCertificateFile(), FileHashIdent.createChecksum(getCertificateFile(), getAlias()));
-                File certDirectory = new File(getCacheDir(), certificateFileIdent.hash());
-
-                Set<File> unsignedFiles = getProject().files(jarFilesToSign).getFiles();
-                List<File> signedFiles = new ArrayList<File>(unsignedFiles.size());
-                for (File unsignedFile : unsignedFiles) {
-                    File signedFile = new File(certDirectory, unsignedFile.getName());
-                    signedFiles.add(signedFile);
-                }
-
-                return signedFiles;
+            if (getCertificateFile() == null) {
+                // Kan ikke signere noe uten sertifikat
+                return unsignedFiles;
             }
-        };
+
+            FileHashIdent certificateFileIdent = new FileHashIdent(getCertificateFile(), FileHashIdent.createChecksum(getCertificateFile(), getAlias()));
+            File certDirectory = new File(getCacheDir(), certificateFileIdent.hash());
+
+            List<File> signedFiles = new ArrayList<File>(unsignedFiles.size());
+            for (File unsignedFile : unsignedFiles) {
+                File signedFile = new File(certDirectory, unsignedFile.getName());
+                signedFiles.add(signedFile);
+            }
+
+            return signedFiles;
+        } catch (Exception e) {
+            throw new GradleException("Error calculating (un)signed output files from " + JarSigner.class.getName(), e);
+        }
     }
 }

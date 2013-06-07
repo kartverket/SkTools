@@ -26,7 +26,7 @@ class WebstartPluginTest {
      * Tester registrering av plugin via navn
      */
     @Test
-    void testAppplyPlugin() {
+    void testApplyPlugin() {
         //forks a new project in a temp folder
         Project project = ProjectBuilder.builder().build()
 
@@ -48,11 +48,9 @@ class WebstartPluginTest {
 
         projectHelper.configureProject {
             webstart {
-                jnlp {
-                    resources {
-                        jars {
-                            files(projectHelper.gradleJars[1])
-                        }
+                client {
+                    jarDependencies files(projectHelper.gradleJars[1])
+                    jnlp {
                     }
                 }
             }
@@ -60,9 +58,7 @@ class WebstartPluginTest {
 
         projectHelper.initializeProject()
 
-        def convention = projectHelper.project.convention.plugins.webstart
-
-        projectHelper.executeTask('webstart')
+        projectHelper.executeTask('genClientJnlp')
 
         //sjekker at filer er blitt opprettet
         projectHelper.assertFileExists("build/webstart/" + projectHelper.project.name + '.jnlp')
@@ -103,16 +99,24 @@ class WebstartPluginTest {
         File webstartHelperJar = projectHelper.project.file('webstartHelper.jar')
         assert webstartHelperJar.createNewFile()
         projectHelper.configureProject {
+            configurations {
+                webstartJars
+            }
+
+            dependencies {
+                webstartJars files(webstartHelperJar)
+                webstartJars project(path: ':projectA')
+            }
+
             webstart {
-                jnlp {
-                    description 'Description client1'
-                    title 'Client1 title'
-                    resources {
-                        jars {
-                            files(webstartHelperJar)
-                            project(path: ':projectA')
+                client {
+                    jarDependencies configurations.webstartJars
+                    jnlp {
+                        description 'Description client1'
+                        title 'Client1 title'
+                        resources {
+                            systemProperties pop1: 'test', prop2: 'test2', 'jnlp.versionEnabled':true
                         }
-                        systemProperties pop1: 'test', prop2: 'test2', 'jnlp.versionEnabled':true
                     }
                 }
             }

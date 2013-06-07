@@ -1,6 +1,7 @@
 package no.statkart.sktools.gradle.plugins.webstart
 
 import no.statkart.sktools.gradle.plugins.webstart.util.ArtifactMatcher
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
@@ -20,12 +21,17 @@ class WebstartTask extends ConventionTask {
     protected static Logger log = Logging.getLogger(WebstartTask.class);
 
     private List<JnlpConfiguration> jnlpConfigurations = new ArrayList<JnlpConfiguration>();
+    private final ConfigurableFileCollection jarResources;
 
     private File destinationDir;
 
     String libDir = "lib";
 
     private String digest = null;
+
+    WebstartTask() {
+        jarResources = project.files()
+    }
 
     public void jnlp(Closure config) {
         def jnlpConfiguration = new JnlpConfiguration(project)
@@ -34,17 +40,21 @@ class WebstartTask extends ConventionTask {
     }
 
     @InputFiles
-    FileCollection getJarDependencies() {
-        return project.files({
-            jnlpConfigurations.collect {
-                project.configurations.detachedConfiguration(it.resources.jarDependencies.toArray())
-            }
-        })
+    FileCollection getJarResources() {
+        return jarResources
+    }
+
+    void jarResources(Object... files) {
+        jarResources.from(files)
     }
 
     @Input
     List<JnlpConfiguration> getJnlpConfigurations() {
         return jnlpConfigurations
+    }
+
+    protected void setJnlpConfigurations(List<JnlpConfiguration> jnlpConfigurations) {
+        this.jnlpConfigurations = jnlpConfigurations
     }
 
     @Input
@@ -104,46 +114,39 @@ class WebstartTask extends ConventionTask {
             informationNode.remove(informationNode.homepage[0]) //homepage must have an href if set
         }
 
-        jnlp.resources.each { ResourcesConfiguration resources ->
-            Node resourcesNode = new Node(jnlpNode, 'resources')
+        Node resourcesNode = new Node(jnlpNode, 'resources')
 
-            resources.runtimes?.each { JavaRuntimeConfiguration javaRuntime ->
-                Node javaNode = resourcesNode.appendNode('j2se', [version: javaRuntime.version])
-                if (javaRuntime.href != null) {
-                    javaNode.attributes().put('href', javaRuntime.href)
-                }
-                if (javaRuntime.xms != null) {
-                    javaNode.attributes().put('initial-heap-size', javaRuntime.xms)
-                }
-                if (javaRuntime.xmx != null) {
-                    javaNode.attributes().put('max-heap-size', javaRuntime.xmx)
-                }
-                if (javaRuntime.vmArgs != null) {
-                    javaNode.attributes().put('java-vm-args', javaRuntime.vmArgs)
-                }
+        jnlp.resources.runtimes?.each { JavaRuntimeConfiguration javaRuntime ->
+            Node javaNode = resourcesNode.appendNode('j2se', [version: javaRuntime.version])
+            if (javaRuntime.href != null) {
+                javaNode.attributes().put('href', javaRuntime.href)
             }
-
-            def configuration = project.configurations.detachedConfiguration(resources.jarDependencies.toArray())
-
-            configuration.files.each {File file ->
-                ArtifactMatcher artifactMatcher = new ArtifactMatcher(file)
-
-                String jarPath = libDir + '/' + artifactMatcher.name + '.' + artifactMatcher.type
-
-                Node jarNode = resourcesNode.appendNode('jar', [href: jarPath, version: artifactMatcher.version + digest])
-                long size = file.length()   //0 if for some reasons the file cant be found
-                if (size > 0L) {
-                    jarNode.attributes().put('size', size)
-                }
+            if (javaRuntime.xms != null) {
+                javaNode.attributes().put('initial-heap-size', javaRuntime.xms)
             }
-
-
-            resources.systemProperties?.each { key, value ->
-                resourcesNode.appendNode('property', [name: key, value: value])
+            if (javaRuntime.xmx != null) {
+                javaNode.attributes().put('max-heap-size', javaRuntime.xmx)
             }
+            if (javaRuntime.vmArgs != null) {
+                javaNode.attributes().put('java-vm-args', javaRuntime.vmArgs)
+            }
+        }
 
-        }//end <resources>
+        jarResources.files.each {File file ->
+            ArtifactMatcher artifactMatcher = new ArtifactMatcher(file)
 
+            String jarPath = getLibDir() + '/' + artifactMatcher.name + '.' + artifactMatcher.type
+
+            Node jarNode = resourcesNode.appendNode('jar', [href: jarPath, version: artifactMatcher.version + digest])
+            long size = file.length()   //0 if for some reasons the file cant be found
+            if (size > 0L) {
+                jarNode.attributes().put('size', size)
+            }
+        }
+
+        jnlp.resources.systemProperties?.each { key, value ->
+            resourcesNode.appendNode('property', [name: key, value: value])
+        }
 
         if (jnlp.hasApplication()) {
             jnlpNode.appendNode('application-desc', ['main-class': jnlp.application.mainClass])

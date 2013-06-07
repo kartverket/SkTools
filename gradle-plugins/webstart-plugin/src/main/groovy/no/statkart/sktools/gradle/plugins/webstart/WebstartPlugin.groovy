@@ -1,22 +1,16 @@
 package no.statkart.sktools.gradle.plugins.webstart
 
 import no.statkart.sktools.gradle.plugins.webstart.util.ArtifactMatcher
-import org.apache.commons.io.FileUtils
+import org.apache.commons.lang.StringUtils
 import org.gradle.api.Action
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.Task
-import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.dsl.DependencyHandler
 import org.gradle.api.file.FileCopyDetails
-import org.gradle.api.internal.ConventionMapping
-import org.gradle.api.internal.ConventionTask
-import org.gradle.api.plugins.BasePlugin
 import org.gradle.api.plugins.WarPlugin
 import org.gradle.api.tasks.bundling.War
+import org.gradle.util.GUtil
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.util.concurrent.Callable
 
 /**
  * For generering av webstart klienter og distribusjoner. <br />
@@ -28,8 +22,10 @@ import java.util.concurrent.Callable
 class WebstartPlugin implements Plugin<Project> {
     private static Logger logger = LoggerFactory.getLogger(WebstartPlugin.class)
 
-    public static final String SIGN_TASK_NAME = 'signJars'
-    public static final String WEBSTART_TASK_NAME = 'webstart'
+    public static final String WEBSTART_CONVENTION_NAME = 'webstart'
+    public static final String SIGN_TASK_PREFIX = 'sign'
+    public static final String WEBSTART_TASK_PREFIX = 'gen'
+    public static final String WEBSTART_TASK_POSTFIX = 'Jnlp'
 
     /**
      * Steg for mapping av navn for ressurs-filer til lib katalog
@@ -44,44 +40,64 @@ class WebstartPlugin implements Plugin<Project> {
     void apply(Project project) {
         project.plugins.apply(WarPlugin)
 
-        configureSignJarTask(project)
-        configureWebstartTask(project)
-        configureWar(project)
+        WebstartConvention convention = new WebstartConvention(project)
+        project.convention.plugins.put(WEBSTART_CONVENTION_NAME, convention)
+
+        convention.webstart.all(new Action<ClientConfiguration>() {
+            @Override
+            void execute(ClientConfiguration clientConfiguration) {
+                configureClient(project, clientConfiguration)
+            }
+        })
     }
 
-    JarSigner configureSignJarTask(Project project) {
-        JarSigner jarSigner = project.tasks.add(SIGN_TASK_NAME, JarSigner)
+    private static void configureClient(Project project, ClientConfiguration clientConfiguration) {
+        JarSigner jarSigner = configureJarSigner(project, clientConfiguration)
+        WebstartTask genJnlp = configureGenJnlp(project, clientConfiguration, jarSigner)
+        configureWar(project, clientConfiguration, jarSigner, genJnlp)
+    }
+
+    private static JarSigner configureJarSigner(Project project, ClientConfiguration clientConfiguration) {
+        JarSigner jarSigner = project.tasks.add(makeTaskName(SIGN_TASK_PREFIX, clientConfiguration.name, null), JarSigner)
+        jarSigner.jarFilesToSign = clientConfiguration.jarDependencies
+        if (clientConfiguration.signingConfiguration != null) {
+            jarSigner.certificateFile = clientConfiguration.signingConfiguration.keystore
+            jarSigner.alias = clientConfiguration.signingConfiguration.alias
+            jarSigner.password = clientConfiguration.signingConfiguration.password
+        }
         return jarSigner
     }
 
-    WebstartTask configureWebstartTask(Project project) {
-        WebstartTask webstartTask = project.tasks.add(WEBSTART_TASK_NAME, WebstartTask)
-        webstartTask.getConventionMapping().map('digest') {
-            JarSigner jarSigner = project.tasks.getByName(SIGN_TASK_NAME) as JarSigner
-            return jarSigner.digest
-        }
+    private static WebstartTask configureGenJnlp(Project project, ClientConfiguration clientConfiguration, JarSigner jarSigner) {
+        WebstartTask webstartTask = project.tasks.add(makeTaskName(WEBSTART_TASK_PREFIX, clientConfiguration.name, WEBSTART_TASK_POSTFIX), WebstartTask)
+        webstartTask.setJnlpConfigurations(clientConfiguration.jnlpConfigurations)
+        webstartTask.conventionMapping.libDir = { clientConfiguration.libDir }
+        webstartTask.jarResources jarSigner
         return webstartTask
     }
 
-    void configureWar(Project project) {
+    private static void configureWar(Project project, ClientConfiguration clientConfiguration, JarSigner jarSigner, WebstartTask webstartTask) {
         War war = project.tasks.getByName(WarPlugin.WAR_TASK_NAME) as War
-        war.from({project.tasks.getByName(WEBSTART_TASK_NAME)})
 
-        war.into({
-            WebstartTask task = project.tasks.getByName(WEBSTART_TASK_NAME) as WebstartTask
-            task.libDir
-        }) {
-            from {
-                WebstartTask task = project.tasks.getByName(WEBSTART_TASK_NAME) as WebstartTask
-                task.jarDependencies
-            }
-            eachFile { FileCopyDetails details ->
-                JarSigner jarSigner = project.tasks.getByName(SIGN_TASK_NAME) as JarSigner
-                ArtifactMatcher artifactMatcher = new ArtifactMatcher(details.file)
-                details.name = createFileNameForJar(artifactMatcher, jarSigner.digest)
-            }
+        war.from webstartTask
+        war.into({ clientConfiguration.libDir }) {
+            from jarSigner
+            eachFile(new Action<FileCopyDetails>() {
+                @Override
+                void execute(FileCopyDetails t) {
+                    ArtifactMatcher artifactMatcher = new ArtifactMatcher(t.file)
+                    String digest = clientConfiguration.signingConfiguration?.digest
+                    t.name = createFileNameForJar(artifactMatcher, digest)
+                }
+            })
+        }
+    }
+
+    private static String makeTaskName(String verb, String client, String postfix) {
+        if (postfix != null) {
+            return StringUtils.uncapitalize(String.format("%s%s%s", verb, GUtil.toCamelCase(client), StringUtils.capitalize(postfix)));
+        } else {
+            return StringUtils.uncapitalize(String.format("%s%s", verb, GUtil.toCamelCase(client)));
         }
     }
 }
-
-

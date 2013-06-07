@@ -1,9 +1,120 @@
 package no.statkart.sktools.gradle.plugins.webstart
 
 import no.statkart.sktools.gradle.plugins.webstart.util.DependencyHelper
-import org.apache.commons.lang.builder.EqualsBuilder
+import no.statkart.sktools.gradle.plugins.webstart.util.FileHashIdent
+import org.gradle.api.NamedDomainObjectContainer
+import org.gradle.api.NamedDomainObjectFactory
 import org.gradle.api.Project
-import org.gradle.api.artifacts.Dependency
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.FileCollection
+
+/**
+ * Extension for webstart plugin.
+ *
+ * @author Tor Egil R. Strand
+ */
+class WebstartConvention {
+    private final Project project
+    private final NamedDomainObjectContainer<ClientConfiguration> clientContainer
+
+    WebstartConvention(Project project) {
+        this.project = project
+        clientContainer = project.container(ClientConfiguration, new NamedDomainObjectFactory<ClientConfiguration>() {
+            @Override
+            ClientConfiguration create(String name) {
+                return new ClientConfiguration(project, name)
+            }
+        })
+    }
+
+    void webstart(Closure config) {
+        clientContainer.configure config
+    }
+
+    NamedDomainObjectContainer<ClientConfiguration> getWebstart() {
+        return clientContainer
+    }
+}
+
+class ClientConfiguration {
+    private final Project project;
+    private final String name;
+
+    private SigningConfiguration signingConfiguration
+    private List<JnlpConfiguration> jnlpConfigurations = new ArrayList<JnlpConfiguration>();
+    private ConfigurableFileCollection jarDependencies
+
+    String libDir = 'lib'
+
+    ClientConfiguration(Project project, String name) {
+        this.project = project
+        this.name = name
+
+        jarDependencies = project.files()
+    }
+
+    String getName() {
+        return name
+    }
+
+    public void sign(File keystore, String alias, String password) {
+        signingConfiguration = new SigningConfiguration(keystore, alias, password)
+    }
+
+    public void jnlp(Closure config) {
+        JnlpConfiguration jnlpConfiguration = new JnlpConfiguration(project)
+        jnlpConfiguration.configure config
+        jnlpConfigurations.add(jnlpConfiguration)
+    }
+
+    public void libDir(String libDir) {
+        this.libDir = libDir
+    }
+
+    public void jarDependencies(Object... files) {
+        jarDependencies.from(files)
+    }
+
+    SigningConfiguration getSigningConfiguration() {
+        return signingConfiguration
+    }
+
+    List<JnlpConfiguration> getJnlpConfigurations() {
+        return jnlpConfigurations
+    }
+
+    FileCollection getJarDependencies() {
+        return jarDependencies
+    }
+}
+
+class SigningConfiguration {
+    private final File keystore
+    private final String alias
+    private final String password
+
+    SigningConfiguration(File keystore, String alias, String password) {
+        this.keystore = keystore
+        this.alias = alias
+        this.password = password
+    }
+
+    File getKeystore() {
+        return keystore
+    }
+
+    String getAlias() {
+        return alias
+    }
+
+    String getPassword() {
+        return password
+    }
+
+    public String getDigest() throws Exception {
+        return FileHashIdent.createChecksum(keystore, alias);
+    }
+}
 
 class JnlpConfiguration implements Serializable {
     private final static long serialVersionUID = 1L;
@@ -188,35 +299,13 @@ class ResourcesConfiguration implements Serializable {
 
     protected final Map<String, Object> systemProperties = new LinkedHashMap();
     protected final List<JavaRuntimeConfiguration> runtimes = new ArrayList<JavaRuntimeConfiguration>();
-    protected final DependencyHelper jarDependencies;
 
     ResourcesConfiguration(JnlpConfiguration jnlp) {
         this.jnlp = jnlp;
-        this.jarDependencies = new DependencyHelper(this.project);
     }
 
     private Project getProject() {
         return jnlp.getProject()
-    }
-
-    public DependencyHelper jars(Closure closure) {
-        return jarDependencies.configure(closure);
-    }
-
-    /**
-     * @see DependencyHelper#library(Object, Closure)
-     * @since 1.2
-     */
-    public Dependency jars(Object notation, Closure notationConfigClosure) {
-        return jarDependencies.library(notation, notationConfigClosure);
-    }
-
-    /**
-     * @see DependencyHelper#library(Object...)
-     * @since 1.2
-     */
-    public Dependency jars(Object... notations) {
-        return jarDependencies.library(notations);
     }
 
     /**
@@ -261,9 +350,6 @@ class ResourcesConfiguration implements Serializable {
         return this;
     }
 
-    // Fordi equals() brukes til up-to-date evaluering, så er ikke jarDependencies med i equals siden filavhengigheter
-    // må/bør registreres for seg selv som Gradle-input. Dessuten er ikke en serialisert og deseralisert
-    // DependencyHelper lik seg selv lenger.
     boolean equals(o) {
         if (this.is(o)) return true
         if (getClass() != o.class) return false

@@ -23,32 +23,34 @@ class WebstartTaskTest {
 
         projectHelper.configureProject {
             webstart {
-                jnlp {
-                    jnlpFilename 'goodClient.jnlp'
-                    description 'Description client1'
-                    title 'Client1 title'
-                    vendor 'MyCompany'
-                    homepage 'http://intra.statkart.no'
-                    applicationMainClass 'some.pkg.MyApplicationLauncher'
-                    resources {
-                        javaRuntime '1.5+'
+                client {
+                    jnlp {
+                        jnlpFilename 'goodClient.jnlp'
+                        description 'Description client1'
+                        title 'Client1 title'
+                        vendor 'MyCompany'
+                        homepage 'http://intra.statkart.no'
+                        applicationMainClass 'some.pkg.MyApplicationLauncher'
+                        resources {
+                            javaRuntime '1.5+'
+                        }
                     }
-                }
-                jnlp {
-                    jnlpFilename 'client2.jnlp'
-                    description project.description
-                    title 'Client2 title'
-                    vendor 'SomeCompany'
-                    homepage '\\\\intra\\somefolder\\someproject\\index.html'
-                    application.mainClass 'AnotherLauncher'
-                    resources {
-                        javaRuntime '1.6+', '128m', '256m', 'http://some.download/location' //shortcut notation
-                        runtime {   //same as above but only with vmArgs set.
-                            version '1.6+'
-                            href 'http://some.download/location'
-                            xms '128m'
-                            xmx '256m'
-                            vmArgs 'someargs'
+                    jnlp {
+                        jnlpFilename 'client2.jnlp'
+                        description project.description
+                        title 'Client2 title'
+                        vendor 'SomeCompany'
+                        homepage '\\\\intra\\somefolder\\someproject\\index.html'
+                        application.mainClass 'AnotherLauncher'
+                        resources {
+                            javaRuntime '1.6+', '128m', '256m', 'http://some.download/location' //shortcut notation
+                            runtime {   //same as above but only with vmArgs set.
+                                version '1.6+'
+                                href 'http://some.download/location'
+                                xms '128m'
+                                xmx '256m'
+                                vmArgs 'someargs'
+                            }
                         }
                     }
                 }
@@ -59,7 +61,7 @@ class WebstartTaskTest {
 
 
         final Project project = projectHelper.project
-        final WebstartTask task = project.tasks.getByName(WebstartPlugin.WEBSTART_TASK_NAME) as WebstartTask
+        final WebstartTask task = project.tasks.getByName('genClientJnlp') as WebstartTask
         final List<JnlpConfiguration> configurations = task.jnlpConfigurations;
 
         Assert.assertEquals(configurations[0].jnlpFilename, 'goodClient.jnlp')
