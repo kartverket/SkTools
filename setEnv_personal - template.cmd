@@ -15,7 +15,7 @@ rem set GROOVY_HOME=C:\bin\groovy-1.8.6
 set ORG_GRADLE_PROJECT_WEBLOGIC_HOME=C:\bea_wls10.3.5
 
 @rem bestemmer versjon av prosjektet [optional - må benyttes på ikke numeriske kodebrancher ala trunk]
-@rem set ORG_GRADLE_PROJECT_sktools_versjon=1-SNAPSHOT
+@rem set ORG_GRADLE_PROJECT_sktools_versjon=1.2-SNAPSHOT
 
 
 
