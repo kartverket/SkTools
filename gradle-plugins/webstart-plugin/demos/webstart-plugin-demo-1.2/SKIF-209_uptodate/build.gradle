@@ -6,13 +6,25 @@
 
 apply plugin: 'sktools-webstart-plugin'
 
-signJars {
-
-}
 
 webstart {
-    jnlp {
-        jnlpFilename 'echo-client-signed.jnlp'
+    client {
+        signJars false
+        outputPath 'build/unsigned'
+        jnlpFile 'echo-client.jnlp'
+        jnlp {
+            title 'Unsigned client'
+            application.mainClass 'WebstartTester'
+            resources {
+                jars project(':echo-client')
+                javaRuntime '1.6+', '64m', '64m'
+            }
+        }
+    }
+    client {
+        signJars true
+        outputPath 'build/signed'
+        jnlpFile 'echo-client-signed.jnlp'
         jnlp {
             title 'Signed client'
             application.mainClass 'WebstartTester'
@@ -71,7 +83,7 @@ task cleanExtraResources() << {
 
 
 task assertEchoClientClasses() << {
-    ["build/signed/lib"].each {
+    ["build/signed/lib", "build/unsigned/lib"].each {
         def archive = project.files(it).asFileTree.filter({it.name.contains("echo-client")}).singleFile
         assert archive.exists() //forventer at jar fil er opprettet
 
@@ -80,7 +92,7 @@ task assertEchoClientClasses() << {
 }
 
 task assertAddedEchoClientClasses() << {
-    ["build/signed/lib"].each {
+    ["build/signed/lib", "build/unsigned/lib"].each {
         def archive = project.files(it).asFileTree.filter({it.name.contains("echo-client")}).singleFile
         assert archive.exists() //forventer at jar fil er opprettet
 
