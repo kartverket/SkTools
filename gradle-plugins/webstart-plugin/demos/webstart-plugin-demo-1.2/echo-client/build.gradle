@@ -4,6 +4,8 @@ version='2.0.4'
 
 description = 'A dummy client for testing a webstart app.'
 
+task runDemo() { } //no op
+
 sourceSets {
     main.resources.srcDir 'src/main/SKIF-209' //extra resources from :SKIF-209_uptodate
 }
