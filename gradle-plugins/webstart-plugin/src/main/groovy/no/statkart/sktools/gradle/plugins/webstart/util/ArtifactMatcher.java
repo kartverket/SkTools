@@ -1,8 +1,6 @@
 package no.statkart.sktools.gradle.plugins.webstart.util;
 
 import org.gradle.api.GradleException;
-import org.gradle.api.logging.Logger;
-import org.gradle.api.logging.Logging;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,21 +16,67 @@ import java.util.regex.Pattern;
  * @author Tor Egil R. Strand
  */
 public class ArtifactMatcher {
-    protected static Logger log = Logging.getLogger(ArtifactMatcher.class);
 
     /**
      * Pattern for validering av filnavn.
-     * <p/>
+     * <p>
      * Groups
      * <ol>
-     * <li><b>artifaktnavn</b>
-     * <li><b>versjon</b>
-     * <li><b>classifier</b>
-     * <li><b>type/extension</b>
+     *     <li><b>artifaktnavn</b>
+     *     <li><b>versjon</b>
+     *     <li><b>classifier</b>
+     *     <li><b>type/extension</b>
      * </ol>
      * Classifier anses som del av versjon.
      */
     public static Pattern artifactPattern = Pattern.compile("^([A-Za-z]\\w*(?:(?:-|\\.)[A-Za-z]\\w*)*)-((?:(?:(?:dev)?\\d[^-]*)|(?:trunk))[^\\.]*)\\.(\\w*)$");
+
+
+    public static String getArtifactVersion(File file) {
+        checkArtifactMatcher(file);
+        Matcher matcher = artifactPattern.matcher(file.getName());
+
+        if (matcher.matches()) {
+            return matcher.group(2);
+        } else {
+            throw new GradleException(String.format("Unable to extract artifact-version from filename %s", file.getPath()));
+        }
+    }
+
+
+    public static String getArtifactName(File file) {
+        checkArtifactMatcher(file);
+        Matcher matcher = artifactPattern.matcher(file.getName());
+
+        if (matcher.matches()) {
+            return matcher.group(1);
+        } else {
+            throw new GradleException(String.format("Unable to extract artifact-name from filename %s", file.getPath()));
+        }
+    }
+
+    public static String getArtifactType(File file) {
+        checkArtifactMatcher(file);
+        Matcher matcher = artifactPattern.matcher(file.getName());
+
+        if (matcher.matches()) {
+            return matcher.group(3).toLowerCase();
+        } else {
+            throw new GradleException(String.format("Unable to extract artifact-type from filename %s", file.getPath()));
+        }
+    }
+
+
+    public static boolean parsableFileName(File file) {
+        return artifactPattern.matcher(file.getName()).matches();
+    }
+
+    private static void checkArtifactMatcher(File file) {
+        if (!parsableFileName(file)) {
+            throw new GradleException(String.format("Unable to parse filename %s", file.getPath()));
+        }
+    }
+
 
     public static String findImplementationVersionInManifest(File file) {
 
@@ -45,43 +89,4 @@ public class ArtifactMatcher {
         return null;
     }
 
-    private String name, version, type;
-
-    public ArtifactMatcher(File file) {
-        Matcher matcher = artifactPattern.matcher(file.getName());
-        if (matcher.matches()) {
-            name = matcher.group(1);
-            version = matcher.group(2);
-            type = matcher.group(3).toLowerCase();
-        } else {
-            String fileName = file.getName();
-            int i = fileName.lastIndexOf('.');
-
-            if (i < 0) {
-                throw new GradleException(String.format("Unable to parse filename %s", file.getPath()));
-            }
-
-            name = fileName.substring(0, i);
-            type = fileName.substring(i + 1);
-
-            log.warn("Filename not parsable, parsing manifest for version {}", file);
-            version = ArtifactMatcher.findImplementationVersionInManifest(file);
-            if (version == null) {
-                log.error("Could not calculate version info from file {}", file);
-                version = "unknown";
-            }
-        }
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getVersion() {
-        return version;
-    }
-
-    public String getType() {
-        return type;
-    }
 }

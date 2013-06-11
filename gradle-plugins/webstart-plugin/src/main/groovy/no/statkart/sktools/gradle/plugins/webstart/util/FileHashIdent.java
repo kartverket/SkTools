@@ -12,13 +12,13 @@ import java.security.MessageDigest;
 public class FileHashIdent implements Serializable {
     private final static long serialVersionUID = 1L;
 
-    private transient File file;
-    private String hash;
+    transient File file;
+    String hash;
 
-    public FileHashIdent(File file) {
+    FileHashIdent(File file) {
         this.file = file;
     }
-    public FileHashIdent(File file, String hash) {
+    FileHashIdent(File file, String hash) {
         this(file);
         this.hash = hash;
     }
@@ -82,9 +82,6 @@ public class FileHashIdent implements Serializable {
         return hash;
     }
 
-    public File getFile() {
-        return file;
-    }
 
     /**
      * Updates (or creates) a checksum file for jar.
@@ -92,7 +89,7 @@ public class FileHashIdent implements Serializable {
      *
      * @see #fileHashIdentFromChecksumFile(java.io.File)
      */
-    public FileHashIdent writeChecksumToFile() throws IOException {
+    FileHashIdent writeChecksumToFile() throws IOException {
         File md5File = new File(file.getParent(), file.getName() + ".md5");
         FileUtils.writeStringToFile(md5File, hash);
         return this;
@@ -104,7 +101,7 @@ public class FileHashIdent implements Serializable {
      *
      * @return {@code null} if corresponding files are not found
      */
-    public static FileHashIdent fileHashIdentFromChecksumFile(File md5File) throws IOException {
+    static FileHashIdent fileHashIdentFromChecksumFile(File md5File) throws IOException {
         FileHashIdent signedArtifactFileIdent = null;
         String md5 = null;
         try {

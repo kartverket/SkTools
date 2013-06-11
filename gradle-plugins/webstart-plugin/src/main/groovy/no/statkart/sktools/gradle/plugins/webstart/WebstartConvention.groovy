@@ -1,156 +1,186 @@
 package no.statkart.sktools.gradle.plugins.webstart
 
 import no.statkart.sktools.gradle.plugins.webstart.util.DependencyHelper
-import no.statkart.sktools.gradle.plugins.webstart.util.FileHashIdent
-import org.gradle.api.NamedDomainObjectContainer
-import org.gradle.api.NamedDomainObjectFactory
+import org.apache.commons.lang.builder.EqualsBuilder
+import org.gradle.api.GradleException
 import org.gradle.api.Project
-import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.FileCollection
+import org.gradle.api.artifacts.Dependency
 
 /**
- * Extension for webstart plugin.
  *
- * @author Tor Egil R. Strand
+ * @since 1.0
+ * @author Thor Åge Eldby
+ * @author Leif Lislegård
  */
-class WebstartConvention {
-    private final Project project
-    private final NamedDomainObjectContainer<ClientConfiguration> clientContainer
+class WebstartConvention implements Serializable {
+    private final static long serialVersionUID = 1L;
+    protected final transient Project project
+
+    protected final Collection<WebstartClientConfiguration> clients = new ArrayList<WebstartClientConfiguration>()
+
+    /**
+     * Deklarer alle navn for {@link org.gradle.api.tasks.bundling.War war tasks}.
+     * Tasks deklarert her vil få standard jarfiler for jnlp servlet bli kopiert ut.
+     * <p>
+     * Dersom listen er tom og {@code not null}, vil alle tasker av type {@link org.gradle.api.tasks.bundling.War} få med disse filene.
+     *
+     * @see WebstartPlugin#JNLP_SERVLET_JARS_TASK_NAME
+     * @see #warTask(String...)
+     * @see #getWarTasks()
+     */
+    protected Set<String> warTasks = null
+
+
 
     WebstartConvention(Project project) {
         this.project = project
-        clientContainer = project.container(ClientConfiguration, new NamedDomainObjectFactory<ClientConfiguration>() {
-            @Override
-            ClientConfiguration create(String name) {
-                return new ClientConfiguration(project, name)
-            }
-        })
     }
 
-    void webstart(Closure config) {
-        clientContainer.configure config
+    /**
+     * Config closure.
+     * <ul>
+     *     <li>{@link #client(Closure)} - definerer webstart klient
+     * </ul>
+     */
+    def webstart(Closure closure) {
+        closure.setResolveStrategy(Closure.DELEGATE_FIRST);
+        closure.delegate = this
+        closure.run()
     }
 
-    NamedDomainObjectContainer<ClientConfiguration> getWebstart() {
-        return clientContainer
+    /**
+     * @since 1.1
+     */
+    public void client(Closure clientConfig) {
+        clients.add(new WebstartClientConfiguration(this).configure(clientConfig))
     }
+
+    /**
+     * @since 1.1
+     */
+    public HashSet<String> getWarTasks() {
+        if (warTasks == null) {
+            warTasks = new HashSet<String>();
+        }
+        return warTasks
+    }
+
+    /**
+     * @since 1.1
+     */
+    public void warTask(String... name) {
+        name.each {
+            getWarTasks().add(it)
+        }
+    }
+
+    protected boolean hasWarTasks() {
+        return warTasks != null;
+    }
+
+
+    boolean equals(Object obj) {
+        return EqualsBuilder.reflectionEquals(this, obj);
+    }
+
 }
 
-class ClientConfiguration {
-    private final Project project;
-    private final String name;
-
-    private SigningConfiguration signingConfiguration
-    private List<JnlpConfiguration> jnlpConfigurations = new ArrayList<JnlpConfiguration>();
-    private ConfigurableFileCollection jarDependencies
-
-    String libDir = 'lib'
-
-    ClientConfiguration(Project project, String name) {
-        this.project = project
-        this.name = name
-
-        jarDependencies = project.files()
-    }
-
-    String getName() {
-        return name
-    }
-
-    public void sign(File keystore, String alias, String password) {
-        signingConfiguration = new SigningConfiguration(keystore, alias, password)
-    }
-
-    public void jnlp(Closure config) {
-        JnlpConfiguration jnlpConfiguration = new JnlpConfiguration(project)
-        jnlpConfiguration.configure config
-        jnlpConfigurations.add(jnlpConfiguration)
-    }
-
-    public void libDir(String libDir) {
-        this.libDir = libDir
-    }
-
-    public void jarDependencies(Object... files) {
-        jarDependencies.from(files)
-    }
-
-    SigningConfiguration getSigningConfiguration() {
-        return signingConfiguration
-    }
-
-    List<JnlpConfiguration> getJnlpConfigurations() {
-        return jnlpConfigurations
-    }
-
-    FileCollection getJarDependencies() {
-        return jarDependencies
-    }
-}
-
-class SigningConfiguration {
-    private final File keystore
-    private final String alias
-    private final String password
-
-    SigningConfiguration(File keystore, String alias, String password) {
-        this.keystore = keystore
-        this.alias = alias
-        this.password = password
-    }
-
-    File getKeystore() {
-        return keystore
-    }
-
-    String getAlias() {
-        return alias
-    }
-
-    String getPassword() {
-        return password
-    }
-
-    public String getDigest() throws Exception {
-        return FileHashIdent.createChecksum(keystore, alias);
-    }
-}
-
-class JnlpConfiguration implements Serializable {
+class WebstartClientConfiguration implements Serializable {
     private final static long serialVersionUID = 1L;
+    protected final transient WebstartConvention convention;
+    protected final transient Project project;
 
-    private transient Project project
+    protected File outputDir   //optional
+    protected String jnlpFilePath   //optional - relativ til outputDir
 
-    String jnlpFilename;
+    protected boolean signJars = true //optional
+    protected JnlpConfiguration jnlp = new JnlpConfiguration(this);
 
-    String title;
-    String vendor;
-    String description;
 
-    String homepage = null; //optional
 
-    String version = null; //optional
-    protected ApplicationConfiguration application = null;  //might be null
+    protected WebstartClientConfiguration(WebstartConvention convention) {
+        this.convention = convention
+        this.project = convention.project
 
-    protected ResourcesConfiguration resources;
-
-    JnlpConfiguration(Project project) {
-        this.project = project
-        jnlpFilename = project.name + '.jnlp'
-        resources = new ResourcesConfiguration(this)
     }
 
-    Project getProject() {
-        return project
-    }
-
-    public JnlpConfiguration title(String title) {
-        this.title = title;
+    /**
+     * Config clause for a webstart client.
+     */
+    protected WebstartClientConfiguration configure(Closure closure) {
+        closure.setDelegate(this);
+        closure.resolveStrategy = Closure.DELEGATE_FIRST;
+        closure.call();
         return this;
     }
 
-    public JnlpConfiguration jnlpFilename(String jnlpFilename) {
-        this.jnlpFilename = jnlpFilename;
+
+    public JnlpConfiguration jnlp(Closure config) {
+        return jnlp.configure(config);
+    }
+
+    public JnlpConfiguration jnlp() {
+        return jnlp;
+    }
+
+
+    public WebstartClientConfiguration outputPath(Object path) {
+        outputDir = project.file(path);
+        return this;
+    }
+
+    public WebstartClientConfiguration jnlpFile(def relativePath) {
+        jnlpFilePath = relativePath;
+        return this;
+    }
+
+    protected File getJnlpFile() {
+        if (outputDir != null) {
+            return project.file(project.relativePath(outputDir) + "/" + jnlpFilePath);
+        } else {
+            throw new GradleException("outputPath not defined!");
+        }
+    }
+
+
+
+    public WebstartClientConfiguration signJars() {
+        return signJars(true);
+    }
+
+    public WebstartClientConfiguration signJars(boolean value) {
+        signJars = value;
+        return this;
+    }
+
+    boolean equals(Object obj) {
+        return EqualsBuilder.reflectionEquals(this, obj);
+    }
+
+}
+
+
+class JnlpConfiguration implements Serializable {
+    private final static long serialVersionUID = 1L;
+    protected final transient WebstartClientConfiguration client;
+
+    protected String title;
+    protected String vendor;
+    protected String description;
+    protected String homepage = null; //optional
+    protected String version = null; //optional
+
+    protected ApplicationConfiguration application = null;  //might be null
+    protected final List<ResourcesConfiguration> resources = new ArrayList<ResourcesConfiguration>();
+
+
+    JnlpConfiguration(WebstartClientConfiguration client) {
+        this.client = client;
+    }
+
+
+    public JnlpConfiguration title(String title) {
+        this.title = title;
         return this;
     }
 
@@ -186,12 +216,8 @@ class JnlpConfiguration implements Serializable {
         return application != null;
     }
 
-    public ApplicationConfiguration application(Closure config = null) {
-        def app = getApplication()
-        if (config != null) {
-            app.configure(config)
-        }
-        return app
+    public ApplicationConfiguration application() {
+        return getApplication();
     }
 
     public ApplicationConfiguration getApplication() {
@@ -201,12 +227,20 @@ class JnlpConfiguration implements Serializable {
         return application;
     }
 
-    public ResourcesConfiguration resources(Closure config) {
-        return resources.configure(config)
+    /**
+     * Adds a group of resources
+     */
+    public ResourcesConfiguration resources(Closure config = null) {
+        ResourcesConfiguration resourcesConfiguration = new ResourcesConfiguration(this)
+        resources.add(resourcesConfiguration);
+        if (config != null) {
+            resourcesConfiguration.configure(config)
+        }
+        return resourcesConfiguration;
     }
 
-    public ResourcesConfiguration getResources() {
-        return resources
+    protected List<ResourcesConfiguration> getResources() {
+        return resources;
     }
 
     /**
@@ -219,47 +253,22 @@ class JnlpConfiguration implements Serializable {
         return this;
     }
 
-    boolean equals(o) {
-        if (this.is(o)) return true
-        if (getClass() != o.class) return false
 
-        JnlpConfiguration that = (JnlpConfiguration) o
-
-        if (application != that.application) return false
-        if (description != that.description) return false
-        if (homepage != that.homepage) return false
-        if (jnlpFilename != that.jnlpFilename) return false
-        if (resources != that.resources) return false
-        if (title != that.title) return false
-        if (vendor != that.vendor) return false
-        if (version != that.version) return false
-
-        return true
+    boolean equals(Object obj) {
+        return EqualsBuilder.reflectionEquals(this, obj);
     }
 
-    int hashCode() {
-        int result
-        result = (jnlpFilename != null ? jnlpFilename.hashCode() : 0)
-        result = 31 * result + (title != null ? title.hashCode() : 0)
-        result = 31 * result + (vendor != null ? vendor.hashCode() : 0)
-        result = 31 * result + (description != null ? description.hashCode() : 0)
-        result = 31 * result + (homepage != null ? homepage.hashCode() : 0)
-        result = 31 * result + (version != null ? version.hashCode() : 0)
-        result = 31 * result + (application != null ? application.hashCode() : 0)
-        result = 31 * result + (resources != null ? resources.hashCode() : 0)
-        return result
-    }
 }
 
 class ApplicationConfiguration implements Serializable {
     private final static long serialVersionUID = 1L;
-    protected final transient JnlpConfiguration jnlp;
+    protected final transient JnlpConfiguration client;
 
     protected String mainClass;
 
 
-    ApplicationConfiguration(JnlpConfiguration jnlp) {
-        this.jnlp = jnlp;
+    ApplicationConfiguration(JnlpConfiguration client) {
+        this.client = client;
     }
 
     public ApplicationConfiguration mainClass(String fqn) {
@@ -267,27 +276,10 @@ class ApplicationConfiguration implements Serializable {
         return this;
     }
 
-    protected ApplicationConfiguration configure(Closure closure) {
-        closure.setDelegate(this);
-        closure.resolveStrategy = Closure.DELEGATE_FIRST;
-        closure.call();
-        return this;
+    boolean equals(Object obj) {
+        return EqualsBuilder.reflectionEquals(this, obj);
     }
 
-    boolean equals(o) {
-        if (this.is(o)) return true
-        if (getClass() != o.class) return false
-
-        ApplicationConfiguration that = (ApplicationConfiguration) o
-
-        if (mainClass != that.mainClass) return false
-
-        return true
-    }
-
-    int hashCode() {
-        return (mainClass != null ? mainClass.hashCode() : 0)
-    }
 }
 
 /**
@@ -296,16 +288,38 @@ class ApplicationConfiguration implements Serializable {
 class ResourcesConfiguration implements Serializable {
     private final static long serialVersionUID = 1L;
     protected final transient JnlpConfiguration jnlp;
+    protected final transient Project project;
 
     protected final Map<String, Object> systemProperties = new LinkedHashMap();
     protected final List<JavaRuntimeConfiguration> runtimes = new ArrayList<JavaRuntimeConfiguration>();
+    protected final DependencyHelper jarDependencies;
+    protected String libPath;
 
     ResourcesConfiguration(JnlpConfiguration jnlp) {
         this.jnlp = jnlp;
+        this.project = jnlp.client.project;
+        this.jarDependencies = new DependencyHelper(this.project);
     }
 
-    private Project getProject() {
-        return jnlp.getProject()
+
+    public DependencyHelper jars(Closure closure) {
+        return jarDependencies.configure(closure);
+    }
+
+    /**
+     * @see DependencyHelper#library(Object, Closure)
+     * @since 1.2
+     */
+    public Dependency jars(Object notation, Closure notationConfigClosure) {
+        return jarDependencies.library(notation, notationConfigClosure);
+    }
+
+    /**
+     * @see DependencyHelper#library(Object...)
+     * @since 1.2
+     */
+    public Dependency jars(Object... notations) {
+        return jarDependencies.library(notations);
     }
 
     /**
@@ -341,6 +355,24 @@ class ResourcesConfiguration implements Serializable {
     }
 
     /**
+     * Optional spesification of path to lib-directory. <br />
+     * The path is relative to {@link WebstartClientConfiguration#outputPath(Object)
+     */
+    public ResourcesConfiguration libPath(String path) {
+        this.libPath = path
+        return this;
+    }
+
+    protected File getLibDir() {
+        if (jnlp.client.outputDir != null) {
+            String basePath = project.relativePath(jnlp.client.outputDir);
+            return  project.file("${basePath}/${libPath}");
+        } else {
+            throw new GradleException("outputPath for client not defined! client: ${jnlp.title} (${jnlp.client.jnlpFilePath})");
+        }
+    }
+
+    /**
      * Config clause for a collection of resources .
      */
     protected ResourcesConfiguration configure(Closure closure) {
@@ -350,24 +382,6 @@ class ResourcesConfiguration implements Serializable {
         return this;
     }
 
-    boolean equals(o) {
-        if (this.is(o)) return true
-        if (getClass() != o.class) return false
-
-        ResourcesConfiguration that = (ResourcesConfiguration) o
-
-        if (runtimes != that.runtimes) return false
-        if (systemProperties != that.systemProperties) return false
-
-        return true
-    }
-
-    int hashCode() {
-        int result
-        result = systemProperties.hashCode()
-        result = 31 * result + runtimes.hashCode()
-        return result
-    }
 }
 
 /**
@@ -377,13 +391,13 @@ class JavaRuntimeConfiguration implements Serializable {
     private final static long serialVersionUID = 1L;
     protected final transient ResourcesConfiguration resources;
 
-    String version;
-    String href = null;   //optional
+    protected String version;
+    protected String href = null;   //optional
     /** initial-heap-size   */
-    String xms = null;    //optional
+    protected String xms = null;    //optional
     /** max-heap-size   */
-    String xmx = null;    //optional
-    String vmArgs = null; //optional
+    protected String xmx = null;    //optional
+    protected String vmArgs = null; //optional
 
 
     protected JavaRuntimeConfiguration(ResourcesConfiguration resources) {
@@ -426,28 +440,4 @@ class JavaRuntimeConfiguration implements Serializable {
         return this;
     }
 
-    boolean equals(o) {
-        if (this.is(o)) return true
-        if (getClass() != o.class) return false
-
-        JavaRuntimeConfiguration that = (JavaRuntimeConfiguration) o
-
-        if (href != that.href) return false
-        if (version != that.version) return false
-        if (vmArgs != that.vmArgs) return false
-        if (xms != that.xms) return false
-        if (xmx != that.xmx) return false
-
-        return true
-    }
-
-    int hashCode() {
-        int result
-        result = (version != null ? version.hashCode() : 0)
-        result = 31 * result + (href != null ? href.hashCode() : 0)
-        result = 31 * result + (xms != null ? xms.hashCode() : 0)
-        result = 31 * result + (xmx != null ? xmx.hashCode() : 0)
-        result = 31 * result + (vmArgs != null ? vmArgs.hashCode() : 0)
-        return result
-    }
 }

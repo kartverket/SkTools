@@ -204,7 +204,7 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
         task.conventionMapping('dumpfile', { getDumpfile() })
         task.conventionMapping('schemas', { getSchemas() })
         task.conventionMapping('schemaMapping', { getSchemaMapping() })
-        task.conventionMapping('logfile', { "${getUsername()}.import.${getDateString()}.LOG" })
+        task.conventionMapping('logfile', { "${dumpfile}.import.${dateString}.LOG" })
         task.conventionMapping('tableExistsAction', { 'REPLACE' })
 
         task.conventionMapping('username', { getUsername() })
@@ -225,7 +225,7 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
         task.conventionMapping('directory', { getDirectory() })
         task.conventionMapping('dumpfile', { getDumpfile() })
         task.conventionMapping('schemas', { getSchemas() })
-        task.conventionMapping('logfile', { "${getDumpfile()}.export.${getDateString()}.LOG" })
+        task.conventionMapping('logfile', { "${dumpfile}.export.${dateString}.LOG" })
         task.conventionMapping('exclude', { ['STATISTICS', 'INDEX'] })
         task.conventionMapping('compression', { 'DATA_ONLY' })
 
