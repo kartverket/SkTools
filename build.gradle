@@ -204,6 +204,7 @@ allprojects {
                         'Build-By': System.getenv('USERNAME'),
                         'Build-Machine': System.getenv('COMPUTERNAME'),
                         'Build-Repo': MAVEN_REPO,
+                        'Build-Gradle': gradle.gradleVersion,
 
                         'Implementation-Title': "${project.name} bygget for ${version.contains('-SNAPSHOT') ? 'TEST' : 'Produksjon'}",
                         'Implementation-Version': project.version,
