@@ -6,30 +6,36 @@
 
 apply plugin: 'sktools-webstart-plugin'
 
+configurations {
+    webstartlibs
+}
+
+dependencies {
+    webstartlibs project(':echo-client')
+}
 
 webstart {
-    client {
-        signJars false
-        outputPath 'build/unsigned'
-        jnlpFile 'echo-client.jnlp'
+    unsigned {
+        libDir 'unsigned'
+        jarDependencies configurations.webstartlibs
         jnlp {
+            jnlpFilename 'echo-client.jnlp'
             title 'Unsigned client'
             application.mainClass 'WebstartTester'
             resources {
-                jars project(':echo-client')
                 javaRuntime '1.6+', '64m', '64m'
             }
         }
     }
-    client {
-        signJars true
-        outputPath 'build/signed'
-        jnlpFile 'echo-client-signed.jnlp'
+    signed {
+        sign project.file('../../../kodesignering.jks'), 'statenskartverk', 'SagZ45_p1'
+        libDir 'signed'
+        jarDependencies configurations.webstartlibs
         jnlp {
+            jnlpFilename 'echo-client-signed.jnlp'
             title 'Signed client'
             application.mainClass 'WebstartTester'
             resources {
-                jars project(':echo-client')
                 javaRuntime '1.6+', '64m', '64m'
             }
         }
@@ -52,7 +58,7 @@ task runDemo(dependsOn:'clean') {
         println "Tester generering av client"
         forkGradle([
                 'release',
-                tasks['genWebstart'],
+                tasks['war'],
                 tasks['assertEchoClientClasses'],
         ]) //'release' version without SNAPSHOT
 
@@ -61,7 +67,7 @@ task runDemo(dependsOn:'clean') {
         println "Tester generering av client"
         forkGradle([
                 'release',
-                tasks['genWebstart'],
+                tasks['war'],
                 tasks['assertEchoClientClasses'],
                 tasks['assertAddedEchoClientClasses'],
         ]) //'release' version without SNAPSHOT
@@ -83,8 +89,10 @@ task cleanExtraResources() << {
 
 
 task assertEchoClientClasses() << {
-    ["build/signed/lib", "build/unsigned/lib"].each {
-        def archive = project.files(it).asFileTree.filter({it.name.contains("echo-client")}).singleFile
+    FileTree warTree = project.zipTree(war.archivePath)
+
+    ['signed/echo-client*.jar', 'unsigned/echo-client*.jar'].each { String pattern ->
+        def archive = warTree.matching { include pattern }.singleFile
         assert archive.exists() //forventer at jar fil er opprettet
 
         assert !project.zipTree(archive).matching {include '**/*.class'}.files.isEmpty()
@@ -92,8 +100,10 @@ task assertEchoClientClasses() << {
 }
 
 task assertAddedEchoClientClasses() << {
-    ["build/signed/lib", "build/unsigned/lib"].each {
-        def archive = project.files(it).asFileTree.filter({it.name.contains("echo-client")}).singleFile
+    FileTree warTree = project.zipTree(war.archivePath)
+
+    ['signed/echo-client*.jar', 'unsigned/echo-client*.jar'].each { String pattern ->
+        def archive = warTree.matching { include pattern }.singleFile
         assert archive.exists() //forventer at jar fil er opprettet
 
         assert project.zipTree(archive).matching {include 'addedResource.txt'}.files.size() == 1

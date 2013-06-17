@@ -1,54 +1,55 @@
-apply plugin: 'war'
 apply plugin: 'sktools-webstart-plugin'
 
 description = 'Demonstrates how to make a simple webstart war module.'
 
+configurations {
+    client1
+    client
+}
+
+dependencies {
+    client1 'dom4j:dom4j:1.4@jar'
+    client1 project(path: ':echo-client')
+    client1 'commons-lang:commons-lang:2.6@jar'
+    client1 (['weblogic:wlfullclient_java5:10.3.5', 'weblogic:wlcipher:10.3.5', 'weblogic:cryptojfips:10.3.5'])
+    client project(path: ':echo-client')
+}
 
 webstart {
-    warTasks
-    client {
-        signJars true
-        jnlpFile 'client1-signed.jnlp'
+    client1 {
+        jarDependencies configurations.client1
+        sign project.file('../../../kodesignering.jks'), 'statenskartverk', 'SagZ45_p1'
         jnlp {
+            jnlpFilename 'client1-signed.jnlp'
             title 'Client1 - signed'
             description 'Demonstrates signing of jars'
             application.mainClass 'WebstartTester'
             resources {
-                jars {
-                    library('dom4j:dom4j:1.4@jar')
-                    project(path: ':echo-client')
-                }
-                jars 'commons-lang:commons-lang:2.6@jar'
-                jars (['weblogic:wlfullclient_java5:10.3.5', 'weblogic:wlcipher:10.3.5', 'weblogic:cryptojfips:10.3.5'])
                 javaRuntime '1.6+', '64m', '64m'    //means any rt with version 1.6 or greater
             }
         }
     }
-    client {
-        signJars false
-        jnlpFile 'client1-unsigned.jnlp'
+    client2 {
+        jarDependencies configurations.client
         jnlp {
+            jnlpFilename 'client1-unsigned.jnlp'
             title 'Client1 - unsigned'
             description 'Demonstrates signing of jars'
             application.mainClass 'WebstartTester'
             resources {
-                jars {
-                    project(path: ':echo-client')
-                }
                 javaRuntime '1.6+', '64m', '64m'    //means any rt with version 1.6 or greater
             }
         }
     }
-    client {
-        signJars true
-        jnlpFile 'runtimes-demo.jnlp'
+    client3 {
+        jarDependencies configurations.client
+        sign project.file('../../../kodesignering.jks'), 'statenskartverk', 'SagZ45_p1'
         jnlp {
+            jnlpFilename 'runtimes-demo.jnlp'
             title 'Demo - multiple runtimes'
             description 'Demonstrates declaration of several runtimes'
             application.mainClass 'WebstartTester'
             resources {
-                jars project(':echo-client')
-
                 javaRuntime '1.5.0_14', '128m', '256m'
                 javaRuntime '1.5.0_15 1.6.0_20', '128m', '256m'   //means the newest rt found among one in this list
                 javaRuntime '1.6+', '64m', '64m'    //means any rt with version 1.6 or greater
@@ -56,15 +57,14 @@ webstart {
             }
         }
     }
-    client {
-        signJars true
-        jnlpFile 'properties.jnlp'
+    client4 {
+        jarDependencies configurations.client
+        sign project.file('../../../kodesignering.jks'), 'statenskartverk', 'SagZ45_p1'
         jnlp {
+            jnlpFilename 'properties.jnlp'
             title 'Demo - passing properties'
             description 'Demonstrates how to pass on properties to the application'
             resources {
-                jars project(':echo-client')
-
                 runtime {   //means any rt with version 1.6 or greater
                     version '1.6+'
                     xms '128m'
@@ -92,13 +92,11 @@ task runDemo() {
     dependsOn 'testClean'
 }
 
-task testGenWebstart(dependsOn: 'genWebstart') << {
-    assert file('build/generated/webstart/client1-signed.jnlp').exists()
-    assert file('build/generated/webstart/client1-unsigned.jnlp').exists()
-    assert file('build/generated/webstart/runtimes-demo.jnlp').exists()
-    assert file('build/generated/webstart/properties.jnlp').exists()
-    assert file('build/generated/webstart/lib/version.xml').exists()
-    assert Arrays.asList(file('build/generated/webstart/lib').listFiles()).findAll {it.name.contains 'echo-client'}.size() == 2 //forventer en signert og en usingert jar
+task testGenWebstart(dependsOn: 'war') << {
+    FileTree warTree = project.zipTree(war.archivePath)
+
+    assert warTree.matching { include '*.jnlp' }.files.collect {it.name} as Set == ['client1-signed.jnlp', 'client1-unsigned.jnlp', 'runtimes-demo.jnlp', 'properties.jnlp'] as Set
+    assert (warTree.matching { include 'lib/echo-client*.jar' }.files.collect {it.name} as Set).size() == 2 //forventer en signert (ganger 3 riktignok) og en usingert jar
 }
 
 task testClean(dependsOn: ['testGenWebstart', 'clean']) << {

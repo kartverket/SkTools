@@ -1,6 +1,6 @@
 include ':echo-client'
-//include ':simple-webstart-app' //kommentert ut i påvente av SKTOOLS-61
-//include ':SKIF-209_uptodate' //kommentert ut i påvente av SKTOOLS-61
+include ':simple-webstart-app'
+include ':SKIF-209_uptodate'
 
 rootProject.name = 'webstart-demos'
 
