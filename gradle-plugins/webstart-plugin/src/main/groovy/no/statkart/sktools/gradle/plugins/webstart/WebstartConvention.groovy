@@ -44,7 +44,15 @@ class ClientConfiguration {
     private List<JnlpConfiguration> jnlpConfigurations = new ArrayList<JnlpConfiguration>();
     private ConfigurableFileCollection jarDependencies
 
+    /**
+     * Angir relativ URL til jar-filer i forholdt til jnlp-filene.
+     */
     String libDir = 'lib'
+
+    /**
+     * Angir om jnlp-filene skal legges rett til war-en. Sett til <code>false</code> dersom jnlp-filene skal prosesseres mer på ett eller annet vis.
+     */
+    boolean warJnlps = true
 
     ClientConfiguration(Project project, String name) {
         this.project = project

@@ -79,7 +79,7 @@ class WebstartPlugin implements Plugin<Project> {
     private static void configureWar(Project project, ClientConfiguration clientConfiguration, JarSigner jarSigner, WebstartTask webstartTask) {
         War war = project.tasks.getByName(WarPlugin.WAR_TASK_NAME) as War
 
-        war.from webstartTask
+        war.from { clientConfiguration.warJnlps ? webstartTask : [] }
         war.into({ clientConfiguration.libDir }) {
             from jarSigner
             eachFile(new Action<FileCopyDetails>() {
