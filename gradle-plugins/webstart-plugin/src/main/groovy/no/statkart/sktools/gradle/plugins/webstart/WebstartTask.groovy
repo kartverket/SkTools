@@ -160,11 +160,15 @@ class WebstartTask extends ConventionTask {
      * Writes xml to file, applying withXml transform if set
      */
     static protected void writeXml(File file, Node xml, Closure withXml) {
+        writeXml(new OutputStreamWriter(new BufferedOutputStream(new FileOutputStream(file)), 'UTF-8'), xml, withXml)
+    }
+
+    static protected void writeXml(Writer writer, Node xml, Closure withXml) {
         Object transformer = findXmlTransformer()
         if (withXml != null) {
             transformer.addAction(withXml)
         }
-        transformer.transform(xml, file)
+        transformer.transform(xml, writer)
     }
 
     /**
