@@ -145,7 +145,7 @@ class WebstartTaskTest {
 
                 withXml { XmlProvider xmlProvider ->
                     Node jnlp = xmlProvider.asNode()
-                    jnlp.resources[0].appendNode('property', name: 'withXml', value: 'oh,yeah')
+                    jnlp.resources[0].appendNode('property', [name: 'withXml', value: 'oh,yeah'])
                 }
             }
         }
