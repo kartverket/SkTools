@@ -1,5 +1,6 @@
 package no.statkart.sktools.gradle.plugins.webstart
 
+import org.gradle.api.XmlProvider
 import org.testng.Assert
 import org.testng.annotations.Test
 import no.statkart.sktools.gradle.testutils.ProjectHelper
@@ -141,6 +142,11 @@ class WebstartTaskTest {
                 application {
                     mainClass('my.Launcher')
                 }
+
+                withXml { XmlProvider xmlProvider ->
+                    Node jnlp = xmlProvider.asNode()
+                    jnlp.resources[0].appendNode('property', name: 'withXml', value: 'oh,yeah')
+                }
             }
         }
 
@@ -169,6 +175,8 @@ class WebstartTaskTest {
             Assert.assertEquals(jnlp.resources[0].property[0].@value.text(), 'true')
             Assert.assertEquals(jnlp.resources[0].property[1].@name.text(), 'uhuh')
             Assert.assertEquals(jnlp.resources[0].property[1].@value.text(), 'whatagoodfeelin')
+            Assert.assertEquals(jnlp.resources[0].property[2].@name.text(), 'withXml')
+            Assert.assertEquals(jnlp.resources[0].property[2].@value.text(), 'oh,yeah')
 
             Assert.assertEquals(jnlp.resources[1].children().size(), 0) //tom resources
 

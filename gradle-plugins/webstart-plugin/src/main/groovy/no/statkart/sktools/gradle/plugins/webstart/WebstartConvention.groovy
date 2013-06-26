@@ -142,6 +142,8 @@ class JnlpConfiguration implements Serializable {
 
     protected ResourcesConfiguration resources;
 
+    private transient Closure withXml;
+
     JnlpConfiguration(Project project) {
         this.project = project
         jnlpFilename = project.name + '.jnlp'
@@ -215,6 +217,14 @@ class JnlpConfiguration implements Serializable {
 
     public ResourcesConfiguration getResources() {
         return resources
+    }
+
+    public void withXml(Closure closure) {
+        withXml = closure
+    }
+
+    protected Closure getWithXml() {
+        return withXml
     }
 
     /**

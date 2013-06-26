@@ -3,6 +3,7 @@ package no.statkart.sktools.gradle.plugins.webstart
 import no.statkart.sktools.gradle.plugins.webstart.util.ArtifactMatcher
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
+import org.gradle.api.internal.xml.XmlTransformer
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.Input
@@ -153,40 +154,17 @@ class WebstartTask extends ConventionTask {
         }
 
 
-        writeXml(new File(getDestinationDir(), jnlp.jnlpFilename), jnlpNode)
+        writeXml(new File(getDestinationDir(), jnlp.jnlpFilename), jnlpNode, jnlp.withXml)
     }
 
     /**
-     * For debug - writes xml to String
+     * Writes xml to file, applying withXml transform if set
      */
-    static protected String writeXmlToString(Node xml) {
-        StringWriter writer = new StringWriter()
-        writeXml(writer, xml)
-        writer.toString()
-    }
-
-    /**
-     * Writes xml to file
-     */
-    static protected void writeXml(File file, Node xml) {
-        if (!file.exists()) {
-            log.info("...creating {}", file)
+    static protected void writeXml(File file, Node xml, Closure withXml) {
+        XmlTransformer transformer = new XmlTransformer()
+        if (withXml != null) {
+            transformer.addAction(withXml)
         }
-
-        Writer writer = new OutputStreamWriter(new FileOutputStream(file), 'UTF-8')
-        writeXml(writer, xml)
-        writer.close()
-
-        if (log.isDebugEnabled()) {
-            log.debug("...writing xml to {} :\n{}", file, writeXmlToString(xml))
-        }
-
+        transformer.transform(xml, file)
     }
-
-    static protected void writeXml(Writer writer, Node xml) {
-        XmlNodePrinter printer = new XmlNodePrinter(new PrintWriter(writer))
-        printer.setPreserveWhitespace(true)
-        printer.print(xml)
-    }
-
 }
