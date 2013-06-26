@@ -3,7 +3,6 @@ package no.statkart.sktools.gradle.plugins.webstart
 import no.statkart.sktools.gradle.plugins.webstart.util.ArtifactMatcher
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
-import org.gradle.api.internal.xml.XmlTransformer
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.Input
@@ -161,10 +160,25 @@ class WebstartTask extends ConventionTask {
      * Writes xml to file, applying withXml transform if set
      */
     static protected void writeXml(File file, Node xml, Closure withXml) {
-        XmlTransformer transformer = new XmlTransformer()
+        Object transformer = findXmlTransformer()
         if (withXml != null) {
             transformer.addAction(withXml)
         }
         transformer.transform(xml, file)
+    }
+
+    /**
+     * Finner XmlTransformer, som ligger i forskjellige pakker avhengig av Gradle-versjon
+     * @return
+     */
+    static private Object findXmlTransformer() {
+        Class transformerClass;
+        try {
+            transformerClass = Class.forName('org.gradle.api.internal.xml.XmlTransformer')
+        } catch (ClassNotFoundException ignored) {
+            transformerClass = Class.forName('org.gradle.api.internal.XmlTransformer')
+        }
+
+        return transformerClass.newInstance()
     }
 }
