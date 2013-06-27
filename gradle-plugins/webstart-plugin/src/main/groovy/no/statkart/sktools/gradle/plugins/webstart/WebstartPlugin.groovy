@@ -35,7 +35,7 @@ class WebstartPlugin implements Plugin<Project> {
      * Versjonsfelt vil også få tillagt parameterisert {@code digest}. <br>
      */
     public static String createFileNameForJar(ArtifactMatcher artifactMatcher, String digest) {
-        return "${artifactMatcher.name}__V${artifactMatcher.version}${digest != null ? digest : ''}.${artifactMatcher.type}"
+        return "${artifactMatcher.name}__V${artifactMatcher.version}${digest != null ? '-' + digest : ''}.${artifactMatcher.type}"
     }
 
     @Override

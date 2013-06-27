@@ -116,6 +116,8 @@ public class JarSigner extends DefaultTask {
                     signedArtifacts.put(unsignedJar.getName(), cachedFileIdent);
                 }
             }
+        } else {
+            logger.info("signing not turned on");
         }
     }
 
