@@ -1,6 +1,7 @@
 package no.statkart.sktools.gradle.plugins.weblogic.deploy
 
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.TaskAction
 
 /**
@@ -11,7 +12,7 @@ import org.gradle.api.tasks.TaskAction
  */
 class WeblogicDeployTask extends AbstractWeblogicDeployTask {
 
-    @Input
+    @InputFiles
     Object file
 
     @Input
