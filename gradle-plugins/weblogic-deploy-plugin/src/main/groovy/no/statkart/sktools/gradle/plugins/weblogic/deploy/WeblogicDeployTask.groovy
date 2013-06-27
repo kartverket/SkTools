@@ -32,7 +32,7 @@ class WeblogicDeployTask extends AbstractWeblogicDeployTask {
                 upload: getUpload(),
 
                 name: getDeploymentName(),
-                source: project.file(getFile()),
+                source: project.files(getFile()).singleFile,
                 targets: getTargets(),
 
                 adminurl: getUrl(),
