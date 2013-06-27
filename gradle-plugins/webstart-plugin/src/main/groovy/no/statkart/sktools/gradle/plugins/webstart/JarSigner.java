@@ -6,11 +6,13 @@ import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.ExecTask;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.Callable;
 
@@ -25,7 +27,7 @@ public class JarSigner extends DefaultTask {
     private File cacheDir;
     /**
      * Holder cache over alle signerte filer, et map per sertifikat.
-     * <p>
+     * <p/>
      * String er her en representasjon av jarfilen som typiskt inneholder navn, group og version.
      */
     private Map<FileHashIdent, Map<String, FileHashIdent>> signedArtifactsForCertificates;
@@ -160,7 +162,8 @@ public class JarSigner extends DefaultTask {
 //
     }
 
-    @InputFile @Optional
+    @InputFile
+    @Optional
     public File getCertificateFile() {
         return certificateFile;
     }
@@ -180,7 +183,8 @@ public class JarSigner extends DefaultTask {
         this.cacheDir = cacheDir;
     }
 
-    @Input @Optional
+    @Input
+    @Optional
     public String getPassword() {
         return password;
     }
@@ -189,7 +193,8 @@ public class JarSigner extends DefaultTask {
         this.password = password;
     }
 
-    @Input @Optional
+    @Input
+    @Optional
     public String getAlias() {
         return alias;
     }
@@ -244,27 +249,32 @@ public class JarSigner extends DefaultTask {
     }
 
     @OutputFiles
-    public Collection<File> getSignedJars() {
-        try {
-            Set<File> unsignedFiles = getProject().files(jarFilesToSign).getFiles();
+    public FileCollection getSignedJars() {
+        return getProject().files(new Callable<Collection<File>>() {
+            @Override
+            public Collection<File> call() throws Exception {
+                try {
+                    Set<File> unsignedFiles = getProject().files(jarFilesToSign).getFiles();
 
-            if (getCertificateFile() == null) {
-                // Kan ikke signere noe uten sertifikat
-                return unsignedFiles;
+                    if (getCertificateFile() == null) {
+                        // Kan ikke signere noe uten sertifikat
+                        return unsignedFiles;
+                    }
+
+                    FileHashIdent certificateFileIdent = new FileHashIdent(getCertificateFile(), FileHashIdent.createChecksum(getCertificateFile(), getAlias()));
+                    File certDirectory = new File(getCacheDir(), certificateFileIdent.hash());
+
+                    List<File> signedFiles = new ArrayList<File>(unsignedFiles.size());
+                    for (File unsignedFile : unsignedFiles) {
+                        File signedFile = new File(certDirectory, unsignedFile.getName());
+                        signedFiles.add(signedFile);
+                    }
+
+                    return signedFiles;
+                } catch (Exception e) {
+                    throw new GradleException("Error calculating (un)signed output files from " + JarSigner.class.getName(), e);
+                }
             }
-
-            FileHashIdent certificateFileIdent = new FileHashIdent(getCertificateFile(), FileHashIdent.createChecksum(getCertificateFile(), getAlias()));
-            File certDirectory = new File(getCacheDir(), certificateFileIdent.hash());
-
-            List<File> signedFiles = new ArrayList<File>(unsignedFiles.size());
-            for (File unsignedFile : unsignedFiles) {
-                File signedFile = new File(certDirectory, unsignedFile.getName());
-                signedFiles.add(signedFile);
-            }
-
-            return signedFiles;
-        } catch (Exception e) {
-            throw new GradleException("Error calculating (un)signed output files from " + JarSigner.class.getName(), e);
-        }
+        });
     }
 }
