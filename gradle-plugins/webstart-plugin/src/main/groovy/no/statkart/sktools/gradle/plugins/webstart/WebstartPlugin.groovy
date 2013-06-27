@@ -12,6 +12,8 @@ import org.gradle.util.GUtil
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import java.util.concurrent.Callable
+
 /**
  * For generering av webstart klienter og distribusjoner. <br />
  * Har funksjonalitet for generering av jnlp-filer, jar-ressurser, signering og enkel war distribuering.
@@ -73,6 +75,12 @@ class WebstartPlugin implements Plugin<Project> {
         webstartTask.setJnlpConfigurations(clientConfiguration.jnlpConfigurations)
         webstartTask.conventionMapping.libDir = { clientConfiguration.libDir }
         webstartTask.jarResources jarSigner
+        webstartTask.conventionMapping.map('digest', new Callable<String>() {
+            @Override
+            String call() throws Exception {
+                return clientConfiguration.signingConfiguration?.digest
+            }
+        })
         return webstartTask
     }
 

@@ -98,7 +98,7 @@ class WebstartTask extends ConventionTask {
      */
     public void createJnlp(JnlpConfiguration jnlp) {
         Node jnlpNode = new XmlParser().parse(getClass().getResourceAsStream('template.jnlp'))
-        String digest = digest != null ? ('-' + digest) : ''
+        String digest = getDigest() != null ? ('-' + getDigest()) : ''
 
         jnlpNode.attributes().put('href', jnlp.jnlpFilename)
         jnlpNode.attributes().put('version', jnlp.version)
