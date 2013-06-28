@@ -62,11 +62,9 @@ class WebstartPlugin implements Plugin<Project> {
     private static JarSigner configureJarSigner(Project project, ClientConfiguration clientConfiguration) {
         JarSigner jarSigner = project.tasks.add(makeTaskName(SIGN_TASK_PREFIX, clientConfiguration.name, null), JarSigner)
         jarSigner.jarFilesToSign = clientConfiguration.jarDependencies
-        if (clientConfiguration.signingConfiguration != null) {
-            jarSigner.certificateFile = clientConfiguration.signingConfiguration.keystore
-            jarSigner.alias = clientConfiguration.signingConfiguration.alias
-            jarSigner.password = clientConfiguration.signingConfiguration.password
-        }
+        jarSigner.conventionMapping.certificateFile = { clientConfiguration?.signingConfiguration?.keystore }
+        jarSigner.conventionMapping.alias = { clientConfiguration?.signingConfiguration?.alias }
+        jarSigner.conventionMapping.password = { clientConfiguration?.signingConfiguration?.password }
         return jarSigner
     }
 
