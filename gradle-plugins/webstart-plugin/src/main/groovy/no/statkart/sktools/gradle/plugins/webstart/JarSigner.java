@@ -239,7 +239,6 @@ public class JarSigner extends ConventionTask {
     @InputFiles
     @SkipWhenEmpty
     public Object getJarFilesToSign() {
-        System.out.println("Sign inputs: " + getProject().files(jarFilesToSign).getFiles());
         return jarFilesToSign;
     }
 
@@ -254,7 +253,6 @@ public class JarSigner extends ConventionTask {
 
             if (getCertificateFile() == null) {
                 // Kan ikke signere noe uten sertifikat
-                System.out.println("Unsign outputs: " + unsignedFiles);
                 return unsignedFiles;
             }
 
@@ -267,7 +265,6 @@ public class JarSigner extends ConventionTask {
                 signedFiles.add(signedFile);
             }
 
-            System.out.println("Signed outputs: " + signedFiles);
             return signedFiles;
         } catch (Exception e) {
             throw new GradleException("Error calculating (un)signed output files from " + JarSigner.class.getName(), e);
