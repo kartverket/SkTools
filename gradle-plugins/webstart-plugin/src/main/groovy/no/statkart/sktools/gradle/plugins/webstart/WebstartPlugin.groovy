@@ -5,6 +5,7 @@ import org.apache.commons.lang.StringUtils
 import org.gradle.api.Action
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.file.CopySpec
 import org.gradle.api.file.FileCopyDetails
 import org.gradle.api.plugins.WarPlugin
 import org.gradle.api.tasks.bundling.War
@@ -28,15 +29,6 @@ class WebstartPlugin implements Plugin<Project> {
     public static final String SIGN_TASK_PREFIX = 'sign'
     public static final String WEBSTART_TASK_PREFIX = 'gen'
     public static final String WEBSTART_TASK_POSTFIX = 'Jnlp'
-
-    /**
-     * Steg for mapping av navn for ressurs-filer til lib katalog
-     * <p>
-     * Versjonsfelt vil også få tillagt parameterisert {@code digest}. <br>
-     */
-    public static String createFileNameForJar(ArtifactMatcher artifactMatcher, String digest) {
-        return "${artifactMatcher.name}__V${artifactMatcher.version}${digest != null ? '-' + digest : ''}.${artifactMatcher.type}"
-    }
 
     @Override
     void apply(Project project) {
@@ -86,17 +78,7 @@ class WebstartPlugin implements Plugin<Project> {
         War war = project.tasks.getByName(WarPlugin.WAR_TASK_NAME) as War
 
         war.from { clientConfiguration.warJnlps ? webstartTask : [] }
-        war.into({ clientConfiguration.libDir }) {
-            from jarSigner
-            eachFile(new Action<FileCopyDetails>() {
-                @Override
-                void execute(FileCopyDetails t) {
-                    ArtifactMatcher artifactMatcher = new ArtifactMatcher(t.file)
-                    String digest = clientConfiguration.signingConfiguration?.digest
-                    t.name = createFileNameForJar(artifactMatcher, digest)
-                }
-            })
-        }
+        war.with(jnlpCopySpec(project, { clientConfiguration.libDir }, jarSigner, { clientConfiguration.signingConfiguration?.digest }))
     }
 
     private static String makeTaskName(String verb, String client, String postfix) {
@@ -104,6 +86,21 @@ class WebstartPlugin implements Plugin<Project> {
             return StringUtils.uncapitalize(String.format("%s%s%s", verb, GUtil.toCamelCase(client), StringUtils.capitalize(postfix)));
         } else {
             return StringUtils.uncapitalize(String.format("%s%s", verb, GUtil.toCamelCase(client)));
+        }
+    }
+
+    public static CopySpec jnlpCopySpec(Project project, Object libDir, Object libs, Callable<String> digestProvider) {
+        return project.copySpec {
+            into libDir
+            from libs
+            eachFile(new Action<FileCopyDetails>() {
+                @Override
+                void execute(FileCopyDetails t) {
+                    ArtifactMatcher artifactMatcher = new ArtifactMatcher(t.file)
+                    String digest = digestProvider.call()
+                    t.name = "${artifactMatcher.name}__V${artifactMatcher.version}${digest != null ? '-' + digest : ''}.${artifactMatcher.type}"
+                }
+            })
         }
     }
 }

@@ -1,6 +1,5 @@
 package no.statkart.sktools.gradle.plugins.webstart
 
-import no.statkart.sktools.gradle.plugins.webstart.util.DependencyHelper
 import no.statkart.sktools.gradle.plugins.webstart.util.FileHashIdent
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.NamedDomainObjectFactory
