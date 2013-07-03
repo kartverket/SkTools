@@ -1,5 +1,6 @@
 package no.statkart.sktools.gradle.plugins.weblogic.deploy
 
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.Input
 
@@ -12,9 +13,11 @@ import org.gradle.api.tasks.Input
 class WeblogicUndeployTask extends AbstractWeblogicDeployTask {
 
     @Input
+    @Optional
     Boolean graceful = null
 
     @Input
+    @Optional
     String appversion = null
 
 
