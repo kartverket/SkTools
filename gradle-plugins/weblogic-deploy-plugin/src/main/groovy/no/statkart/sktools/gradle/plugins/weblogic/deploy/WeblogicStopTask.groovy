@@ -24,7 +24,7 @@ class WeblogicStopTask extends AbstractWeblogicDeployTask {
         logger.quiet("Stopper ${getDeploymentName()} i Weblogic paa ${getUrl()}")
 
         def args = [
-                action: 'undeploy',
+                action: 'stop',
                 name: getDeploymentName(),
                 targets: getTargets(),
 
