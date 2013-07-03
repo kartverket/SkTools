@@ -6,6 +6,7 @@ import org.gradle.api.AntBuilder
 import org.gradle.api.tasks.Input
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 
 /**
@@ -17,7 +18,7 @@ import org.gradle.api.tasks.Optional
 abstract class AbstractWeblogicDeployTask extends ConventionTask {
     private static Logger deployLogger = Logging.getLogger(AbstractWeblogicDeployTask.class)
 
-    @Input
+    @InputFiles
     FileCollection classpath
 
 

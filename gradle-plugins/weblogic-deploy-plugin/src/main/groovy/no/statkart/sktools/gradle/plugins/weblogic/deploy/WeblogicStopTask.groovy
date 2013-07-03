@@ -1,15 +1,16 @@
 package no.statkart.sktools.gradle.plugins.weblogic.deploy
 
-import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.TaskAction
 
 /**
- * Task for undeploy
+ * Task for å stoppe en applikasjon.
  *
- * @since 1.2
+ * @since 1.3
  * @author Leif Lislegård
+ * @author Tor Egil R. Strand
  */
-class WeblogicUndeployTask extends AbstractWeblogicDeployTask {
+class WeblogicStopTask extends AbstractWeblogicDeployTask {
 
     @Input
     Boolean graceful = null
@@ -20,7 +21,7 @@ class WeblogicUndeployTask extends AbstractWeblogicDeployTask {
 
     @TaskAction
     void deploy() {
-        logger.quiet("Undeployment av ${getDeploymentName()} til Weblogic paa ${getUrl()}")
+        logger.quiet("Stopper ${getDeploymentName()} i Weblogic paa ${getUrl()}")
 
         def args = [
                 action: 'undeploy',
