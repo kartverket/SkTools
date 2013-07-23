@@ -28,7 +28,7 @@ webstart {
         }
     }
     signed {
-        sign project.file('../../../kodesignering.jks'), 'statenskartverk', 'SagZ45_p1'
+        sign rootProject.file('kodesignering.jks'), 'statenskartverk', 'SagZ45_p1'
         libDir 'signed'
         jarDependencies configurations.webstartlibs
         jnlp {

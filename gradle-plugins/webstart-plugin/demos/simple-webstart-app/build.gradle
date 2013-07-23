@@ -18,7 +18,7 @@ dependencies {
 webstart {
     client1 {
         jarDependencies configurations.client1
-        sign project.file('../../../kodesignering.jks'), 'statenskartverk', 'SagZ45_p1'
+        sign rootProject.file('kodesignering.jks'), 'statenskartverk', 'SagZ45_p1'
         jnlp {
             jnlpFilename 'client1-signed.jnlp'
             title 'Client1 - signed'
@@ -43,7 +43,7 @@ webstart {
     }
     client3 {
         jarDependencies configurations.client
-        sign project.file('../../../kodesignering.jks'), 'statenskartverk', 'SagZ45_p1'
+        sign rootProject.file('kodesignering.jks'), 'statenskartverk', 'SagZ45_p1'
         jnlp {
             jnlpFilename 'runtimes-demo.jnlp'
             title 'Demo - multiple runtimes'
@@ -59,7 +59,7 @@ webstart {
     }
     client4 {
         jarDependencies configurations.client
-        sign project.file('../../../kodesignering.jks'), 'statenskartverk', 'SagZ45_p1'
+        sign rootProject.file('kodesignering.jks'), 'statenskartverk', 'SagZ45_p1'
         jnlp {
             jnlpFilename 'properties.jnlp'
             title 'Demo - passing properties'
