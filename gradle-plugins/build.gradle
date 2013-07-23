@@ -20,7 +20,7 @@ tasks.test.dependsOn('testDemos')
 //closure som collecter alle demo-prosjekter som evt måtte finnes
 groovy.lang.Closure findDemoDirs = { project ->
     return project.childProjects.values().collectMany { Project childProject ->
-        File demoDir = childProject.file("demos/${childProject.name}-demo-${childProject.version.replaceAll(/-.*/, '')}")
+        File demoDir = childProject.file("demos")
         if (!demoDir.exists()) println "..no demo found for ${childProject.getPath()}"
         return demoDir.exists() ? [[demoDir, childProject]] : []
     }

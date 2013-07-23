@@ -15,10 +15,10 @@ gradle.projectsLoaded { Gradle g ->
     if (g.parent == null) {
         if (!startParameter.taskNames.isEmpty()) {
             g.rootProject.buildscript {
-                println 'Asserting project is up to date. Running build on plugin-project:'
+                println 'Asserting project is up to date. Running build on root-project:'
                 g.rootProject.exec() {
                     commandLine 'gradle.bat', 'install'
-                    workingDir '../../../..' //install på rotprosjektet da en har dependency til db-tools
+                    workingDir '../../..' //install på rotprosjektet da en har dependency til db-tools
                 }
             }
         }

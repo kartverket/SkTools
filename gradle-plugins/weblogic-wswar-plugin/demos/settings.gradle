@@ -14,7 +14,7 @@ gradle.projectsLoaded { Gradle g ->
                 println 'Asserting project is up to date. Running build on plugin-project:'
                 g.rootProject.exec() {
                     commandLine 'gradle.bat', 'install'
-                    workingDir '../..'
+                    workingDir '..'
                 }
             }
         }
