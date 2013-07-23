@@ -1,1 +1,0 @@
-PROMPT Hello from custom gradle task!
