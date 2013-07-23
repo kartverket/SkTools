@@ -18,6 +18,9 @@ allprojects {
     // version kan settes via properties (feks kommandolinje -P )
     if (ext.has('sktools_versjon')) { version = sktools_versjon }
 
+    // valgfri build katalog - kan benyttes for kompilering for flere samtidige Gradle versjoner..
+    buildDir = gradle.startParameter.systemPropertiesArgs.get('buildDirName', Project.DEFAULT_BUILD_DIR_NAME)
+
     afterEvaluate {
         if (plugins.hasPlugin('maven')) {
             uploadArchives.repositories.mavenDeployer {
