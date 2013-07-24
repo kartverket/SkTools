@@ -31,7 +31,7 @@ class PatchTask extends DatabasePatchTask {
         if (singlestep != null) {
             singlestep
         } else {
-            project.gradle.startParameter.mergedSystemProperties['singlestep']
+            project.gradle.startParameter.systemPropertiesArgs['singlestep']
         }
     }
 

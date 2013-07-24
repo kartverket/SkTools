@@ -13,6 +13,7 @@ import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSet
 import org.gradle.plugins.ide.idea.IdeaPlugin
+import org.gradle.api.tasks.compile.AbstractCompile
 
 /**
  * Baserer seg på WeblogicBasePlugin og JavaBasePlugin.
@@ -112,7 +113,13 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
             project.getTasks().getByName(JavaBasePlugin.CHECK_TASK_NAME).dependsOn(JavaPlugin.TEST_TASK_NAME);
         }
 
-        WeblogicWarTask war = project.getTasks().add(WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME, WeblogicWarTask.class);
+        final WeblogicWarTask war;
+        if (project.getGradle().getGradleVersion().compareTo("1.5") > 0 ) {
+            war = project.getTasks().replace(WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME, WeblogicWarTask.class);  //todo: endre bruk av replace() til create()
+        } else {
+            war = project.getTasks().add(WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME, WeblogicWarTask.class); //todo: remove backward compability with Gradle 1.5
+        }
+
         war.setDescription("Assembles a war archive containing the main classes.");
         war.setAppendix(WeblogicWsWarPlugin.WEBLOGIC_SOURCE_SET_NAME)
         war.setGroup(BasePlugin.BUILD_GROUP);
@@ -233,7 +240,7 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
     private Configuration createWeblogicConfiguration(Project project) {
         Configuration weblogicConfiguration = project.getConfigurations().findByName(WEBLOGIC_CONFIGURATION_NAME);
         if (weblogicConfiguration == null) {
-            weblogicConfiguration = project.getConfigurations().add(WeblogicWsWarPlugin.WEBLOGIC_CONFIGURATION_NAME);
+            weblogicConfiguration = project.getConfigurations().create(WeblogicWsWarPlugin.WEBLOGIC_CONFIGURATION_NAME);
         }
         return weblogicConfiguration;
     }

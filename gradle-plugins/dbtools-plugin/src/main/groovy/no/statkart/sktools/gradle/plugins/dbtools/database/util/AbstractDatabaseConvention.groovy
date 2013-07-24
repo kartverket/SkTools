@@ -148,7 +148,7 @@ abstract class AbstractDatabaseConvention {
         }
 
         String taskName = getTaskName(name);
-        AbstractSQLTask task = (AbstractSQLTask) project.tasks.add(name:taskName, type:type);
+        AbstractSQLTask task = (AbstractSQLTask) project.task(type:type, taskName);
         task.doFirst(filterClosure)
 
         task.conventionMapping.with {
@@ -243,7 +243,10 @@ abstract class AbstractDatabaseConvention {
 
     //SKIF-211
     String getEncoding() {
-        Map<String, String> sysProperties = project.gradle.startParameter.getMergedSystemProperties()
+        Map<String, String> sysProperties = new HashMap<String, String>();
+        sysProperties.putAll((Map) System.getProperties());
+        sysProperties.putAll(project.gradle.startParameter.getSystemPropertiesArgs());
+
         sysProperties.get('sql.file.encoding') ?: sysProperties.get('file.encoding')
     }
 

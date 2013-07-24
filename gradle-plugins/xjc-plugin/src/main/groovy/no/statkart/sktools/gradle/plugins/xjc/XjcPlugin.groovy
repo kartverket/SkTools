@@ -138,7 +138,13 @@ class XjcPlugin implements Plugin<ProjectInternal> {
                     }
 
                     private Task createCompileXjcTaskForSchema(XjcSchema xjcSchema, Task xjcTask, File buildOutputDir) {
-                        AbstractCompile compile = (AbstractCompile) project.tasks.add(xjcSchema.getCompileXjcSchemaTaskName(), XjcCompileTaskImpl.class)
+                        final AbstractCompile compile;
+                        if (project.getGradle().getGradleVersion().compareTo("1.5") > 0 ) {
+                            compile = (AbstractCompile) project.tasks.replace(xjcSchema.getCompileXjcSchemaTaskName(), XjcCompileTaskImpl.class)  //todo: endre bruk av replace() til create()
+                        } else {
+                            compile = (AbstractCompile) project.tasks.add(xjcSchema.getCompileXjcSchemaTaskName(), XjcCompileTaskImpl.class) //todo: remove backward compability with Gradle 1.5
+                        }
+
                         javaBasePlugin.configureForSourceSet(sourceSet, compile);
 
                         compile.setDescription("Compiles the XCJ generated schema files");
@@ -204,7 +210,7 @@ class XjcPlugin implements Plugin<ProjectInternal> {
 
     //classpath classpath for jaxb libs (needed at runtime)
     private Configuration createConfiguration(Project project) {
-        Configuration configuration = project.configurations.add(JAXB_CONFIGURATION_NAME).setVisible(false).setDescription("Classpath for jaxb library and extensions.");
+        Configuration configuration = project.configurations.create(JAXB_CONFIGURATION_NAME).setVisible(false).setDescription("Classpath for jaxb library and extensions.");
         return configuration;
     }
 

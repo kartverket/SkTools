@@ -61,7 +61,7 @@ class DbtoolsPlugin implements Plugin<Project>  {
     }
 
     private void configureConfigurations(Project project) {
-        Configuration configuration = project.configurations.add(DBTOOLS_CONFIGURATION);
+        Configuration configuration = project.configurations.create(DBTOOLS_CONFIGURATION);
     }
 
     void assignConventionMappings(Project project) {
@@ -69,7 +69,7 @@ class DbtoolsPlugin implements Plugin<Project>  {
 
         //SKTOOLS-40: setter parallell dersom -Dparallel=<nr> er angitt
         def setParallelClosure = { ConventionTask it ->
-            def systemProperties = project.gradle.getStartParameter().getMergedSystemProperties()
+            def systemProperties = project.gradle.getStartParameter().getSystemPropertiesArgs()
             if (systemProperties.containsKey('parallel')) {
                 it.conventionMapping.with {
                     map 'parallel', {

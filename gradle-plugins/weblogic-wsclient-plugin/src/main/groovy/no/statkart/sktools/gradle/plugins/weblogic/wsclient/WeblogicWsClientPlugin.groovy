@@ -21,6 +21,7 @@ import java.util.concurrent.Callable
 import org.gradle.api.tasks.SourceSetContainer
 import no.statkart.sktools.gradle.plugins.weblogic.wsclient.internal.WeblogicWsClientCompileTaskImpl
 import org.gradle.api.Action
+import org.gradle.api.internal.plugins.ProcessResources
 
 /**
  * Baserer seg på {@code JavaBasePlugin} og integrerer med {@code JavaPlugin} dersom denne aktiveres.
@@ -195,7 +196,13 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
     private AbstractCompile createCompileTask(final WeblogicWsClientConvention wsClientConvention, final SourceSet sourceSet, final AbstractCompile genTask) {
         final Project project = wsClientConvention.project
 
-        AbstractCompile compile = (AbstractCompile) project.tasks.add(WeblogicWsClientPlugin.GEN_CLIENT_TASK_NAME, WeblogicWsClientCompileTaskImpl.class)
+        final AbstractCompile compile;
+        if (project.getGradle().getGradleVersion().compareTo("1.5") > 0 ) {
+            compile = (AbstractCompile) project.tasks.replace(WeblogicWsClientPlugin.GEN_CLIENT_TASK_NAME, WeblogicWsClientCompileTaskImpl.class)  //todo: endre bruk av replace() til create()
+        } else {
+            compile = (AbstractCompile) project.tasks.add(WeblogicWsClientPlugin.GEN_CLIENT_TASK_NAME, WeblogicWsClientCompileTaskImpl.class)  //todo: remove backward compability with Gradle 1.5
+        }
+
         compile.setDescription(String.format("Compiles the %s.%s.", sourceSet.name, 'wsclient'));
 
         ConventionMapping conventionMapping = compile.conventionMapping

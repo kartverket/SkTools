@@ -52,7 +52,14 @@ class WebstartPlugin implements Plugin<Project> {
     }
 
     private static JarSigner configureJarSigner(Project project, ClientConfiguration clientConfiguration) {
-        JarSigner jarSigner = project.tasks.add(makeTaskName(SIGN_TASK_PREFIX, clientConfiguration.name, null), JarSigner)
+
+        final JarSigner jarSigner;
+        if (project.getGradle().getGradleVersion().compareTo("1.5") > 0 ) {
+            jarSigner = project.tasks.replace(makeTaskName(SIGN_TASK_PREFIX, clientConfiguration.name, null), JarSigner.class)  //todo: endre bruk av replace() til create()
+        } else {
+            jarSigner = project.tasks.add(makeTaskName(SIGN_TASK_PREFIX, clientConfiguration.name, null), JarSigner.class) //todo: remove backward compability with Gradle 1.5
+        }
+
         jarSigner.jarFilesToSign = clientConfiguration.jarDependencies
         jarSigner.conventionMapping.certificateFile = { clientConfiguration?.signingConfiguration?.keystore }
         jarSigner.conventionMapping.alias = { clientConfiguration?.signingConfiguration?.alias }
@@ -61,7 +68,14 @@ class WebstartPlugin implements Plugin<Project> {
     }
 
     private static WebstartTask configureGenJnlp(Project project, ClientConfiguration clientConfiguration, JarSigner jarSigner) {
-        WebstartTask webstartTask = project.tasks.add(makeTaskName(WEBSTART_TASK_PREFIX, clientConfiguration.name, WEBSTART_TASK_POSTFIX), WebstartTask)
+
+        final WebstartTask webstartTask;
+        if (project.getGradle().getGradleVersion().compareTo("1.5") > 0 ) {
+            webstartTask = project.tasks.replace(makeTaskName(WEBSTART_TASK_PREFIX, clientConfiguration.name, WEBSTART_TASK_POSTFIX), WebstartTask.class)  //todo: endre bruk av replace() til create()
+        } else {
+            webstartTask = project.tasks.add(makeTaskName(WEBSTART_TASK_PREFIX, clientConfiguration.name, WEBSTART_TASK_POSTFIX), WebstartTask.class) //todo: remove backward compability with Gradle 1.5
+        }
+
         webstartTask.setJnlpConfigurations(clientConfiguration.jnlpConfigurations)
         webstartTask.conventionMapping.libDir = { clientConfiguration.libDir }
         webstartTask.jarResources jarSigner

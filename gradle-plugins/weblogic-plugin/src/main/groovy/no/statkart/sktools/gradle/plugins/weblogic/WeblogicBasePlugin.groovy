@@ -35,7 +35,7 @@ class WeblogicBasePlugin implements Plugin<ProjectInternal> {
     }
 
     private Configuration createConfiguration(ProjectInternal project) {
-        project.getConfigurations().add(WEBLOGIC_PROVIDED_CONFIGURATION_NAME).setVisible(false).setTransitive(true).setDescription("Weblogic tools and provided libraries.")
+        project.getConfigurations().create(WEBLOGIC_PROVIDED_CONFIGURATION_NAME).setVisible(false).setTransitive(true).setDescription("Weblogic tools and provided libraries.")
     }
 
     private void configureWeblogicTaskDefaults(final Project project) {

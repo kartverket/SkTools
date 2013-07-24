@@ -62,7 +62,7 @@ class WsDocGenPlugin implements Plugin<Project> {
     private Configuration createConfiguration(Project project) {
 
         //Trenger denne classpathen for innkobling av {@link no.statkart.grunnbok.tools.docgen.ws.WebserviceAnnotationProcessorFactory}
-        return project.configurations.add(WsDocGenPlugin.CONFIGURATION_NAME).setTransitive(false).setDescription('Webservice documentation artifact');
+        return project.configurations.create(WsDocGenPlugin.CONFIGURATION_NAME).setTransitive(false).setDescription('Webservice documentation artifact');
     }
 
     /**

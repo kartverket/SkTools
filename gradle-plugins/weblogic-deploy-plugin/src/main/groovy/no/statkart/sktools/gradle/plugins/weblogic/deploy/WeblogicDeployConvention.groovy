@@ -108,7 +108,7 @@ class WeblogicDeployConfiguration {
      * @return
      */
     Task askIfProdserverTask(Closure config) {
-        askIfProdserverTask = project.tasks.add(name: convention.getTaskName('askIfProdserver', name)) << {
+        askIfProdserverTask = project.task(convention.getTaskName('askIfProdserver', name)) << {
             def svar = System.console().readLine("\nDeploy til PRODSERVER (${url}), vil du fortsette? (j/n)")
             if( !svar.equalsIgnoreCase("j") && !svar.equalsIgnoreCase("ja") ) {
               println "Build aborted by user"
@@ -127,7 +127,7 @@ class WeblogicDeployConfiguration {
         if (name == null || name.trim().isEmpty()) {
             throw new GradleException('name parameter not supplied for task!')
         }
-        undeployTask = (WeblogicUndeployTask) project.tasks.add(name: name, type: WeblogicUndeployTask.class)
+        undeployTask = (WeblogicUndeployTask) project.task(type: WeblogicUndeployTask.class, name)
         setCommonConventionalValues(undeployTask)
 
         ConfigureUtil.configureByMap(params, undeployTask)
@@ -144,7 +144,7 @@ class WeblogicDeployConfiguration {
             throw new GradleException('name parameter not supplied for task!')
         }
 
-        Task task = project.tasks.add(name: name, type: WeblogicDeployTask.class)
+        Task task = project.task(type: WeblogicDeployTask.class, name)
         deployTask = (WeblogicDeployTask) task
         setCommonConventionalValues(deployTask)
         deployTask.conventionMapping 'file', { this.getFile() }

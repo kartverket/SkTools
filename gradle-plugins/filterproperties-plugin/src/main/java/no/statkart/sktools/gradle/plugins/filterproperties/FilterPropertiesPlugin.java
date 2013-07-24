@@ -121,7 +121,13 @@ public class FilterPropertiesPlugin implements Plugin<ProjectInternal> {
 
 
                 //oppretter copy task for filtrering...
-                final ProcessResources filterResourcesTask = project.getTasks().add(filterResourcesTaskName, ProcessResources.class);
+                final ProcessResources filterResourcesTask;
+                if (project.getGradle().getGradleVersion().compareTo("1.5") > 0 ) {
+                    filterResourcesTask = project.getTasks().replace(filterResourcesTaskName, ProcessResources.class); //todo: endre bruk av replace() til create()
+                } else {
+                    filterResourcesTask = project.getTasks().add(filterResourcesTaskName, ProcessResources.class); //todo: remove backward compability with Gradle 1.5
+                }
+
                 filterResourcesTask.setDescription(String.format("Filters the %s resources for filtering.", sourceSet.getName()));
 
                 filterResourcesTask.from(new Callable<Object>() {

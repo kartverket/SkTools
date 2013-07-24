@@ -257,7 +257,7 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
             throw new Exception("Unknown task type: ${type}", cnfe);
         }
 
-        Task task = project.tasks.add(name:taskName, type:taskType);
+        Task task = project.task(type:taskType, taskName);
         task.group = "Database"
 
         ConfigureUtil.configureByMap(params, task)
