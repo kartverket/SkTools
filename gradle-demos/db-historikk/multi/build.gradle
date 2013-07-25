@@ -1,0 +1,121 @@
+assert ['1.2'].find {gradle.gradleVersion >= it}
+
+description = "Komplett historikk demo"
+defaultTasks "info", "tasks"
+
+
+task info() {
+   doLast {
+      println """\
+------------------------------------------------------------
+  Prosjekt som demonstrerer et feature komlett system for
+  historikk implementasjon tilpasset Oracle 11g database.
+------------------------------------------------------------
+
+For å komme raskt i gang, se dbSetUpUsers under "Database Management tasks".
+Prosjektet kommer med standardverdier for kjøring mot lokal database. Dette kan endres via properties.
+
+For å sette opp schema kjøres dbInit.
+
+Task som rydder opp etter demo: dbClean
+
+"""
+   }
+}
+
+task('dbClean', group:'Database Management', description: 'Sletter alle brukere og tablespace for denne demoen')
+
+task('dbSetUpUsers', group:'Database Management', description: 'Setter opp alle brukere og tablespace for denne demoen')
+task('dbInit', group:'Database Management', description: 'Setter opp fullt schema med grants')
+
+
+allprojects {
+    apply plugin: 'sktools-filterproperties-plugin'
+    propertyUtils.expandProjectProperties()
+}
+
+
+// n.a. for all purposes of this demo
+boolean isProductionDeployment() { false }
+
+
+// Optional configuration of library versions to use. (not production)
+// Values will be read from project.properties with naming convention "version.<key>"
+// Simply add version properties to your gradle-user.property file to use this feature.
+def libVersion(String name, String defaultValue) {
+    if (!isProductionDeployment()) {
+        gradle.startParameter.systemPropertiesArgs.get('libVersion.' + name, defaultValue) //development mode only
+    } else {
+        defaultValue
+    }
+}
+
+// build a map of the dependency artifacts to use. Allows centralized definition of the versions of artifacts to
+// use. In that respect it serves a role similar to <dependencyManagement> in Maven
+ext.libraries = [
+
+        // Database
+        ojdbc: "com.oracle:ojdbc6:${libVersion('oracle', '11.2.0.3.0')}@jar",
+        ojdbc_g: "com.oracle:ojdbc6_g:${libVersion('oracle', '11.2.0.3.0')}@jar",
+
+]
+
+// SKIF-239: Mulighet for valg av ojdbc driver
+libraries.jdbc = Boolean.valueOf(System.getenv('ORA_DEBUG') ?: 'false') ? libraries.ojdbc_g : libraries.ojdbc
+
+
+
+
+//hjelpefunksjon for eksekveringsrekkefølge dersom task blir kjørt
+Closure getDependsOnIfExecuted() {
+    return { def task, def dependent ->
+        gradle.taskGraph.whenReady { if (gradle.taskGraph.hasTask(dependent)) task.dependsOn(dependent) }
+        return task
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+buildscript {
+    if (rootProject.ext.has('sktools_versjon')) version = rootProject.ext.get('sktools_versjon')
+    assert version != Project.DEFAULT_VERSION // set via env variables
+
+    // Variables to grab from environment + defaults
+    ['COMPUTERNAME', 'MAVEN_REPO', 'JAVA_HOME'].each { val ->
+        if (!rootProject.ext.has(val) && System.getenv(val) != null) {
+            rootProject.ext.set(val, System.getenv(val))
+        }
+    }
+    project.ext.set('MAVEN_REPO', project.ext.properties.get('MAVEN_REPO', 'http://nexus.statkart.no:8090/nexus/content/groups/public/'))
+
+    repositories {
+        //bruker kun lokale filer her da dette er et demo prosjekt...
+        mavenLocal()
+        mavenRepo name: 'public', url: MAVEN_REPO
+    }
+
+    dependencies {
+        classpath "no.statkart.sktools.gradle:dbtools-plugin:${version}"
+        classpath "no.statkart.sktools.gradle:filterproperties-plugin:${version}"
+    }
+}
+
+allprojects {
+    setVersion(rootProject.version)
+
+    repositories {
+        mavenLocal()
+        mavenRepo name: 'public', url: "${rootProject.MAVEN_REPO}"
+    }
+}

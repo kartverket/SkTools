@@ -1,0 +1,132 @@
+apply plugin: 'sktools-dbtools-plugin'
+
+//hjelpefunksjon for eksekveringsrekkefølge dersom task blir kjørt
+def dependsOnIfExecuted = rootProject.getDependsOnIfExecuted()
+
+configureDatabasePlugin {
+    useDrivers libraries.ojdbc
+
+    project.ext.tns = "${historikk_db_sid}_${historikk_db_hostname}"
+
+    /**
+     * Toolset for historikk-bruker
+     */
+    toolset(name: 'historikk', type: 'oracle', prefix: 'historikk') {
+
+        sqlTask('CreateHistorikkSchema', sqlFile: 'src/main/sql/historikk/schema/CreatehistorikkSchema.sql') {
+            dependsOn taskSequence('PurgeHistorikkSchema') {
+                dependsOn sqlTask('PurgeHistorikkViews', sqlFile: 'src/main/sql/historikk/schema/PurgeHistorikkViews.sql')
+                dependsOn sqlTask('PurgeHistorikkTables', sqlFile: 'src/main/sql/historikk/schema/PurgeHistorikkTables.sql')
+                dependsOn sqlTask('PurgeHistorikkPackages', sqlFile: 'src/main/sql/historikk/schema/PurgeHistorikkPackages.sql')
+            }
+        }
+
+        sqlTask('UpdatePackageHistorikkSession', sqlFile: file('src/main/sql/historikk/UpdatePackageHistorikkSession.sql')) {
+            dependsOn sqlTask('CreateTemporaryTables', sqlFile: file('src/main/sql/historikk/CreateTemporaryTables.sql'), failOnError: false) //feiler ikke dersom tabell allerede finnes fra før
+        }
+
+        sqlTask('CreateViewsAndTriggers', sqlString:'generated...') {
+            dependsOn tasks['UpdatePackageHistorikkSession']
+            doFirst {
+                println "Genererer DDL for historikk views og legger dette til schema i databasen..."
+            }
+            apply from: parent.file('genHistorikkViewsAndTriggers.gradle')
+
+            doFirst {
+                sqlString = project.ext.genHistorikkViewsAndTriggers(dbToolsetName: toolset.name, includeTables: { it.endsWith('_H') })
+            }
+
+            doLast {
+                if (!logger.isEnabled(LogLevel.INFO)) {
+                    logger.quiet "Legger inn view og triggere: \n\n ${sqlString}"
+                }
+            }
+        }
+
+
+        properties = [
+                historikk_db_username: historikk_db_username,
+                historikk_db_password: historikk_db_password,
+                historikk_db_sid: historikk_db_sid,
+                historikk_db_hostname: historikk_db_hostname,
+                historikk_db_port: historikk_db_port,
+                historikk_db_schema: historikk_db_schema,
+                historikk_db_tablespace: historikk_db_tablespace,
+                historikk_db_tablespace_index: historikk_db_tablespace_index,
+        ]
+
+        credentials.username = historikk_db_username
+        credentials.password = historikk_db_password
+        url = "jdbc:oracle:thin:@${historikk_db_hostname}:${historikk_db_port}:${historikk_db_sid}"
+        driver = 'oracle.jdbc.OracleDriver'
+    }
+
+
+    /**
+     * Toolset for SYSTEM-bruker
+     */
+    toolset(name: 'admin', type: 'oracle', prefix: 'admin') {
+
+        sqlTask('CreateHistorikkTablespace', sqlFile: 'src/main/sql/historikk/system/tablespace/CreateHistorikkTablespace.sql')
+        sqlTask('DropHistorikkTablespace', sqlFile: 'src/main/sql/historikk/system/tablespace/DropHistorikkTablespace.sql')
+
+        sqlTask('GrantHistorikkUser', sqlFile: 'src/main/sql/historikk/system/user/GrantHistorikkUser.sql') {
+            dependsOnIfExecuted it, sqlTask('CreateHistorikkUser', sqlFile: 'src/main/sql/historikk/system/user/CreateHistorikkUser.sql') {
+                dependsOnIfExecuted it, sqlTask('DropHistorikkUser', sqlFile: 'src/main/sql/historikk/system/user/DropHistorikkUser.sql', failOnError: false)
+            }
+        }
+
+
+
+//        sqlTask('GrantHistorikkTohistorikk', sqlFile: 'src/main/sql/system/grant/GrantHistorikkTohistorikk.sql')
+//        sqlTask('RevokeHistorikkTohistorikk', sqlFile: 'src/main/sql/system/grant/RevokeHistorikkTohistorikk.sql')
+
+//        sqlTask('CreateSynonyms', sqlFile: 'src/main/sql/system/synonym/CreateSynonyms.sql')
+
+        properties = [
+                historikk_db_username: historikk_db_username,
+                historikk_db_password: historikk_db_password,
+                historikk_db_sid: historikk_db_sid,
+                historikk_db_hostname: historikk_db_hostname,
+                historikk_db_port: historikk_db_port,
+                historikk_db_tablespace: historikk_db_tablespace,
+                historikk_db_tablespace_index: historikk_db_tablespace_index,
+        ]
+
+        if (System.properties.containsKey('db.oradata')) { properties.put('db_oradata', System.getProperty('db.oradata')) }
+
+        credentials.username = historikk_admin_db_username
+        credentials.password = historikk_admin_db_password
+        url = "jdbc:oracle:thin:@${historikk_db_hostname}:${historikk_db_port}:${historikk_db_sid}"
+        driver = 'oracle.jdbc.OracleDriver'
+    }
+
+    taskSequence('dbSetUpHistorikkUser', group: 'Database', description: 'Oppretter tablespace og bruker for Historikk data') {
+        dependsOn dbToolSets['admin'].tasks['CreateHistorikkTablespace']
+        dependsOn dbToolSets['admin'].tasks['CreateHistorikkUser']
+        dependsOn dbToolSets['admin'].tasks['GrantHistorikkUser']
+    }
+
+    taskSequence('dbTearDownHistorikkUser', group: 'Database', description: 'Sletter tablespace og bruker for Historikk data') {
+        dependsOn dbToolSets['admin'].tasks['DropHistorikkUser']
+        dependsOn dbToolSets['admin'].tasks['DropHistorikkTablespace']
+    }
+
+    task('dbCreateHistorikkSchema') {
+        dependsOn dbToolSets['historikk'].tasks['CreateHistorikkSchema']
+    }
+}
+
+
+task('dbClean') {
+    dependsOn 'dbTearDownHistorikkUser'
+}
+
+task('dbSetUpUsers') {
+    dependsOn 'dbSetUpHistorikkUser'
+}
+
+task('dbInit') {
+    dependsOn 'dbCreateHistorikkSchema'
+}
+

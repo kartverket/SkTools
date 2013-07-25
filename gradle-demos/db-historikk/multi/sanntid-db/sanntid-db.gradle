@@ -1,0 +1,132 @@
+apply plugin: 'sktools-dbtools-plugin'
+
+//hjelpefunksjon for eksekveringsrekkefølge dersom task blir kjørt
+def dependsOnIfExecuted = rootProject.getDependsOnIfExecuted()
+
+configureDatabasePlugin {
+    useDrivers libraries.ojdbc
+
+    project.ext.tns = "${sanntid_db_sid}_${sanntid_db_hostname}"
+
+    /**
+     * Toolset for SANNTID-bruker
+     */
+    toolset(name: 'sanntid', type: 'oracle', prefix: 'sanntid') {
+
+        sqlTask('CreateSanntidSchema', sqlFile: 'src/main/sql/sanntid/schema/CreateSanntidSchema.sql') {
+            dependsOn taskSequence('PurgeSanntidSchema') {
+                dependsOn sqlTask('PurgeSanntidTables', sqlFile: 'src/main/sql/sanntid/schema/PurgeSanntidTables.sql')
+                dependsOn sqlTask('PurgeSanntidSynonyms', sqlFile: 'src/main/sql/sanntid/schema/PurgeSanntidSynonyms.sql')
+            }
+        }
+
+//        sqlTask('FylkerOgKommuner', sqlFile: 'src/main/sql/sanntid/data/FylkerOgKommuner.sql')
+
+        properties = [
+                sanntid_db_username: sanntid_db_username,
+                sanntid_db_password: sanntid_db_password,
+                sanntid_db_sid: sanntid_db_sid,
+                sanntid_db_hostname: sanntid_db_hostname,
+                sanntid_db_port: sanntid_db_port,
+                sanntid_db_schema: sanntid_db_schema,
+                sanntid_db_tablespace: sanntid_db_tablespace,
+                sanntid_db_tablespace_index: sanntid_db_tablespace_index,
+        ]
+
+        credentials.username = sanntid_db_username
+        credentials.password = sanntid_db_password
+        url = "jdbc:oracle:thin:@${sanntid_db_hostname}:${sanntid_db_port}:${sanntid_db_sid}"
+        driver = 'oracle.jdbc.OracleDriver'
+    }
+
+
+    /**
+     * Toolset for SYSTEM-bruker
+     */
+    toolset(name: 'admin', type: 'oracle', prefix: 'admin') {
+        sqlTask('CreateSanntidTablespace', sqlFile: 'src/main/sql/sanntid/system/tablespace/CreateSanntidTablespace.sql')
+        sqlTask('DropSanntidTablespace', sqlFile: 'src/main/sql/sanntid/system/tablespace/DropSanntidTablespace.sql')
+
+        sqlTask('GrantSanntidUser', sqlFile: 'src/main/sql/sanntid/system/user/GrantSanntidUser.sql') {
+            dependsOnIfExecuted it, sqlTask('CreateSanntidUser', sqlFile: 'src/main/sql/sanntid/system/user/CreateSanntidUser.sql') {
+                dependsOnIfExecuted it, sqlTask('DropSanntidUser', sqlFile: 'src/main/sql/sanntid/system/user/DropSanntidUser.sql', failOnError: false)
+            }
+        }
+
+
+
+//        sqlTask('GrantHistorikkToSanntid', sqlFile: 'src/main/sql/system/grant/GrantHistorikkToSanntid.sql')
+//        sqlTask('RevokeHistorikkToSanntid', sqlFile: 'src/main/sql/system/grant/RevokeHistorikkToSanntid.sql')
+
+//        sqlTask('CreateSynonyms', sqlFile: 'src/main/sql/system/synonym/CreateSynonyms.sql')
+
+        properties = [
+                sanntid_db_username: sanntid_db_username,
+                sanntid_db_password: sanntid_db_password,
+                sanntid_db_sid: sanntid_db_sid,
+                sanntid_db_hostname: sanntid_db_hostname,
+                sanntid_db_port: sanntid_db_port,
+                sanntid_db_tablespace: sanntid_db_tablespace,
+                sanntid_db_tablespace_index: sanntid_db_tablespace_index,
+
+        ]
+
+        if (System.properties.containsKey('db.oradata')) { properties.put('db_oradata', System.getProperty('db.oradata')) }
+
+        credentials.username = sanntid_admin_db_username
+        credentials.password = sanntid_admin_db_password
+        url = "jdbc:oracle:thin:@${sanntid_db_hostname}:${sanntid_db_port}:${sanntid_db_sid}"
+        driver = 'oracle.jdbc.OracleDriver'
+    }
+
+
+    taskSequence('dbSetUpSanntidUser', group: 'Database', description: 'Oppretter tablespace og bruker for sanntid data') {
+        dependsOn dbToolSets['admin'].tasks['CreateSanntidTablespace']
+        dependsOn dbToolSets['admin'].tasks['CreateSanntidUser']
+        dependsOn dbToolSets['admin'].tasks['GrantSanntidUser']
+    }
+
+    taskSequence('dbTearDownSanntidUser', group: 'Database', description: 'Sletter tablespace og bruker for sanntid data') {
+        dependsOn dbToolSets['admin'].tasks['DropSanntidUser']
+        dependsOn dbToolSets['admin'].tasks['DropSanntidTablespace']
+    }
+
+    task('dbCreateSanntidSchema') {
+        dependsOn dbToolSets['sanntid'].tasks['CreateSanntidSchema']
+    }
+
+}
+
+
+//globale tasker
+
+task('dbClean') {
+    dependsOn 'dbTearDownSanntidUser'
+}
+
+task('dbSetUpUsers') {
+    dependsOn 'dbSetUpSanntidUser'
+}
+
+task('dbInit') {
+    dependsOn 'dbCreateSanntidSchema'
+}
+
+
+//tasker for kodegenerering
+task genHistorikkSchemaTempateFromSchema() {
+
+    apply from: parent.file('genHistorikkSchemaTempateFromSchema.gradle')
+
+    doFirst {
+        println "Genererer skjema DDL for historikk basert på skjema hentet ifra gjeldende skjema for sanntid.."
+    }
+
+    doLast {
+        project.ext.genHistorikkSchemaTempateFromSchema(
+                filename: 'src/main/sql/sanntid/schema/CreateHistorikkSchema.sql',
+                dbToolsetName: 'sanntid',
+                excludeTables: {['SEQUENCE'].contains(it)},
+        )
+    }
+}

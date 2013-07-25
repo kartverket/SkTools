@@ -1,0 +1,266 @@
+/*
+  Script for automatisk generering av skjema DDL for historikk skjema.
+  Resultatet blir skrevet til parameterisert fil.
+
+  Bruk:
+
+  Benytt closure hektet inn på project.ext.genHistorikkSchemaTempateFromSchema
+  med følgende parametere:
+
+    filename - filnavn for generert sql script
+    dbToolsetName - navn på dbToolset det skal leses ifra
+
+
+    Valgfrie Parametere:
+
+    includeTables - {closure} for filtrering av tabellnavn for prosessering
+    excludeTables - {closure} for filtrering av tabellnavn for prosessering
+
+    ignoredColumnNames - map av kolonnenavn per tabellnavn (key) som evt skal ignoreres
+
+ */
+
+project.ext.genHistorikkSchemaTempateFromSchema = { Map params ->
+
+    // parameters
+
+    final def filename = params['filename']
+    assert filename // filename is mandatory parameter
+
+    final def dbToolsetName = params['dbToolsetName']
+    assert dbToolsetName // dbToolsetName is mandatory parameter
+
+    final def includeTables = params.get('includeTables', {true})
+    final def excludeTables = params.get('excludeTables', {false})
+
+    final def ignoredColumnNames = params.get('ignoredColumnNames', [:])
+
+    //styrer arving av constraints for tabell-kollonner.
+    final def inheritConstraints = false;
+    //styrer arving av default verdier for tabell-kollonner.
+    final def inheritDefaults = false;
+
+
+
+    // variables
+    def historikkColumNames = [TVERSION: 'TVERSION', TBEGIN: 'TBEGIN', TEND: 'TEND']
+
+    def oracleConvention = project.convention.plugins['db'].dbToolSets[dbToolsetName]
+    def username = oracleConvention.credentials.username
+
+    def file = project.file(filename)
+    if( file != null ) {
+        file.parentFile.mkdirs()
+        if( !file.exists() ) {
+            file.createNewFile()
+        }
+    }
+
+    final Writer schemaDDL = file.newWriter(false)
+
+
+    def sql
+    try {
+        sql = groovy.sql.Sql.newInstance(oracleConvention.url, username, oracleConvention.credentials.password, oracleConvention.driver)
+    } finally {
+        if (!sql) logger.error "Error connecting to database: ${oracleConvention.url} [${username}]"
+    }
+    println("connected to source database: ${sql.connection.metaData.URL} [${sql.connection.metaData.userName}]")
+
+
+
+
+    // algorithm
+
+    def writeDDLForTable = { Writer out, String tableName, def result, Closure doIgnoreColumn, def doInheritConstraints, def doInheritDefaults ->
+
+        out.write "CREATE TABLE \"${tableName}\" \n(\n"
+
+        out.write "\t\"${historikkColumNames.TVERSION}\"\tNUMBER(6,0) DEFAULT 1 NOT NULL"
+        out.write ",\n"
+        out.write "\t\"${historikkColumNames.TBEGIN}\"  \tTIMESTAMP(9) DEFAULT SYSTIMESTAMP NOT NULL"
+        out.write ",\n"
+        out.write "\t\"${historikkColumNames.TEND}\"    \tTIMESTAMP(9) DEFAULT TO_TIMESTAMP('9999-01-01 00:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF') NOT NULL"
+
+        while( result.next() ) {
+            def columnName = result.getString('COLUMN_NAME')
+            if (!doIgnoreColumn(columnName) && !historikkColumNames.containsValue(columnName)) {
+                out.write ",\n"
+                out.write "\t\"${columnName}\""
+
+                //type
+                out.write "\t${result.getString('TYPE_NAME')}"
+                boolean isCharType = false
+                boolean hasPrecision = false
+                switch (result.getInt('DATA_TYPE')) {
+                    case java.sql.Types.CHAR:
+                    case java.sql.Types.NCHAR:
+                    case java.sql.Types.VARCHAR:
+                    case java.sql.Types.NVARCHAR:
+                        isCharType = true
+                        hasPrecision = true
+                        break
+                    case java.sql.Types.DECIMAL:
+                    case java.sql.Types.NUMERIC:
+                    case java.sql.Types.DOUBLE:
+                    case java.sql.Types.FLOAT:
+                    case java.sql.Types.INTEGER:
+                    case java.sql.Types.SMALLINT:
+                    case java.sql.Types.REAL:
+                    case java.sql.Types.TINYINT:
+                        hasPrecision = true
+                        break
+                    default:
+                        hasPrecision = false
+                }
+
+                //precision
+                if (hasPrecision) {
+
+                    if (isCharType == true) {
+                        if (result.getString('COLUMN_SIZE')) {
+                            out.write "(${result.getInt('COLUMN_SIZE')} CHAR)"
+                        }
+                    } else {
+                        if (result.getString('COLUMN_SIZE')) {
+
+                            out.write "(${result.getInt('COLUMN_SIZE')}"
+                            if (result.getString('DECIMAL_DIGITS')) {
+                                out.write ",${result.getInt('DECIMAL_DIGITS')}"
+                            }
+                            out.write ")"
+                        }
+                    }
+                }
+
+
+                //default value if applicable
+                if (doInheritDefaults) {
+                    def defaultValue = result.getString('COLUMN_DEF')
+                    out.write '\t'
+                    if (defaultValue != null) {
+                        out.write " DEFAULT ${defaultValue}"
+                    }
+                }
+
+                //nullable if applicable
+                if (doInheritConstraints) {
+                    out.write '\t'
+                    switch (result.getInt('NULLABLE')) {
+                        case 0: //java.sql.DatabaseMetadata.columnNoNulls
+                            out.write " NOT NULL"
+                            break
+                        case 1: //java.sql.DatabaseMetadata.columnNullable
+                            out.write " NULL"
+                            break
+                        default:
+                            println "NULLABLE unnknown for ${tableName}.${columnName}"
+                    }
+                } else {
+                    out.write '\tNULL'
+                }
+
+            }
+        }
+
+        out.write "\n"
+        out.write ")\n"
+        out.write ";\n"
+
+        result.close()
+        out.flush()
+
+    }
+
+
+    def writeConstraintsForTable = { Writer out, String tableName, def result, Closure doIgnoreColumn ->
+
+        if (result.next()) {
+            def sourceTableSchema = result.getString('TABLE_SCHEM')
+            def sourceTableName = result.getString('TABLE_NAME')
+
+            //primary key definition
+            def pk = findPKColumnNames(sourceTableSchema, sourceTableName).findAll { !doIgnoreColumn(it) } as LinkedHashSet
+
+            //GBOK-1424: standard index and unique constraint for historic data
+            if (!pk.isEmpty()) {
+                def indexKeys = pk + [historikkColumNames.TEND, historikkColumNames.TBEGIN]
+
+                out.write '\n'
+                out.write "ALTER TABLE \"${tableName}\" \nADD CONSTRAINT \"C_HIST_${tableName}\" UNIQUE \n"  //GBOK-1424: import endrer navn lik inded (oracle standard) husk å re-name denne etter import
+                out.write "(\n\t"
+                out.write(indexKeys.collect {"\"$it\""}.join(',\n\t'))
+                out.write "\n"
+                out.write ")\n"
+                out.write "USING INDEX (\n"
+                out.write "\tCREATE UNIQUE INDEX \"${tableName}_IX_HIST\" ON \"${tableName}\" \n"
+                out.write "\t(\n\t\t"
+                out.write(indexKeys.collect {"\"$it\""}.join(',\n\t\t'))
+                out.write "\t\n"
+                out.write "\t)\n"
+                out.write "\tREVERSE\n" //GBOK-1851
+                out.write ")\n"
+                out.write "ENABLE\n"
+                out.write ";\n"
+            }
+
+        }
+
+
+        result.close()
+        out.flush()
+    }
+
+
+    def findTableNames = { String userName ->
+        Map<String, List> tableNamesForUsers = [:] as LinkedHashMap
+        sql.eachRow("select OBJECT_NAME from ALL_OBJECTS where OBJECT_TYPE in ('TABLE') and OWNER like ? and not OBJECT_NAME LIKE '%\$%' escape '\\' order by OBJECT_NAME", [userName]) {
+            if (includeTables(it[0])) {
+                if (!excludeTables(it[0])) {
+                    if (tableNamesForUsers[username] == null) {
+                        tableNamesForUsers[username] = []
+                    }
+                    tableNamesForUsers[username].add(it[0])
+                }
+            }
+        }
+        return tableNamesForUsers
+    }
+
+    def findPKColumnNames = { String schemaForTableName, tableName ->
+        def ret = []
+        def resultSet = sql.properties.connection.metaData.getPrimaryKeys(null, schemaForTableName, tableName)
+        while( resultSet.next() ) {
+            ret[resultSet.getInt('KEY_SEQ') - 1] = resultSet.getString('COLUMN_NAME')
+        }
+        resultSet.close()
+        return ret
+    }
+
+
+    def tableNamesForUsers = findTableNames(username)
+    tableNamesForUsers.each { def schema, tableNames ->
+        tableNames.each { tableName ->
+            logger.quiet "Processing table '${tableName}' from schema ${schema}..."
+
+            def doIgnoreColumn = { ignoredColumnNames[tableName] ?: [] }
+
+
+            schemaDDL.println("PROMPT Creating Table ${tableName}_H ...")
+            writeDDLForTable(schemaDDL, "${tableName}_H", sql.properties.connection.metaData.getColumns(schema, username, tableName, null), doIgnoreColumn, inheritConstraints, inheritDefaults)
+            writeConstraintsForTable(schemaDDL, "${tableName}_H", sql.properties.connection.metaData.getColumns(schema, username, tableName, null), doIgnoreColumn)
+
+            schemaDDL.println()
+            schemaDDL.println()
+            schemaDDL.println()
+        }
+    }
+
+    if (tableNamesForUsers.isEmpty()) {
+        logger.quiet "No tables found for user ${username}. Is the schema currently empty?"
+    }
+
+
+    println "Schema DDL written to ${file}"
+
+}

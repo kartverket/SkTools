@@ -1,0 +1,294 @@
+/*
+  Script for automatisk generering av view DDL for historikk skjema.
+  Resultatet blir returnert som streng.
+
+  Bruk:
+
+  Benytt closure hektet inn på project.ext.genHistorikkViewsAndTriggers
+  med følgende parametere:
+
+    dbToolsetName - navn på dbToolset det skal leses ifra
+
+
+    Valgfrie Parametere:
+
+    includeTables - {closure} for filtrering av tabellnavn for prosessering
+    excludeTables - {closure} for filtrering av tabellnavn for prosessering
+
+    ignoredColumnNames - map av kolonnenavn per tabellnavn (key) som evt skal ignoreres
+
+ */
+
+project.ext.genHistorikkViewsAndTriggers = { Map params ->
+
+    // parameters
+
+    final def dbToolsetName = params['dbToolsetName']
+    assert dbToolsetName // dbToolsetName is mandatory parameter
+
+    final def includeTables = params.get('includeTables', { it.endsWith('_H') })
+    final def excludeTables = params.get('excludeTables', { !it.endsWith('_H') })
+
+
+    final def ignoredColumnNames = params.get('ignoredColumnNames', [:]) //kan trolig ikke ignorere noen kollonner i view eller triggere...
+
+
+    // variables
+    def historikkColumNames = [TVERSION: 'TVERSION', TBEGIN: 'TBEGIN', TEND: 'TEND']
+
+    def oracleConvention = project.convention.plugins['db'].dbToolSets[dbToolsetName]
+    String username = oracleConvention.credentials.username
+
+
+    def sql
+    try {
+        sql = groovy.sql.Sql.newInstance(oracleConvention.url, username, oracleConvention.credentials.password, oracleConvention.driver)
+    } finally {
+        if (!sql) logger.error "Error connecting to database: ${oracleConvention.url} [${username}]"
+    }
+    println("connected to source database: ${sql.connection.metaData.URL} [${sql.connection.metaData.userName}]")
+
+
+    final StringWriter schemaDDL = new StringWriter()
+
+
+
+    //algorithm
+
+    def writeDDLForView = { Writer out, String viewName, Map columnMapping ->
+
+        out.write "\n"
+        out.write "-- View for ${viewName}\n"
+        out.write "CREATE OR REPLACE VIEW \"${viewName}\" (\n"
+        out.write columnMapping.values().collect{"   \"${it}\""}.join(',\n')
+        out.write "\n) AS SELECT \n"
+        out.write columnMapping.keySet().collect{"   h.\"${it}\""}.join(',\n')
+        out.write "\n FROM \"${viewName}_H\" h"
+        out.write "\n WHERE "
+//GBOK-1482 - versjon 3:
+        out.write "\n     (h.\"${historikkColumNames.TEND}\" > SNAPSHOT_TIME.Get_T() AND h.\"${historikkColumNames.TBEGIN}\" <= SNAPSHOT_TIME.Get_T()) "
+        out.write "\n  OR (h.\"${historikkColumNames.TEND}\" = SNAPSHOT_TIME.Get_T_CURRENT() AND h.\"${historikkColumNames.TBEGIN}\" <= SNAPSHOT_TIME.Get_T()) "
+
+//GBOK-1482 - versjon 2:
+//            out.write "\n     (snapshot_time.Get_T() < h.\"${historikkColumNames.TEND}\" OR h.\"${historikkColumNames.TEND}\" = snapshot_time.Get_T_CURRENT()) "
+//            out.write "\n  AND h.\"${historikkColumNames.TBEGIN}\" <= snapshot_time.Get_T()"
+
+//versjon 1:
+//            out.write "\n     snapshot_time.T_Between(h.\"${historikkColumNames.TBEGIN}\", h.\"${historikkColumNames.TEND}\") = 1"
+
+        out.write "\n;"
+        out.flush()
+    }
+
+
+    //view kan ha annen felt-rekkefølge enn skygge-tabell
+    def writeTriggersForView = { Writer out, String viewName, String hTableName, def pkColumns, Map columnMappingForView, def columnNamesForTable ->
+
+        out.write "\n"
+        out.write """
+-- Trigger for ${viewName}
+CREATE OR REPLACE TRIGGER "T_${viewName}"\
+ INSTEAD OF INSERT OR UPDATE OR DELETE ON "${viewName}"
+ FOR EACH ROW
+  DECLARE
+    t_Trans TIMESTAMP(9) := SNAPSHOT_TIME.Get_T_Trans();
+    t_End TIMESTAMP(9) := SNAPSHOT_TIME.Get_T_CURRENT();
+
+    LOGISK_FEIL EXCEPTION;
+  BEGIN
+
+  IF snapshot_time.GeT_T() <> t_End THEN
+    RAISE_APPLICATION_ERROR(-20100, 'Modifikasjon mot historikk-data fungerer kun med t satt til t_CURRENT');
+  END IF;
+
+  IF INSERTING THEN
+     INSERT INTO "${hTableName}"
+        VALUES (
+           ${
+            columnNamesForTable.collect {
+                switch (it) {
+                    case historikkColumNames.TBEGIN: return 't_Trans'
+                    case historikkColumNames.TEND: return 't_End'       //levende objekter har denne tend verdi
+                    case historikkColumNames.TVERSION: return 1         //nye objekter inserted via view får version=1 (default 0)
+                    default: return columnMappingForView.containsKey(it) ? ":new.\"${columnMappingForView.get(it)}\"" : 'default'
+                }
+            }.join(', \n           ')
+        }
+        );
+
+  ELSIF UPDATING THEN
+     IF :old."${historikkColumNames.TBEGIN}" < t_Trans THEN
+        INSERT INTO "${hTableName}" VALUES (
+           ${
+            columnNamesForTable.collect {
+                switch (it) {
+                    case historikkColumNames.TEND: return 't_Trans'
+                    default: return columnMappingForView.containsKey(it) ? ":new.\"${columnMappingForView.get(it)}\"" : 'default'
+                }
+            }.join(', \n           ')
+        }
+           )
+        ;
+        UPDATE "${hTableName}" SET "${historikkColumNames.TVERSION}" = :old."${columnMappingForView.get(historikkColumNames.TVERSION)}" + 1
+        WHERE
+           ${
+            pkColumns.collect {
+                switch (it) {
+                    case historikkColumNames.TEND: return "\"${it}\" = t_End"
+                    default: return "\"${it}\" = :old.\"${columnMappingForView.get(it)}\"" //GBOK-1422: matcher "current rad" med old verdier for PK
+                }
+            }.join('\n           AND ')
+        }
+        ;
+     END IF;
+     UPDATE "${hTableName}"
+        SET
+           ${
+            //todo: unngå flere oppdatering av tBegin her..
+            columnNamesForTable.findAll { columnMappingForView.containsKey(it) && ![historikkColumNames.TVERSION, historikkColumNames.TEND].contains(it) }.collect {
+                switch (it) {
+                    case historikkColumNames.TBEGIN: return "\"${it}\" = t_Trans"
+                    default: return "\"${it}\" = ${columnMappingForView.containsKey(it) ? ':new.\"' + columnMappingForView.get(it) + '\"' : 'default'}"
+                }
+            }.join(', \n           ')
+        }
+        WHERE
+           ${
+            pkColumns.collect {
+                switch (it) {
+                    case historikkColumNames.TEND: return "\"${it}\" = t_End"
+                    default: return "\"${it}\" = :old.\"${columnMappingForView.get(it)}\"" //GBOK-1422: matcher "current rad" med old verdier for PK
+                }
+            }.join('\n           AND ')
+        }
+        ;
+
+  ELSIF DELETING THEN
+     IF :old."${historikkColumNames.TBEGIN}" < t_Trans THEN
+        INSERT INTO "${hTableName}"
+           VALUES (
+           ${
+            columnNamesForTable.collect {
+                switch (it) {
+                    case historikkColumNames.TBEGIN: return ":old.\"${it}\"" //gammel verdi
+                    case historikkColumNames.TEND: return 't_Trans'
+                    case historikkColumNames.TVERSION: return ":old.\"${it}\"" //gammel verdi
+                    default: return ":old.\"${columnMappingForView.get(it)}\""
+                }
+            }.join(', \n           ')
+        }
+           )
+        ;
+     END IF;
+     DELETE FROM "${hTableName}"
+        WHERE
+           ${
+            pkColumns.collect {
+                switch (it) {
+                    case historikkColumNames.TEND: return "\"${it}\" = t_End"
+                    default: return "\"${it}\" = :old.\"${columnMappingForView.get(it)}\"" //GBOK-1422: matcher "current rad" med old verdier for PK
+                }
+            }.join('\n           AND ')
+        }
+     ;
+  END IF;
+END "T_${viewName}";
+/"""
+
+        out.flush()
+    }
+
+
+
+    def findTableNames = { String userName ->
+        Map<String, List> tableNamesForUsers = [:] as LinkedHashMap
+        sql.eachRow("select OBJECT_NAME from ALL_OBJECTS where OBJECT_TYPE in ('TABLE') and OWNER like ? order by OBJECT_NAME", [username]) {
+            if (includeTables(it[0])) {
+                if (!excludeTables(it[0])) {
+                    if (tableNamesForUsers[username] == null) {
+                        tableNamesForUsers[username] = []
+                    }
+                    tableNamesForUsers[username].add(it[0])
+                }
+            }
+        }
+        return tableNamesForUsers
+    }
+
+
+    def findColumnNames = { String userName, String tableName, String schema = userName, Closure doIgnoredColumn = {false} ->
+        def ret = []
+
+        def resultSet = sql.properties.connection.metaData.getColumns(schema, userName, tableName, null)
+        while( resultSet.next() ) {
+            def columnName = resultSet.getString('COLUMN_NAME')
+            if (!doIgnoredColumn(columnName)) {
+                ret.add(columnName)
+            }
+        }
+        resultSet.close()
+
+        return ret
+    }
+
+
+    //gives you the column mapping between table (key) and view (value)
+    def findColumnNamesForView = { String userName, String tableName, String schema, Closure doIgnoredColumn = {false}, Closure colmapTableToView = {it} ->
+        def mapping = [:] as LinkedHashMap
+
+        def columnNamesForView = findColumnNames(userName, tableName, schema, doIgnoredColumn) - historikkColumNames.values() + historikkColumNames.values()
+        columnNamesForView.each {
+            mapping.put(it, colmapTableToView(it))
+        }
+
+        return mapping
+    }
+
+    //finner felter som inngår i primærnøkkler ved å se på unique constraint med navn C_HIST_<tabellenavn>
+    def findPKColumnNames = { String schema, tableName ->
+        def ret = []
+        sql.eachRow("select * from ALL_CONS_COLUMNS where OWNER = ? and TABLE_NAME = ? and constraint_name like 'C\\_HIST\\_%' escape '\\' order by POSITION", [schema, tableName]) {
+            ret += it.COLUMN_NAME
+        }
+        return ret
+    }
+
+
+    def tableNamesForUsers = findTableNames(username)
+    tableNamesForUsers.each { String schema, def tableNames ->
+        tableNames.each { String tableName ->
+            logger.quiet "Processing table '${tableName}' from schema ${schema}..."
+
+            def doIgnoreColumn = { ignoredColumnNames[tableName] ?: [] }
+
+            String viewNameForTable = tableName.toString().replaceAll(/\_H$/, '')
+
+            def columnMappingForView = findColumnNamesForView(username, tableName, schema, doIgnoreColumn)
+
+            schemaDDL.println("PROMPT Creating View ${viewNameForTable} ...")
+            writeDDLForView(schemaDDL, viewNameForTable, columnMappingForView)
+
+
+            Collection pkColumns = findPKColumnNames(schema, tableName)
+
+            //select * from user_cons_columns where table_name = 'STED_H' and constraint_name like 'C\_HIST\_%' escape '\' order by position;
+            if (!pkColumns.containsAll([historikkColumNames.TEND, historikkColumNames.TBEGIN])) {
+                logger.warn "Unique/PK columns not found. Expected to have some among ${[historikkColumNames.TEND, historikkColumNames.TBEGIN]}"
+            }
+
+            def columnNamesForTable = findColumnNames(username, tableName, schema, doIgnoreColumn)
+            writeTriggersForView(schemaDDL, "${viewNameForTable}", "${tableName}", pkColumns, columnMappingForView, columnNamesForTable)
+
+
+            schemaDDL.println()
+            schemaDDL.println()
+            schemaDDL.println()
+        }
+    }
+
+    if (tableNamesForUsers.isEmpty()) {
+        logger.quiet "No tables found for user ${username}. Is the schema currently empty?"
+    }
+
+    return schemaDDL.toString()
+}
