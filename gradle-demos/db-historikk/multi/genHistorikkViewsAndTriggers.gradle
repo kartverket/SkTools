@@ -123,7 +123,7 @@ CREATE OR REPLACE TRIGGER "T_${viewName}"\
             columnNamesForTable.collect {
                 switch (it) {
                     case historikkColumNames.TEND: return 't_Trans'
-                    default: return columnMappingForView.containsKey(it) ? ":new.\"${columnMappingForView.get(it)}\"" : 'default'
+                    default: return columnMappingForView.containsKey(it) ? ":old.\"${columnMappingForView.get(it)}\"" : 'default'
                 }
             }.join(', \n           ')
         }
