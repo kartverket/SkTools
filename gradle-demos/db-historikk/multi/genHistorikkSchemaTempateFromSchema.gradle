@@ -172,6 +172,15 @@ project.ext.genHistorikkSchemaTempateFromSchema = { Map params ->
 
     }
 
+    def findPKColumnNames = { String schemaForTableName, tableName ->
+        def ret = []
+        def resultSet = sql.properties.connection.metaData.getPrimaryKeys(null, schemaForTableName, tableName)
+        while( resultSet.next() ) {
+            ret[resultSet.getInt('KEY_SEQ') - 1] = resultSet.getString('COLUMN_NAME')
+        }
+        resultSet.close()
+        return ret
+    }
 
     def writeConstraintsForTable = { Writer out, String tableName, def result, Closure doIgnoreColumn ->
 
@@ -227,15 +236,6 @@ project.ext.genHistorikkSchemaTempateFromSchema = { Map params ->
         return tableNamesForUsers
     }
 
-    def findPKColumnNames = { String schemaForTableName, tableName ->
-        def ret = []
-        def resultSet = sql.properties.connection.metaData.getPrimaryKeys(null, schemaForTableName, tableName)
-        while( resultSet.next() ) {
-            ret[resultSet.getInt('KEY_SEQ') - 1] = resultSet.getString('COLUMN_NAME')
-        }
-        resultSet.close()
-        return ret
-    }
 
 
     def tableNamesForUsers = findTableNames(username)
