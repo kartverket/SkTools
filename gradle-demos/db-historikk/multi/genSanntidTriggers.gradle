@@ -1,0 +1,218 @@
+/*
+  Script for automatisk generering av trigger DDL for sanntid skjema. Triggere oppdaterer historikkdata.
+  Det er valgfritt hvilke historikk-felter som blir eksponert (om noen). Dersom en tabell ikke skal med, deklarer dette i includeTables/excludeTables.
+
+  Resultatet blir returnert som streng.
+
+
+  Bruk:
+
+  Benytt closure hektet inn på project.ext.genSanntidTriggers
+  med følgende parametere:
+
+    dbToolset - dbToolset som bekriver connection det skal leses ifra
+    historikkSchema - skjemanavn for historikkdata
+
+    Valgfrie Parametere:
+
+    includeTables - {closure} for filtrering av tabellnavn for prosessering
+    excludeTables - {closure} for filtrering av tabellnavn for prosessering
+
+    ignoredColumnNames - map av kolonnenavn per tabellnavn (key) som evt skal ignoreres
+
+ */
+
+project.ext.genSanntidTriggers = { Map params ->
+
+    // parameters
+
+    final def dbToolset = params['dbToolset']
+    assert dbToolset // dbToolset as mandatory parameter
+
+    final def historikkSchema = params['historikkSchema']
+    assert historikkSchema // historikkSchema as mandatory parameter
+
+    final def includeTables = params.get('includeTables', { true })
+    final def excludeTables = params.get('excludeTables', { it.endsWith('_H') })
+
+
+    final def ignoredColumnNames = params.get('ignoredColumnNames', [:]) //kan trolig ikke ignorere noen kollonner i view eller triggere...
+
+
+    // variables
+    def historikkColumNames = [TVERSION: 'TVERSION', TBEGIN: 'TBEGIN', TEND: 'TEND', UPDATEDBY:'OPPDATERTAV', ENDEDBY:'AVSLUTTETAV']
+
+    def oracleConvention = dbToolset
+    String username = oracleConvention.credentials.username
+
+
+    def sql
+    try {
+        sql = groovy.sql.Sql.newInstance(oracleConvention.url, username, oracleConvention.credentials.password, oracleConvention.driver)
+    } finally {
+        if (!sql) logger.error "Error connecting to database: ${oracleConvention.url} [${username}]"
+    }
+    println("connected to source database: ${sql.connection.metaData.URL} [${sql.connection.metaData.userName}]")
+
+
+    final StringWriter schemaDDL = new StringWriter()
+
+
+
+    //algorithm
+
+    def writeTriggersForTable = { Writer out, String triggerName, String tableName, List pkColumns, Map columnMappingForTable ->
+
+        def noneHistorikkColumns = columnMappingForTable.keySet().collectMany {!historikkColumNames.containsValue(it) ? [it] : [] }
+
+        if (!pkColumns.intersect(historikkColumNames.values()).isEmpty()) {
+            logger.warn "Primary Key for sanntidstabeller kan ikke inneholde kollonner for historikk. Genererte triggere er ikke garantert til å virke."
+        }
+
+        out.write "\n"
+        out.write """
+-- Trigger for ${tableName}
+CREATE OR REPLACE TRIGGER "${triggerName}"
+  BEFORE INSERT OR UPDATE OR DELETE ON "${tableName}"
+  FOR EACH ROW
+  DECLARE  
+    t_Trans TIMESTAMP(9) := SNAPSHOT_TIME.Get_T_Trans(); 
+    t_End TIMESTAMP(9) := SNAPSHOT_TIME.Get_T_CURRENT();
+    
+    t_User VARCHAR2(255 BYTE) := SNAPSHOT_TIME.Get_Bruker();
+  BEGIN
+
+  IF NOT DELETING THEN
+    ${ columnMappingForTable.containsKey(historikkColumNames.TBEGIN) ? ":new.\"${historikkColumNames.TBEGIN}\" := t_Trans;" : '' }
+    ${ columnMappingForTable.containsKey(historikkColumNames.UPDATEDBY) ? ":new.\"${historikkColumNames.UPDATEDBY}\" := t_User;" : '' }
+  END IF;
+
+  IF INSERTING THEN
+    INSERT INTO "${historikkSchema}"."${tableName}"
+      COLUMNS (
+        ${
+            noneHistorikkColumns.collect {
+                "\"${columnMappingForTable.get(it)}\""
+            }.join(', \n        ')
+        }
+      )
+      VALUES (
+        ${
+            noneHistorikkColumns.collect {
+                ":new.\"${it}\""
+            }.join(', \n        ')
+        }
+      );
+  ELSIF UPDATING THEN
+    UPDATE "${historikkSchema}"."${tableName}"
+      SET
+        ${
+            noneHistorikkColumns.collect {
+                "\"${columnMappingForTable.get(it)}\" = :new.\"${it}\""
+            }.join(', \n        ')
+        }
+      WHERE ${
+            pkColumns.collect {
+                "\"${columnMappingForTable.get(it)}\" = :new.\"${it}\""
+            }.join('\n        AND ')
+        };
+  ELSIF DELETING THEN
+    DELETE FROM "${historikkSchema}"."${tableName}"
+      WHERE ${
+            pkColumns.collect {
+                "\"${columnMappingForTable.get(it)}\" = :old.\"${it}\""
+            }.join('\n        AND ')
+        };
+  END IF;
+
+END T_${tableName};
+/"""
+
+        out.flush()
+    }
+
+
+    def findTableNames = { String userName ->
+        Map<String, List> tableNamesForUsers = [:] as LinkedHashMap
+        sql.eachRow("select OBJECT_NAME from ALL_OBJECTS where OBJECT_TYPE in ('TABLE') and OWNER like ? and OBJECT_NAME not like '%\$%' escape '\\' order by OBJECT_NAME", [username]) {
+            if (includeTables(it[0])) {
+                if (!excludeTables(it[0])) {
+                    if (tableNamesForUsers[username] == null) {
+                        tableNamesForUsers[username] = []
+                    }
+                    tableNamesForUsers[username].add(it[0])
+                }
+            }
+        }
+        return tableNamesForUsers
+    }
+
+
+    def findColumnNames = { String userName, String tableName, String schema = userName, Closure doIgnoredColumn = {false} ->
+        def ret = []
+
+        def resultSet = sql.properties.connection.metaData.getColumns(schema, userName, tableName, null)
+        while( resultSet.next() ) {
+            def columnName = resultSet.getString('COLUMN_NAME')
+            if (!doIgnoredColumn(columnName)) {
+                ret.add(columnName)
+            }
+        }
+        resultSet.close()
+
+        return ret
+    }
+
+
+    //gives you the column mapping between table (key) and historikk-view (value)
+    def findColumnNamesForHistorikkView = { String userName, String tableName, String schema, Closure doIgnoredColumn = {false}, Closure colmapTableToView = {it} ->
+        def mapping = [:] as LinkedHashMap
+
+        def columnNamesForView = findColumnNames(userName, tableName, schema, doIgnoredColumn) - historikkColumNames.values() + historikkColumNames.values()
+        columnNamesForView.each {
+            mapping.put(it, colmapTableToView(it))
+        }
+
+        return mapping
+    }
+
+    def findPKColumnNames = { String schemaForTableName, tableName ->
+        def ret = []
+        def resultSet = sql.properties.connection.metaData.getPrimaryKeys(null, schemaForTableName, tableName)
+        while( resultSet.next() ) {
+            ret[resultSet.getInt('KEY_SEQ') - 1] = resultSet.getString('COLUMN_NAME')
+        }
+        resultSet.close()
+        return ret
+    }
+
+
+    def tableNamesForUsers = findTableNames(username)
+    tableNamesForUsers.each { String schema, def tableNames ->
+        tableNames.each { String tableName ->
+            logger.quiet "Processing table '${tableName}' from schema ${schema}..."
+
+            def doIgnoreColumn = { ignoredColumnNames[tableName] ?: [] }
+
+            Collection pkColumns = findPKColumnNames(schema, tableName)
+            if (pkColumns.empty) {
+                logger.warn "Unique/PK columns not found for table ${schema}.${tableName}.}"
+            }
+
+            def columnMappingForTable = findColumnNamesForHistorikkView(username, tableName, schema, doIgnoreColumn)
+
+            schemaDDL.println("PROMPT Creating Trigger for ${tableName} ...")
+            writeTriggersForTable(schemaDDL, "T_H_${tableName}", tableName, pkColumns, columnMappingForTable)
+
+            schemaDDL.println()
+            schemaDDL.println()
+            schemaDDL.println()
+        }
+    }
+
+    if (tableNamesForUsers.isEmpty()) {
+        logger.quiet "No tables found for user ${username}. Is the schema currently empty?"
+    }
+
+    return schemaDDL.toString()
+}
