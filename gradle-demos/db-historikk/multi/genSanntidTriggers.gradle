@@ -1,5 +1,7 @@
 /*
-  Script for automatisk generering av trigger DDL for sanntid skjema. Triggere oppdaterer historikkdata.
+  Script for automatisk generering av trigger DDL for sanntid skjema.
+  Triggere oppdaterer historikkdata og eies av historikk brukeren.
+
   Det er valgfritt hvilke historikk-felter som blir eksponert (om noen). Dersom en tabell ikke skal med, deklarer dette i includeTables/excludeTables.
 
   Resultatet blir returnert som streng.
@@ -11,7 +13,6 @@
   med følgende parametere:
 
     dbToolset - dbToolset som bekriver connection det skal leses ifra
-    historikkSchema - skjemanavn for historikkdata
 
     Valgfrie Parametere:
 
@@ -29,9 +30,6 @@ project.ext.genSanntidTriggers = { Map params ->
     final def dbToolset = params['dbToolset']
     assert dbToolset // dbToolset as mandatory parameter
 
-    final def historikkSchema = params['historikkSchema']
-    assert historikkSchema // historikkSchema as mandatory parameter
-
     final def includeTables = params.get('includeTables', { true })
     final def excludeTables = params.get('excludeTables', { it.endsWith('_H') })
 
@@ -40,7 +38,7 @@ project.ext.genSanntidTriggers = { Map params ->
 
 
     // variables
-    def historikkColumNames = [TVERSION: 'TVERSION', TBEGIN: 'TBEGIN', TEND: 'TEND', UPDATEDBY:'OPPDATERTAV', ENDEDBY:'AVSLUTTETAV']
+    def historikkColumNames = [TVERSION: 'TVERSION', TBEGIN: 'TBEGIN', TEND: 'TEND', UPDATEDBY: 'OPPDATERTAV', ENDEDBY: 'AVSLUTTETAV']
 
     def oracleConvention = dbToolset
     String username = oracleConvention.credentials.username
@@ -61,7 +59,7 @@ project.ext.genSanntidTriggers = { Map params ->
 
     //algorithm
 
-    def writeTriggersForTable = { Writer out, String triggerName, String tableName, List pkColumns, Map columnMappingForTable ->
+    def writeTriggersForTable = { Writer out, String triggerName, String schema, String tableName, String historikkViewName, List pkColumns, Map columnMappingForTable ->
 
         def noneHistorikkColumns = columnMappingForTable.keySet().collectMany {!historikkColumNames.containsValue(it) ? [it] : [] }
 
@@ -73,7 +71,7 @@ project.ext.genSanntidTriggers = { Map params ->
         out.write """
 -- Trigger for ${tableName}
 CREATE OR REPLACE TRIGGER "${triggerName}"
-  BEFORE INSERT OR UPDATE OR DELETE ON "${tableName}"
+  BEFORE INSERT OR UPDATE OR DELETE ON "${schema}"."${tableName}"
   FOR EACH ROW
   DECLARE  
     t_Trans TIMESTAMP(9) := SNAPSHOT_TIME.Get_T_Trans(); 
@@ -82,13 +80,26 @@ CREATE OR REPLACE TRIGGER "${triggerName}"
     t_User VARCHAR2(255 BYTE) := SNAPSHOT_TIME.Get_Bruker();
   BEGIN
 
+  ${
+
+            columnMappingForTable.values().collectMany {
+                switch (it) {
+                    case historikkColumNames.TBEGIN: return [":new.\"${historikkColumNames.TBEGIN}\" := t_Trans"]
+                    case historikkColumNames.UPDATEDBY: return [":new.\"${historikkColumNames.UPDATEDBY}\" := t_User"]
+                    default: return []
+                }
+            }.with {
+                !it.isEmpty() ? """
   IF NOT DELETING THEN
-    ${ columnMappingForTable.containsKey(historikkColumNames.TBEGIN) ? ":new.\"${historikkColumNames.TBEGIN}\" := t_Trans;" : '' }
-    ${ columnMappingForTable.containsKey(historikkColumNames.UPDATEDBY) ? ":new.\"${historikkColumNames.UPDATEDBY}\" := t_User;" : '' }
+    ${it.join(';\n    ')};
   END IF;
+""" : ''
+            }
+
+        }
 
   IF INSERTING THEN
-    INSERT INTO "${historikkSchema}"."${tableName}"
+    INSERT INTO "${historikkViewName}"
       COLUMNS (
         ${
             noneHistorikkColumns.collect {
@@ -104,7 +115,7 @@ CREATE OR REPLACE TRIGGER "${triggerName}"
         }
       );
   ELSIF UPDATING THEN
-    UPDATE "${historikkSchema}"."${tableName}"
+    UPDATE "${historikkViewName}"
       SET
         ${
             noneHistorikkColumns.collect {
@@ -117,7 +128,7 @@ CREATE OR REPLACE TRIGGER "${triggerName}"
             }.join('\n        AND ')
         };
   ELSIF DELETING THEN
-    DELETE FROM "${historikkSchema}"."${tableName}"
+    DELETE FROM "${historikkViewName}"
       WHERE ${
             pkColumns.collect {
                 "\"${columnMappingForTable.get(it)}\" = :old.\"${it}\""
@@ -168,7 +179,7 @@ END T_${tableName};
     def findColumnNamesForHistorikkView = { String userName, String tableName, String schema, Closure doIgnoredColumn = {false}, Closure colmapTableToView = {it} ->
         def mapping = [:] as LinkedHashMap
 
-        def columnNamesForView = findColumnNames(userName, tableName, schema, doIgnoredColumn) - historikkColumNames.values() + historikkColumNames.values()
+        def columnNamesForView = findColumnNames(userName, tableName, schema, doIgnoredColumn)
         columnNamesForView.each {
             mapping.put(it, colmapTableToView(it))
         }
@@ -202,7 +213,7 @@ END T_${tableName};
             def columnMappingForTable = findColumnNamesForHistorikkView(username, tableName, schema, doIgnoreColumn)
 
             schemaDDL.println("PROMPT Creating Trigger for ${tableName} ...")
-            writeTriggersForTable(schemaDDL, "T_H_${tableName}", tableName, pkColumns, columnMappingForTable)
+            writeTriggersForTable(schemaDDL, "T_S_${tableName}", schema, tableName, tableName, pkColumns, columnMappingForTable)
 
             schemaDDL.println()
             schemaDDL.println()
