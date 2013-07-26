@@ -25,7 +25,7 @@ configureDatabasePlugin {
             dependsOn sqlTask('CreateTemporaryTables', sqlFile: file('src/main/sql/historikk/CreateTemporaryTables.sql'), failOnError: false) //feiler ikke dersom tabell allerede finnes fra før
         }
 
-        sqlTask('CreateViewsAndTriggers', sqlString:'generated...') {
+        sqlTask('CreateViewsAndTriggers', sqlString:'') {
             dependsOn tasks['UpdatePackageHistorikkSession']
             doFirst {
                 println "Genererer DDL for historikk views og legger dette til schema i databasen..."
@@ -42,6 +42,32 @@ configureDatabasePlugin {
                 }
             }
         }
+
+        sqlTask('CreateSanntidTriggers', sqlString:'') {
+//            dependsOn tasks['UpdatePackageHistorikkSession']
+            doFirst {
+                println "Genererer DDL for sanntids historikk triggere og legger dette til schema i databasen..."
+            }
+            apply from: parent.file('genSanntidTriggers.gradle')
+
+            doFirst {
+                sqlString = project.ext.genSanntidTriggers(
+                        dbToolset: project.parent.project(':sanntid-db').convention.plugins['db'].dbToolSets['sanntid'],
+                        excludeTables: {[
+                                'SEQUENCE',
+                        ].contains(it)}
+                )
+            }
+
+            doLast {
+                if (!logger.isEnabled(LogLevel.INFO)) {
+                    logger.quiet "Legger inn view og triggere: \n\n ${sqlString}"
+                }
+            }
+        }
+
+
+
 
 
         properties = [
@@ -128,5 +154,10 @@ task('dbSetUpUsers') {
 
 task('dbInit') {
     dependsOn 'dbCreateHistorikkSchema'
+    dependsOn dbToolSets['admin'].tasks['GrantHistorikkUser']
+}
+
+task('dbEngageHistorikk') {
+    dependsOn dbToolSets['historikk'].tasks['CreateSanntidTriggers']
 }
 

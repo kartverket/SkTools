@@ -16,6 +16,11 @@ CREATE OR REPLACE PACKAGE SNAPSHOT_TIME AUTHID DEFINER AS
     -- DEPRICATED
     FUNCTION T_Between(t_Begin IN SNAPSHOT_TRANS.v%TYPE, t_End IN SNAPSHOT_TRANS.v%TYPE) RETURN NUMBER;
 
+    --todo: legge dette til transaksjonsobjekt?
+    Function Get_Bruker Return VARCHAR2;
+    Function Set_Bruker (brukernavn IN VARCHAR2) Return VARCHAR2;
+    bruker_null EXCEPTION;
+
 END SNAPSHOT_TIME;
 /
 
@@ -28,6 +33,9 @@ CREATE OR REPLACE PACKAGE BODY SNAPSHOT_TIME AS
     t SNAPSHOT_TRANS.v%TYPE := t_Current;
 
     t_Trans SNAPSHOT_TRANS.v%TYPE;
+
+    bruker VARCHAR(255 BYTE);
+
 
     FUNCTION Get_T_CURRENT RETURN TIMESTAMP IS
     BEGIN
@@ -77,6 +85,31 @@ CREATE OR REPLACE PACKAGE BODY SNAPSHOT_TIME AS
       END IF;
       RETURN retVal;
     END T_Between;
+
+    --todo: legge dette til transaksjonsobjekt?
+    Function Get_Bruker
+    Return VARCHAR2
+    is
+    begin
+      if(bruker is not null)
+      then
+        return bruker;
+      else
+        raise bruker_null;
+      end if;
+      exception
+      WHEN bruker_null
+      then
+        raise_application_error(-20001, 'Brukernavn må være satt før man prøver å legge inn data!', FALSE);
+    END Get_Bruker;
+
+    Function Set_Bruker(brukernavn IN VARCHAR2)
+    Return VARCHAR2
+    Is
+    BEGIN
+       bruker:= brukernavn;
+       return bruker;
+    END Set_Bruker;
 
 END SNAPSHOT_TIME;
 /
