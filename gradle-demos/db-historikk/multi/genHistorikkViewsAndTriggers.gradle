@@ -32,6 +32,10 @@ project.ext.genHistorikkViewsAndTriggers = { Map params ->
     final def ignoredColumnNames = params.get('ignoredColumnNames', [:]) //kan trolig ikke ignorere noen kollonner i view eller triggere...
     final Map historikkColumnNames = params.get('historikkColumnNames', ['TVERSION', 'TBEGIN_INFO', 'TEND_INFO', 'TBEGIN', 'TEND'].collectEntries { [it, it.toString()] })
 
+    //bestemmer hvorvidt trigger skal sette brukernavn for historikk-data
+    final def isSetUsernameOnUpdate = params.get('setUsername') ?: historikkColumnNames.containsKey('TBEGIN_INFO')
+    final def isSetUsernameOnDelete = params.get('setUsername') ?: historikkColumnNames.containsKey('TEND_INFO')
+
 
     // variables
 
@@ -92,6 +96,7 @@ CREATE OR REPLACE TRIGGER "T_${viewName}"\
   DECLARE
     t_Trans TIMESTAMP(9) := SNAPSHOT_TIME.Get_T_Trans();
     t_End TIMESTAMP(9) := SNAPSHOT_TIME.Get_T_CURRENT();
+    ${(isSetUsernameOnUpdate || isSetUsernameOnDelete) ? 't_User VARCHAR2(255 CHAR) := SNAPSHOT_TIME.Get_Bruker();' : ''}
 
     LOGISK_FEIL EXCEPTION;
   BEGIN
@@ -105,12 +110,17 @@ CREATE OR REPLACE TRIGGER "T_${viewName}"\
         VALUES (
            ${
             columnNamesForTable.collect {
-                switch (it) {
-                    case historikkColumnNames.TBEGIN: return 't_Trans'
-                    case historikkColumnNames.TEND: return 't_End'       //levende objekter har denne tend verdi
-                    case historikkColumnNames.TVERSION: return 1         //nye objekter inserted via view får version=1 (default 0)
-                    default: return columnMappingForView.containsKey(it) ? ":new.\"${columnMappingForView.get(it)}\"" : 'default'
-                }
+                if (it == historikkColumnNames.TBEGIN) return 't_Trans'
+                if (it == historikkColumnNames.TEND) return 't_End'        //levende objekter har denne tend verdi
+                if (it == historikkColumnNames.TVERSION) return 1          //nye objekter inserted via view får version=1 (default 0)
+                if (it == historikkColumnNames.TBEGIN_INFO && isSetUsernameOnUpdate) return 't_User'
+                if (it == historikkColumnNames.TEND_INFO && isSetUsernameOnDelete) return 'null' // ingen verdi (null) for nye objekter.
+
+                return columnMappingForView.containsKey(it) ? ":new.\"${columnMappingForView.get(it)}\"" : 'default'
+
+//                if (it == historikkColumnNames.TBEGIN_INFO && isSetUsernameOnUpdate) return 't_User';
+//                if (it == historikkColumnNames.TEND_INFO && isSetUsernameOnDelete) return 't_User';
+
             }.join(', \n           ')
         }
         );
@@ -120,22 +130,24 @@ CREATE OR REPLACE TRIGGER "T_${viewName}"\
         INSERT INTO "${hTableName}" VALUES (
            ${
             columnNamesForTable.collect {
-                switch (it) {
-                    case historikkColumnNames.TEND: return 't_Trans'
-                    default: return columnMappingForView.containsKey(it) ? ":old.\"${columnMappingForView.get(it)}\"" : 'default'
-                }
+                if (it == historikkColumnNames.TEND) return 't_Trans'
+                if (it == historikkColumnNames.TEND_INFO && isSetUsernameOnDelete) return 't_User'
+
+                return columnMappingForView.containsKey(it) ? ":old.\"${columnMappingForView.get(it)}\"" : 'default'
             }.join(', \n           ')
         }
            )
         ;
-        UPDATE "${hTableName}" SET "${historikkColumnNames.TVERSION}" = :old."${columnMappingForView.get(historikkColumnNames.TVERSION)}" + 1
+        UPDATE "${hTableName}" SET --GBOK-1824: setter verdier for transaksjon en og kun kun en gang per transaksjon.
+            "${historikkColumnNames.TVERSION}" = :old."${columnMappingForView.get(historikkColumnNames.TVERSION)}" + 1
+            , "${historikkColumnNames.TBEGIN}" = t_Trans
+            ${(isSetUsernameOnUpdate && historikkColumnNames.TBEGIN_INFO) ? ", \"${historikkColumnNames.TBEGIN_INFO}\" = t_User" : ''}
         WHERE
            ${
             pkColumns.collect {
-                switch (it) {
-                    case historikkColumnNames.TEND: return "\"${it}\" = t_End"
-                    default: return "\"${it}\" = :old.\"${columnMappingForView.get(it)}\"" //GBOK-1422: matcher "current rad" med old verdier for PK
-                }
+                if (it == historikkColumnNames.TEND) return "\"${it}\" = t_End";
+
+                return "\"${it}\" = :old.\"${columnMappingForView.get(it)}\"" //GBOK-1422: matcher "current rad" med old verdier for PK
             }.join('\n           AND ')
         }
         ;
@@ -143,21 +155,18 @@ CREATE OR REPLACE TRIGGER "T_${viewName}"\
      UPDATE "${hTableName}"
         SET
            ${
-            //todo: unngå flere oppdatering av tBegin her..
-            columnNamesForTable.findAll { columnMappingForView.containsKey(it) && ![historikkColumnNames.TVERSION, historikkColumnNames.TEND].contains(it) }.collect {
-                switch (it) {
-                    case historikkColumnNames.TBEGIN: return "\"${it}\" = t_Trans"
-                    default: return "\"${it}\" = ${columnMappingForView.containsKey(it) ? ':new.\"' + columnMappingForView.get(it) + '\"' : 'default'}"
-                }
+            columnNamesForTable.findAll { columnMappingForView.containsKey(it) && !historikkColumnNames.containsKey(it) }.collect {
+
+                return "\"${it}\" = ${columnMappingForView.containsKey(it) ? ':new.\"' + columnMappingForView.get(it) + '\"' : 'default'}"
             }.join(', \n           ')
         }
         WHERE
            ${
             pkColumns.collect {
-                switch (it) {
-                    case historikkColumnNames.TEND: return "\"${it}\" = t_End"
-                    default: return "\"${it}\" = :old.\"${columnMappingForView.get(it)}\"" //GBOK-1422: matcher "current rad" med old verdier for PK
-                }
+                if (it == historikkColumnNames.TEND) return "\"${it}\" = t_End";
+                if (it == historikkColumnNames.TBEGIN) return "\"${it}\" = t_Trans";
+
+                return "\"${it}\" = :old.\"${columnMappingForView.get(it)}\"" //GBOK-1422: matcher "current rad" med old verdier for PK
             }.join('\n           AND ')
         }
         ;
@@ -168,12 +177,11 @@ CREATE OR REPLACE TRIGGER "T_${viewName}"\
            VALUES (
            ${
             columnNamesForTable.collect {
-                switch (it) {
-                    case historikkColumnNames.TBEGIN: return ":old.\"${it}\"" //gammel verdi
-                    case historikkColumnNames.TEND: return 't_Trans'
-                    case historikkColumnNames.TVERSION: return ":old.\"${it}\"" //gammel verdi
-                    default: return ":old.\"${columnMappingForView.get(it)}\""
-                }
+                if (it == historikkColumnNames.TEND) return 't_Trans'
+                if (it == historikkColumnNames.TEND_INFO && isSetUsernameOnDelete) return 't_User'
+
+                return columnMappingForView.containsKey(it) ? ":old.\"${columnMappingForView.get(it)}\"" : 'default'
+
             }.join(', \n           ')
         }
            )
@@ -183,10 +191,9 @@ CREATE OR REPLACE TRIGGER "T_${viewName}"\
         WHERE
            ${
             pkColumns.collect {
-                switch (it) {
-                    case historikkColumnNames.TEND: return "\"${it}\" = t_End"
-                    default: return "\"${it}\" = :old.\"${columnMappingForView.get(it)}\"" //GBOK-1422: matcher "current rad" med old verdier for PK
-                }
+                if (it == historikkColumnNames.TEND) return "\"${it}\" = t_End"
+
+                return "\"${it}\" = :old.\"${columnMappingForView.get(it)}\"" //GBOK-1422: matcher "current rad" med old verdier for PK
             }.join('\n           AND ')
         }
      ;
