@@ -8,7 +8,7 @@
   med følgende parametere:
 
     filename - filnavn for generert sql script
-    dbToolsetName - navn på dbToolset det skal leses ifra
+    dbToolset - dbToolset sin connection skal leses ifra
 
 
     Valgfrie Parametere:
@@ -27,8 +27,8 @@ project.ext.genHistorikkSchemaTempateFromSchema = { Map params ->
     final def filename = params['filename']
     assert filename // filename is mandatory parameter
 
-    final def dbToolsetName = params['dbToolsetName']
-    assert dbToolsetName // dbToolsetName is mandatory parameter
+    final def dbToolset = params['dbToolset']
+    assert dbToolset // dbToolsetName is mandatory parameter
 
     final def includeTables = params.get('includeTables', {true})
     final def excludeTables = params.get('excludeTables', {false})
@@ -40,12 +40,13 @@ project.ext.genHistorikkSchemaTempateFromSchema = { Map params ->
     //styrer arving av default verdier for tabell-kollonner.
     final def inheritDefaults = false;
 
+    //styrer hvilke kollonner som kommer med i skjema og hva de heter.
+    final Map historikkColumnNames = params.get('historikkColumnNames', ['TVERSION', 'TBEGIN_INFO', 'TEND_INFO', 'TBEGIN', 'TEND'].collectEntries { [it, it.toString()] })
 
 
     // variables
-    def historikkColumNames = [TVERSION: 'TVERSION', TBEGIN: 'TBEGIN', TEND: 'TEND']
 
-    def oracleConvention = project.convention.plugins['db'].dbToolSets[dbToolsetName]
+    def oracleConvention = dbToolset
     def username = oracleConvention.credentials.username
 
     def file = project.file(filename)
@@ -76,20 +77,31 @@ project.ext.genHistorikkSchemaTempateFromSchema = { Map params ->
 
         out.write "CREATE TABLE \"${tableName}\" \n(\n"
 
-        out.write "\t\"${historikkColumNames.TVERSION}\"\tNUMBER(6,0) DEFAULT 1 NOT NULL"
-        out.write ",\n"
-        out.write "\t\"${historikkColumNames.TBEGIN}\"  \tTIMESTAMP(9) DEFAULT SYSTIMESTAMP NOT NULL"
-        out.write ",\n"
-        out.write "\t\"${historikkColumNames.TEND}\"    \tTIMESTAMP(9) DEFAULT TO_TIMESTAMP('9999-01-01 00:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF') NOT NULL"
+        out.write historikkColumnNames.collect {
+            switch(it.key) {
+                case 'TVERSION':
+                    return "\t\"${historikkColumnNames.TVERSION}\"  \t\tNUMBER(6,0) DEFAULT 1 NOT NULL"
+                case 'TBEGIN':
+                    return "\t\"${historikkColumnNames.TBEGIN}\"    \t\tTIMESTAMP(9) DEFAULT SYSTIMESTAMP NOT NULL"
+                case 'TEND':
+                    return "\t\"${historikkColumnNames.TEND}\"      \t\tTIMESTAMP(9) DEFAULT TO_TIMESTAMP('9999-01-01 00:00:00.00', 'YYYY-MM-DD HH24:MI:SS.FF') NOT NULL"
+                case 'TBEGIN_INFO':
+                    return "\t\"${historikkColumnNames.TBEGIN_INFO}\"\t\tVARCHAR2(255 CHAR)"
+                case 'TEND_INFO':
+                    return "\t\"${historikkColumnNames.TEND_INFO}\"  \t\tVARCHAR2(255 CHAR)"
+                default:
+                    "Unnokwn column name for historikk: ${it.key}" // remember to add new keys here..
+            }
+        }.join(',\n')
 
         while( result.next() ) {
             def columnName = result.getString('COLUMN_NAME')
-            if (!doIgnoreColumn(columnName) && !historikkColumNames.containsValue(columnName)) {
+            if (!doIgnoreColumn(columnName) && !historikkColumnNames.containsValue(columnName)) {
                 out.write ",\n"
                 out.write "\t\"${columnName}\""
 
                 //type
-                out.write "\t${result.getString('TYPE_NAME')}"
+                out.write "\t\t${result.getString('TYPE_NAME')}"
                 boolean isCharType = false
                 boolean hasPrecision = false
                 switch (result.getInt('DATA_TYPE')) {
@@ -193,7 +205,7 @@ project.ext.genHistorikkSchemaTempateFromSchema = { Map params ->
 
             //GBOK-1424: standard index and unique constraint for historic data
             if (!pk.isEmpty()) {
-                def indexKeys = pk + [historikkColumNames.TEND, historikkColumNames.TBEGIN]
+                def indexKeys = pk + [historikkColumnNames.TEND, historikkColumnNames.TBEGIN]
 
                 out.write '\n'
                 out.write "ALTER TABLE \"${tableName}\" \nADD CONSTRAINT \"C_HIST_${tableName}\" UNIQUE \n"  //GBOK-1424: import endrer navn lik inded (oracle standard) husk å re-name denne etter import

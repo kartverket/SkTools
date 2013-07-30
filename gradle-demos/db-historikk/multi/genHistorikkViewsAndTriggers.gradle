@@ -7,8 +7,7 @@
   Benytt closure hektet inn på project.ext.genHistorikkViewsAndTriggers
   med følgende parametere:
 
-    dbToolsetName - navn på dbToolset det skal leses ifra
-
+    dbToolset - dbToolset sin connection skal leses ifra
 
     Valgfrie Parametere:
 
@@ -23,20 +22,20 @@ project.ext.genHistorikkViewsAndTriggers = { Map params ->
 
     // parameters
 
-    final def dbToolsetName = params['dbToolsetName']
-    assert dbToolsetName // dbToolsetName is mandatory parameter
+    final def dbToolset = params['dbToolset']
+    assert dbToolset // dbToolset is mandatory parameter
+
 
     final def includeTables = params.get('includeTables', { it.endsWith('_H') })
     final def excludeTables = params.get('excludeTables', { !it.endsWith('_H') })
 
-
     final def ignoredColumnNames = params.get('ignoredColumnNames', [:]) //kan trolig ikke ignorere noen kollonner i view eller triggere...
+    final Map historikkColumnNames = params.get('historikkColumnNames', ['TVERSION', 'TBEGIN_INFO', 'TEND_INFO', 'TBEGIN', 'TEND'].collectEntries { [it, it.toString()] })
 
 
     // variables
-    def historikkColumNames = [TVERSION: 'TVERSION', TBEGIN: 'TBEGIN', TEND: 'TEND']
 
-    def oracleConvention = project.convention.plugins['db'].dbToolSets[dbToolsetName]
+    def oracleConvention = dbToolset
     String username = oracleConvention.credentials.username
 
 
@@ -66,8 +65,8 @@ project.ext.genHistorikkViewsAndTriggers = { Map params ->
         out.write "\n FROM \"${viewName}_H\" h"
         out.write "\n WHERE "
 //GBOK-1482 - versjon 3:
-        out.write "\n     (h.\"${historikkColumNames.TEND}\" > SNAPSHOT_TIME.Get_T() AND h.\"${historikkColumNames.TBEGIN}\" <= SNAPSHOT_TIME.Get_T()) "
-        out.write "\n  OR (h.\"${historikkColumNames.TEND}\" = SNAPSHOT_TIME.Get_T_CURRENT() AND h.\"${historikkColumNames.TBEGIN}\" <= SNAPSHOT_TIME.Get_T()) "
+        out.write "\n     (h.\"${historikkColumnNames.TEND}\" > SNAPSHOT_TIME.Get_T() AND h.\"${historikkColumnNames.TBEGIN}\" <= SNAPSHOT_TIME.Get_T()) "
+        out.write "\n  OR (h.\"${historikkColumnNames.TEND}\" = SNAPSHOT_TIME.Get_T_CURRENT() AND h.\"${historikkColumnNames.TBEGIN}\" <= SNAPSHOT_TIME.Get_T()) "
 
 //GBOK-1482 - versjon 2:
 //            out.write "\n     (snapshot_time.Get_T() < h.\"${historikkColumNames.TEND}\" OR h.\"${historikkColumNames.TEND}\" = snapshot_time.Get_T_CURRENT()) "
@@ -107,9 +106,9 @@ CREATE OR REPLACE TRIGGER "T_${viewName}"\
            ${
             columnNamesForTable.collect {
                 switch (it) {
-                    case historikkColumNames.TBEGIN: return 't_Trans'
-                    case historikkColumNames.TEND: return 't_End'       //levende objekter har denne tend verdi
-                    case historikkColumNames.TVERSION: return 1         //nye objekter inserted via view får version=1 (default 0)
+                    case historikkColumnNames.TBEGIN: return 't_Trans'
+                    case historikkColumnNames.TEND: return 't_End'       //levende objekter har denne tend verdi
+                    case historikkColumnNames.TVERSION: return 1         //nye objekter inserted via view får version=1 (default 0)
                     default: return columnMappingForView.containsKey(it) ? ":new.\"${columnMappingForView.get(it)}\"" : 'default'
                 }
             }.join(', \n           ')
@@ -117,24 +116,24 @@ CREATE OR REPLACE TRIGGER "T_${viewName}"\
         );
 
   ELSIF UPDATING THEN
-     IF :old."${historikkColumNames.TBEGIN}" < t_Trans THEN
+     IF :old."${historikkColumnNames.TBEGIN}" < t_Trans THEN
         INSERT INTO "${hTableName}" VALUES (
            ${
             columnNamesForTable.collect {
                 switch (it) {
-                    case historikkColumNames.TEND: return 't_Trans'
+                    case historikkColumnNames.TEND: return 't_Trans'
                     default: return columnMappingForView.containsKey(it) ? ":old.\"${columnMappingForView.get(it)}\"" : 'default'
                 }
             }.join(', \n           ')
         }
            )
         ;
-        UPDATE "${hTableName}" SET "${historikkColumNames.TVERSION}" = :old."${columnMappingForView.get(historikkColumNames.TVERSION)}" + 1
+        UPDATE "${hTableName}" SET "${historikkColumnNames.TVERSION}" = :old."${columnMappingForView.get(historikkColumnNames.TVERSION)}" + 1
         WHERE
            ${
             pkColumns.collect {
                 switch (it) {
-                    case historikkColumNames.TEND: return "\"${it}\" = t_End"
+                    case historikkColumnNames.TEND: return "\"${it}\" = t_End"
                     default: return "\"${it}\" = :old.\"${columnMappingForView.get(it)}\"" //GBOK-1422: matcher "current rad" med old verdier for PK
                 }
             }.join('\n           AND ')
@@ -145,9 +144,9 @@ CREATE OR REPLACE TRIGGER "T_${viewName}"\
         SET
            ${
             //todo: unngå flere oppdatering av tBegin her..
-            columnNamesForTable.findAll { columnMappingForView.containsKey(it) && ![historikkColumNames.TVERSION, historikkColumNames.TEND].contains(it) }.collect {
+            columnNamesForTable.findAll { columnMappingForView.containsKey(it) && ![historikkColumnNames.TVERSION, historikkColumnNames.TEND].contains(it) }.collect {
                 switch (it) {
-                    case historikkColumNames.TBEGIN: return "\"${it}\" = t_Trans"
+                    case historikkColumnNames.TBEGIN: return "\"${it}\" = t_Trans"
                     default: return "\"${it}\" = ${columnMappingForView.containsKey(it) ? ':new.\"' + columnMappingForView.get(it) + '\"' : 'default'}"
                 }
             }.join(', \n           ')
@@ -156,7 +155,7 @@ CREATE OR REPLACE TRIGGER "T_${viewName}"\
            ${
             pkColumns.collect {
                 switch (it) {
-                    case historikkColumNames.TEND: return "\"${it}\" = t_End"
+                    case historikkColumnNames.TEND: return "\"${it}\" = t_End"
                     default: return "\"${it}\" = :old.\"${columnMappingForView.get(it)}\"" //GBOK-1422: matcher "current rad" med old verdier for PK
                 }
             }.join('\n           AND ')
@@ -164,15 +163,15 @@ CREATE OR REPLACE TRIGGER "T_${viewName}"\
         ;
 
   ELSIF DELETING THEN
-     IF :old."${historikkColumNames.TBEGIN}" < t_Trans THEN
+     IF :old."${historikkColumnNames.TBEGIN}" < t_Trans THEN
         INSERT INTO "${hTableName}"
            VALUES (
            ${
             columnNamesForTable.collect {
                 switch (it) {
-                    case historikkColumNames.TBEGIN: return ":old.\"${it}\"" //gammel verdi
-                    case historikkColumNames.TEND: return 't_Trans'
-                    case historikkColumNames.TVERSION: return ":old.\"${it}\"" //gammel verdi
+                    case historikkColumnNames.TBEGIN: return ":old.\"${it}\"" //gammel verdi
+                    case historikkColumnNames.TEND: return 't_Trans'
+                    case historikkColumnNames.TVERSION: return ":old.\"${it}\"" //gammel verdi
                     default: return ":old.\"${columnMappingForView.get(it)}\""
                 }
             }.join(', \n           ')
@@ -185,7 +184,7 @@ CREATE OR REPLACE TRIGGER "T_${viewName}"\
            ${
             pkColumns.collect {
                 switch (it) {
-                    case historikkColumNames.TEND: return "\"${it}\" = t_End"
+                    case historikkColumnNames.TEND: return "\"${it}\" = t_End"
                     default: return "\"${it}\" = :old.\"${columnMappingForView.get(it)}\"" //GBOK-1422: matcher "current rad" med old verdier for PK
                 }
             }.join('\n           AND ')
@@ -236,8 +235,10 @@ END "T_${viewName}";
     def findColumnNamesForView = { String userName, String tableName, String schema, Closure doIgnoredColumn = {false}, Closure colmapTableToView = {it} ->
         def mapping = [:] as LinkedHashMap
 
-        def columnNamesForView = findColumnNames(userName, tableName, schema, doIgnoredColumn) - historikkColumNames.values() + historikkColumNames.values()
-        columnNamesForView.each {
+        def columnNamesForView = findColumnNames(userName, tableName, schema, doIgnoredColumn)
+        def actualHistorikkColumnNames = historikkColumnNames.values().intersect(columnNamesForView)
+
+        (columnNamesForView - actualHistorikkColumnNames + actualHistorikkColumnNames).each {
             mapping.put(it, colmapTableToView(it))
         }
 
@@ -272,8 +273,8 @@ END "T_${viewName}";
             Collection pkColumns = findPKColumnNames(schema, tableName)
 
             //select * from user_cons_columns where table_name = 'STED_H' and constraint_name like 'C\_HIST\_%' escape '\' order by position;
-            if (!pkColumns.containsAll([historikkColumNames.TEND, historikkColumNames.TBEGIN])) {
-                logger.warn "Unique/PK columns not found. Expected to have some among ${[historikkColumNames.TEND, historikkColumNames.TBEGIN]}"
+            if (!pkColumns.containsAll([historikkColumnNames.TEND, historikkColumnNames.TBEGIN])) {
+                logger.warn "Unique/PK columns not found. Expected to have some among ${[historikkColumnNames.TEND, historikkColumnNames.TBEGIN]}"
             }
 
             def columnNamesForTable = findColumnNames(username, tableName, schema, doIgnoreColumn)

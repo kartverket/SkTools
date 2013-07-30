@@ -12,6 +12,7 @@ configureDatabasePlugin {
      * Toolset for historikk-bruker
      */
     toolset(name: 'historikk', type: 'oracle', prefix: 'historikk') {
+        def HISTORIKK_COLUM_NAMES = [TVERSION: 'TVERSION', TBEGIN_INFO: 'TBEGIN_INFO', TEND_INFO: 'TEND_INFO', TBEGIN: 'TBEGIN', TEND: 'TEND']
 
         sqlTask('CreateHistorikkSchema', sqlFile: 'src/main/sql/historikk/schema/CreatehistorikkSchema.sql') {
             dependsOn taskSequence('PurgeHistorikkSchema') {
@@ -33,7 +34,11 @@ configureDatabasePlugin {
             apply from: parent.file('genHistorikkViewsAndTriggers.gradle')
 
             doFirst {
-                sqlString = project.ext.genHistorikkViewsAndTriggers(dbToolsetName: toolset.name, includeTables: { it.endsWith('_H') })
+                sqlString = project.ext.genHistorikkViewsAndTriggers(
+                        dbToolset: toolset,
+                        includeTables: { it.endsWith('_H') },
+                        historikkColumnNames: HISTORIKK_COLUM_NAMES,
+                )
             }
 
             doLast {
@@ -55,7 +60,8 @@ configureDatabasePlugin {
                         dbToolset: project.parent.project(':sanntid-db').convention.plugins['db'].dbToolSets['sanntid'],
                         excludeTables: {[
                                 'SEQUENCE',
-                        ].contains(it)}
+                        ].contains(it)},
+                        historikkColumnNames: HISTORIKK_COLUM_NAMES,
                 )
             }
 

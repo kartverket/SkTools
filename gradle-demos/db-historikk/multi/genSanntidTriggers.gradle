@@ -30,15 +30,14 @@ project.ext.genSanntidTriggers = { Map params ->
     final def dbToolset = params['dbToolset']
     assert dbToolset // dbToolset as mandatory parameter
 
+
     final def includeTables = params.get('includeTables', { true })
     final def excludeTables = params.get('excludeTables', { it.endsWith('_H') })
 
-
     final def ignoredColumnNames = params.get('ignoredColumnNames', [:]) //kan trolig ikke ignorere noen kollonner i view eller triggere...
-
+    final Map historikkColumnNames = params.get('historikkColumnNames', ['TVERSION', 'TBEGIN_INFO', 'TEND_INFO', 'TBEGIN', 'TEND'].collectEntries { [it, it.toString()] })
 
     // variables
-    def historikkColumNames = [TVERSION: 'TVERSION', TBEGIN: 'TBEGIN', TEND: 'TEND', UPDATEDBY: 'OPPDATERTAV', ENDEDBY: 'AVSLUTTETAV']
 
     def oracleConvention = dbToolset
     String username = oracleConvention.credentials.username
@@ -61,9 +60,9 @@ project.ext.genSanntidTriggers = { Map params ->
 
     def writeTriggersForTable = { Writer out, String triggerName, String schema, String tableName, String historikkViewName, List pkColumns, Map columnMappingForTable ->
 
-        def noneHistorikkColumns = columnMappingForTable.keySet().collectMany {!historikkColumNames.containsValue(it) ? [it] : [] }
+        def noneHistorikkColumns = columnMappingForTable.keySet().collectMany {!historikkColumnNames.containsValue(it) ? [it] : [] }
 
-        if (!pkColumns.intersect(historikkColumNames.values()).isEmpty()) {
+        if (!pkColumns.intersect(historikkColumnNames.values()).isEmpty()) {
             logger.warn "Primary Key for sanntidstabeller kan ikke inneholde kollonner for historikk. Genererte triggere er ikke garantert til å virke."
         }
 
@@ -84,8 +83,8 @@ CREATE OR REPLACE TRIGGER "${triggerName}"
 
             columnMappingForTable.values().collectMany {
                 switch (it) {
-                    case historikkColumNames.TBEGIN: return [":new.\"${historikkColumNames.TBEGIN}\" := t_Trans"]
-                    case historikkColumNames.UPDATEDBY: return [":new.\"${historikkColumNames.UPDATEDBY}\" := t_User"]
+                    case historikkColumnNames.TBEGIN: return [":new.\"${historikkColumnNames.TBEGIN}\" := t_Trans"]
+                    case historikkColumnNames.TBEGIN_INFO: return [":new.\"${historikkColumnNames.TBEGIN_INFO}\" := t_User"]
                     default: return []
                 }
             }.with {

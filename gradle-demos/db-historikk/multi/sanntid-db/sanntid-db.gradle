@@ -125,8 +125,9 @@ task genHistorikkSchemaTempateFromSchema() {
     doLast {
         project.ext.genHistorikkSchemaTempateFromSchema(
                 filename: 'src/main/sql/sanntid/schema/CreateHistorikkSchema.sql',
-                dbToolsetName: 'sanntid',
+                dbToolset: dbToolSets['sanntid'],
                 excludeTables: {['SEQUENCE'].contains(it)},
+                historikkColumnNames: [TVERSION: 'TVERSION', TBEGIN_INFO: 'TBEGIN_INFO', TEND_INFO: 'TEND_INFO', TBEGIN: 'TBEGIN', TEND: 'TEND'],
         )
     }
 }
