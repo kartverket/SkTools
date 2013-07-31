@@ -123,7 +123,7 @@ CREATE OR REPLACE TRIGGER "${triggerName}"
         }
       WHERE ${
             pkColumns.collect {
-                "\"${columnMappingForTable.get(it)}\" = :new.\"${it}\""
+                "\"${columnMappingForTable.get(it)}\" = :old.\"${it}\""
             }.join('\n        AND ')
         };
   ELSIF DELETING THEN
