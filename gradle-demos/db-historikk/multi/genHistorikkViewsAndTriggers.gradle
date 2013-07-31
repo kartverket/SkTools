@@ -29,7 +29,13 @@ ext.genHistorikkViewsAndTriggers = { Map params ->
     final def excludeTables = params.get('excludeTables', { !it.endsWith('_H') })
 
     final def ignoredColumnNames = params.get('ignoredColumnNames', [:]) //kan trolig ikke ignorere noen kollonner i view eller triggere...
+
+    // implementert navn for historikk-kolonner (disse må være like i sanntid-db og historikk-db)
     final Map historikkColumnNames = params.get('historikkColumnNames', ['TVERSION', 'TBEGIN_INFO', 'TEND_INFO', 'TBEGIN', 'TEND'].collectEntries { [it, it.toString()] })
+    assert historikkColumnNames.TVERSION //mandatory column for historikk-data
+    assert historikkColumnNames.TBEGIN //mandatory column for historikk-data
+    assert historikkColumnNames.TEND //mandatory column for historikk-data
+
 
     //bestemmer hvorvidt trigger skal sette brukernavn for historikk-data
     final def isSetUsernameOnUpdate = params.get('setUsername') ?: historikkColumnNames.containsKey('TBEGIN_INFO')
@@ -84,14 +90,14 @@ ext.genHistorikkViewsAndTriggers = { Map params ->
 
 
     //view kan ha annen felt-rekkefølge enn skygge-tabell
-    def writeTriggersForView = { Writer out, String viewName, String hTableName, def pkColumns, Map columnMappingForView, def columnNamesForTable ->
+    def writeTriggersForView = { Writer out, String triggerName, String viewName, String hTableName, def pkColumns, Map columnMappingForView, def columnNamesForTable ->
 
         out.write "\n"
         out.write """
--- Trigger for ${viewName}
-CREATE OR REPLACE TRIGGER "T_${viewName}"\
- INSTEAD OF INSERT OR UPDATE OR DELETE ON "${viewName}"
- FOR EACH ROW
+-- Trigger for ${viewName} (historikk-db)
+CREATE OR REPLACE TRIGGER "${triggerName}"
+  INSTEAD OF INSERT OR UPDATE OR DELETE ON "${viewName}"
+  FOR EACH ROW
   DECLARE
     t_Trans TIMESTAMP(9) := SNAPSHOT_TIME.Get_T_Trans();
     t_End TIMESTAMP(9) := SNAPSHOT_TIME.Get_T_CURRENT();
@@ -154,7 +160,7 @@ CREATE OR REPLACE TRIGGER "T_${viewName}"\
      UPDATE "${hTableName}"
         SET
            ${
-            columnNamesForTable.findAll { columnMappingForView.containsKey(it) && !historikkColumnNames.containsKey(it) }.collect {
+            columnNamesForTable.findAll { columnMappingForView.containsKey(it) && !historikkColumnNames.containsValue(it) }.collect {
 
                 return "\"${it}\" = ${columnMappingForView.containsKey(it) ? ':new.\"' + columnMappingForView.get(it) + '\"' : 'default'}"
             }.join(', \n           ')
@@ -197,7 +203,8 @@ CREATE OR REPLACE TRIGGER "T_${viewName}"\
         }
      ;
   END IF;
-END "T_${viewName}";
+
+  END "${triggerName}";
 /"""
 
         out.flush()
@@ -284,7 +291,7 @@ END "T_${viewName}";
             }
 
             def columnNamesForTable = findColumnNames(username, tableName, schema, doIgnoreColumn)
-            writeTriggersForView(schemaDDL, "${viewNameForTable}", "${tableName}", pkColumns, columnMappingForView, columnNamesForTable)
+            writeTriggersForView(schemaDDL, "T_H_${viewNameForTable}", "${viewNameForTable}", "${tableName}", pkColumns, columnMappingForView, columnNamesForTable)
 
 
             schemaDDL.println()

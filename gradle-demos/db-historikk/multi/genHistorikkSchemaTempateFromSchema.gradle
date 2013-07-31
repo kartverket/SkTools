@@ -39,8 +39,11 @@ ext.genHistorikkSchemaTempateFromSchema = { Map params ->
     //styrer arving av default verdier for tabell-kollonner.
     final def inheritDefaults = false;
 
-    //styrer hvilke kollonner som kommer med i skjema og hva de heter.
+    //styrer hvilke historikk-kolonner som implementeres og hva de heter. merk at rekkefølgen er vestentlig.
     final Map historikkColumnNames = params.get('historikkColumnNames', ['TVERSION', 'TBEGIN_INFO', 'TEND_INFO', 'TBEGIN', 'TEND'].collectEntries { [it, it.toString()] })
+    assert historikkColumnNames.TVERSION //mandatory column for historikk-data
+    assert historikkColumnNames.TBEGIN //mandatory column for historikk-data
+    assert historikkColumnNames.TEND //mandatory column for historikk-data
 
 
     // variables

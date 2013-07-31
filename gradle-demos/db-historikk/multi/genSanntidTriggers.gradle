@@ -11,7 +11,7 @@
 
   Benytt closure hektet inn på ext.genSanntidTriggers med følgende parametere:
 
-    dbToolset - dbToolset som beskriver connection det skal leses i fra
+    dbToolset - dbToolset (for sanntid) som beskriver connection det skal leses i fra
 
 
     Valgfrie Parametere:
@@ -35,6 +35,8 @@ ext.genSanntidTriggers = { Map params ->
     final def excludeTables = params.get('excludeTables', { it.endsWith('_H') })
 
     final def ignoredColumnNames = params.get('ignoredColumnNames', [:]) //kan trolig ikke ignorere noen kollonner i view eller triggere...
+
+    // implementert navn for historikk-kolonner (disse må være like i sanntid-db og historikk-db)
     final Map historikkColumnNames = params.get('historikkColumnNames', ['TVERSION', 'TBEGIN_INFO', 'TEND_INFO', 'TBEGIN', 'TEND'].collectEntries { [it, it.toString()] })
 
     // variables
@@ -54,8 +56,6 @@ ext.genSanntidTriggers = { Map params ->
 
     final StringWriter schemaDDL = new StringWriter()
 
-
-
     //algorithm
 
     def writeTriggersForTable = { Writer out, String triggerName, String schema, String tableName, String historikkViewName, List pkColumns, Map columnMappingForTable ->
@@ -68,74 +68,86 @@ ext.genSanntidTriggers = { Map params ->
 
         out.write "\n"
         out.write """
--- Trigger for ${tableName}
+-- Trigger for "${schema}".${tableName} (sanntid-db)
 CREATE OR REPLACE TRIGGER "${triggerName}"
   BEFORE INSERT OR UPDATE OR DELETE ON "${schema}"."${tableName}"
   FOR EACH ROW
-  DECLARE  
-    t_Trans TIMESTAMP(9) := SNAPSHOT_TIME.Get_T_Trans(); 
-    t_End TIMESTAMP(9) := SNAPSHOT_TIME.Get_T_CURRENT();
-    
-    t_User VARCHAR2(255 BYTE) := SNAPSHOT_TIME.Get_Bruker();
+
   BEGIN
 
-  ${
-
-            columnMappingForTable.values().collectMany {
-                switch (it) {
-                    case historikkColumnNames.TBEGIN: return [":new.\"${historikkColumnNames.TBEGIN}\" := t_Trans"]
-                    case historikkColumnNames.TBEGIN_INFO: return [":new.\"${historikkColumnNames.TBEGIN_INFO}\" := t_User"]
-                    default: return []
-                }
-            }.with {
-                !it.isEmpty() ? """
-  IF NOT DELETING THEN
-    ${it.join(';\n    ')};
-  END IF;
-""" : ''
-            }
-
-        }
-
+  -- Delegerer like operasjoner til historikk-db..
   IF INSERTING THEN
     INSERT INTO "${historikkViewName}"
-      COLUMNS (
-        ${
+    COLUMNS (
+      ${
             noneHistorikkColumns.collect {
                 "\"${columnMappingForTable.get(it)}\""
-            }.join(', \n        ')
+            }.join(', \n      ')
         }
-      )
-      VALUES (
-        ${
+    ) VALUES (
+      ${
             noneHistorikkColumns.collect {
                 ":new.\"${it}\""
-            }.join(', \n        ')
+            }.join(', \n      ')
         }
-      );
+    );
   ELSIF UPDATING THEN
     UPDATE "${historikkViewName}"
-      SET
-        ${
+    SET
+      ${
             noneHistorikkColumns.collect {
                 "\"${columnMappingForTable.get(it)}\" = :new.\"${it}\""
-            }.join(', \n        ')
+            }.join(', \n      ')
         }
-      WHERE ${
+    WHERE
+      ${
             pkColumns.collect {
                 "\"${columnMappingForTable.get(it)}\" = :old.\"${it}\""
-            }.join('\n        AND ')
-        };
+            }.join(' AND\n      ')
+        }
+    ;
   ELSIF DELETING THEN
     DELETE FROM "${historikkViewName}"
-      WHERE ${
+    WHERE
+      ${
             pkColumns.collect {
                 "\"${columnMappingForTable.get(it)}\" = :old.\"${it}\""
-            }.join('\n        AND ')
-        };
+            }.join(' AND\n      ')
+        }
+    ;
   END IF;
 
-END T_${tableName};
+  -- Vedlikeholder historikk-felter i sanntid-db.. ${
+            if (columnMappingForTable.find { historikkColumnNames.containsValue(it.key) }) {
+
+                columnMappingForTable.findAll { historikkColumnNames.containsValue(it.key) }.entrySet().with {
+                    """
+  IF INSERTING OR UPDATING THEN
+    SELECT
+      ${it.collect {"\"${it.value}\""}.join(',\n      ')}
+    INTO
+      ${it.collect {":new.\"${it.key}\""}.join(',\n      ')}
+    FROM "${historikkViewName}"
+    WHERE
+      ${
+                        pkColumns.collect {
+                            "\"${columnMappingForTable.get(it)}\" = :new.\"${it}\""
+                        }.join(' AND\n      ')
+                    }
+    ;
+  END IF;
+"""
+                }
+
+            } else {
+                '''
+  -- ..ingen historikkfelter i sanntid å vedlikeholde.
+'''
+            }
+        }
+
+
+  END "${triggerName}";
 /"""
 
         out.flush()
@@ -162,7 +174,7 @@ END T_${tableName};
         def ret = []
 
         def resultSet = sql.properties.connection.metaData.getColumns(schema, userName, tableName, null)
-        while( resultSet.next() ) {
+        while (resultSet.next()) {
             def columnName = resultSet.getString('COLUMN_NAME')
             if (!doIgnoredColumn(columnName)) {
                 ret.add(columnName)
@@ -172,7 +184,6 @@ END T_${tableName};
 
         return ret
     }
-
 
     //gives you the column mapping between table (key) and historikk-view (value)
     def findColumnNamesForHistorikkView = { String userName, String tableName, String schema, Closure doIgnoredColumn = {false}, Closure colmapTableToView = {it} ->
@@ -189,7 +200,7 @@ END T_${tableName};
     def findPKColumnNames = { String schemaForTableName, tableName ->
         def ret = []
         def resultSet = sql.properties.connection.metaData.getPrimaryKeys(null, schemaForTableName, tableName)
-        while( resultSet.next() ) {
+        while (resultSet.next()) {
             ret[resultSet.getInt('KEY_SEQ') - 1] = resultSet.getString('COLUMN_NAME')
         }
         resultSet.close()
