@@ -116,14 +116,13 @@ task('dbInit') {
 //tasker for kodegenerering
 task genHistorikkSchemaTempateFromSchema() {
 
-    apply from: parent.file('genHistorikkSchemaTempateFromSchema.gradle')
-
+    apply to: it, from: parent.file('genHistorikkSchemaTempateFromSchema.gradle')
     doFirst {
         println "Genererer skjema DDL for historikk basert på skjema hentet ifra gjeldende skjema for sanntid.."
     }
 
     doLast {
-        project.ext.genHistorikkSchemaTempateFromSchema(
+        genHistorikkSchemaTempateFromSchema(
                 filename: 'src/main/sql/sanntid/schema/CreateHistorikkSchema.sql',
                 dbToolset: dbToolSets['sanntid'],
                 excludeTables: {['SEQUENCE'].contains(it)},

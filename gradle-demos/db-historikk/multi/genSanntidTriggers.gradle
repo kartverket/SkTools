@@ -9,21 +9,21 @@
 
   Bruk:
 
-  Benytt closure hektet inn på project.ext.genSanntidTriggers
-  med følgende parametere:
+  Benytt closure hektet inn på ext.genSanntidTriggers med følgende parametere:
 
-    dbToolset - dbToolset som bekriver connection det skal leses ifra
+    dbToolset - dbToolset som beskriver connection det skal leses i fra
+
 
     Valgfrie Parametere:
 
     includeTables - {closure} for filtrering av tabellnavn for prosessering
     excludeTables - {closure} for filtrering av tabellnavn for prosessering
 
-    ignoredColumnNames - map av kolonnenavn per tabellnavn (key) som evt skal ignoreres
+    ignoredColumnNames - map av kolonnenavn per tabellnavn (key) som ignoreres
 
  */
 
-project.ext.genSanntidTriggers = { Map params ->
+ext.genSanntidTriggers = { Map params ->
 
     // parameters
 

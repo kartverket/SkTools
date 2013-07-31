@@ -28,19 +28,19 @@ configureDatabasePlugin {
 
         sqlTask('CreateViewsAndTriggers', sqlString:'') {
             dependsOn tasks['UpdatePackageHistorikkSession']
+
+            apply to: it, from: parent.file('genHistorikkViewsAndTriggers.gradle')
             doFirst {
                 println "Genererer DDL for historikk views og legger dette til schema i databasen..."
             }
-            apply from: parent.file('genHistorikkViewsAndTriggers.gradle')
 
             doFirst {
-                sqlString = project.ext.genHistorikkViewsAndTriggers(
+                sqlString = genHistorikkViewsAndTriggers(
                         dbToolset: toolset,
                         includeTables: { it.endsWith('_H') },
                         historikkColumnNames: HISTORIKK_COLUM_NAMES,
                 )
             }
-
             doLast {
                 if (!logger.isEnabled(LogLevel.INFO)) {
                     logger.quiet "Legger inn view og triggere: \n\n ${sqlString}"
@@ -50,13 +50,14 @@ configureDatabasePlugin {
 
         sqlTask('CreateSanntidTriggers', sqlString:'') {
 //            dependsOn tasks['UpdatePackageHistorikkSession']
+
+            apply to: it, from: parent.file('genSanntidTriggers.gradle')
             doFirst {
                 println "Genererer DDL for sanntids historikk triggere og legger dette til schema i databasen..."
             }
-            apply from: parent.file('genSanntidTriggers.gradle')
 
             doFirst {
-                sqlString = project.ext.genSanntidTriggers(
+                sqlString = genSanntidTriggers(
                         dbToolset: project.parent.project(':sanntid-db').convention.plugins['db'].dbToolSets['sanntid'],
                         excludeTables: {[
                                 'SEQUENCE',
@@ -64,7 +65,6 @@ configureDatabasePlugin {
                         historikkColumnNames: HISTORIKK_COLUM_NAMES,
                 )
             }
-
             doLast {
                 if (!logger.isEnabled(LogLevel.INFO)) {
                     logger.quiet "Legger inn view og triggere: \n\n ${sqlString}"

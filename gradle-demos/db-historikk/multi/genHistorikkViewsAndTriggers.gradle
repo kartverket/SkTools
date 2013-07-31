@@ -4,21 +4,20 @@
 
   Bruk:
 
-  Benytt closure hektet inn på project.ext.genHistorikkViewsAndTriggers
-  med følgende parametere:
+  Benytt closure hektet inn på ext.genHistorikkViewsAndTriggers med følgende parametere:
 
-    dbToolset - dbToolset sin connection skal leses ifra
+    dbToolset - dbToolset som beskriver connection det skal leses i fra
 
     Valgfrie Parametere:
 
     includeTables - {closure} for filtrering av tabellnavn for prosessering
     excludeTables - {closure} for filtrering av tabellnavn for prosessering
 
-    ignoredColumnNames - map av kolonnenavn per tabellnavn (key) som evt skal ignoreres
+    ignoredColumnNames - map av kolonnenavn per tabellnavn (key) som ignoreres
 
  */
 
-project.ext.genHistorikkViewsAndTriggers = { Map params ->
+ext.genHistorikkViewsAndTriggers = { Map params ->
 
     // parameters
 
