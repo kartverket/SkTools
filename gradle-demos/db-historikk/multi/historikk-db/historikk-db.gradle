@@ -22,12 +22,16 @@ configureDatabasePlugin {
             }
         }
 
-        sqlTask('UpdatePackageHistorikkSession', sqlFile: file('src/main/sql/historikk/UpdatePackageHistorikkSession.sql')) {
-            dependsOn sqlTask('CreateTemporaryTables', sqlFile: file('src/main/sql/historikk/CreateTemporaryTables.sql'), failOnError: false) //feiler ikke dersom tabell allerede finnes fra før
+        task('UpdatePackages') {
+            dependsOn sqlTask('UpdatePackageHistorikkSession', sqlFile: file('src/main/sql/historikk/UpdatePackageHistorikkSession.sql')) {
+                dependsOn sqlTask('UpdatePackageHistorikkTransaction', sqlFile: file('src/main/sql/historikk/UpdatePackageHistorikkTransaction.sql')) {
+                    dependsOn sqlTask('CreateTemporaryTables', sqlFile: file('src/main/sql/historikk/CreateTemporaryTables.sql'), failOnError: false) //feiler ikke dersom tabell allerede finnes fra før
+                }
+            }
         }
 
         sqlTask('CreateViewsAndTriggers', sqlString:'') {
-            dependsOn tasks['UpdatePackageHistorikkSession']
+            dependsOn tasks['UpdatePackages']
 
             apply to: it, from: parent.file('genHistorikkViewsAndTriggers.gradle')
             doFirst {
@@ -150,7 +154,7 @@ configureDatabasePlugin {
 
     task('dbCreateHistorikkSchema') {
         dependsOn dbToolSets['historikk'].tasks['CreateHistorikkSchema']
-        dependsOn dbToolSets['historikk'].tasks['UpdatePackageHistorikkSession']
+        dependsOn dbToolSets['historikk'].tasks['UpdatePackages']
         dependsOn dbToolSets['historikk'].tasks['CreateViewsAndTriggers']
     }
 }

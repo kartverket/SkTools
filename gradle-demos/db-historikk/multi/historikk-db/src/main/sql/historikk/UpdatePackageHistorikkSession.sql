@@ -6,6 +6,7 @@ CREATE OR REPLACE PACKAGE SNAPSHOT_TIME AUTHID DEFINER AS
     FUNCTION Get_T RETURN SNAPSHOT_TRANS.v%TYPE;
     -- Setter gjeldende timestamp
     FUNCTION Set_T(newValue IN SNAPSHOT_TRANS.v%TYPE) RETURN SNAPSHOT_TRANS.v%TYPE;
+
     -- Definerer timestamp for transaksjon. Denne blir benyttet ved kreering av endringsinnslag ved oppdateringer (insert, update og delete)
     FUNCTION Get_T_Trans RETURN SNAPSHOT_TRANS.v%TYPE;
 
@@ -16,7 +17,6 @@ CREATE OR REPLACE PACKAGE SNAPSHOT_TIME AUTHID DEFINER AS
     -- DEPRICATED
     FUNCTION T_Between(t_Begin IN SNAPSHOT_TRANS.v%TYPE, t_End IN SNAPSHOT_TRANS.v%TYPE) RETURN NUMBER;
 
-    --todo: legge dette til transaksjonsobjekt?
     Function Get_Bruker Return VARCHAR2;
     Function Set_Bruker (brukernavn IN VARCHAR2) Return VARCHAR2;
     bruker_null EXCEPTION;
@@ -32,9 +32,6 @@ CREATE OR REPLACE PACKAGE BODY SNAPSHOT_TIME AS
     -- initialiserer t slik at man får oppdaterte data i views som standard (se T_Between())
     t SNAPSHOT_TRANS.v%TYPE := t_Current;
 
-    t_Trans SNAPSHOT_TRANS.v%TYPE;
-
-    bruker VARCHAR(255 CHAR);
 
 
     FUNCTION Get_T_CURRENT RETURN TIMESTAMP IS
@@ -55,17 +52,7 @@ CREATE OR REPLACE PACKAGE BODY SNAPSHOT_TIME AS
 
     FUNCTION Get_T_Trans RETURN SNAPSHOT_TRANS.v%TYPE IS
     BEGIN
-      BEGIN
-        SELECT v INTO t_Trans FROM SNAPSHOT_TRANS WHERE rownum <= 1;
-        EXCEPTION
-        WHEN NO_DATA_FOUND THEN
-           t_Trans := NULL;
-       END;
-       IF t_Trans IS NULL THEN
-         t_Trans := LOCALTIMESTAMP;
-         INSERT INTO SNAPSHOT_TRANS VALUES(t_Trans);
-       END IF;
-      RETURN t_Trans;
+      RETURN HISTORIKK_TRANSACTION.Get_T_Trans();
     END Get_T_Trans;
 
     FUNCTION To_T(timestampAsString IN VARCHAR2) RETURN TIMESTAMP IS
@@ -73,7 +60,7 @@ CREATE OR REPLACE PACKAGE BODY SNAPSHOT_TIME AS
       RETURN to_timestamp(timestampAsString, 'YYYY-MM-DD HH24:MI:SS.FF');
     END To_T;
 
-    --depricated
+    -- DEPRICATED
     FUNCTION T_Between(t_Begin IN SNAPSHOT_TRANS.v%TYPE, t_End IN SNAPSHOT_TRANS.v%TYPE) RETURN NUMBER IS
     retVal NUMBER;
     BEGIN
@@ -86,29 +73,18 @@ CREATE OR REPLACE PACKAGE BODY SNAPSHOT_TIME AS
       RETURN retVal;
     END T_Between;
 
-    --todo: legge dette til transaksjonsobjekt?
     Function Get_Bruker
     Return VARCHAR2
     is
     begin
-      if(bruker is not null)
-      then
-        return bruker;
-      else
-        raise bruker_null;
-      end if;
-      exception
-      WHEN bruker_null
-      then
-        raise_application_error(-20001, 'Brukernavn må være satt før man prøver å legge inn data!', FALSE);
+      RETURN HISTORIKK_TRANSACTION.Get_Bruker();
     END Get_Bruker;
 
     Function Set_Bruker(brukernavn IN VARCHAR2)
     Return VARCHAR2
     Is
     BEGIN
-       bruker:= brukernavn;
-       return bruker;
+      RETURN HISTORIKK_TRANSACTION.Set_Bruker(brukernavn);
     END Set_Bruker;
 
 END SNAPSHOT_TIME;
