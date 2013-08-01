@@ -28,7 +28,8 @@ task('dbClean', group:'Database Management', description: 'Sletter alle brukere 
 task('dbSetUpUsers', group:'Database Management', description: 'Setter opp alle brukere og tablespace for denne demoen')
 task('dbInit', group:'Database Management', description: 'Setter opp fullt schema med grants')
 
-task('dbEngageHistorikk', group:'Database Management', description: 'Kobler inn historikk-mekanisme')
+task('dbEngageHistorikk', group:'Database Management', description: 'Kobler inn historikk-mekanisme for sanntid-db')
+task('dbDisengageHistorikk', group:'Database Management', description: 'Kobler ifra historikk-mekanisme for sanntid-db')
 
 allprojects {
     apply plugin: 'sktools-filterproperties-plugin'

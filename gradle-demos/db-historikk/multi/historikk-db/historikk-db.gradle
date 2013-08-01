@@ -49,8 +49,6 @@ configureDatabasePlugin {
         }
 
         sqlTask('CreateSanntidTriggers', sqlString:'') {
-//            dependsOn tasks['UpdatePackageHistorikkSession']
-
             apply to: it, from: parent.file('genSanntidTriggers.gradle')
             doFirst {
                 println "Genererer DDL for sanntids historikk triggere og legger dette til schema i databasen..."
@@ -71,6 +69,7 @@ configureDatabasePlugin {
                 }
             }
         }
+        sqlTask('DropSanntidTriggers', sqlFile:'src/main/sql/historikk/trigger/DropSanntidTriggers.sql')
 
 
 
@@ -108,6 +107,8 @@ configureDatabasePlugin {
             }
         }
 
+        sqlTask('GrantSanntidUser', sqlFile: 'src/main/sql/historikk/system/grant/GrantSanntidUser.sql')
+        sqlTask('RevokeSanntidUser', sqlFile: 'src/main/sql/historikk/system/grant/RevokeSanntidUser.sql')
 
 
 //        sqlTask('GrantHistorikkTohistorikk', sqlFile: 'src/main/sql/system/grant/GrantHistorikkTohistorikk.sql')
@@ -121,8 +122,11 @@ configureDatabasePlugin {
                 historikk_db_sid: historikk_db_sid,
                 historikk_db_hostname: historikk_db_hostname,
                 historikk_db_port: historikk_db_port,
+                historikk_db_schema: historikk_db_schema,
                 historikk_db_tablespace: historikk_db_tablespace,
                 historikk_db_tablespace_index: historikk_db_tablespace_index,
+
+                sanntid_db_username: sanntid_db_username,
         ]
 
         if (System.properties.containsKey('db.oradata')) { properties.put('db_oradata', System.getProperty('db.oradata')) }
@@ -146,6 +150,8 @@ configureDatabasePlugin {
 
     task('dbCreateHistorikkSchema') {
         dependsOn dbToolSets['historikk'].tasks['CreateHistorikkSchema']
+        dependsOn dbToolSets['historikk'].tasks['UpdatePackageHistorikkSession']
+        dependsOn dbToolSets['historikk'].tasks['CreateViewsAndTriggers']
     }
 }
 
@@ -163,7 +169,20 @@ task('dbInit') {
     dependsOn dbToolSets['admin'].tasks['GrantHistorikkUser']
 }
 
-task('dbEngageHistorikk') {
-    dependsOn dbToolSets['historikk'].tasks['CreateSanntidTriggers']
+task('dbEngageHistorikk', type: GradleBuild) {
+    startParameter.projectProperties.putAll(project.gradle.startParameter.projectProperties)
+
+    tasks = [
+            dbToolSets['historikk'].tasks['CreateSanntidTriggers'].path,
+            dbToolSets['admin'].tasks['GrantSanntidUser'].path,
+    ]
+}
+
+task('dbDisengageHistorikk') {
+    dependsOn([
+            dbToolSets['admin'].tasks['RevokeSanntidUser'].path,
+            dbToolSets['historikk'].tasks['DropSanntidTriggers'].path,
+
+    ])
 }
 
