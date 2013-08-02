@@ -79,7 +79,7 @@ configureDatabasePlugin {
 
 
 
-        properties = [
+        properties += [
                 historikk_db_username: historikk_db_username,
                 historikk_db_password: historikk_db_password,
                 historikk_db_sid: historikk_db_sid,
@@ -105,22 +105,24 @@ configureDatabasePlugin {
         sqlTask('CreateHistorikkTablespace', sqlFile: 'src/main/sql/historikk/system/tablespace/CreateHistorikkTablespace.sql')
         sqlTask('DropHistorikkTablespace', sqlFile: 'src/main/sql/historikk/system/tablespace/DropHistorikkTablespace.sql')
 
-        sqlTask('GrantHistorikkUser', sqlFile: 'src/main/sql/historikk/system/user/GrantHistorikkUser.sql') {
-            dependsOnIfExecuted it, sqlTask('CreateHistorikkUser', sqlFile: 'src/main/sql/historikk/system/user/CreateHistorikkUser.sql') {
-                dependsOnIfExecuted it, sqlTask('DropHistorikkUser', sqlFile: 'src/main/sql/historikk/system/user/DropHistorikkUser.sql', failOnError: false)
+        task('GrantUsers') {
+            dependsOn sqlTask('GrantHistorikkUser', sqlFile: 'src/main/sql/historikk/system/user/GrantHistorikkUser.sql') {
+                dependsOnIfExecuted it, sqlTask('CreateHistorikkUser', sqlFile: 'src/main/sql/historikk/system/user/CreateHistorikkUser.sql') {
+                    dependsOnIfExecuted it, sqlTask('DropHistorikkUser', sqlFile: 'src/main/sql/historikk/system/user/DropHistorikkUser.sql', failOnError: false)
+                }
             }
+            dependsOn sqlTask('GrantSanntidUser', sqlFile: 'src/main/sql/historikk/system/grant/GrantSanntidUser.sql')
+            dependsOn sqlTask('GrantReplicationUser', sqlFile: 'src/main/sql/historikk/system/grant/GrantReplicationUser.sql')
         }
 
-        sqlTask('GrantSanntidUser', sqlFile: 'src/main/sql/historikk/system/grant/GrantSanntidUser.sql')
-        sqlTask('RevokeSanntidUser', sqlFile: 'src/main/sql/historikk/system/grant/RevokeSanntidUser.sql')
+        task('RevokeUsers') {
+            dependsOn sqlTask('RevokeSanntidUser', sqlFile: 'src/main/sql/historikk/system/grant/RevokeSanntidUser.sql')
+            dependsOn sqlTask('RevokeReplicationUser', sqlFile: 'src/main/sql/historikk/system/grant/RevokeReplicationUser.sql')
+        }
 
 
-//        sqlTask('GrantHistorikkTohistorikk', sqlFile: 'src/main/sql/system/grant/GrantHistorikkTohistorikk.sql')
-//        sqlTask('RevokeHistorikkTohistorikk', sqlFile: 'src/main/sql/system/grant/RevokeHistorikkTohistorikk.sql')
 
-//        sqlTask('CreateSynonyms', sqlFile: 'src/main/sql/system/synonym/CreateSynonyms.sql')
-
-        properties = [
+        properties += [
                 historikk_db_username: historikk_db_username,
                 historikk_db_password: historikk_db_password,
                 historikk_db_sid: historikk_db_sid,
@@ -130,8 +132,22 @@ configureDatabasePlugin {
                 historikk_db_tablespace: historikk_db_tablespace,
                 historikk_db_tablespace_index: historikk_db_tablespace_index,
 
+        ]
+
+        //sanntid
+        properties += [
                 sanntid_db_username: sanntid_db_username,
         ]
+
+
+        //replication
+        properties += [
+                replication_db_username: replication_db_username,
+                replication_db_password: replication_db_password,
+                replication_db_tablespace: replication_db_tablespace,
+                replication_db_schema: replication_db_schema,
+        ]
+
 
         if (System.properties.containsKey('db.oradata')) { properties.put('db_oradata', System.getProperty('db.oradata')) }
 
@@ -157,36 +173,37 @@ configureDatabasePlugin {
         dependsOn dbToolSets['historikk'].tasks['UpdatePackages']
         dependsOn dbToolSets['historikk'].tasks['CreateViewsAndTriggers']
     }
-}
+
+    task('dbGrantUsers', description: 'Grants for brukere') {
+        dependsOn dbToolSets['admin'].tasks['GrantUsers']
+    }
 
 
-task('dbClean') {
-    dependsOn 'dbTearDownHistorikkUser'
-}
 
-task('dbSetUpUsers') {
-    dependsOn 'dbSetUpHistorikkUser'
-}
+    //global tasks...
 
-task('dbInit') {
-    dependsOn 'dbCreateHistorikkSchema'
-    dependsOn dbToolSets['admin'].tasks['GrantHistorikkUser']
-}
+    task('dbClean') {
+        dependsOn 'dbTearDownHistorikkUser'
+    }
 
-task('dbEngageHistorikk', type: GradleBuild) {
-    startParameter.projectProperties.putAll(project.gradle.startParameter.projectProperties)
+    task('dbSetUpUsers') {
+        dependsOn 'dbSetUpHistorikkUser'
+    }
 
-    tasks = [
-            dbToolSets['historikk'].tasks['CreateSanntidTriggers'].path,
-            dbToolSets['admin'].tasks['GrantSanntidUser'].path,
-    ]
-}
+    taskSequence('dbInit') {
+        dependsOn 'dbCreateHistorikkSchema'
+        dependsOn 'dbGrantUsers'
+    }
 
-task('dbDisengageHistorikk') {
-    dependsOn([
-            dbToolSets['admin'].tasks['RevokeSanntidUser'].path,
-            dbToolSets['historikk'].tasks['DropSanntidTriggers'].path,
+    taskSequence('dbEngageHistorikk') {
+        dependsOn dbToolSets['historikk'].tasks['CreateSanntidTriggers']
+        dependsOn 'dbGrantUsers'
+    }
 
-    ])
+    taskSequence('dbDisengageHistorikk') {
+        dependsOn dbToolSets['admin'].tasks['RevokeSanntidUser']
+        dependsOn dbToolSets['historikk'].tasks['DropSanntidTriggers']
+    }
+
 }
 
