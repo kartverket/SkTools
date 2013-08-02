@@ -8,8 +8,6 @@ CREATE OR REPLACE PACKAGE SNAPSHOT_TIME AUTHID DEFINER AS
     -- Setter gjeldende timestamp
     FUNCTION Set_T(newValue IN SNAPSHOT_TRANS.v%TYPE) RETURN SNAPSHOT_TRANS.v%TYPE;
 
-    -- Definerer timestamp for transaksjon. Denne blir benyttet ved kreering av endringsinnslag ved oppdateringer (insert, update og delete)
-    FUNCTION Get_T_Trans RETURN SNAPSHOT_TRANS.v%TYPE;
 
     -- Konverterer timestamp ifra fast streng-representasjon
     FUNCTION To_T(timestampAsString IN VARCHAR2) RETURN TIMESTAMP;
@@ -18,8 +16,9 @@ CREATE OR REPLACE PACKAGE SNAPSHOT_TIME AUTHID DEFINER AS
     -- DEPRICATED
     FUNCTION T_Between(t_Begin IN SNAPSHOT_TRANS.v%TYPE, t_End IN SNAPSHOT_TRANS.v%TYPE) RETURN NUMBER;
 
-    Function Get_UserInfo() Return VARCHAR2;
-    Function Set_UserInfo(username IN VARCHAR2) Return VARCHAR2;
+    FUNCTION Get_UserInfo Return VARCHAR2;
+    FUNCTION Set_UserInfo(username IN VARCHAR2) Return VARCHAR2;
+
     bruker_null EXCEPTION;
 
 END SNAPSHOT_TIME;
@@ -51,11 +50,6 @@ CREATE OR REPLACE PACKAGE BODY SNAPSHOT_TIME AS
       RETURN t;
     END Set_T;
 
-    FUNCTION Get_T_Trans RETURN SNAPSHOT_TRANS.v%TYPE IS
-    BEGIN
-      RETURN HISTORIKK_TRANSACTION.Get_T_Trans();
-    END Get_T_Trans;
-
     FUNCTION To_T(timestampAsString IN VARCHAR2) RETURN TIMESTAMP IS
     BEGIN
       RETURN to_timestamp(timestampAsString, 'YYYY-MM-DD HH24:MI:SS.FF');
@@ -74,16 +68,16 @@ CREATE OR REPLACE PACKAGE BODY SNAPSHOT_TIME AS
       RETURN retVal;
     END T_Between;
 
-    Function Get_UserInfo
-    Return VARCHAR2
-    is
-    begin
-      RETURN HISTORIKK_TRANSACTION.Get_UserInfo(true);
+    FUNCTION Get_UserInfo
+    RETURN VARCHAR2
+    IS
+    BEGIN
+      RETURN HISTORIKK_TRANSACTION.Get_UserInfo(true); -- krever at brukernavn er satt per transaksjon
     END Get_UserInfo;
 
-    Function Set_UserInfo(username IN VARCHAR2)
-    Return VARCHAR2
-    Is
+    FUNCTION Set_UserInfo(username IN VARCHAR2)
+    RETURN VARCHAR2
+    IS
     BEGIN
       RETURN HISTORIKK_TRANSACTION.Set_UserInfo(username);
     END Set_UserInfo;

@@ -1,11 +1,14 @@
 -- AUTHID DEFINER fører til at funksjonene blir kjørt med rettigheter til historikk-db-bruker (brukeren som oppretter denne)
 CREATE OR REPLACE PACKAGE HISTORIKK_TRANSACTION AUTHID DEFINER AS
 
+  -- Konverterer timestamp ifra fast streng-representasjon
+  FUNCTION To_T(timestampAsString IN VARCHAR2) RETURN TIMESTAMP;
+
   -- Definerer timestamp for transaksjon. Denne blir benyttet ved kreering av endringsinnslag ved oppdateringer (insert, update og delete)
   FUNCTION Get_T_Trans RETURN SNAPSHOT_TRANS.v%TYPE;
   FUNCTION Set_T_Trans(newValue IN SNAPSHOT_TRANS.v%TYPE) RETURN SNAPSHOT_TRANS.v%TYPE;
 
-  Function Get_UserInfo(validate_not_null IN BOOLEAN := TRUE) Return VARCHAR2;
+  Function Get_UserInfo(validate_not_null IN BOOLEAN := FALSE) Return VARCHAR2;
   Function Set_UserInfo(username IN VARCHAR2) Return VARCHAR2;
 
   bruker_null EXCEPTION;
@@ -17,6 +20,12 @@ CREATE OR REPLACE PACKAGE BODY HISTORIKK_TRANSACTION AS
 
   t_Trans SNAPSHOT_TRANS.v%TYPE;
   bruker VARCHAR(255 CHAR);
+
+
+  FUNCTION To_T(timestampAsString IN VARCHAR2) RETURN TIMESTAMP IS
+  BEGIN
+    RETURN to_timestamp(timestampAsString, 'YYYY-MM-DD HH24:MI:SS.FF');
+  END To_T;
 
 
   FUNCTION Get_T_Trans RETURN SNAPSHOT_TRANS.v%TYPE IS
