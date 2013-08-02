@@ -77,14 +77,14 @@ CREATE OR REPLACE PACKAGE BODY SNAPSHOT_TIME AS
     Return VARCHAR2
     is
     begin
-      RETURN HISTORIKK_TRANSACTION.Get_Bruker();
+      RETURN HISTORIKK_TRANSACTION.Get_Username(true);
     END Get_Bruker;
 
     Function Set_Bruker(brukernavn IN VARCHAR2)
     Return VARCHAR2
     Is
     BEGIN
-      RETURN HISTORIKK_TRANSACTION.Set_Bruker(brukernavn);
+      RETURN HISTORIKK_TRANSACTION.Set_Username(brukernavn);
     END Set_Bruker;
 
 END SNAPSHOT_TIME;
