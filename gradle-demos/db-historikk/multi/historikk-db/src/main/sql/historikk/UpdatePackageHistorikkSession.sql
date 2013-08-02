@@ -2,6 +2,7 @@
 CREATE OR REPLACE PACKAGE SNAPSHOT_TIME AUTHID DEFINER AS
 
     FUNCTION Get_T_CURRENT RETURN TIMESTAMP;
+
     -- Finner gjeldende timestamp (default er T_CURRENT )
     FUNCTION Get_T RETURN SNAPSHOT_TRANS.v%TYPE;
     -- Setter gjeldende timestamp
@@ -17,8 +18,8 @@ CREATE OR REPLACE PACKAGE SNAPSHOT_TIME AUTHID DEFINER AS
     -- DEPRICATED
     FUNCTION T_Between(t_Begin IN SNAPSHOT_TRANS.v%TYPE, t_End IN SNAPSHOT_TRANS.v%TYPE) RETURN NUMBER;
 
-    Function Get_Bruker Return VARCHAR2;
-    Function Set_Bruker (brukernavn IN VARCHAR2) Return VARCHAR2;
+    Function Get_UserInfo() Return VARCHAR2;
+    Function Set_UserInfo(username IN VARCHAR2) Return VARCHAR2;
     bruker_null EXCEPTION;
 
 END SNAPSHOT_TIME;
@@ -73,19 +74,19 @@ CREATE OR REPLACE PACKAGE BODY SNAPSHOT_TIME AS
       RETURN retVal;
     END T_Between;
 
-    Function Get_Bruker
+    Function Get_UserInfo
     Return VARCHAR2
     is
     begin
-      RETURN HISTORIKK_TRANSACTION.Get_Username(true);
-    END Get_Bruker;
+      RETURN HISTORIKK_TRANSACTION.Get_UserInfo(true);
+    END Get_UserInfo;
 
-    Function Set_Bruker(brukernavn IN VARCHAR2)
+    Function Set_UserInfo(username IN VARCHAR2)
     Return VARCHAR2
     Is
     BEGIN
-      RETURN HISTORIKK_TRANSACTION.Set_Username(brukernavn);
-    END Set_Bruker;
+      RETURN HISTORIKK_TRANSACTION.Set_UserInfo(username);
+    END Set_UserInfo;
 
 END SNAPSHOT_TIME;
 /

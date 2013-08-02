@@ -5,8 +5,8 @@ CREATE OR REPLACE PACKAGE HISTORIKK_TRANSACTION AUTHID DEFINER AS
   FUNCTION Get_T_Trans RETURN SNAPSHOT_TRANS.v%TYPE;
   FUNCTION Set_T_Trans(newValue IN SNAPSHOT_TRANS.v%TYPE) RETURN SNAPSHOT_TRANS.v%TYPE;
 
-  Function Get_Username(validate_not_null IN BOOLEAN := TRUE) Return VARCHAR2;
-  Function Set_Username(username IN VARCHAR2) Return VARCHAR2;
+  Function Get_UserInfo(validate_not_null IN BOOLEAN := TRUE) Return VARCHAR2;
+  Function Set_UserInfo(username IN VARCHAR2) Return VARCHAR2;
 
   bruker_null EXCEPTION;
 
@@ -42,7 +42,7 @@ CREATE OR REPLACE PACKAGE BODY HISTORIKK_TRANSACTION AS
 
 
 
-  FUNCTION Get_Username(validate_not_null IN BOOLEAN := TRUE)
+  FUNCTION Get_UserInfo(validate_not_null IN BOOLEAN := FALSE)
   RETURN VARCHAR2
   IS
   BEGIN
@@ -56,15 +56,15 @@ CREATE OR REPLACE PACKAGE BODY HISTORIKK_TRANSACTION AS
     WHEN bruker_null
     THEN
       RAISE_APPLICATION_ERROR(-20101, 'Brukernavn må være satt før man prøver å legge inn data!', FALSE);
-  END Get_Username;
+  END Get_UserInfo;
 
-  FUNCTION Set_Username(username IN VARCHAR2)
+  FUNCTION Set_UserInfo(username IN VARCHAR2)
   RETURN VARCHAR2
   IS
   BEGIN
      bruker := username;
      RETURN bruker;
-  END Set_Username;
+  END Set_UserInfo;
 
 
 END HISTORIKK_TRANSACTION;

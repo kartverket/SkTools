@@ -101,7 +101,7 @@ CREATE OR REPLACE TRIGGER "${triggerName}"
   DECLARE
     t_Trans TIMESTAMP(9) := SNAPSHOT_TIME.Get_T_Trans();
     t_End TIMESTAMP(9) := SNAPSHOT_TIME.Get_T_CURRENT();
-    ${(isSetUsernameOnUpdate || isSetUsernameOnDelete) ? 't_User VARCHAR2(255 CHAR) := SNAPSHOT_TIME.Get_Bruker();' : ''}
+    ${(isSetUsernameOnUpdate || isSetUsernameOnDelete) ? 'userInfo VARCHAR2(255 CHAR) := SNAPSHOT_TIME.Get_UserInfo();' : ''}
 
     LOGISK_FEIL EXCEPTION;
   BEGIN
@@ -118,14 +118,10 @@ CREATE OR REPLACE TRIGGER "${triggerName}"
                 if (it == historikkColumnNames.TBEGIN) return 't_Trans'
                 if (it == historikkColumnNames.TEND) return 't_End'        //levende objekter har denne tend verdi
                 if (it == historikkColumnNames.TVERSION) return 1          //nye objekter inserted via view får version=1 (default 0)
-                if (it == historikkColumnNames.TBEGIN_INFO && isSetUsernameOnUpdate) return 't_User'
+                if (it == historikkColumnNames.TBEGIN_INFO && isSetUsernameOnUpdate) return 'userInfo'
                 if (it == historikkColumnNames.TEND_INFO && isSetUsernameOnDelete) return 'null' // ingen verdi (null) for nye objekter.
 
                 return columnMappingForView.containsKey(it) ? ":new.\"${columnMappingForView.get(it)}\"" : 'default'
-
-//                if (it == historikkColumnNames.TBEGIN_INFO && isSetUsernameOnUpdate) return 't_User';
-//                if (it == historikkColumnNames.TEND_INFO && isSetUsernameOnDelete) return 't_User';
-
             }.join(', \n           ')
         }
         );
@@ -136,7 +132,7 @@ CREATE OR REPLACE TRIGGER "${triggerName}"
            ${
             columnNamesForTable.collect {
                 if (it == historikkColumnNames.TEND) return 't_Trans'
-                if (it == historikkColumnNames.TEND_INFO && isSetUsernameOnDelete) return 't_User'
+                if (it == historikkColumnNames.TEND_INFO && isSetUsernameOnDelete) return 'userInfo'
 
                 return columnMappingForView.containsKey(it) ? ":old.\"${columnMappingForView.get(it)}\"" : 'default'
             }.join(', \n           ')
@@ -146,7 +142,7 @@ CREATE OR REPLACE TRIGGER "${triggerName}"
         UPDATE "${hTableName}" SET --GBOK-1824: setter verdier for transaksjon en og kun kun en gang per transaksjon.
             "${historikkColumnNames.TVERSION}" = :old."${columnMappingForView.get(historikkColumnNames.TVERSION)}" + 1
             , "${historikkColumnNames.TBEGIN}" = t_Trans
-            ${(isSetUsernameOnUpdate && historikkColumnNames.TBEGIN_INFO) ? ", \"${historikkColumnNames.TBEGIN_INFO}\" = t_User" : ''}
+            ${(isSetUsernameOnUpdate && historikkColumnNames.TBEGIN_INFO) ? ", \"${historikkColumnNames.TBEGIN_INFO}\" = userInfo" : ''}
         WHERE
            ${
             pkColumns.collect {
@@ -183,7 +179,7 @@ CREATE OR REPLACE TRIGGER "${triggerName}"
            ${
             columnNamesForTable.collect {
                 if (it == historikkColumnNames.TEND) return 't_Trans'
-                if (it == historikkColumnNames.TEND_INFO && isSetUsernameOnDelete) return 't_User'
+                if (it == historikkColumnNames.TEND_INFO && isSetUsernameOnDelete) return 'userInfo'
 
                 return columnMappingForView.containsKey(it) ? ":old.\"${columnMappingForView.get(it)}\"" : 'default'
 
