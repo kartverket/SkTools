@@ -7,7 +7,7 @@ CREATE OR REPLACE PACKAGE HISTORIKK_TRANSACTION AUTHID DEFINER AS
   -- Definerer timestamp for transaksjon. Denne blir benyttet ved kreering av endringsinnslag ved oppdateringer (insert, update og delete)
   -- localtimestamp_on_missing == TRUE setter LOCALTIMESTAMP som transaksjonsverdi
   FUNCTION Get_T_Trans(localtimestamp_on_missing IN BOOLEAN := TRUE) RETURN SNAPSHOT_TRANS.v%TYPE;
-  FUNCTION Set_T_Trans(newValue IN SNAPSHOT_TRANS.v%TYPE, validate_ascending IN BOOLEAN := TRUE, fix_inncorrect_timestamps IN BOOLEAN := FALSE) RETURN SNAPSHOT_TRANS.v%TYPE;
+  PROCEDURE Set_T_Trans(newValue IN SNAPSHOT_TRANS.v%TYPE, opts IN NUMBER := 2);
 
   Function Get_UserInfo(validate_not_null IN BOOLEAN := FALSE) Return VARCHAR2;
   Function Set_UserInfo(username IN VARCHAR2) Return VARCHAR2;
@@ -46,10 +46,16 @@ CREATE OR REPLACE PACKAGE BODY HISTORIKK_TRANSACTION AS
     RETURN t_Trans;
   END Get_T_Trans;
 
-  --todo: legge disse til som prosedyrere da en har dml inn i bildet her..
-  FUNCTION Set_T_Trans(newValue IN SNAPSHOT_TRANS.v%TYPE, validate_ascending IN BOOLEAN := TRUE, fix_inncorrect_timestamps IN BOOLEAN := FALSE)
-  RETURN SNAPSHOT_TRANS.v%TYPE IS
+  -- options & 2 == validate_ascending //GBOK-1858
+  -- options & 4 == fix_inncorrect_timestamps  //GBOK-1858
+  PROCEDURE Set_T_Trans(newValue IN SNAPSHOT_TRANS.v%TYPE, opts IN NUMBER := 2)
+  IS
+    validate_ascending BOOLEAN := BITAND(opts, 2) <> 0;
+    fix_inncorrect_timestamps BOOLEAN := BITAND(opts, 4) <> 0;
+
     t_Trans_new SNAPSHOT_TRANS.v%TYPE;
+    t_Trans_old SNAPSHOT_TRANS.v%TYPE;
+    isNewTransaction BOOLEAN;
   BEGIN
     IF validate_ascending THEN
       IF newValue IS NULL THEN
@@ -63,21 +69,26 @@ CREATE OR REPLACE PACKAGE BODY HISTORIKK_TRANSACTION AS
       END IF;
     END IF;
 
-    t_Trans_new := newValue;
+    t_Trans_old := t_Trans; --tar vare på førtilstand for sessjon..
+    isNewTransaction := Get_T_Trans(FALSE) IS NULL;
 
-    --må sjekke dette her før en evt overskriver t_Trans ved ny transaksjon...
-    IF fix_inncorrect_timestamps AND (t_Trans IS NOT NULL AND newValue <= t_Trans) THEN
-      t_Trans_new := t_Trans + NUMTODSINTERVAL(1/1000000000,'SECOND'); --denne må samsvare med granualitet til SNAPSHOT_TRANS.v
-      DBMS_OUTPUT.PUT_LINE('adding one ns to last transaction time set!');
-    END IF;
+    IF isNewTransaction THEN
+      t_Trans_new := newValue;
 
-    IF Get_T_Trans(false) IS NULL THEN
+      --må sjekke dette her før en evt overskriver t_Trans ved ny transaksjon...
+      IF fix_inncorrect_timestamps AND (t_Trans_old IS NOT NULL) THEN
+        --sjekke om det er en ny transaksjon. Korrigerer kun om nødvendig.
+        IF newValue <= t_Trans_old THEN
+          t_Trans_new := t_Trans_old + NUMTODSINTERVAL(1/1000000000,'SECOND'); --denne må samsvare med granualitet til SNAPSHOT_TRANS.v
+          DBMS_OUTPUT.PUT_LINE('adding one ns to last transaction time set!');
+        END IF;
+      END IF;
+
+
       INSERT INTO SNAPSHOT_TRANS VALUES (t_Trans_new);
     ELSE
       DBMS_OUTPUT.PUT_LINE('Ignoring multiple updates on t_Trans. Current value is: ' || Get_T_Trans());
     END IF;
-
-    RETURN Get_T_Trans();
 
     EXCEPTION WHEN incorrect_semantics
     THEN

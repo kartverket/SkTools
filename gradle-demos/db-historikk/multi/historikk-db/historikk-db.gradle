@@ -120,6 +120,11 @@ configureDatabasePlugin {
             dependsOn sqlTask('RevokeReplicationUser', sqlFile: 'src/main/sql/historikk/system/grant/RevokeReplicationUser.sql')
         }
 
+        task('HistorikkForUsers') {
+            dependsOn task('ProceduresForUsers') {
+                dependsOn sqlTask('ProceduresForReplicationUser', sqlFile: 'src/main/sql/historikk/system/procedure/ProceduresForReplicationUser.sql')
+            }
+        }
 
 
         properties += [
@@ -193,10 +198,12 @@ configureDatabasePlugin {
     taskSequence('dbInit') {
         dependsOn 'dbCreateHistorikkSchema'
         dependsOn 'dbGrantUsers'
+        dependsOn dbToolSets['admin'].tasks['HistorikkForUsers']
     }
 
     taskSequence('dbEngageHistorikk') {
         dependsOn dbToolSets['historikk'].tasks['CreateSanntidTriggers']
+        dependsOn dbToolSets['admin'].tasks['HistorikkForUsers']
         dependsOn 'dbGrantUsers'
     }
 
