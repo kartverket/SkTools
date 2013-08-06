@@ -161,6 +161,89 @@ CREATE OR REPLACE Function tt;
 
     }
 
+    /**
+     * Tester parsing av PL/SQL for FUNCTION
+     */
+    @Test
+    void testParsing_PLSQL_Function() {
+        def oracle_db_schema = 'TESTSCHEMA'
+
+        String statement1 = """\
+create function test
+...\
+""";
+
+        String statement2 = """\
+CREATE OR REPLACE Function "${oracle_db_schema}".To_T(timestampAsString IN VARCHAR2) RETURN TIMESTAMP
+IS
+BEGIN
+  RETURN to_timestamp(timestampAsString, 'YYYY-MM-DD HH24:MI:SS.FF');
+END To_T;\
+""";
+
+
+        StringReader stringReader = new StringReader("""\
+${statement1}
+/
+${statement2}
+/
+""")
+        LineNumberReader reader = new LineNumberReader(stringReader)
+        List<Expression> list = SQLStatementParser.parseExpressions(reader)
+        list.each { Assert.assertTrue(it instanceof PLSQLStatement, "Expected PLSQLStatement instance, but was ${it.class}")}
+
+        List<Statement> statementList = list
+        int i = 0
+        Assert.assertEquals(statementList[i].sql.trim(), statement1)
+        Assert.assertEquals(statementList[i].lineNumber, 1, 'linjenr for statement')
+        i++
+        Assert.assertEquals(statementList[i].sql.trim(), statement2)
+        Assert.assertEquals(statementList[i].lineNumber, 4, 'linjenr for statement')
+        i++
+        Assert.assertEquals(statementList.size(), i, 'antall statements')
+    }
+
+    /**
+     * Tester parsing av PL/SQL for PROCEDURE
+     */
+    @Test
+    void testParsing_PLSQL_Procedure() {
+        def oracle_db_schema = 'TESTSCHEMA'
+
+        String statement1 = """\
+create function test
+...\
+""";
+
+        String statement2 = """\
+CREATE OR REPLACE Procedure "${oracle_db_schema}".To_T(timestampAsString IN VARCHAR2)
+IS
+BEGIN
+  to_timestamp(timestampAsString, 'YYYY-MM-DD HH24:MI:SS.FF');
+END To_T;\
+""";
+
+
+        StringReader stringReader = new StringReader("""\
+${statement1}
+/
+${statement2}
+/
+""")
+        LineNumberReader reader = new LineNumberReader(stringReader)
+        List<Expression> list = SQLStatementParser.parseExpressions(reader)
+        list.each { Assert.assertTrue(it instanceof PLSQLStatement, "Expected PLSQLStatement instance, but was ${it.class}")}
+
+        List<Statement> statementList = list
+        int i = 0
+        Assert.assertEquals(statementList[i].sql.trim(), statement1)
+        Assert.assertEquals(statementList[i].lineNumber, 1, 'linjenr for statement')
+        i++
+        Assert.assertEquals(statementList[i].sql.trim(), statement2)
+        Assert.assertEquals(statementList[i].lineNumber, 4, 'linjenr for statement')
+        i++
+        Assert.assertEquals(statementList.size(), i, 'antall statements')
+    }
 
     /**
      * Tester parsing av PL/SQL setninger

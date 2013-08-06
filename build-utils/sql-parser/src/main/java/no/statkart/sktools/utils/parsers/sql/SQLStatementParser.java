@@ -18,7 +18,7 @@ import java.util.List;
  *     <li>DefaultStatement :: {@code <text>}; </li>
  *
  *     <li>PLSQLStatement :: PLSQLStatement1 | PLSQLStatement2 </li>
- *     <li>PLSQLStatement1 :: "CREATE (OR REPLACE) TRIGGER|FUNCTION|PACKAGE" {@code <text>}/ </li>
+ *     <li>PLSQLStatement1 :: "CREATE (OR REPLACE) TRIGGER|FUNCTION|PACKAGE|PROCEDURE" {@code <text>}/ </li>
  *     <li>PLSQLStatement1 :: "DECLARE|BEGIN" {@code <text>}/ </li>
  *
  *     <li>Comment :: PromptStatement</li>
@@ -67,7 +67,7 @@ public class SQLStatementParser {
 
             reader.reset();
 
-            if (nextLine.matches("CREATE(\\s+OR\\s+REPLACE)?\\s+(TRIGGER|FUNCTION|PACKAGE).*")) {
+            if (nextLine.matches("CREATE(\\s+OR\\s+REPLACE)?\\s+(TRIGGER|FUNCTION|PACKAGE|PROCEDURE).*")) {
                 newExpression = new PLSQLStatement();
             } else if (nextLine.matches("(DECLARE|BEGIN).*")) {
                 newExpression = new PLSQLStatement();
