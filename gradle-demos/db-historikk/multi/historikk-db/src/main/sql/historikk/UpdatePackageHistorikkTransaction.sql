@@ -1,4 +1,4 @@
--- AUTHID DEFINER fører til at funksjonene blir kjørt med rettigheter til historikk-db-bruker (brukeren som oppretter denne)
+-- AUTHID DEFINER fører til at funksjonene blir kjørt med rettigheter til historikk-db-userInfo (brukeren som oppretter denne)
 CREATE OR REPLACE PACKAGE HISTORIKK_TRANSACTION AUTHID DEFINER AS
 
   -- Konverterer timestamp ifra fast streng-representasjon
@@ -10,9 +10,9 @@ CREATE OR REPLACE PACKAGE HISTORIKK_TRANSACTION AUTHID DEFINER AS
   PROCEDURE Set_T_Trans(newValue IN SNAPSHOT_TRANS.v%TYPE, opts IN NUMBER := 2);
 
   Function Get_UserInfo(validate_not_null IN BOOLEAN := FALSE) Return VARCHAR2;
-  Function Set_UserInfo(username IN VARCHAR2) Return VARCHAR2;
+  PROCEDURE Set_UserInfo(username IN VARCHAR2, opts IN NUMBER := 0);
 
-  bruker_null EXCEPTION;
+  userInfo_null EXCEPTION;
   incorrect_semantics EXCEPTION;
 
 END HISTORIKK_TRANSACTION;
@@ -21,7 +21,9 @@ END HISTORIKK_TRANSACTION;
 CREATE OR REPLACE PACKAGE BODY HISTORIKK_TRANSACTION AS
 
   t_Trans SNAPSHOT_TRANS.v%TYPE;
-  bruker VARCHAR(255 CHAR);
+  
+  --todo: make session variable like t_Trans
+  userInfo VARCHAR(255 CHAR);
 
 
   FUNCTION To_T(timestampAsString IN VARCHAR2) RETURN TIMESTAMP IS
@@ -100,25 +102,22 @@ CREATE OR REPLACE PACKAGE BODY HISTORIKK_TRANSACTION AS
   RETURN VARCHAR2
   IS
   BEGIN
-    IF(validate_not_null <> TRUE OR bruker IS NOT NULL )
+    IF(validate_not_null <> TRUE OR userInfo IS NOT NULL )
     THEN
-      RETURN bruker;
+      RETURN userInfo;
     ELSE
-      RAISE bruker_null;
+      RAISE userInfo_null;
     END IF;
     EXCEPTION
-    WHEN bruker_null
+    WHEN userInfo_null
     THEN
       RAISE_APPLICATION_ERROR(-20101, 'Brukernavn må være satt før man prøver å legge inn data!', FALSE);
   END Get_UserInfo;
 
-  --todo: legge disse til som prosedyrere da en har dml inn i bildet her..
-  FUNCTION Set_UserInfo(username IN VARCHAR2)
-  RETURN VARCHAR2
+  PROCEDURE Set_UserInfo(username IN VARCHAR2, opts IN NUMBER := 0)
   IS
   BEGIN
-     bruker := username;
-     RETURN bruker;
+     userInfo := username;
   END Set_UserInfo;
 
 
