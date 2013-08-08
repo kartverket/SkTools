@@ -124,6 +124,9 @@ configureDatabasePlugin {
             dependsOn task('ProceduresForUsers') {
                 dependsOn sqlTask('ProceduresForReplicationUser', sqlFile: 'src/main/sql/historikk/system/procedure/ProceduresForReplicationUser.sql')
             }
+            dependsOn task('SynonymsForUsers') {
+                dependsOn sqlTask('SynonymsForSanntidUser', sqlFile: 'src/main/sql/historikk/system/synonym/SynonymsForSanntidUser.sql')
+            }
         }
 
 
@@ -142,6 +145,7 @@ configureDatabasePlugin {
         //sanntid
         properties += [
                 sanntid_db_username: sanntid_db_username,
+                sanntid_db_schema: sanntid_db_schema,
         ]
 
 
