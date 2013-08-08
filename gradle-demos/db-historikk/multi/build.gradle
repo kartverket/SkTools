@@ -12,12 +12,22 @@ task info() {
   historikk implementasjon tilpasset Oracle 11g database.
 ------------------------------------------------------------
 
-For å komme raskt i gang, se dbSetUpUsers under "Database Management tasks".
-Prosjektet kommer med standardverdier for kjøring mot lokal database. Dette kan endres via properties.
+For å komme raskt i gang, se "Database Management tasks".
 
-For å sette opp schema kjøres dbInit.
+Prosjektet er satt opp med standardverdier for kjøring mot lokal database.
+Dette kan endres via properties i gradle.properties
 
-Task som rydder opp etter demo: dbClean
+Her er typisk bruk av demo:
+ * gradle dbSetUpUsers - setter opp tablespace og brukere
+ * gradle dbInit - oppretter skjema definisjoner
+ * gradle engageHistorikk - aktiverer historikk
+ * gradle dbDisengageHistorikk - deaktiverer historikk generering
+ * gradle dbClean - rydder opp elementer lagt inn i denne demoen
+
+Oversikt over database brukere og skjema:
+ * sanntid - sanntid-skjema
+ * historikk - historikk-skjema og views
+ * replikering - prosedyrer for replikering
 
 """
    }
