@@ -106,7 +106,7 @@ configureDatabasePlugin {
         sqlTask('DropHistorikkTablespace', sqlFile: 'src/main/sql/demo/system/tablespace/DropHistorikkTablespace.sql')
 
         task('GrantUsers') {
-            dependsOn sqlTask('GrantHistorikkUser', sqlFile: 'src/main/sql/demo/system/user/GrantHistorikkUser.sql') {
+            dependsOn sqlTask('GrantHistorikkUser', sqlFile: 'src/main/sql/demo/historikk/grant/GrantHistorikkUser.sql') {
                 dependsOnIfExecuted it, sqlTask('CreateHistorikkUser', sqlFile: 'src/main/sql/demo/system/user/CreateHistorikkUser.sql') {
                     dependsOnIfExecuted it, sqlTask('DropHistorikkUser', sqlFile: 'src/main/sql/demo/system/user/DropHistorikkUser.sql', failOnError: false)
                 }

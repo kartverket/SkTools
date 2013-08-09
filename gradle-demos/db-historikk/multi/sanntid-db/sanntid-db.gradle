@@ -51,7 +51,7 @@ configureDatabasePlugin {
         sqlTask('DropSanntidTablespace', sqlFile: 'src/main/sql/demo/system/tablespace/DropSanntidTablespace.sql')
 
         tasks['GrantUsers'].with {
-            dependsOn sqlTask('GrantSanntidUser', sqlFile: 'src/main/sql/demo/system/user/GrantSanntidUser.sql') {
+            dependsOn sqlTask('GrantSanntidUser', sqlFile: 'src/main/sql/demo/sanntid/grant/GrantSanntidUser.sql') {
                 dependsOnIfExecuted it, sqlTask('CreateSanntidUser', sqlFile: 'src/main/sql/demo/system/user/CreateSanntidUser.sql') {
                     dependsOnIfExecuted it, sqlTask('DropSanntidUser', sqlFile: 'src/main/sql/demo/system/user/DropSanntidUser.sql', failOnError: false)
                 }
@@ -89,7 +89,7 @@ configureDatabasePlugin {
     dbToolSets['admin'].with {
 
         tasks['GrantUsers'].with {
-            dependsOn sqlTask('GrantReplicationUser', sqlFile: 'src/main/sql/demo/system/user/GrantReplicationUser.sql') {
+            dependsOn sqlTask('GrantReplicationUser', sqlFile: 'src/main/sql/demo/replication/grant/GrantReplicationUser.sql') {
                 dependsOnIfExecuted it, sqlTask('CreateReplicationUser', sqlFile: 'src/main/sql/demo/system/user/CreateReplicationUser.sql') {
                     dependsOnIfExecuted it, sqlTask('DropReplicationUser', sqlFile: 'src/main/sql/demo/system/user/DropReplicationUser.sql', failOnError: false)
                 }
@@ -158,7 +158,7 @@ task genHistorikkSchemaTempateFromSchema() {
 
     doLast {
         genHistorikkSchemaTempateFromSchema(
-                filename: 'src/main/sql/sanntid/schema/CreateHistorikkSchema.sql',
+                filename: 'src/main/sql/demo/sanntid/schema/CreateHistorikkSchema.sql',
                 dbToolset: dbToolSets['sanntid'],
                 excludeTables: {['SEQUENCE'].contains(it)},
                 historikkColumnNames: [TVERSION: 'TVERSION', TBEGIN_INFO: 'TBEGIN_INFO', TEND_INFO: 'TEND_INFO', TBEGIN: 'TBEGIN', TEND: 'TEND'],
