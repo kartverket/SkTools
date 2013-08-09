@@ -13,10 +13,10 @@ configureDatabasePlugin {
      */
     toolset(name: 'sanntid', type: 'oracle', prefix: 'sanntid') {
 
-        sqlTask('CreateSanntidSchema', sqlFile: 'src/main/sql/sanntid/schema/CreateSanntidSchema.sql') {
+        sqlTask('CreateSanntidSchema', sqlFile: 'src/main/sql/demo/sanntid/schema/CreateSanntidSchema.sql') {
             dependsOn taskSequence('PurgeSanntidSchema') {
-                dependsOn sqlTask('PurgeSanntidTables', sqlFile: 'src/main/sql/sanntid/schema/PurgeSanntidTables.sql')
-                dependsOn sqlTask('PurgeSanntidSynonyms', sqlFile: 'src/main/sql/sanntid/schema/PurgeSanntidSynonyms.sql')
+                dependsOn sqlTask('PurgeSanntidTables', sqlFile: 'src/main/sql/demo/sanntid/schema/PurgeSanntidTables.sql')
+                dependsOn sqlTask('PurgeSanntidSynonyms', sqlFile: 'src/main/sql/demo/sanntid/schema/PurgeSanntidSynonyms.sql')
             }
         }
 
@@ -47,13 +47,13 @@ configureDatabasePlugin {
 
         task('GrantUsers')
 
-        sqlTask('CreateSanntidTablespace', sqlFile: 'src/main/sql/sanntid/system/tablespace/CreateSanntidTablespace.sql')
-        sqlTask('DropSanntidTablespace', sqlFile: 'src/main/sql/sanntid/system/tablespace/DropSanntidTablespace.sql')
+        sqlTask('CreateSanntidTablespace', sqlFile: 'src/main/sql/demo/system/tablespace/CreateSanntidTablespace.sql')
+        sqlTask('DropSanntidTablespace', sqlFile: 'src/main/sql/demo/system/tablespace/DropSanntidTablespace.sql')
 
         tasks['GrantUsers'].with {
-            dependsOn sqlTask('GrantSanntidUser', sqlFile: 'src/main/sql/sanntid/system/user/GrantSanntidUser.sql') {
-                dependsOnIfExecuted it, sqlTask('CreateSanntidUser', sqlFile: 'src/main/sql/sanntid/system/user/CreateSanntidUser.sql') {
-                    dependsOnIfExecuted it, sqlTask('DropSanntidUser', sqlFile: 'src/main/sql/sanntid/system/user/DropSanntidUser.sql', failOnError: false)
+            dependsOn sqlTask('GrantSanntidUser', sqlFile: 'src/main/sql/demo/system/user/GrantSanntidUser.sql') {
+                dependsOnIfExecuted it, sqlTask('CreateSanntidUser', sqlFile: 'src/main/sql/demo/system/user/CreateSanntidUser.sql') {
+                    dependsOnIfExecuted it, sqlTask('DropSanntidUser', sqlFile: 'src/main/sql/demo/system/user/DropSanntidUser.sql', failOnError: false)
                 }
             }
         }
@@ -89,9 +89,9 @@ configureDatabasePlugin {
     dbToolSets['admin'].with {
 
         tasks['GrantUsers'].with {
-            dependsOn sqlTask('GrantReplicationUser', sqlFile: 'src/main/sql/sanntid/system/user/GrantReplicationUser.sql') {
-                dependsOnIfExecuted it, sqlTask('CreateReplicationUser', sqlFile: 'src/main/sql/sanntid/system/user/CreateReplicationUser.sql') {
-                    dependsOnIfExecuted it, sqlTask('DropReplicationUser', sqlFile: 'src/main/sql/sanntid/system/user/DropReplicationUser.sql', failOnError: false)
+            dependsOn sqlTask('GrantReplicationUser', sqlFile: 'src/main/sql/demo/system/user/GrantReplicationUser.sql') {
+                dependsOnIfExecuted it, sqlTask('CreateReplicationUser', sqlFile: 'src/main/sql/demo/system/user/CreateReplicationUser.sql') {
+                    dependsOnIfExecuted it, sqlTask('DropReplicationUser', sqlFile: 'src/main/sql/demo/system/user/DropReplicationUser.sql', failOnError: false)
                 }
             }
         }

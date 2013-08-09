@@ -14,18 +14,18 @@ configureDatabasePlugin {
     toolset(name: 'historikk', type: 'oracle', prefix: 'historikk') {
         def HISTORIKK_COLUM_NAMES = [TVERSION: 'TVERSION', TBEGIN_INFO: 'TBEGIN_INFO', TEND_INFO: 'TEND_INFO', TBEGIN: 'TBEGIN', TEND: 'TEND']
 
-        sqlTask('CreateHistorikkSchema', sqlFile: 'src/main/sql/historikk/schema/CreatehistorikkSchema.sql') {
+        sqlTask('CreateHistorikkSchema', sqlFile: 'src/main/sql/demo/historikk/schema/CreatehistorikkSchema.sql') {
             dependsOn taskSequence('PurgeHistorikkSchema') {
-                dependsOn sqlTask('PurgeHistorikkViews', sqlFile: 'src/main/sql/historikk/schema/PurgeHistorikkViews.sql')
-                dependsOn sqlTask('PurgeHistorikkTables', sqlFile: 'src/main/sql/historikk/schema/PurgeHistorikkTables.sql')
-                dependsOn sqlTask('PurgeHistorikkPackages', sqlFile: 'src/main/sql/historikk/schema/PurgeHistorikkPackages.sql')
+                dependsOn sqlTask('PurgeHistorikkViews', sqlFile: 'src/main/sql/demo/historikk/schema/PurgeHistorikkViews.sql')
+                dependsOn sqlTask('PurgeHistorikkTables', sqlFile: 'src/main/sql/demo/historikk/schema/PurgeHistorikkTables.sql')
+                dependsOn sqlTask('PurgeHistorikkPackages', sqlFile: 'src/main/sql/demo/historikk/schema/PurgeHistorikkPackages.sql')
             }
         }
 
         task('UpdatePackages') {
-            dependsOn sqlTask('UpdatePackageHistorikkSession', sqlFile: file('src/main/sql/historikk/UpdatePackageHistorikkSession.sql')) {
-                dependsOn sqlTask('UpdatePackageHistorikkTransaction', sqlFile: file('src/main/sql/historikk/UpdatePackageHistorikkTransaction.sql')) {
-                    dependsOn sqlTask('CreateTemporaryTables', sqlFile: file('src/main/sql/historikk/CreateTemporaryTables.sql'), failOnError: false) //feiler ikke dersom tabell allerede finnes fra før
+            dependsOn sqlTask('UpdatePackageHistorikkSession', sqlFile: file('src/main/sql/demo/historikk/UpdatePackageHistorikkSession.sql')) {
+                dependsOn sqlTask('UpdatePackageHistorikkTransaction', sqlFile: file('src/main/sql/demo/historikk/UpdatePackageHistorikkTransaction.sql')) {
+                    dependsOn sqlTask('CreateTemporaryTables', sqlFile: file('src/main/sql/demo/historikk/CreateTemporaryTables.sql'), failOnError: false) //feiler ikke dersom tabell allerede finnes fra før
                 }
             }
         }
@@ -73,7 +73,7 @@ configureDatabasePlugin {
                 }
             }
         }
-        sqlTask('DropSanntidTriggers', sqlFile:'src/main/sql/historikk/trigger/DropSanntidTriggers.sql')
+        sqlTask('DropSanntidTriggers', sqlFile:'src/main/sql/demo/sanntid/trigger/DropSanntidTriggers.sql')
 
 
 
@@ -102,30 +102,30 @@ configureDatabasePlugin {
      */
     toolset(name: 'admin', type: 'oracle', prefix: 'admin') {
 
-        sqlTask('CreateHistorikkTablespace', sqlFile: 'src/main/sql/historikk/system/tablespace/CreateHistorikkTablespace.sql')
-        sqlTask('DropHistorikkTablespace', sqlFile: 'src/main/sql/historikk/system/tablespace/DropHistorikkTablespace.sql')
+        sqlTask('CreateHistorikkTablespace', sqlFile: 'src/main/sql/demo/system/tablespace/CreateHistorikkTablespace.sql')
+        sqlTask('DropHistorikkTablespace', sqlFile: 'src/main/sql/demo/system/tablespace/DropHistorikkTablespace.sql')
 
         task('GrantUsers') {
-            dependsOn sqlTask('GrantHistorikkUser', sqlFile: 'src/main/sql/historikk/system/user/GrantHistorikkUser.sql') {
-                dependsOnIfExecuted it, sqlTask('CreateHistorikkUser', sqlFile: 'src/main/sql/historikk/system/user/CreateHistorikkUser.sql') {
-                    dependsOnIfExecuted it, sqlTask('DropHistorikkUser', sqlFile: 'src/main/sql/historikk/system/user/DropHistorikkUser.sql', failOnError: false)
+            dependsOn sqlTask('GrantHistorikkUser', sqlFile: 'src/main/sql/demo/system/user/GrantHistorikkUser.sql') {
+                dependsOnIfExecuted it, sqlTask('CreateHistorikkUser', sqlFile: 'src/main/sql/demo/system/user/CreateHistorikkUser.sql') {
+                    dependsOnIfExecuted it, sqlTask('DropHistorikkUser', sqlFile: 'src/main/sql/demo/system/user/DropHistorikkUser.sql', failOnError: false)
                 }
             }
-            dependsOn sqlTask('GrantSanntidUser', sqlFile: 'src/main/sql/historikk/system/grant/GrantSanntidUser.sql')
-            dependsOn sqlTask('GrantReplicationUser', sqlFile: 'src/main/sql/historikk/system/grant/GrantReplicationUser.sql')
+            dependsOn sqlTask('GrantSanntidUser', sqlFile: 'src/main/sql/demo/sanntid/grant/GrantSanntidUser.sql')
+            dependsOn sqlTask('GrantReplicationUser', sqlFile: 'src/main/sql/demo/replication/grant/GrantReplicationUser.sql')
         }
 
         task('RevokeUsers') {
-            dependsOn sqlTask('RevokeSanntidUser', sqlFile: 'src/main/sql/historikk/system/grant/RevokeSanntidUser.sql')
-            dependsOn sqlTask('RevokeReplicationUser', sqlFile: 'src/main/sql/historikk/system/grant/RevokeReplicationUser.sql')
+            dependsOn sqlTask('RevokeSanntidUser', sqlFile: 'src/main/sql/demo/sanntid/grant/RevokeSanntidUser.sql')
+            dependsOn sqlTask('RevokeReplicationUser', sqlFile: 'src/main/sql/demo/replication/grant/RevokeReplicationUser.sql')
         }
 
         task('HistorikkForUsers') {
             dependsOn task('ProceduresForUsers') {
-                dependsOn sqlTask('ProceduresForReplicationUser', sqlFile: 'src/main/sql/historikk/system/procedure/ProceduresForReplicationUser.sql')
+                dependsOn sqlTask('ProceduresForReplicationUser', sqlFile: 'src/main/sql/demo/replication/procedure/ProceduresForReplicationUser.sql')
             }
             dependsOn task('SynonymsForUsers') {
-                dependsOn sqlTask('SynonymsForSanntidUser', sqlFile: 'src/main/sql/historikk/system/synonym/SynonymsForSanntidUser.sql')
+                dependsOn sqlTask('SynonymsForSanntidUser', sqlFile: 'src/main/sql/demo/sanntid/synonym/SynonymsForSanntidUser.sql')
             }
         }
 
