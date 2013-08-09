@@ -11,8 +11,9 @@
 
   Benytt closure hektet inn på ext.genSanntidTriggers med følgende parametere:
 
-    dbToolset - dbToolset (for sanntid) som beskriver connection det skal leses i fra
-
+    dbToolset - for connection
+    sourceSchema - skjema for sanntids-tabeller    
+    targetSchema - skjema for historikk-views
 
     Valgfrie Parametere:
 
@@ -30,6 +31,11 @@ ext.genSanntidTriggers = { Map params ->
     final def dbToolset = params['dbToolset']
     assert dbToolset // dbToolset as mandatory parameter
 
+    final def sourceSchema = params['sourceSchema']
+    assert sourceSchema // sourceSchema as mandatory parameter
+
+    final def targetSchema = params['targetSchema']
+    assert targetSchema // targetSchema as mandatory parameter
 
     final def includeTables = params.get('includeTables', { true })
     final def excludeTables = params.get('excludeTables', { it.endsWith('_H') })
@@ -42,14 +48,13 @@ ext.genSanntidTriggers = { Map params ->
     // variables
 
     def oracleConvention = dbToolset
-    String username = oracleConvention.credentials.username
 
 
     def sql
     try {
-        sql = groovy.sql.Sql.newInstance(oracleConvention.url, username, oracleConvention.credentials.password, oracleConvention.driver)
+        sql = groovy.sql.Sql.newInstance(oracleConvention.url, oracleConvention.credentials.username, oracleConvention.credentials.password, oracleConvention.driver)
     } finally {
-        if (!sql) logger.error "Error connecting to database: ${oracleConvention.url} [${username}]"
+        if (!sql) logger.error "Error connecting to database: ${oracleConvention.url} [${oracleConvention.credentials.username}]"
     }
     println("connected to source database: ${sql.connection.metaData.URL} [${sql.connection.metaData.userName}]")
 
@@ -58,7 +63,7 @@ ext.genSanntidTriggers = { Map params ->
 
     //algorithm
 
-    def writeTriggersForTable = { Writer out, String triggerName, String schema, String tableName, String historikkViewName, List pkColumns, Map columnMappingForTable ->
+    def writeTriggersForTable = { Writer out, String targetSchemaName, String triggerName, String sourceSchemaName, String sourceTableName, String historikkViewName, List pkColumns, Map columnMappingForTable ->
 
         def noneHistorikkColumns = columnMappingForTable.keySet().collectMany {!historikkColumnNames.containsValue(it) ? [it] : [] }
 
@@ -68,16 +73,16 @@ ext.genSanntidTriggers = { Map params ->
 
         out.write "\n"
         out.write """
--- Trigger for "${schema}".${tableName} (sanntid-db)
-CREATE OR REPLACE TRIGGER "${triggerName}"
-  BEFORE INSERT OR UPDATE OR DELETE ON "${schema}"."${tableName}"
+-- Trigger for "${sourceSchemaName}".${sourceTableName} (sanntid-db)
+CREATE OR REPLACE TRIGGER "${targetSchemaName}"."${triggerName}"
+  BEFORE INSERT OR UPDATE OR DELETE ON "${sourceSchemaName}"."${sourceTableName}"
   FOR EACH ROW
 
   BEGIN
 
   -- Delegerer like operasjoner til historikk-db..
   IF INSERTING THEN
-    INSERT INTO "${historikkViewName}"
+    INSERT INTO "${targetSchemaName}"."${historikkViewName}"
     COLUMNS (
       ${
             noneHistorikkColumns.collect {
@@ -92,7 +97,7 @@ CREATE OR REPLACE TRIGGER "${triggerName}"
         }
     );
   ELSIF UPDATING THEN
-    UPDATE "${historikkViewName}"
+    UPDATE "${targetSchemaName}"."${historikkViewName}"
     SET
       ${
             noneHistorikkColumns.collect {
@@ -107,7 +112,7 @@ CREATE OR REPLACE TRIGGER "${triggerName}"
         }
     ;
   ELSIF DELETING THEN
-    DELETE FROM "${historikkViewName}"
+    DELETE FROM "${targetSchemaName}"."${historikkViewName}"
     WHERE
       ${
             pkColumns.collect {
@@ -127,7 +132,7 @@ CREATE OR REPLACE TRIGGER "${triggerName}"
       ${it.collect {"\"${it.value}\""}.join(',\n      ')}
     INTO
       ${it.collect {":new.\"${it.key}\""}.join(',\n      ')}
-    FROM "${historikkViewName}"
+    FROM "${targetSchemaName}"."${historikkViewName}"
     WHERE
       ${
                         pkColumns.collect {
@@ -156,13 +161,13 @@ CREATE OR REPLACE TRIGGER "${triggerName}"
 
     def findTableNames = { String userName ->
         Map<String, List> tableNamesForUsers = [:] as LinkedHashMap
-        sql.eachRow("select OBJECT_NAME from ALL_OBJECTS where OBJECT_TYPE in ('TABLE') and OWNER like ? and OBJECT_NAME not like '%\$%' escape '\\' order by OBJECT_NAME", [username]) {
+        sql.eachRow("select OBJECT_NAME from ALL_OBJECTS where OBJECT_TYPE in ('TABLE') and OWNER like ? and OBJECT_NAME not like '%\$%' escape '\\' order by OBJECT_NAME", [userName]) {
             if (includeTables(it[0])) {
                 if (!excludeTables(it[0])) {
-                    if (tableNamesForUsers[username] == null) {
-                        tableNamesForUsers[username] = []
+                    if (tableNamesForUsers[userName] == null) {
+                        tableNamesForUsers[userName] = []
                     }
-                    tableNamesForUsers[username].add(it[0])
+                    tableNamesForUsers[userName].add(it[0])
                 }
             }
         }
@@ -208,7 +213,7 @@ CREATE OR REPLACE TRIGGER "${triggerName}"
     }
 
 
-    def tableNamesForUsers = findTableNames(username)
+    def tableNamesForUsers = findTableNames(sourceSchema)
     tableNamesForUsers.each { String schema, def tableNames ->
         tableNames.each { String tableName ->
             logger.quiet "Processing table '${tableName}' from schema ${schema}..."
@@ -220,10 +225,10 @@ CREATE OR REPLACE TRIGGER "${triggerName}"
                 logger.warn "Unique/PK columns not found for table ${schema}.${tableName}.}"
             }
 
-            def columnMappingForTable = findColumnNamesForHistorikkView(username, tableName, schema, doIgnoreColumn)
+            def columnMappingForTable = findColumnNamesForHistorikkView(sourceSchema, tableName, schema, doIgnoreColumn)
 
             schemaDDL.println("PROMPT Creating Trigger for ${tableName} ...")
-            writeTriggersForTable(schemaDDL, "T_S_${tableName}", schema, tableName, tableName, pkColumns, columnMappingForTable)
+            writeTriggersForTable(schemaDDL, targetSchema, "T_S_${tableName}", schema, tableName, tableName, pkColumns, columnMappingForTable)
 
             schemaDDL.println()
             schemaDDL.println()
@@ -232,7 +237,7 @@ CREATE OR REPLACE TRIGGER "${triggerName}"
     }
 
     if (tableNamesForUsers.isEmpty()) {
-        logger.quiet "No tables found for user ${username}. Is the schema currently empty?"
+        logger.quiet "No tables found for user ${sourceSchema}. Is the schema currently empty?"
     }
 
     return schemaDDL.toString()

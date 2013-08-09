@@ -7,8 +7,9 @@
   Benytt closure hektet inn på ext.genHistorikkSchemaTempateFromSchema med følgende parametere:
 
     filename - filnavn for generert sql script
-    dbToolset - dbToolset som beskriver connection det skal leses i fra
-
+    dbToolset - for connection
+    sourceSchema - skjema for sanntids-tabeller
+    targetSchema - skjema for historikk-views
 
     Valgfrie Parametere:
 
@@ -28,6 +29,12 @@ ext.genHistorikkSchemaTempateFromSchema = { Map params ->
 
     final def dbToolset = params['dbToolset']
     assert dbToolset // dbToolsetName is mandatory parameter
+
+    final def sourceSchema = params['sourceSchema']
+    assert sourceSchema // sourceSchema as mandatory parameter
+
+    final def targetSchema = params['targetSchema']
+    assert targetSchema // targetSchema as mandatory parameter
 
     final def includeTables = params.get('includeTables', {true})
     final def excludeTables = params.get('excludeTables', {false})
@@ -49,7 +56,6 @@ ext.genHistorikkSchemaTempateFromSchema = { Map params ->
     // variables
 
     def oracleConvention = dbToolset
-    def username = oracleConvention.credentials.username
 
     def file = project.file(filename)
     if( file != null ) {
@@ -64,9 +70,9 @@ ext.genHistorikkSchemaTempateFromSchema = { Map params ->
 
     def sql
     try {
-        sql = groovy.sql.Sql.newInstance(oracleConvention.url, username, oracleConvention.credentials.password, oracleConvention.driver)
+        sql = groovy.sql.Sql.newInstance(oracleConvention.url, oracleConvention.credentials.username, oracleConvention.credentials.password, oracleConvention.driver)
     } finally {
-        if (!sql) logger.error "Error connecting to database: ${oracleConvention.url} [${username}]"
+        if (!sql) logger.error "Error connecting to database: ${oracleConvention.url} [${oracleConvention.credentials.username}]"
     }
     println("connected to source database: ${sql.connection.metaData.URL} [${sql.connection.metaData.userName}]")
 
@@ -75,9 +81,9 @@ ext.genHistorikkSchemaTempateFromSchema = { Map params ->
 
     // algorithm
 
-    def writeDDLForTable = { Writer out, String tableName, def result, Closure doIgnoreColumn, def doInheritConstraints, def doInheritDefaults ->
+    def writeDDLForTable = { Writer out, String schemaName, String tableName, def result, Closure doIgnoreColumn, def doInheritConstraints, def doInheritDefaults ->
 
-        out.write "CREATE TABLE \"${tableName}\" \n(\n"
+        out.write "CREATE TABLE \"${schemaName}\".\"${tableName}\" \n(\n"
 
         out.write historikkColumnNames.collect {
             switch(it.key) {
@@ -196,7 +202,7 @@ ext.genHistorikkSchemaTempateFromSchema = { Map params ->
         return ret
     }
 
-    def writeConstraintsForTable = { Writer out, String tableName, def result, Closure doIgnoreColumn ->
+    def writeConstraintsForTable = { Writer out, String schemaName, String tableName, def result, Closure doIgnoreColumn ->
 
         if (result.next()) {
             def sourceTableSchema = result.getString('TABLE_SCHEM')
@@ -210,13 +216,13 @@ ext.genHistorikkSchemaTempateFromSchema = { Map params ->
                 def indexKeys = pk + [historikkColumnNames.TEND, historikkColumnNames.TBEGIN]
 
                 out.write '\n'
-                out.write "ALTER TABLE \"${tableName}\" \nADD CONSTRAINT \"C_HIST_${tableName}\" UNIQUE \n"  //GBOK-1424: import endrer navn lik inded (oracle standard) husk å re-name denne etter import
+                out.write "ALTER TABLE \"${schemaName}\".\"${tableName}\" \nADD CONSTRAINT \"C_HIST_${tableName}\" UNIQUE \n"  //GBOK-1424: import endrer navn lik inded (oracle standard) husk å re-name denne etter import
                 out.write "(\n\t"
                 out.write(indexKeys.collect {"\"$it\""}.join(',\n\t'))
                 out.write "\n"
                 out.write ")\n"
                 out.write "USING INDEX (\n"
-                out.write "\tCREATE UNIQUE INDEX \"${tableName}_IX_HIST\" ON \"${tableName}\" \n"
+                out.write "\tCREATE UNIQUE INDEX \"${tableName}_IX_HIST\" ON \"${schemaName}\".\"${tableName}\" \n"
                 out.write "\t(\n\t\t"
                 out.write(indexKeys.collect {"\"$it\""}.join(',\n\t\t'))
                 out.write "\t\n"
@@ -240,10 +246,10 @@ ext.genHistorikkSchemaTempateFromSchema = { Map params ->
         sql.eachRow("select OBJECT_NAME from ALL_OBJECTS where OBJECT_TYPE in ('TABLE') and OWNER like ? and not OBJECT_NAME LIKE '%\$%' escape '\\' order by OBJECT_NAME", [userName]) {
             if (includeTables(it[0])) {
                 if (!excludeTables(it[0])) {
-                    if (tableNamesForUsers[username] == null) {
-                        tableNamesForUsers[username] = []
+                    if (tableNamesForUsers[userName] == null) {
+                        tableNamesForUsers[userName] = []
                     }
-                    tableNamesForUsers[username].add(it[0])
+                    tableNamesForUsers[userName].add(it[0])
                 }
             }
         }
@@ -252,17 +258,18 @@ ext.genHistorikkSchemaTempateFromSchema = { Map params ->
 
 
 
-    def tableNamesForUsers = findTableNames(username)
+    def tableNamesForUsers = findTableNames(sourceSchema)
     tableNamesForUsers.each { def schema, tableNames ->
         tableNames.each { tableName ->
             logger.quiet "Processing table '${tableName}' from schema ${schema}..."
 
             def doIgnoreColumn = { ignoredColumnNames[tableName] ?: [] }
 
+            def targetTableName = "${tableName}_H"
 
-            schemaDDL.println("PROMPT Creating Table ${tableName}_H ...")
-            writeDDLForTable(schemaDDL, "${tableName}_H", sql.properties.connection.metaData.getColumns(schema, username, tableName, null), doIgnoreColumn, inheritConstraints, inheritDefaults)
-            writeConstraintsForTable(schemaDDL, "${tableName}_H", sql.properties.connection.metaData.getColumns(schema, username, tableName, null), doIgnoreColumn)
+            schemaDDL.println("PROMPT Creating Table ${targetTableName} ...")
+            writeDDLForTable(schemaDDL, targetSchema, targetTableName, sql.properties.connection.metaData.getColumns(schema, sourceSchema, tableName, null), doIgnoreColumn, inheritConstraints, inheritDefaults)
+            writeConstraintsForTable(schemaDDL, targetSchema, targetTableName, sql.properties.connection.metaData.getColumns(schema, sourceSchema, tableName, null), doIgnoreColumn)
 
             schemaDDL.println()
             schemaDDL.println()
@@ -271,7 +278,7 @@ ext.genHistorikkSchemaTempateFromSchema = { Map params ->
     }
 
     if (tableNamesForUsers.isEmpty()) {
-        logger.quiet "No tables found for user ${username}. Is the schema currently empty?"
+        logger.quiet "No tables found for user ${sourceSchema}. Is the schema currently empty?"
     }
 
 

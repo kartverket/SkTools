@@ -6,7 +6,8 @@
 
   Benytt closure hektet inn på ext.genHistorikkViewsAndTriggers med følgende parametere:
 
-    dbToolset - dbToolset som beskriver connection det skal leses i fra
+    dbToolset - for connection
+    schema - historikk schema som inneholder _H tabeller
 
     Valgfrie Parametere:
 
@@ -24,6 +25,8 @@ ext.genHistorikkViewsAndTriggers = { Map params ->
     final def dbToolset = params['dbToolset']
     assert dbToolset // dbToolset is mandatory parameter
 
+    final String schema = params['schema']
+    assert schema // schema is mandatory parameter
 
     final def includeTables = params.get('includeTables', { it.endsWith('_H') })
     final def excludeTables = params.get('excludeTables', { !it.endsWith('_H') })
@@ -45,14 +48,13 @@ ext.genHistorikkViewsAndTriggers = { Map params ->
     // variables
 
     def oracleConvention = dbToolset
-    String username = oracleConvention.credentials.username
 
 
     def sql
     try {
-        sql = groovy.sql.Sql.newInstance(oracleConvention.url, username, oracleConvention.credentials.password, oracleConvention.driver)
+        sql = groovy.sql.Sql.newInstance(oracleConvention.url, oracleConvention.credentials.username, oracleConvention.credentials.password, oracleConvention.driver)
     } finally {
-        if (!sql) logger.error "Error connecting to database: ${oracleConvention.url} [${username}]"
+        if (!sql) logger.error "Error connecting to database: ${oracleConvention.url} [${oracleConvention.credentials.username}]"
     }
     println("connected to source database: ${sql.connection.metaData.URL} [${sql.connection.metaData.userName}]")
 
@@ -63,15 +65,15 @@ ext.genHistorikkViewsAndTriggers = { Map params ->
 
     //algorithm
 
-    def writeDDLForView = { Writer out, String viewName, Map columnMapping ->
+    def writeDDLForView = { Writer out, String schemaName, String viewName, Map columnMapping ->
 
         out.write "\n"
         out.write "-- View for ${viewName}\n"
-        out.write "CREATE OR REPLACE VIEW \"${viewName}\" (\n"
+        out.write "CREATE OR REPLACE VIEW \"${schemaName}\".\"${viewName}\" (\n"
         out.write columnMapping.values().collect{"   \"${it}\""}.join(',\n')
         out.write "\n) AS SELECT \n"
         out.write columnMapping.keySet().collect{"   h.\"${it}\""}.join(',\n')
-        out.write "\n FROM \"${viewName}_H\" h"
+        out.write "\n FROM \"${schemaName}\".\"${viewName}_H\" h"
         out.write "\n WHERE "
 //GBOK-1482 - versjon 3:
         out.write "\n     (h.\"${historikkColumnNames.TEND}\" > SNAPSHOT_TIME.Get_T() AND h.\"${historikkColumnNames.TBEGIN}\" <= SNAPSHOT_TIME.Get_T()) "
@@ -90,13 +92,13 @@ ext.genHistorikkViewsAndTriggers = { Map params ->
 
 
     //view kan ha annen felt-rekkefølge enn skygge-tabell
-    def writeTriggersForView = { Writer out, String triggerName, String viewName, String hTableName, def pkColumns, Map columnMappingForView, def columnNamesForTable ->
+    def writeTriggersForView = { Writer out, String schemaName, String triggerName, String viewSchemaName, String viewName, String hTableName, def pkColumns, Map columnMappingForView, def columnNamesForTable ->
 
         out.write "\n"
         out.write """
 -- Trigger for ${viewName} (historikk-db)
-CREATE OR REPLACE TRIGGER "${triggerName}"
-  INSTEAD OF INSERT OR UPDATE OR DELETE ON "${viewName}"
+CREATE OR REPLACE TRIGGER "${schemaName}"."${triggerName}"
+  INSTEAD OF INSERT OR UPDATE OR DELETE ON "${viewSchemaName}"."${viewName}"
   FOR EACH ROW
   DECLARE
     t_Trans TIMESTAMP(9) := HISTORIKK_TRANSACTION.Get_T_Trans();
@@ -111,7 +113,7 @@ CREATE OR REPLACE TRIGGER "${triggerName}"
   END IF;
 
   IF INSERTING THEN
-     INSERT INTO "${hTableName}"
+     INSERT INTO "${schemaName}"."${hTableName}"
         VALUES (
            ${
             columnNamesForTable.collect {
@@ -128,7 +130,7 @@ CREATE OR REPLACE TRIGGER "${triggerName}"
 
   ELSIF UPDATING THEN
      IF :old."${historikkColumnNames.TBEGIN}" < t_Trans THEN
-        INSERT INTO "${hTableName}" VALUES (
+        INSERT INTO "${schemaName}"."${hTableName}" VALUES (
            ${
             columnNamesForTable.collect {
                 if (it == historikkColumnNames.TEND) return 't_Trans'
@@ -139,7 +141,7 @@ CREATE OR REPLACE TRIGGER "${triggerName}"
         }
            )
         ;
-        UPDATE "${hTableName}" SET --GBOK-1824: setter verdier for transaksjon en og kun kun en gang per transaksjon.
+        UPDATE "${schemaName}"."${hTableName}" SET --GBOK-1824: setter verdier for transaksjon en og kun kun en gang per transaksjon.
             "${historikkColumnNames.TVERSION}" = :old."${columnMappingForView.get(historikkColumnNames.TVERSION)}" + 1
             , "${historikkColumnNames.TBEGIN}" = t_Trans
             ${(isSetUsernameOnUpdate && historikkColumnNames.TBEGIN_INFO) ? ", \"${historikkColumnNames.TBEGIN_INFO}\" = userInfo" : ''}
@@ -153,7 +155,7 @@ CREATE OR REPLACE TRIGGER "${triggerName}"
         }
         ;
      END IF;
-     UPDATE "${hTableName}"
+     UPDATE "${schemaName}"."${hTableName}"
         SET
            ${
             columnNamesForTable.findAll { columnMappingForView.containsKey(it) && !historikkColumnNames.containsValue(it) }.collect {
@@ -174,7 +176,7 @@ CREATE OR REPLACE TRIGGER "${triggerName}"
 
   ELSIF DELETING THEN
      IF :old."${historikkColumnNames.TBEGIN}" < t_Trans THEN
-        INSERT INTO "${hTableName}"
+        INSERT INTO "${schemaName}"."${hTableName}"
            VALUES (
            ${
             columnNamesForTable.collect {
@@ -188,7 +190,7 @@ CREATE OR REPLACE TRIGGER "${triggerName}"
            )
         ;
      END IF;
-     DELETE FROM "${hTableName}"
+     DELETE FROM "${schemaName}"."${hTableName}"
         WHERE
            ${
             pkColumns.collect {
@@ -210,13 +212,13 @@ CREATE OR REPLACE TRIGGER "${triggerName}"
 
     def findTableNames = { String userName ->
         Map<String, List> tableNamesForUsers = [:] as LinkedHashMap
-        sql.eachRow("select OBJECT_NAME from ALL_OBJECTS where OBJECT_TYPE in ('TABLE') and OWNER like ? order by OBJECT_NAME", [username]) {
+        sql.eachRow("select OBJECT_NAME from ALL_OBJECTS where OBJECT_TYPE in ('TABLE') and OWNER like ? order by OBJECT_NAME", [userName]) {
             if (includeTables(it[0])) {
                 if (!excludeTables(it[0])) {
-                    if (tableNamesForUsers[username] == null) {
-                        tableNamesForUsers[username] = []
+                    if (tableNamesForUsers[userName] == null) {
+                        tableNamesForUsers[userName] = []
                     }
-                    tableNamesForUsers[username].add(it[0])
+                    tableNamesForUsers[userName].add(it[0])
                 }
             }
         }
@@ -224,10 +226,10 @@ CREATE OR REPLACE TRIGGER "${triggerName}"
     }
 
 
-    def findColumnNames = { String userName, String tableName, String schema = userName, Closure doIgnoredColumn = {false} ->
+    def findColumnNames = { String userName, String tableName, String schemaName = userName, Closure doIgnoredColumn = {false} ->
         def ret = []
 
-        def resultSet = sql.properties.connection.metaData.getColumns(schema, userName, tableName, null)
+        def resultSet = sql.properties.connection.metaData.getColumns(schemaName, userName, tableName, null)
         while( resultSet.next() ) {
             def columnName = resultSet.getString('COLUMN_NAME')
             if (!doIgnoredColumn(columnName)) {
@@ -241,10 +243,10 @@ CREATE OR REPLACE TRIGGER "${triggerName}"
 
 
     //gives you the column mapping between table (key) and view (value)
-    def findColumnNamesForView = { String userName, String tableName, String schema, Closure doIgnoredColumn = {false}, Closure colmapTableToView = {it} ->
+    def findColumnNamesForView = { String userName, String tableName, String schemaName, Closure doIgnoredColumn = {false}, Closure colmapTableToView = {it} ->
         def mapping = [:] as LinkedHashMap
 
-        def columnNamesForView = findColumnNames(userName, tableName, schema, doIgnoredColumn)
+        def columnNamesForView = findColumnNames(userName, tableName, schemaName, doIgnoredColumn)
         def actualHistorikkColumnNames = historikkColumnNames.values().intersect(columnNamesForView)
 
         (columnNamesForView - actualHistorikkColumnNames + actualHistorikkColumnNames).each {
@@ -255,39 +257,40 @@ CREATE OR REPLACE TRIGGER "${triggerName}"
     }
 
     //finner felter som inngår i primærnøkkler ved å se på unique constraint med navn C_HIST_<tabellenavn>
-    def findPKColumnNames = { String schema, tableName ->
+    def findPKColumnNames = { String schemaName, tableName ->
         def ret = []
-        sql.eachRow("select * from ALL_CONS_COLUMNS where OWNER = ? and TABLE_NAME = ? and constraint_name like 'C\\_HIST\\_%' escape '\\' order by POSITION", [schema, tableName]) {
+        sql.eachRow("select * from ALL_CONS_COLUMNS where OWNER = ? and TABLE_NAME = ? and constraint_name like 'C\\_HIST\\_%' escape '\\' order by POSITION", [schemaName, tableName]) {
             ret += it.COLUMN_NAME
         }
         return ret
     }
 
 
-    def tableNamesForUsers = findTableNames(username)
-    tableNamesForUsers.each { String schema, def tableNames ->
+    def tableNamesForUsers = findTableNames(schema)
+    tableNamesForUsers.each { String schemaName, def tableNames ->
         tableNames.each { String tableName ->
-            logger.quiet "Processing table '${tableName}' from schema ${schema}..."
+            logger.quiet "Processing table '${tableName}' from schema ${schemaName}..."
 
             def doIgnoreColumn = { ignoredColumnNames[tableName] ?: [] }
 
             String viewNameForTable = tableName.toString().replaceAll(/\_H$/, '')
 
-            def columnMappingForView = findColumnNamesForView(username, tableName, schema, doIgnoreColumn)
+            def columnMappingForView = findColumnNamesForView(schema, tableName, schemaName, doIgnoreColumn)
 
             schemaDDL.println("PROMPT Creating View ${viewNameForTable} ...")
-            writeDDLForView(schemaDDL, viewNameForTable, columnMappingForView)
+            def viewSchemaName = schemaName
+            writeDDLForView(schemaDDL, viewSchemaName, viewNameForTable, columnMappingForView)
 
 
-            Collection pkColumns = findPKColumnNames(schema, tableName)
+            Collection pkColumns = findPKColumnNames(schemaName, tableName)
 
             //select * from user_cons_columns where table_name = 'STED_H' and constraint_name like 'C\_HIST\_%' escape '\' order by position;
             if (!pkColumns.containsAll([historikkColumnNames.TEND, historikkColumnNames.TBEGIN])) {
                 logger.warn "Unique/PK columns not found. Expected to have some among ${[historikkColumnNames.TEND, historikkColumnNames.TBEGIN]}"
             }
 
-            def columnNamesForTable = findColumnNames(username, tableName, schema, doIgnoreColumn)
-            writeTriggersForView(schemaDDL, "T_H_${viewNameForTable}", "${viewNameForTable}", "${tableName}", pkColumns, columnMappingForView, columnNamesForTable)
+            def columnNamesForTable = findColumnNames(schema, tableName, schemaName, doIgnoreColumn)
+            writeTriggersForView(schemaDDL, schemaName, "T_H_${viewNameForTable}", viewSchemaName, "${viewNameForTable}", "${tableName}", pkColumns, columnMappingForView, columnNamesForTable)
 
 
             schemaDDL.println()
@@ -297,7 +300,7 @@ CREATE OR REPLACE TRIGGER "${triggerName}"
     }
 
     if (tableNamesForUsers.isEmpty()) {
-        logger.quiet "No tables found for user ${username}. Is the schema currently empty?"
+        logger.quiet "No tables found for user/schema '${schema}'. Is the schema currently empty?"
     }
 
     return schemaDDL.toString()

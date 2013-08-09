@@ -8,11 +8,13 @@ configureDatabasePlugin {
 
     project.ext.tns = "${historikk_db_sid}_${historikk_db_hostname}"
 
+    //todo: flytte til felles toolsett
+    def HISTORIKK_COLUM_NAMES = [TVERSION: 'TVERSION', TBEGIN_INFO: 'TBEGIN_INFO', TEND_INFO: 'TEND_INFO', TBEGIN: 'TBEGIN', TEND: 'TEND']
+
     /**
      * Toolset for historikk-bruker
      */
     toolset(name: 'historikk', type: 'oracle', prefix: 'historikk') {
-        def HISTORIKK_COLUM_NAMES = [TVERSION: 'TVERSION', TBEGIN_INFO: 'TBEGIN_INFO', TEND_INFO: 'TEND_INFO', TBEGIN: 'TBEGIN', TEND: 'TEND']
 
         sqlTask('CreateHistorikkSchema', sqlFile: 'src/main/sql/demo/historikk/schema/CreatehistorikkSchema.sql') {
             dependsOn taskSequence('PurgeHistorikkSchema') {
@@ -29,55 +31,6 @@ configureDatabasePlugin {
                 }
             }
         }
-
-        sqlTask('CreateViewsAndTriggers', sqlString:'') {
-            dependsOn tasks['UpdatePackages']
-
-            apply to: it, from: parent.file('genHistorikkViewsAndTriggers.gradle')
-            doFirst {
-                println "Genererer DDL for historikk views og legger dette til schema i databasen..."
-            }
-
-            doFirst {
-                sqlString = genHistorikkViewsAndTriggers(
-                        dbToolset: toolset,
-                        includeTables: { it.endsWith('_H') },
-                        historikkColumnNames: HISTORIKK_COLUM_NAMES,
-                )
-            }
-            doLast {
-                if (!logger.isEnabled(LogLevel.INFO)) {
-                    logger.quiet "Legger inn view og triggere: \n\n ${sqlString}"
-                }
-            }
-        }
-
-        sqlTask('CreateSanntidTriggers', sqlString:'') {
-            apply to: it, from: parent.file('genSanntidTriggers.gradle')
-            doFirst {
-                println "Genererer DDL for sanntids historikk triggere og legger dette til schema i databasen..."
-            }
-
-            doFirst {
-                sqlString = genSanntidTriggers(
-                        dbToolset: project.parent.project(':sanntid-db').convention.plugins['db'].dbToolSets['sanntid'],
-                        excludeTables: {[
-                                'SEQUENCE',
-                        ].contains(it)},
-                        historikkColumnNames: HISTORIKK_COLUM_NAMES,
-                )
-            }
-            doLast {
-                if (!logger.isEnabled(LogLevel.INFO)) {
-                    logger.quiet "Legger inn view og triggere: \n\n ${sqlString}"
-                }
-            }
-        }
-        sqlTask('DropSanntidTriggers', sqlFile:'src/main/sql/demo/sanntid/trigger/DropSanntidTriggers.sql')
-
-
-
-
 
         properties += [
                 historikk_db_username: historikk_db_username,
@@ -129,6 +82,54 @@ configureDatabasePlugin {
             }
         }
 
+        sqlTask('CreateViewsAndTriggers', sqlString:'') {
+            dependsOn dbToolSets['historikk'].tasks['UpdatePackages']
+
+            apply to: it, from: parent.file('genHistorikkViewsAndTriggers.gradle')
+            doFirst {
+                println "Genererer DDL for historikk views og legger dette til schema i databasen..."
+            }
+
+            doFirst {
+                sqlString = genHistorikkViewsAndTriggers(
+                        dbToolset: toolset,
+                        schema: historikk_db_schema,
+                        includeTables: { it.endsWith('_H') },
+                        historikkColumnNames: HISTORIKK_COLUM_NAMES,
+                )
+            }
+            doLast {
+                if (!logger.isEnabled(LogLevel.INFO)) {
+                    logger.quiet "Legger inn view og triggere: \n\n ${sqlString}"
+                }
+            }
+        }
+
+        sqlTask('CreateSanntidTriggers', sqlString:'') {
+            apply to: it, from: parent.file('genSanntidTriggers.gradle')
+            doFirst {
+                println "Genererer DDL for sanntids historikk triggere og legger dette til schema i databasen..."
+            }
+
+            doFirst {
+                sqlString = genSanntidTriggers(
+                        dbToolset: toolset,
+                        sourceSchema: sanntid_db_schema,
+                        targetSchema: historikk_db_schema,
+                        excludeTables: {[
+                                'SEQUENCE',
+                        ].contains(it)},
+                        historikkColumnNames: HISTORIKK_COLUM_NAMES,
+                )
+            }
+            doLast {
+                if (!logger.isEnabled(LogLevel.INFO)) {
+                    logger.quiet "Legger inn view og triggere: \n\n ${sqlString}"
+                }
+            }
+        }
+        sqlTask('DropSanntidTriggers', sqlFile:'src/main/sql/demo/sanntid/trigger/DropSanntidTriggers.sql')
+
 
         properties += [
                 historikk_db_username: historikk_db_username,
@@ -177,10 +178,10 @@ configureDatabasePlugin {
         dependsOn dbToolSets['admin'].tasks['DropHistorikkTablespace']
     }
 
-    task('dbCreateHistorikkSchema') {
+    taskSequence('dbCreateHistorikkSchema') {
         dependsOn dbToolSets['historikk'].tasks['CreateHistorikkSchema']
         dependsOn dbToolSets['historikk'].tasks['UpdatePackages']
-        dependsOn dbToolSets['historikk'].tasks['CreateViewsAndTriggers']
+        dependsOn dbToolSets['admin'].tasks['CreateViewsAndTriggers']
     }
 
     task('dbGrantUsers', description: 'Grants for brukere') {
@@ -206,14 +207,14 @@ configureDatabasePlugin {
     }
 
     taskSequence('dbEngageHistorikk') {
-        dependsOn dbToolSets['historikk'].tasks['CreateSanntidTriggers']
+        dependsOn dbToolSets['admin'].tasks['CreateSanntidTriggers']
         dependsOn dbToolSets['admin'].tasks['HistorikkForUsers']
         dependsOn 'dbGrantUsers'
     }
 
     taskSequence('dbDisengageHistorikk') {
         dependsOn dbToolSets['admin'].tasks['RevokeSanntidUser']
-        dependsOn dbToolSets['historikk'].tasks['DropSanntidTriggers']
+        dependsOn dbToolSets['admin'].tasks['DropSanntidTriggers']
     }
 
 }

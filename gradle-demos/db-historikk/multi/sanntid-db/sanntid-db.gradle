@@ -159,7 +159,9 @@ task genHistorikkSchemaTempateFromSchema() {
     doLast {
         genHistorikkSchemaTempateFromSchema(
                 filename: 'src/main/sql/demo/sanntid/schema/CreateHistorikkSchema.sql',
-                dbToolset: dbToolSets['sanntid'],
+                dbToolset: dbToolSets['admin'],
+                sourceSchema: sanntid_db_schema,
+                targetSchema: historikk_db_schema,
                 excludeTables: {['SEQUENCE'].contains(it)},
                 historikkColumnNames: [TVERSION: 'TVERSION', TBEGIN_INFO: 'TBEGIN_INFO', TEND_INFO: 'TEND_INFO', TBEGIN: 'TBEGIN', TEND: 'TEND'],
         )
