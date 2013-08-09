@@ -6,7 +6,7 @@ CREATE OR REPLACE SYNONYM "@sanntid_db_schema@".HISTORIKK_TRANSACTION FOR "@hist
 -- velger at bruker for sanntids-db kan se historikktabell (slått på for denne demoen)
 BEGIN
   FOR i IN (SELECT object_name FROM all_objects where owner = '@historikk_db_username@' AND object_type = 'TABLE' AND object_name like '%\_H' escape '\') LOOP
-    EXECUTE IMMEDIATE('CREATE OR REPLACE SYNONYM "@sanntid_db_schema@".' || i.object_name || ' FOR @historikk_db_schema@.' || i.object_name );
+    EXECUTE IMMEDIATE('CREATE OR REPLACE SYNONYM "@sanntid_db_schema@"."' || i.object_name || '" FOR "@historikk_db_schema@"."' || i.object_name || '"');
   END LOOP;
   COMMIT;
 END;
