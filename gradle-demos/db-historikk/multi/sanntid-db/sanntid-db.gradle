@@ -12,16 +12,31 @@ configureDatabasePlugin {
     /**
      * Toolset for SYSTEM-bruker
      */
-    toolset(name: 'admin', type: 'oracle', prefix: 'admin') {
+    toolset(name: 'system', type: 'oracle', prefix: 'system') {
 
         sqlTask('CreateSanntidTablespace', sqlFile: 'src/main/sql/demo/system/tablespace/CreateSanntidTablespace.sql') {
             dependsOnIfExecuted it, sqlTask('DropSanntidTablespace', sqlFile: 'src/main/sql/demo/system/tablespace/DropSanntidTablespace.sql')
         }
 
-        sqlTask('CreateSanntidUser', sqlFile: 'src/main/sql/demo/system/user/CreateSanntidUser.sql') {
-            dependsOnIfExecuted it, sqlTask('DropSanntidUser', sqlFile: 'src/main/sql/demo/system/user/DropSanntidUser.sql', failOnError: false)
+        task('CreateUsers') {
+            dependsOn sqlTask('CreateSanntidUser', sqlFile: 'src/main/sql/demo/system/user/CreateSanntidUser.sql') {
+                dependsOnIfExecuted it, tasks['CreateSanntidTablespace']
+                dependsOnIfExecuted it, sqlTask('DropSanntidUser', sqlFile: 'src/main/sql/demo/system/user/DropSanntidUser.sql', failOnError: false)
+            }
+            dependsOn sqlTask('CreateReplicationUser', sqlFile: 'src/main/sql/demo/system/user/CreateReplicationUser.sql') {
+                dependsOnIfExecuted it, sqlTask('DropReplicationUser', sqlFile: 'src/main/sql/demo/system/user/DropReplicationUser.sql', failOnError: false)
+            }
         }
 
+
+        task('GrantUsers') {
+            dependsOn sqlTask('GrantSanntidUser', sqlFile: 'src/main/sql/demo/system/grant/GrantSanntidUser.sql') {
+                dependsOnIfExecuted it, tasks['CreateSanntidUser']
+            }
+            dependsOn sqlTask('GrantReplicationUser', sqlFile: 'src/main/sql/demo/system/grant/GrantReplicationUser.sql') {
+                dependsOnIfExecuted it, tasks['CreateReplicationUser']
+            }
+        }
 
         properties += [
                 sanntid_db_username: sanntid_db_username,
@@ -31,10 +46,6 @@ configureDatabasePlugin {
                 sanntid_db_tablespace_index: sanntid_db_tablespace_index,
         ]
 
-
-        sqlTask('CreateReplicationUser', sqlFile: 'src/main/sql/demo/system/user/CreateReplicationUser.sql') {
-            dependsOnIfExecuted it, sqlTask('DropReplicationUser', sqlFile: 'src/main/sql/demo/system/user/DropReplicationUser.sql', failOnError: false)
-        }
 
         properties += [
                 replication_db_username: replication_db_username,
@@ -68,13 +79,6 @@ configureDatabasePlugin {
         task('GrantUsers')
 
 
-        tasks['GrantUsers'].with {
-            dependsOn sqlTask('GrantSanntidUser', sqlFile: 'src/main/sql/demo/sanntid/grant/GrantSanntidUser.sql') {
-                dependsOnIfExecuted it, project.dbToolSets['admin'].tasks['CreateSanntidUser']
-            }
-        }
-
-
 //        sqlTask('FylkerOgKommuner', sqlFile: 'src/main/sql/sanntid/data/FylkerOgKommuner.sql')
 
         properties += [
@@ -91,7 +95,7 @@ configureDatabasePlugin {
          */
         tasks['GrantUsers'].with {
             dependsOn sqlTask('GrantReplicationUser', sqlFile: 'src/main/sql/demo/replication/grant/GrantReplicationUser.sql') {
-                dependsOnIfExecuted it, project.dbToolSets['admin'].tasks['CreateReplicationUser']
+                dependsOnIfExecuted it, project.dbToolSets['system'].tasks['CreateReplicationUser']
             }
         }
         properties += [
@@ -109,20 +113,17 @@ configureDatabasePlugin {
 
 
 
-    taskSequence('dbSetUpSanntidUsers', group: 'Database', description: 'Oppretter tablespace og bruker for sanntid data') {
-        dependsOn dbToolSets['admin'].tasks['CreateSanntidTablespace']
-        dependsOn dbToolSets['admin'].tasks['CreateSanntidUser']
-        dependsOn dbToolSets['sanntid'].tasks['GrantSanntidUser']
-
-        dependsOn dbToolSets['admin'].tasks['CreateReplicationUser']
-        dependsOn dbToolSets['sanntid'].tasks['GrantReplicationUser']
+    task('dbSetUpSanntidUsers', group: 'Database', description: 'Oppretter tablespace og bruker for sanntid data') {
+        dependsOn dbToolSets['system'].tasks['CreateSanntidTablespace']
+        dependsOn dbToolSets['system'].tasks['CreateUsers']
+        dependsOn dbToolSets['system'].tasks['GrantUsers']
     }
 
     taskSequence('dbTearDownSanntidUsers', group: 'Database', description: 'Sletter tablespace og bruker for sanntid data') {
-        dependsOn dbToolSets['admin'].tasks['DropSanntidUser']
-        dependsOn dbToolSets['admin'].tasks['DropSanntidTablespace']
+        dependsOn dbToolSets['system'].tasks['DropSanntidUser']
+        dependsOn dbToolSets['system'].tasks['DropSanntidTablespace']
 
-        dependsOn dbToolSets['admin'].tasks['DropReplicationUser']
+        dependsOn dbToolSets['system'].tasks['DropReplicationUser']
     }
 
     task('dbCreateSanntidSchema') {
@@ -130,6 +131,7 @@ configureDatabasePlugin {
     }
 
     task('dbGrantUsers', description: 'Grants for brukere') {
+        dependsOn dbToolSets['system'].tasks['GrantUsers']
         dependsOn dbToolSets['sanntid'].tasks['GrantUsers']
     }
 
@@ -163,7 +165,7 @@ task genHistorikkSchemaTempateFromSchema() {
     doLast {
         genHistorikkSchemaTempateFromSchema(
                 filename: 'src/main/sql/demo/sanntid/schema/CreateHistorikkSchema.sql',
-                dbToolset: dbToolSets['admin'],
+                dbToolset: dbToolSets['system'],
                 sourceSchema: sanntid_db_schema,
                 targetSchema: historikk_db_schema,
                 excludeTables: {['SEQUENCE'].contains(it)},

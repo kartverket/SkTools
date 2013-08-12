@@ -12,15 +12,25 @@ configureDatabasePlugin {
     /**
      * Toolset for historikk-bruker
      */
-    toolset(name: 'admin', type: 'oracle', prefix: 'admin') {
+    toolset(name: 'system', type: 'oracle', prefix: 'system') {
 
         sqlTask('CreateHistorikkTablespace', sqlFile: 'src/main/sql/demo/system/tablespace/CreateHistorikkTablespace.sql') {
             dependsOnIfExecuted it, sqlTask('DropHistorikkTablespace', sqlFile: 'src/main/sql/demo/system/tablespace/DropHistorikkTablespace.sql')
         }
 
-        sqlTask('CreateHistorikkUser', sqlFile: 'src/main/sql/demo/system/user/CreateHistorikkUser.sql') {
-            dependsOnIfExecuted it, sqlTask('DropHistorikkUser', sqlFile: 'src/main/sql/demo/system/user/DropHistorikkUser.sql', failOnError: false)
+        task('CreateUsers') {
+            dependsOn sqlTask('CreateHistorikkUser', sqlFile: 'src/main/sql/demo/system/user/CreateHistorikkUser.sql') {
+                dependsOnIfExecuted it, tasks['CreateHistorikkTablespace']
+                dependsOnIfExecuted it, sqlTask('DropHistorikkUser', sqlFile: 'src/main/sql/demo/system/user/DropHistorikkUser.sql', failOnError: false)
+            }
         }
+
+        task('GrantUsers') {
+            dependsOn sqlTask('GrantHistorikkUser', sqlFile: 'src/main/sql/demo/system/grant/GrantHistorikkUser.sql') {
+                dependsOnIfExecuted it, tasks['CreateHistorikkUser']
+            }
+        }
+
 
         properties += [
                 historikk_db_username: historikk_db_username,
@@ -65,9 +75,6 @@ configureDatabasePlugin {
 
 
         task('GrantUsers') {
-            dependsOn sqlTask('GrantHistorikkUser', sqlFile: 'src/main/sql/demo/historikk/grant/GrantHistorikkUser.sql') {
-                dependsOnIfExecuted it, project.dbToolSets['admin'].tasks['CreateHistorikkUser']
-            }
             dependsOn sqlTask('GrantSanntidUser', sqlFile: 'src/main/sql/demo/sanntid/grant/GrantSanntidUser.sql')
             dependsOn sqlTask('GrantReplicationUser', sqlFile: 'src/main/sql/demo/replication/grant/GrantReplicationUser.sql')
         }
@@ -162,14 +169,15 @@ configureDatabasePlugin {
         driver = 'oracle.jdbc.OracleDriver'
     }
 
-    taskSequence('dbSetUpHistorikkUser', group: 'Database', description: 'Oppretter tablespace og bruker for Historikk data') {
-        dependsOn dbToolSets['admin'].tasks['CreateHistorikkTablespace']
-        dependsOn dbToolSets['admin'].tasks['CreateHistorikkUser']
+    task('dbSetUpHistorikkUser', group: 'Database', description: 'Oppretter tablespace og bruker for Historikk data') {
+        dependsOn dbToolSets['system'].tasks['CreateHistorikkTablespace']
+        dependsOn dbToolSets['system'].tasks['CreateUsers']
+        dependsOn dbToolSets['system'].tasks['GrantUsers']
     }
 
     taskSequence('dbTearDownHistorikkUser', group: 'Database', description: 'Sletter tablespace og bruker for Historikk data') {
-        dependsOn dbToolSets['admin'].tasks['DropHistorikkUser']
-        dependsOn dbToolSets['admin'].tasks['DropHistorikkTablespace']
+        dependsOn dbToolSets['system'].tasks['DropHistorikkUser']
+        dependsOn dbToolSets['system'].tasks['DropHistorikkTablespace']
     }
 
     taskSequence('dbCreateHistorikkSchema') {
@@ -179,6 +187,7 @@ configureDatabasePlugin {
     }
 
     task('dbGrantUsers', description: 'Grants for brukere') {
+        dependsOn dbToolSets['system'].tasks['GrantUsers']
         dependsOn dbToolSets['historikk'].tasks['GrantUsers']
     }
 

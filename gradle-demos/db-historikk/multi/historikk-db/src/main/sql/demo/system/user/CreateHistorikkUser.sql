@@ -10,8 +10,3 @@ CREATE USER "@historikk_db_username@" IDENTIFIED BY "@historikk_db_password@"
   ACCOUNT UNLOCK
 ;
 
-ALTER USER "@historikk_db_username@" QUOTA UNLIMITED ON "@historikk_db_tablespace_index@";
-ALTER USER "@historikk_db_username@" QUOTA UNLIMITED ON "@historikk_db_tablespace@";
-
-GRANT CREATE SESSION TO "@historikk_db_username@";
-GRANT RESOURCE TO "@historikk_db_username@";

@@ -1,15 +1,6 @@
 ------------------------------------------------------------------------------------------------------------------------
--- Kjores som systembruker
+-- Kjores som admin-bruker
 ------------------------------------------------------------------------------------------------------------------------
-
-
---REPL_ROLE:
-GRANT CREATE SESSION TO "@replication_db_username@";
-GRANT ALTER SESSION TO "@replication_db_username@";
-GRANT SELECT ANY TABLE TO "@replication_db_username@";
-GRANT SELECT ANY DICTIONARY TO "@replication_db_username@";
-
-
 
 PROMPT Assigning grants to existing tables and views (if any)...
 BEGIN
