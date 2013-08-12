@@ -8,6 +8,51 @@ configureDatabasePlugin {
 
     project.ext.tns = "${sanntid_db_sid}_${sanntid_db_hostname}"
 
+
+    /**
+     * Toolset for SYSTEM-bruker
+     */
+    toolset(name: 'admin', type: 'oracle', prefix: 'admin') {
+
+        sqlTask('CreateSanntidTablespace', sqlFile: 'src/main/sql/demo/system/tablespace/CreateSanntidTablespace.sql') {
+            dependsOnIfExecuted it, sqlTask('DropSanntidTablespace', sqlFile: 'src/main/sql/demo/system/tablespace/DropSanntidTablespace.sql')
+        }
+
+        sqlTask('CreateSanntidUser', sqlFile: 'src/main/sql/demo/system/user/CreateSanntidUser.sql') {
+            dependsOnIfExecuted it, sqlTask('DropSanntidUser', sqlFile: 'src/main/sql/demo/system/user/DropSanntidUser.sql', failOnError: false)
+        }
+
+
+        properties += [
+                sanntid_db_username: sanntid_db_username,
+                sanntid_db_password: sanntid_db_password,
+                sanntid_db_sid: sanntid_db_sid,
+                sanntid_db_tablespace: sanntid_db_tablespace,
+                sanntid_db_tablespace_index: sanntid_db_tablespace_index,
+        ]
+
+
+        sqlTask('CreateReplicationUser', sqlFile: 'src/main/sql/demo/system/user/CreateReplicationUser.sql') {
+            dependsOnIfExecuted it, sqlTask('DropReplicationUser', sqlFile: 'src/main/sql/demo/system/user/DropReplicationUser.sql', failOnError: false)
+        }
+
+        properties += [
+                replication_db_username: replication_db_username,
+                replication_db_password: replication_db_password,
+                replication_db_tablespace: replication_db_tablespace,
+        ]
+
+
+        if (System.properties.containsKey('db.oradata')) { properties.put('db_oradata', System.getProperty('db.oradata')) }
+
+        credentials.username = sanntid_admin_db_username
+        credentials.password = sanntid_admin_db_password
+        url = "jdbc:oracle:thin:@${sanntid_db_hostname}:${sanntid_db_port}:${sanntid_db_sid}"
+        driver = 'oracle.jdbc.OracleDriver'
+    }
+
+
+
     /**
      * Toolset for SANNTID-bruker
      */
@@ -20,60 +65,40 @@ configureDatabasePlugin {
             }
         }
 
-//        sqlTask('FylkerOgKommuner', sqlFile: 'src/main/sql/sanntid/data/FylkerOgKommuner.sql')
-
-        properties += [
-                sanntid_db_username: sanntid_db_username,
-                sanntid_db_password: sanntid_db_password,
-                sanntid_db_sid: sanntid_db_sid,
-                sanntid_db_hostname: sanntid_db_hostname,
-                sanntid_db_port: sanntid_db_port,
-                sanntid_db_schema: sanntid_db_schema,
-                sanntid_db_tablespace: sanntid_db_tablespace,
-                sanntid_db_tablespace_index: sanntid_db_tablespace_index,
-        ]
-
-        credentials.username = sanntid_db_username
-        credentials.password = sanntid_db_password
-        url = "jdbc:oracle:thin:@${sanntid_db_hostname}:${sanntid_db_port}:${sanntid_db_sid}"
-        driver = 'oracle.jdbc.OracleDriver'
-    }
-
-
-    /**
-     * Toolset for SYSTEM-bruker
-     */
-    toolset(name: 'admin', type: 'oracle', prefix: 'admin') {
-
         task('GrantUsers')
 
-        sqlTask('CreateSanntidTablespace', sqlFile: 'src/main/sql/demo/system/tablespace/CreateSanntidTablespace.sql')
-        sqlTask('DropSanntidTablespace', sqlFile: 'src/main/sql/demo/system/tablespace/DropSanntidTablespace.sql')
 
         tasks['GrantUsers'].with {
             dependsOn sqlTask('GrantSanntidUser', sqlFile: 'src/main/sql/demo/sanntid/grant/GrantSanntidUser.sql') {
-                dependsOnIfExecuted it, sqlTask('CreateSanntidUser', sqlFile: 'src/main/sql/demo/system/user/CreateSanntidUser.sql') {
-                    dependsOnIfExecuted it, sqlTask('DropSanntidUser', sqlFile: 'src/main/sql/demo/system/user/DropSanntidUser.sql', failOnError: false)
-                }
+                dependsOnIfExecuted it, project.dbToolSets['admin'].tasks['CreateSanntidUser']
             }
         }
 
 
-
-//        sqlTask('CreateSynonyms', sqlFile: 'src/main/sql/system/synonym/CreateSynonyms.sql')
+//        sqlTask('FylkerOgKommuner', sqlFile: 'src/main/sql/sanntid/data/FylkerOgKommuner.sql')
 
         properties += [
                 sanntid_db_username: sanntid_db_username,
-                sanntid_db_password: sanntid_db_password,
-                sanntid_db_sid: sanntid_db_sid,
-                sanntid_db_hostname: sanntid_db_hostname,
-                sanntid_db_port: sanntid_db_port,
                 sanntid_db_schema: sanntid_db_schema,
                 sanntid_db_tablespace: sanntid_db_tablespace,
                 sanntid_db_tablespace_index: sanntid_db_tablespace_index,
         ]
 
-        if (System.properties.containsKey('db.oradata')) { properties.put('db_oradata', System.getProperty('db.oradata')) }
+
+        /*
+         * Tillegg for Replikeringsbruker
+         * Denne brukeren blir alltid opprettet, alltid. Se dbSetUpSanntidUsers
+         */
+        tasks['GrantUsers'].with {
+            dependsOn sqlTask('GrantReplicationUser', sqlFile: 'src/main/sql/demo/replication/grant/GrantReplicationUser.sql') {
+                dependsOnIfExecuted it, project.dbToolSets['admin'].tasks['CreateReplicationUser']
+            }
+        }
+        properties += [
+                replication_db_username: replication_db_username,
+                replication_db_schema: replication_db_schema,
+        ]
+
 
         credentials.username = sanntid_admin_db_username
         credentials.password = sanntid_admin_db_password
@@ -81,37 +106,16 @@ configureDatabasePlugin {
         driver = 'oracle.jdbc.OracleDriver'
     }
 
-    /**
-     * Tillegg for Replikeringsbruker
-     *
-     * Denne brukeren blir alltid opprettet, alltid. Se dbSetUpSanntidUsers
-     */
-    dbToolSets['admin'].with {
 
-        tasks['GrantUsers'].with {
-            dependsOn sqlTask('GrantReplicationUser', sqlFile: 'src/main/sql/demo/replication/grant/GrantReplicationUser.sql') {
-                dependsOnIfExecuted it, sqlTask('CreateReplicationUser', sqlFile: 'src/main/sql/demo/system/user/CreateReplicationUser.sql') {
-                    dependsOnIfExecuted it, sqlTask('DropReplicationUser', sqlFile: 'src/main/sql/demo/system/user/DropReplicationUser.sql', failOnError: false)
-                }
-            }
-        }
-
-        properties += [
-                replication_db_username: replication_db_username,
-                replication_db_password: replication_db_password,
-                replication_db_tablespace: replication_db_tablespace,
-                replication_db_schema: replication_db_schema,
-        ]
-    }
 
 
     taskSequence('dbSetUpSanntidUsers', group: 'Database', description: 'Oppretter tablespace og bruker for sanntid data') {
         dependsOn dbToolSets['admin'].tasks['CreateSanntidTablespace']
         dependsOn dbToolSets['admin'].tasks['CreateSanntidUser']
-        dependsOn dbToolSets['admin'].tasks['GrantSanntidUser']
+        dependsOn dbToolSets['sanntid'].tasks['GrantSanntidUser']
 
         dependsOn dbToolSets['admin'].tasks['CreateReplicationUser']
-        dependsOn dbToolSets['admin'].tasks['GrantReplicationUser']
+        dependsOn dbToolSets['sanntid'].tasks['GrantReplicationUser']
     }
 
     taskSequence('dbTearDownSanntidUsers', group: 'Database', description: 'Sletter tablespace og bruker for sanntid data') {
@@ -126,7 +130,7 @@ configureDatabasePlugin {
     }
 
     task('dbGrantUsers', description: 'Grants for brukere') {
-        dependsOn dbToolSets['admin'].tasks['GrantUsers']
+        dependsOn dbToolSets['sanntid'].tasks['GrantUsers']
     }
 
 

@@ -1,5 +1,5 @@
--- AUTHID DEFINER fører til at funksjonene blir kjørt med rettigheter til historikk-db-userInfo (brukeren som oppretter denne)
-CREATE OR REPLACE PACKAGE HISTORIKK_TRANSACTION AUTHID DEFINER AS
+-- AUTHID DEFINER fører til at funksjonene blir kjørt med rettigheter til historikk-db-userInfo (brukeren som oppretter/eier denne)
+CREATE OR REPLACE PACKAGE "@historikk_db_schema@".HISTORIKK_TRANSACTION AUTHID DEFINER AS
 
   -- Konverterer timestamp ifra fast streng-representasjon
   FUNCTION To_T(timestampAsString IN VARCHAR2) RETURN TIMESTAMP;
@@ -18,7 +18,7 @@ CREATE OR REPLACE PACKAGE HISTORIKK_TRANSACTION AUTHID DEFINER AS
 END HISTORIKK_TRANSACTION;
 /
 
-CREATE OR REPLACE PACKAGE BODY HISTORIKK_TRANSACTION AS
+CREATE OR REPLACE PACKAGE BODY "@historikk_db_schema@".HISTORIKK_TRANSACTION AS
 
   t_Trans SNAPSHOT_TRANS.v%TYPE;
   
