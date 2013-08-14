@@ -104,7 +104,9 @@ configureDatabasePlugin {
             doFirst {
                 sqlString = genHistorikkViewsAndTriggers(
                         dbToolset: toolset,
-                        schema: historikk_db_schema,
+                        historikkSourceSchema: historikk_db_schema,
+                        historikkSchemaName: '@historikk_db_schema@',
+                        historikkViewSchemaName: '@historikk_db_schema@',
                         includeTables: { it.endsWith('_H') },
                         historikkColumnNames: HISTORIKK_COLUM_NAMES,
                 )
@@ -125,8 +127,9 @@ configureDatabasePlugin {
             doFirst {
                 sqlString = genSanntidTriggers(
                         dbToolset: toolset,
-                        sourceSchema: sanntid_db_schema,
-                        targetSchema: historikk_db_schema,
+                        sanntidSourceSchema: sanntid_db_schema,
+                        sanntidSchemaName: "@sanntid_db_schema@",
+                        historikkSchemaName: "@historikk_db_schema@",
                         excludeTables: {[
                                 'SEQUENCE',
                         ].contains(it)},

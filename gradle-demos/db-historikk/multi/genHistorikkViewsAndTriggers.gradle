@@ -7,9 +7,12 @@
   Benytt closure hektet inn på ext.genHistorikkViewsAndTriggers med følgende parametere:
 
     dbToolset - for connection
-    schema - historikk schema som inneholder _H tabeller
+    historikkSourceSchema - historikk skjema som inneholder _H tabeller
 
     Valgfrie Parametere:
+
+    historikkSchemaName - skjemanavn for historikk-tabeller + triggere (default: <historikkSourceSchema>)
+    historikkViewSchemaName - skjemanavn for historikk-view (default: <historikkSchemaName>)
 
     includeTables - {closure} for filtrering av tabellnavn for prosessering
     excludeTables - {closure} for filtrering av tabellnavn for prosessering
@@ -22,11 +25,15 @@ ext.genHistorikkViewsAndTriggers = { Map params ->
 
     // parameters
 
-    final def dbToolset = params['dbToolset']
-    assert dbToolset // dbToolset is mandatory parameter
+    final def dbToolset = params.get('dbToolset')
+    assert dbToolset // toolset as mandatory parameter
 
-    final String schema = params['schema']
-    assert schema // schema is mandatory parameter
+    final String historikkSourceSchema = params.get('historikkSourceSchema')
+    assert historikkSourceSchema // source schema as mandatory parameter
+
+    final String historikkSchemaName = params.get('historikkSchemaName', historikkSourceSchema)
+    final String historikkViewSchemaName = params.get('historikkViewSchemaName', historikkSourceSchema)
+
 
     final def includeTables = params.get('includeTables', { it.endsWith('_H') })
     final def excludeTables = params.get('excludeTables', { !it.endsWith('_H') })
@@ -34,7 +41,7 @@ ext.genHistorikkViewsAndTriggers = { Map params ->
     final def ignoredColumnNames = params.get('ignoredColumnNames', [:]) //kan trolig ikke ignorere noen kollonner i view eller triggere...
 
     // implementert navn for historikk-kolonner (disse må være like i sanntid-db og historikk-db)
-    final Map historikkColumnNames = params.get('historikkColumnNames', ['TVERSION', 'TBEGIN_INFO', 'TEND_INFO', 'TBEGIN', 'TEND'].collectEntries { [it, it.toString()] })
+    final Map historikkColumnNames = (Map) params.get('historikkColumnNames', ['TVERSION', 'TBEGIN_INFO', 'TEND_INFO', 'TBEGIN', 'TEND'].collectEntries { [it, it.toString()] })
     assert historikkColumnNames.TVERSION //mandatory column for historikk-data
     assert historikkColumnNames.TBEGIN //mandatory column for historikk-data
     assert historikkColumnNames.TEND //mandatory column for historikk-data
@@ -50,7 +57,7 @@ ext.genHistorikkViewsAndTriggers = { Map params ->
     def oracleConvention = dbToolset
 
 
-    def sql
+    def sql = null
     try {
         sql = groovy.sql.Sql.newInstance(oracleConvention.url, oracleConvention.credentials.username, oracleConvention.credentials.password, oracleConvention.driver)
     } finally {
@@ -65,15 +72,17 @@ ext.genHistorikkViewsAndTriggers = { Map params ->
 
     //algorithm
 
-    def writeDDLForView = { Writer out, String schemaName, String viewName, Map columnMapping ->
+    def writeDDLForView = { Writer out, String viewSchema, String viewName, String tableSchema, String tableName, Map columnMapping ->
+        def quotedViewSchemaNameDot = viewSchema ? "\"${viewSchema}\"." : ''
+        def quotedTableSchemaNameDot = tableSchema ? "\"${tableSchema}\"." : ''
 
         out.write "\n"
         out.write "-- View for ${viewName}\n"
-        out.write "CREATE OR REPLACE VIEW \"${schemaName}\".\"${viewName}\" (\n"
+        out.write "CREATE OR REPLACE VIEW ${quotedViewSchemaNameDot}\"${viewName}\" (\n"
         out.write columnMapping.values().collect{"   \"${it}\""}.join(',\n')
         out.write "\n) AS SELECT \n"
         out.write columnMapping.keySet().collect{"   h.\"${it}\""}.join(',\n')
-        out.write "\n FROM \"${schemaName}\".\"${viewName}_H\" h"
+        out.write "\n FROM ${quotedTableSchemaNameDot}\"${tableName}\" h"
         out.write "\n WHERE "
 //GBOK-1482 - versjon 3:
         out.write "\n     (h.\"${historikkColumnNames.TEND}\" > SNAPSHOT_TIME.Get_T() AND h.\"${historikkColumnNames.TBEGIN}\" <= SNAPSHOT_TIME.Get_T()) "
@@ -93,12 +102,14 @@ ext.genHistorikkViewsAndTriggers = { Map params ->
 
     //view kan ha annen felt-rekkefølge enn skygge-tabell
     def writeTriggersForView = { Writer out, String schemaName, String triggerName, String viewSchemaName, String viewName, String hTableName, def pkColumns, Map columnMappingForView, def columnNamesForTable ->
+        def quotedSchemaNameDot = schemaName ? "\"${schemaName}\"." : ''
+        def quotedViewSchemaNameDot = viewSchemaName ? "\"${viewSchemaName}\"." : ''
 
         out.write "\n"
         out.write """
 -- Trigger for ${viewName} (historikk-db)
-CREATE OR REPLACE TRIGGER "${schemaName}"."${triggerName}"
-  INSTEAD OF INSERT OR UPDATE OR DELETE ON "${viewSchemaName}"."${viewName}"
+CREATE OR REPLACE TRIGGER ${quotedSchemaNameDot}"${triggerName}"
+  INSTEAD OF INSERT OR UPDATE OR DELETE ON ${quotedViewSchemaNameDot}"${viewName}"
   FOR EACH ROW
   DECLARE
     t_Trans TIMESTAMP(9) := HISTORIKK_TRANSACTION.Get_T_Trans();
@@ -113,7 +124,7 @@ CREATE OR REPLACE TRIGGER "${schemaName}"."${triggerName}"
   END IF;
 
   IF INSERTING THEN
-     INSERT INTO "${schemaName}"."${hTableName}"
+     INSERT INTO ${quotedSchemaNameDot}"${hTableName}"
         VALUES (
            ${
             columnNamesForTable.collect {
@@ -130,7 +141,7 @@ CREATE OR REPLACE TRIGGER "${schemaName}"."${triggerName}"
 
   ELSIF UPDATING THEN
      IF :old."${historikkColumnNames.TBEGIN}" < t_Trans THEN
-        INSERT INTO "${schemaName}"."${hTableName}" VALUES (
+        INSERT INTO ${quotedSchemaNameDot}"${hTableName}" VALUES (
            ${
             columnNamesForTable.collect {
                 if (it == historikkColumnNames.TEND) return 't_Trans'
@@ -141,7 +152,7 @@ CREATE OR REPLACE TRIGGER "${schemaName}"."${triggerName}"
         }
            )
         ;
-        UPDATE "${schemaName}"."${hTableName}" SET --GBOK-1824: setter verdier for transaksjon en og kun kun en gang per transaksjon.
+        UPDATE ${quotedSchemaNameDot}"${hTableName}" SET --GBOK-1824: setter verdier for transaksjon en og kun kun en gang per transaksjon.
             "${historikkColumnNames.TVERSION}" = :old."${columnMappingForView.get(historikkColumnNames.TVERSION)}" + 1
             , "${historikkColumnNames.TBEGIN}" = t_Trans
             ${(isSetUsernameOnUpdate && historikkColumnNames.TBEGIN_INFO) ? ", \"${historikkColumnNames.TBEGIN_INFO}\" = userInfo" : ''}
@@ -155,7 +166,7 @@ CREATE OR REPLACE TRIGGER "${schemaName}"."${triggerName}"
         }
         ;
      END IF;
-     UPDATE "${schemaName}"."${hTableName}"
+     UPDATE ${quotedSchemaNameDot}"${hTableName}"
         SET
            ${
             columnNamesForTable.findAll { columnMappingForView.containsKey(it) && !historikkColumnNames.containsValue(it) }.collect {
@@ -176,7 +187,7 @@ CREATE OR REPLACE TRIGGER "${schemaName}"."${triggerName}"
 
   ELSIF DELETING THEN
      IF :old."${historikkColumnNames.TBEGIN}" < t_Trans THEN
-        INSERT INTO "${schemaName}"."${hTableName}"
+        INSERT INTO ${quotedSchemaNameDot}"${hTableName}"
            VALUES (
            ${
             columnNamesForTable.collect {
@@ -190,7 +201,7 @@ CREATE OR REPLACE TRIGGER "${schemaName}"."${triggerName}"
            )
         ;
      END IF;
-     DELETE FROM "${schemaName}"."${hTableName}"
+     DELETE FROM ${quotedSchemaNameDot}"${hTableName}"
         WHERE
            ${
             pkColumns.collect {
@@ -266,7 +277,7 @@ CREATE OR REPLACE TRIGGER "${schemaName}"."${triggerName}"
     }
 
 
-    def tableNamesForUsers = findTableNames(schema)
+    def tableNamesForUsers = findTableNames(historikkSourceSchema)
     tableNamesForUsers.each { String schemaName, def tableNames ->
         tableNames.each { String tableName ->
             logger.quiet "Processing table '${tableName}' from schema ${schemaName}..."
@@ -275,11 +286,10 @@ CREATE OR REPLACE TRIGGER "${schemaName}"."${triggerName}"
 
             String viewNameForTable = tableName.toString().replaceAll(/\_H$/, '')
 
-            def columnMappingForView = findColumnNamesForView(schema, tableName, schemaName, doIgnoreColumn)
+            def columnMappingForView = findColumnNamesForView(historikkSourceSchema, tableName, schemaName, doIgnoreColumn)
 
             schemaDDL.println("PROMPT Creating View ${viewNameForTable} ...")
-            def viewSchemaName = schemaName
-            writeDDLForView(schemaDDL, viewSchemaName, viewNameForTable, columnMappingForView)
+            writeDDLForView(schemaDDL, historikkViewSchemaName, viewNameForTable, historikkSchemaName, tableName, columnMappingForView)
 
 
             Collection pkColumns = findPKColumnNames(schemaName, tableName)
@@ -289,8 +299,9 @@ CREATE OR REPLACE TRIGGER "${schemaName}"."${triggerName}"
                 logger.warn "Unique/PK columns not found. Expected to have some among ${[historikkColumnNames.TEND, historikkColumnNames.TBEGIN]}"
             }
 
-            def columnNamesForTable = findColumnNames(schema, tableName, schemaName, doIgnoreColumn)
-            writeTriggersForView(schemaDDL, schemaName, "T_H_${viewNameForTable}", viewSchemaName, "${viewNameForTable}", "${tableName}", pkColumns, columnMappingForView, columnNamesForTable)
+            def columnNamesForTable = findColumnNames(historikkSourceSchema, tableName, schemaName, doIgnoreColumn)
+            //triggers are owned by historikk-schema and doesn't have to include the views. Views can be placed in separate schema.
+            writeTriggersForView(schemaDDL, historikkSchemaName, "T_H_${viewNameForTable}", historikkViewSchemaName, viewNameForTable, tableName, pkColumns, columnMappingForView, columnNamesForTable)
 
 
             schemaDDL.println()
@@ -300,7 +311,7 @@ CREATE OR REPLACE TRIGGER "${schemaName}"."${triggerName}"
     }
 
     if (tableNamesForUsers.isEmpty()) {
-        logger.quiet "No tables found for user/schema '${schema}'. Is the schema currently empty?"
+        logger.quiet "No tables found for user/schema '${historikkSourceSchema}'. Is the schema currently empty?"
     }
 
     return schemaDDL.toString()

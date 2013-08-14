@@ -1,6 +1,8 @@
+ALTER SESSION SET CURRENT_SCHEMA = "@sanntid_db_schema@";
+
 
 -- tabell med alle historikkfelter
-CREATE TABLE "@sanntid_db_schema@".STED (
+CREATE TABLE STED (
     ID NUMBER(19,0) NOT NULL,
     STEDSNAVN VARCHAR2(255 CHAR) NOT NULL,
     TBEGIN TIMESTAMP(9),
@@ -10,7 +12,7 @@ CREATE TABLE "@sanntid_db_schema@".STED (
 );
 
 -- tabell med kun historikkfelt: oppdateringsdato/tbegin
-CREATE TABLE "@sanntid_db_schema@".KOMMUNE (
+CREATE TABLE KOMMUNE (
     ID NUMBER(19,0) NOT NULL,
     KOMMUNENUMMER VARCHAR2(16 CHAR),
     KOMMUNENAVN VARCHAR2(255 CHAR),
@@ -21,7 +23,7 @@ CREATE TABLE "@sanntid_db_schema@".KOMMUNE (
 
 
 -- koblingstabell (uten historikkfelter)
-CREATE TABLE "@sanntid_db_schema@".KOMMUNERFORSTED (
+CREATE TABLE KOMMUNERFORSTED (
     STEDID NUMBER(19,0) NOT NULL,
     KOMMUNEID NUMBER(19,0) NOT NULL,
 
@@ -30,7 +32,7 @@ CREATE TABLE "@sanntid_db_schema@".KOMMUNERFORSTED (
 
 
 -- tabell uten historikk (ignoreres i kodegenerering av historikk-skjema; se task genHistorikkSchemaTempateFromSchema
-CREATE TABLE "@sanntid_db_schema@".SEQUENCE (
+CREATE TABLE SEQUENCE (
     ID NUMBER(19,0) NOT NULL,
     VALUE NUMBER(19,0) NOT NULL,
     CONSTRAINT P_PK_SEQUENCE PRIMARY KEY (ID)
@@ -38,10 +40,10 @@ CREATE TABLE "@sanntid_db_schema@".SEQUENCE (
 
 
 
-ALTER TABLE "@sanntid_db_schema@".KOMMUNERFORSTED
-    ADD CONSTRAINT FK_KOMFORSTED_KOMMUNE FOREIGN KEY (KOMMUNEID) REFERENCES "@sanntid_db_schema@".KOMMUNE
+ALTER TABLE KOMMUNERFORSTED
+    ADD CONSTRAINT FK_KOMFORSTED_KOMMUNE FOREIGN KEY (KOMMUNEID) REFERENCES KOMMUNE
 ;
 
-ALTER TABLE "@sanntid_db_schema@".KOMMUNERFORSTED
-    ADD CONSTRAINT FK_KOMFORSTED_STED FOREIGN KEY (STEDID) REFERENCES "@sanntid_db_schema@".STED
+ALTER TABLE KOMMUNERFORSTED
+    ADD CONSTRAINT FK_KOMFORSTED_STED FOREIGN KEY (STEDID) REFERENCES STED
 ;

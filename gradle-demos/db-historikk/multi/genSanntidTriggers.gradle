@@ -12,10 +12,13 @@
   Benytt closure hektet inn på ext.genSanntidTriggers med følgende parametere:
 
     dbToolset - for connection
-    sourceSchema - skjema for sanntids-tabeller    
-    targetSchema - skjema for historikk-views
+    sanntidSourceSchema - skjema for sanntids-tabeller
+    sanntidSchemaName - skjema for sanntid (default <sanntidSourceSchema>)
 
     Valgfrie Parametere:
+
+    historikkSchemaName - samme som <historikkViewSchemaName>
+    historikkViewSchemaName - skjema for historikk-views
 
     includeTables - {closure} for filtrering av tabellnavn for prosessering
     excludeTables - {closure} for filtrering av tabellnavn for prosessering
@@ -28,14 +31,16 @@ ext.genSanntidTriggers = { Map params ->
 
     // parameters
 
-    final def dbToolset = params['dbToolset']
-    assert dbToolset // dbToolset as mandatory parameter
+    final def dbToolset = params.get('dbToolset')
+    assert dbToolset // toolset as mandatory parameter
 
-    final def sourceSchema = params['sourceSchema']
-    assert sourceSchema // sourceSchema as mandatory parameter
+    final String sanntidSourceSchema = params.get('sanntidSourceSchema')
+    assert sanntidSourceSchema // source schema as mandatory parameter
 
-    final def targetSchema = params['targetSchema']
-    assert targetSchema // targetSchema as mandatory parameter
+    final String historikkSchemaName = params.get('historikkSchemaName')
+    final String historikkViewSchemaName = params.get('historikkViewSchemaName', historikkSchemaName)
+    final String sanntidSchemaName = params.get('sanntidSchemaName', sanntidSourceSchema)
+    assert sanntidSchemaName // schema name as mandatory parameter
 
     final def includeTables = params.get('includeTables', { true })
     final def excludeTables = params.get('excludeTables', { it.endsWith('_H') })
@@ -43,14 +48,14 @@ ext.genSanntidTriggers = { Map params ->
     final def ignoredColumnNames = params.get('ignoredColumnNames', [:]) //kan trolig ikke ignorere noen kollonner i view eller triggere...
 
     // implementert navn for historikk-kolonner (disse må være like i sanntid-db og historikk-db)
-    final Map historikkColumnNames = params.get('historikkColumnNames', ['TVERSION', 'TBEGIN_INFO', 'TEND_INFO', 'TBEGIN', 'TEND'].collectEntries { [it, it.toString()] })
+    final Map historikkColumnNames = (Map) params.get('historikkColumnNames', ['TVERSION', 'TBEGIN_INFO', 'TEND_INFO', 'TBEGIN', 'TEND'].collectEntries { [it, it.toString()] })
 
     // variables
 
     def oracleConvention = dbToolset
 
 
-    def sql
+    def sql = null
     try {
         sql = groovy.sql.Sql.newInstance(oracleConvention.url, oracleConvention.credentials.username, oracleConvention.credentials.password, oracleConvention.driver)
     } finally {
@@ -63,7 +68,9 @@ ext.genSanntidTriggers = { Map params ->
 
     //algorithm
 
-    def writeTriggersForTable = { Writer out, String targetSchemaName, String triggerName, String sourceSchemaName, String sourceTableName, String historikkViewName, List pkColumns, Map columnMappingForTable ->
+    def writeTriggersForSanntidTable = { Writer out, CharSequence triggerSchemaName, CharSequence triggerName, CharSequence sanntidTableSchemaName, CharSequence sanntidTableName, CharSequence historikkViewName, List pkColumns, Map columnMappingForTable ->
+        def quotedHistorikkSchemaNameDot = triggerSchemaName ? "\"${triggerSchemaName}\"." : ''
+        def quotedSanntidSchemaNameDot = sanntidTableSchemaName ? "\"${sanntidTableSchemaName}\"." : ''
 
         def noneHistorikkColumns = columnMappingForTable.keySet().collectMany {!historikkColumnNames.containsValue(it) ? [it] : [] }
 
@@ -73,16 +80,16 @@ ext.genSanntidTriggers = { Map params ->
 
         out.write "\n"
         out.write """
--- Trigger for "${sourceSchemaName}".${sourceTableName} (sanntid-db)
-CREATE OR REPLACE TRIGGER "${targetSchemaName}"."${triggerName}"
-  BEFORE INSERT OR UPDATE OR DELETE ON "${sourceSchemaName}"."${sourceTableName}"
+-- Trigger for ${quotedSanntidSchemaNameDot}${sanntidTableName} (sanntid-db)
+CREATE OR REPLACE TRIGGER ${quotedHistorikkSchemaNameDot}"${triggerName}"
+  BEFORE INSERT OR UPDATE OR DELETE ON ${quotedSanntidSchemaNameDot}"${sanntidTableName}"
   FOR EACH ROW
 
   BEGIN
 
   -- Delegerer like operasjoner til historikk-db..
   IF INSERTING THEN
-    INSERT INTO "${targetSchemaName}"."${historikkViewName}"
+    INSERT INTO ${quotedHistorikkSchemaNameDot}"${historikkViewName}"
     COLUMNS (
       ${
             noneHistorikkColumns.collect {
@@ -97,7 +104,7 @@ CREATE OR REPLACE TRIGGER "${targetSchemaName}"."${triggerName}"
         }
     );
   ELSIF UPDATING THEN
-    UPDATE "${targetSchemaName}"."${historikkViewName}"
+    UPDATE ${quotedHistorikkSchemaNameDot}"${historikkViewName}"
     SET
       ${
             noneHistorikkColumns.collect {
@@ -112,7 +119,7 @@ CREATE OR REPLACE TRIGGER "${targetSchemaName}"."${triggerName}"
         }
     ;
   ELSIF DELETING THEN
-    DELETE FROM "${targetSchemaName}"."${historikkViewName}"
+    DELETE FROM ${quotedHistorikkSchemaNameDot}"${historikkViewName}"
     WHERE
       ${
             pkColumns.collect {
@@ -132,7 +139,7 @@ CREATE OR REPLACE TRIGGER "${targetSchemaName}"."${triggerName}"
       ${it.collect {"\"${it.value}\""}.join(',\n      ')}
     INTO
       ${it.collect {":new.\"${it.key}\""}.join(',\n      ')}
-    FROM "${targetSchemaName}"."${historikkViewName}"
+    FROM ${quotedHistorikkSchemaNameDot}"${historikkViewName}"
     WHERE
       ${
                         pkColumns.collect {
@@ -213,22 +220,23 @@ CREATE OR REPLACE TRIGGER "${targetSchemaName}"."${triggerName}"
     }
 
 
-    def tableNamesForUsers = findTableNames(sourceSchema)
-    tableNamesForUsers.each { String schema, def tableNames ->
+    def tableNamesForUsers = findTableNames(sanntidSourceSchema)
+    tableNamesForUsers.each { String schemaName, def tableNames ->
         tableNames.each { String tableName ->
-            logger.quiet "Processing table '${tableName}' from schema ${schema}..."
+            logger.quiet "Processing table '${tableName}' from schema ${schemaName}..."
 
             def doIgnoreColumn = { ignoredColumnNames[tableName] ?: [] }
 
-            Collection pkColumns = findPKColumnNames(schema, tableName)
+            Collection pkColumns = findPKColumnNames(schemaName, tableName)
             if (pkColumns.empty) {
-                logger.warn "Unique/PK columns not found for table ${schema}.${tableName}.}"
+                logger.warn "Unique/PK columns not found for table ${schemaName}.${tableName}.}"
             }
 
-            def columnMappingForTable = findColumnNamesForHistorikkView(sourceSchema, tableName, schema, doIgnoreColumn)
+            def columnMappingForTable = findColumnNamesForHistorikkView(sanntidSourceSchema, tableName, schemaName, doIgnoreColumn)
 
             schemaDDL.println("PROMPT Creating Trigger for ${tableName} ...")
-            writeTriggersForTable(schemaDDL, targetSchema, "T_S_${tableName}", schema, tableName, tableName, pkColumns, columnMappingForTable)
+            def historikkViewName = tableName; // tabell/view for historikk-db samsvarere med sanntid tabellnavn
+            writeTriggersForSanntidTable(schemaDDL, historikkViewSchemaName, "T_S_${tableName}", sanntidSchemaName, tableName, historikkViewName, pkColumns, columnMappingForTable)
 
             schemaDDL.println()
             schemaDDL.println()
@@ -237,7 +245,7 @@ CREATE OR REPLACE TRIGGER "${targetSchemaName}"."${triggerName}"
     }
 
     if (tableNamesForUsers.isEmpty()) {
-        logger.quiet "No tables found for user ${sourceSchema}. Is the schema currently empty?"
+        logger.quiet "No tables found for user ${sanntidSourceSchema}. Is the schema currently empty?"
     }
 
     return schemaDDL.toString()
