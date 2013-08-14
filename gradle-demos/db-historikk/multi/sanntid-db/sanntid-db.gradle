@@ -154,22 +154,3 @@ configureDatabasePlugin {
 
 }
 
-//tasker for kodegenerering
-task genHistorikkSchemaTempateFromSchema() {
-
-    apply to: it, from: parent.file('genHistorikkSchemaTempateFromSchema.gradle')
-    doFirst {
-        println "Genererer skjema DDL for historikk basert på skjema hentet ifra gjeldende skjema for sanntid.."
-    }
-
-    doLast {
-        genHistorikkSchemaTempateFromSchema(
-                filename: 'src/main/sql/demo/sanntid/schema/CreateHistorikkSchema.sql',
-                dbToolset: dbToolSets['system'],
-                sanntidSourceSchema: sanntid_db_schema,
-                historikkSchemaName: "@historikk_db_schema@",
-                excludeTables: {['SEQUENCE'].contains(it)},
-                historikkColumnNames: [TVERSION: 'TVERSION', TBEGIN_INFO: 'TBEGIN_INFO', TEND_INFO: 'TEND_INFO', TBEGIN: 'TBEGIN', TEND: 'TEND'],
-        )
-    }
-}

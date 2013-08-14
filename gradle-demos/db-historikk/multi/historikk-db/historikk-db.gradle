@@ -3,6 +3,9 @@ apply plugin: 'sktools-dbtools-plugin'
 //hjelpefunksjon for eksekveringsrekkefølge dersom task blir kjørt
 def dependsOnIfExecuted = rootProject.getDependsOnIfExecuted()
 
+def HISTORIKK_COLUM_NAMES = [TVERSION: 'TVERSION', TBEGIN_INFO: 'TBEGIN_INFO', TEND_INFO: 'TEND_INFO', TBEGIN: 'TBEGIN', TEND: 'TEND']
+
+
 configureDatabasePlugin {
     useDrivers libraries.ojdbc
 
@@ -53,9 +56,6 @@ configureDatabasePlugin {
      * Toolset for SYSTEM-bruker
      */
     toolset(name: 'historikk', type: 'oracle', prefix: 'historikk') {
-
-        def HISTORIKK_COLUM_NAMES = [TVERSION: 'TVERSION', TBEGIN_INFO: 'TBEGIN_INFO', TEND_INFO: 'TEND_INFO', TBEGIN: 'TBEGIN', TEND: 'TEND']
-
 
         task('UpdatePackages') {
             dependsOn sqlTask('UpdatePackageHistorikkSession', sqlFile: file('src/main/sql/demo/historikk/UpdatePackageHistorikkSession.sql')) {
@@ -223,5 +223,27 @@ configureDatabasePlugin {
         dependsOn dbToolSets['historikk'].tasks['DropSanntidTriggers']
     }
 
+}
+
+
+
+//task for kodegenerering av skjema for historikk
+task genHistorikkSchemaTempateFromSchema() {
+
+    apply to: it, from: parent.file('genHistorikkSchemaTempateFromSchema.gradle')
+    doFirst {
+        println "Genererer skjema DDL for historikk basert på skjema hentet ifra gjeldende skjema for sanntid.."
+    }
+
+    doLast {
+        genHistorikkSchemaTempateFromSchema(
+                filename: 'src/main/sql/demo/historikk/schema/CreateHistorikkSchema_generated.sql',
+                dbToolset: dbToolSets['system'],
+                sanntidSourceSchema: sanntid_db_schema,
+                historikkSchemaName: "@historikk_db_schema@",
+                excludeTables: {['SEQUENCE'].contains(it)},
+                historikkColumnNames: HISTORIKK_COLUM_NAMES,
+        )
+    }
 }
 
