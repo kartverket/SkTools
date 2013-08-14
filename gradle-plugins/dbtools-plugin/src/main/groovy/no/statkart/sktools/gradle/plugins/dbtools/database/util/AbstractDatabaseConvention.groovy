@@ -239,6 +239,14 @@ abstract class AbstractDatabaseConvention {
             task.sqlFile = project.file("${buildDir}/${task.sqlFile.name}")
         }
 
+        if (task instanceof SQLTask && task.getSqlString()) {
+            String sqlString = task.getSqlString()
+            this.properties.each { key, value ->
+                sqlString = sqlString.replaceAll("@${key}@", value.toString())
+            }
+            task.setSqlString(sqlString)
+        }
+
     }
 
     //SKIF-211
