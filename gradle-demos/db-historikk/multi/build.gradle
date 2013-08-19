@@ -73,7 +73,7 @@ ext.libraries = [
 ]
 
 // SKIF-239: Mulighet for valg av ojdbc driver
-libraries.jdbc = Boolean.valueOf(System.getenv('ORA_DEBUG') ?: 'false') ? libraries.ojdbc_g : libraries.ojdbc
+libraries.jdbc = ORA_DEBUG ? libraries.ojdbc_g : libraries.ojdbc
 
 
 
@@ -109,7 +109,12 @@ buildscript {
             rootProject.ext.set(val, System.getenv(val))
         }
     }
-    project.ext.set('MAVEN_REPO', project.ext.properties.get('MAVEN_REPO', 'http://nexus.statkart.no:8090/nexus/content/groups/public/'))
+    ext.ORA_DEBUG = Boolean.valueOf("${rootProject.properties.get('ORA_DEBUG', System.getenv('ORA_DEBUG')) ?: 'false'}")
+    ext.MAVEN_REPO = rootProject.properties.get('MAVEN_REPO', System.getenv('MAVEN_REPO'))
+    if (ext.MAVEN_REPO == null) {
+        ext.MAVEN_REPO = 'http://nexus.statkart.no:8090/nexus/content/groups/public/'
+        logger.warn "warning: MAVEN_REPO not defined. Defaulting to ${MAVEN_REPO}"
+    }
 
     repositories {
         //bruker kun lokale filer her da dette er et demo prosjekt...
