@@ -13,7 +13,6 @@ import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSet
 import org.gradle.plugins.ide.idea.IdeaPlugin
-import org.gradle.api.tasks.compile.AbstractCompile
 
 /**
  * Baserer seg på WeblogicBasePlugin og JavaBasePlugin.
@@ -46,8 +45,6 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
 
     public static final String CONVENTION_NAME = 'weblogicWsWar'
     public static final String WEBLOGIC_CONFIGURATION_NAME = 'weblogic'
-    public static final String WEBLOGIC_COMPILE_CONFIGURATION_NAME = 'weblogicCompile'
-    public static final String WEBLOGIC_RUNTIME_CONFIGURATION_NAME = 'weblogicRuntime'
     public static final String WEBLOGIC_SOURCE_SET_NAME = 'weblogic'
     public static final String WEBLOGIC_WAR_TASK_NAME = 'warWeblogic'
     public static final String WEBLOGIC_GEN_TASK_NAME = 'genWeblogic'
@@ -57,7 +54,7 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
         project.apply plugin: JavaBasePlugin.class
         project.apply plugin: WeblogicBasePlugin.class
 
-        JavaPluginConvention javaConvention = project.getConvention().getPlugins().get("java");
+        JavaPluginConvention javaConvention = project.getConvention().getPlugins().get("java") as JavaPluginConvention;
 
         Configuration weblogicConfiguration = createWeblogicConfiguration(project);
         SourceSet weblogicSourceSet = javaConvention.getSourceSets().add(WeblogicWsWarPlugin.WEBLOGIC_SOURCE_SET_NAME)
@@ -124,8 +121,9 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
         war.setAppendix(WeblogicWsWarPlugin.WEBLOGIC_SOURCE_SET_NAME)
         war.setGroup(BasePlugin.BUILD_GROUP);
 
-        //evt duplikate entries blir forkastes.. vær derfor obs på rekkefølgen!
+        // pass på duplikater og vær obs på rekkefølgen!
 
+        // Må ta inn output fra genTask eksplisitt
         war.into('WEB-INF/classes') {
             from genTask.classesDir
         }
@@ -133,7 +131,7 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
         war.from(genTask.getDestinationDir())
 
         war.into('WEB-INF/classes') {
-            from sourceSet.output.classesDir
+            from sourceSet.output
         }
 
 
@@ -165,9 +163,10 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
 
         genTask.genDir = project.file("${project.buildDir}/weblogic/jwsc")
 
-        //registrerer mapper til sourceSet
-        sourceSet.output.dir { genTask.classesDir }
         sourceSet.allSource.srcDir { genTask.genSourcesDir }
+
+        // Kan ikke legge til genTasks output som sourceSet.output, siden genTask har sourceSet.output, via
+        // sourceSet.runtimeClasspath, som input
 
         return genTask
     }
