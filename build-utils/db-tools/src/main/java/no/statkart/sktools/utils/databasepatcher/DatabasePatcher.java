@@ -63,6 +63,10 @@ public class DatabasePatcher {
       // Optional kommentar
       String kommentar;
 
+      public PatchVersion(String kommentar) {
+         this(DEFAULT_DB_VERSION, DEFAULT_PATCH_NO, kommentar, false);
+      }
+
       public PatchVersion(String dbVersion, int patchNo, String kommentar) {
          this(dbVersion, patchNo, kommentar, false);
       }
@@ -265,7 +269,7 @@ public class DatabasePatcher {
          // Første entry inneholder min version.
          PatchVersion minVersion = patches.entrySet().iterator().next().getKey();
          patches.remove(minVersion);
-         if( currentPatchInfo.patchVersion.compareTo(minVersion) == -1 ) {
+         if( currentPatchInfo.patchVersion.compareTo(minVersion) < 0 ) {
             throw new RuntimeException("Kan ikke patch database. Krever minimum versjon: " + minVersion);
          }
 
@@ -325,7 +329,7 @@ public class DatabasePatcher {
    private static LinkedHashMap<PatchVersion, List<? extends Expression>> parsePatches(List<? extends Expression> scriptLines) {
       LinkedHashMap<PatchVersion, List<? extends Expression>> result = new LinkedHashMap<PatchVersion, List<? extends Expression>>();
 
-      PatchVersion minPatchVersion = new PatchVersion(null, -1, null);
+      PatchVersion minPatchVersion = new PatchVersion("Unspecified min.version");
       PatchVersion lastPatchVersion = null;
 
       int i = 0;
@@ -349,7 +353,7 @@ public class DatabasePatcher {
       while( i < scriptLines.size() && isPatchVersion(scriptLines.get(i)) ) {
          PatchVersion patchVersion = parsePatchVersion(scriptLines.get(i));
 
-         if( lastPatchVersion.compareTo(patchVersion) != -1 ) {
+         if( lastPatchVersion.compareTo(patchVersion) >= 0 ) {
             throw new ConfigurationException("Feil: Patchblokker må ha stigende versjonsnr i fil (forrige var: " + lastPatchVersion + " ): " + scriptLines.get(i));
          }
          lastPatchVersion = patchVersion;

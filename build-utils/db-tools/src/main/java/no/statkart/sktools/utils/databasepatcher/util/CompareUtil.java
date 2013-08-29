@@ -14,6 +14,7 @@ public class CompareUtil {
      * <li>1.9 < 1.9.1
      * <li>1.9.1 < 1.10
      * <li>1.9.1 < 1.9.2
+     * <li>1 > NULL
      */
     public static int compareDBVersions(String dbVersion1, String dbVersion2) {
        String[] s1 = dbVersion1.split("\\.");
@@ -28,7 +29,7 @@ public class CompareUtil {
              int int2 = Integer.parseInt(s2[i]);
              res = (int1 == int2) ? 0 : (int1 < int2) ? -1 : 1;
           } catch( NumberFormatException e ) {
-             throw new RuntimeException("Kan ikke sammenlikne " + dbVersion1 + " mot " + dbVersion2);
+              res = s1[i].compareTo(s2[i]);  //sammenligner leksografisk dersom numerisk sammenligning feiler
           }
           if (res!=0) {
              return res;
