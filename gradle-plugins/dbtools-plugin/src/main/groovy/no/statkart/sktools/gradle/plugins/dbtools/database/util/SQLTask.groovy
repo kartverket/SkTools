@@ -50,14 +50,16 @@ public class SQLTask extends AbstractSQLTask {
     }
 
 
-    private void validate() {
+    void validate() {
+        validateAbstractSQLTask()
+
         if (getSqlFile() == null && getSqlString() == null) {
             throw new Exception("sqlFile eller sqlString må anngis!")
         }
 
         if (getSqlFile() != null) {
             if (!getSqlFile().exists()) {
-                throw new Exception("File does not exist! sqlFile=${getSqlFile()}")
+                throw new Exception("File does not exist! sqlFile=${project.relativePath(getSqlFile())}")
             }
 
             if (getSqlString() != null) {

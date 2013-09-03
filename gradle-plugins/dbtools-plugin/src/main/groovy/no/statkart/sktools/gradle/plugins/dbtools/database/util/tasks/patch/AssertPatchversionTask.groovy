@@ -44,4 +44,8 @@ class AssertPatchversionTask extends DatabasePatchTask {
     //bruker ikke denne
     File getSqlFile() { }
 
+    @Override
+    void validate() {
+        super.validate();
+    }
 }

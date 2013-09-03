@@ -40,5 +40,13 @@ abstract class DatabasePatchTask extends AbstractSQLTask {
         return spec
     }
 
+    @Override
+    void validate() {
 
+        if (getComponent() == null) {
+            throw new Exception("Value for attribute 'component' not set!")
+        }
+
+        validateAbstractSQLTask()
+    }
 }

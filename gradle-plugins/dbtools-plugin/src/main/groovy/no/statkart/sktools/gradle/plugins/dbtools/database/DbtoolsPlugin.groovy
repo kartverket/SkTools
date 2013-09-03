@@ -12,6 +12,11 @@ import org.gradle.api.invocation.Gradle
 import no.statkart.sktools.gradle.plugins.dbtools.database.oracle.OracleExportTask
 import org.gradle.api.internal.ConventionTask
 import no.statkart.sktools.gradle.plugins.dbtools.database.oracle.OracleImportTask
+import org.gradle.api.Task
+import org.gradle.api.plugins.JavaBasePlugin
+import no.statkart.sktools.gradle.plugins.dbtools.database.util.SQLTask
+import org.gradle.api.internal.project.ProjectInternal
+import no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractSQLTask
 
 /**
  * Gradle plugin for database-moduler.
@@ -38,8 +43,9 @@ configureDatabasePlugin {
  *     @see DbtoolsConvention
  */
 class DbtoolsPlugin implements Plugin<Project>  {
-    public final static String CONVENTION_NAME = "db";
-    public final static String DBTOOLS_CONFIGURATION = "dbTools";
+    public static final String CONVENTION_NAME = "db";
+    public static final String DBTOOLS_CONFIGURATION = "dbTools";
+    public static final String TEST_TASK_NAME = "test";
 
     private static final Set<String> loadedDrivers = new HashSet<String>();
 
@@ -51,12 +57,27 @@ class DbtoolsPlugin implements Plugin<Project>  {
         project.getConvention().getPlugins().put(CONVENTION_NAME, dbtoolsConvention);
 
         configureConfigurations(project)
-
         assignConventionMappings(project)
+
+        configureTest(project, dbtoolsConvention); //SKTOOLS-81
 
         project.afterEvaluate {
             assignConventionalValues(project);
             registerDrivers(project);
+        }
+    }
+
+
+    private void configureTest(final Project project, final DbtoolsConvention pluginConvention) {
+        Task test = project.getTasks().create(TEST_TASK_NAME) {
+            description = 'Verifies configuration for task'
+            group = JavaBasePlugin.VERIFICATION_GROUP
+
+            doLast {
+                project.tasks.withType(AbstractSQLTask.class) { AbstractSQLTask task ->
+                    task.validate() //SKTOOLS-81
+                }
+            }
         }
     }
 

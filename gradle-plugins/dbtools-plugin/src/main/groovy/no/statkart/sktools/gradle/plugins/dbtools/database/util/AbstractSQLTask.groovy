@@ -54,4 +54,24 @@ abstract class AbstractSQLTask extends ConventionTask {
 
 
     abstract File getSqlFile();
+
+    abstract void validate(); //SKTOOLS-81
+
+    protected void validateAbstractSQLTask() {
+
+        if (getDriver() == null) {
+            throw new Exception("Value for attribute 'driver' not set!")
+        }
+        if (getUrl() == null) {
+            throw new Exception("Value for attribute 'url' not set!")
+        }
+        if (getUsername() == null) {
+            throw new Exception("Value for attribute 'username' not set!")
+        }
+        if (getPassword() == null) {
+            throw new Exception("Value for attribute 'password' not set!")
+        }
+
+    }
+
 }

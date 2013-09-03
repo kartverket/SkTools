@@ -51,4 +51,18 @@ class PatchTask extends DatabasePatchTask {
         }
     }
 
+    @Override
+    void validate() {
+        super.validate();
+
+        if (getSqlFile() == null) {
+            throw new Exception("sqlFile må anngis!")
+        }
+
+        if (!getSqlFile().exists()) {
+            throw new Exception("File does not exist! sqlFile=${project.relativePath(getSqlFile())}")
+        }
+    }
+
 }
+
