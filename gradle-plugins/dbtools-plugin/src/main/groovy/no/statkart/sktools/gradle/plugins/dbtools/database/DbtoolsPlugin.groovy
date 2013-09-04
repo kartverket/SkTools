@@ -75,7 +75,7 @@ class DbtoolsPlugin implements Plugin<Project>  {
                 project.tasks.withType(AbstractSQLTask.class) { AbstractSQLTask task ->
                     try {
                         task.validate() //SKTOOLS-81
-                    } finally {
+                    } catch (Throwable t) {
                         logger.error "Error when validating task ${task.path}"
                     }
                 }
