@@ -73,7 +73,11 @@ class DbtoolsPlugin implements Plugin<Project>  {
             group = JavaBasePlugin.VERIFICATION_GROUP
             doLast {
                 project.tasks.withType(AbstractSQLTask.class) { AbstractSQLTask task ->
-                    task.validate() //SKTOOLS-81
+                    try {
+                        task.validate() //SKTOOLS-81
+                    } finally {
+                        logger.error "Error when validating task ${task.path}"
+                    }
                 }
             }
         }
