@@ -7,16 +7,15 @@ import org.gradle.api.Project
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.PatchConfiguration
 import org.gradle.api.artifacts.Configuration
 
-import org.gradle.api.initialization.dsl.ScriptHandler
-import org.gradle.api.invocation.Gradle
 import no.statkart.sktools.gradle.plugins.dbtools.database.oracle.OracleExportTask
 import org.gradle.api.internal.ConventionTask
 import no.statkart.sktools.gradle.plugins.dbtools.database.oracle.OracleImportTask
-import org.gradle.api.Task
+
 import org.gradle.api.plugins.JavaBasePlugin
-import no.statkart.sktools.gradle.plugins.dbtools.database.util.SQLTask
-import org.gradle.api.internal.project.ProjectInternal
+
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractSQLTask
+import org.gradle.api.Task
+import org.gradle.api.plugins.JavaPlugin
 
 /**
  * Gradle plugin for database-moduler.
@@ -45,7 +44,7 @@ configureDatabasePlugin {
 class DbtoolsPlugin implements Plugin<Project>  {
     public static final String CONVENTION_NAME = "db";
     public static final String DBTOOLS_CONFIGURATION = "dbTools";
-    public static final String TEST_TASK_NAME = "test";
+    public static final String CHECK_TASK_NAME = "check";
 
     private static final Set<String> loadedDrivers = new HashSet<String>();
 
@@ -69,15 +68,18 @@ class DbtoolsPlugin implements Plugin<Project>  {
 
 
     private void configureTest(final Project project, final DbtoolsConvention pluginConvention) {
-        Task test = project.getTasks().create(TEST_TASK_NAME) {
-            description = 'Verifies configuration for task'
+        final Task checkSQLTasks = project.tasks.create('checkSQLTasks') {
+            description = 'Verifies configuration of SQLTasks'
             group = JavaBasePlugin.VERIFICATION_GROUP
-
             doLast {
                 project.tasks.withType(AbstractSQLTask.class) { AbstractSQLTask task ->
                     task.validate() //SKTOOLS-81
                 }
             }
+        }
+        project.afterEvaluate {
+            Task checkTask = project.getTasks().findByName(CHECK_TASK_NAME) ?: project.task(CHECK_TASK_NAME, description: 'Checks the dbTools configuration', group: JavaBasePlugin.VERIFICATION_GROUP)
+            checkTask.dependsOn checkSQLTasks
         }
     }
 
