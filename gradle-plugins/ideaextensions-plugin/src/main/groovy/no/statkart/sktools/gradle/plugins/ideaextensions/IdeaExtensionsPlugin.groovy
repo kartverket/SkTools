@@ -32,7 +32,7 @@ class IdeaExtensionsPlugin implements Plugin<Project> {
     void apply(Project project) {
         project.apply plugin: 'idea'
 
-        IdeaExtensionsPluginExtension extension = project.extensions.create(EXTENSION_NAME, IdeaExtensionsPluginExtension.class)
+        IdeaExtensionsPluginExtension extension = project.extensions.create(EXTENSION_NAME, IdeaExtensionsPluginExtension.class, project)
 
         if (project.parent == null) { //root
 
@@ -47,7 +47,7 @@ class IdeaExtensionsPlugin implements Plugin<Project> {
 
                 addGradle(rootNode, project)
                 addVcsMappings(rootNode, extension)
-                addIgnore(rootNode, extension)
+                addInspectionProfile(rootNode, extension)
             }
 
         } else { //ikke root
@@ -132,7 +132,7 @@ class IdeaExtensionsPlugin implements Plugin<Project> {
 
                 def builder = new NodeBuilder()
 
-                it.append(builder.mapping(directory: path, vcs: vcs) )
+                it.append(builder.mapping(directory: path, vcs: vcs))
             }
         }
     }
@@ -140,24 +140,75 @@ class IdeaExtensionsPlugin implements Plugin<Project> {
     /**
      * @since 1.2
      */
-    static def addIgnore(Node rootNode, IdeaExtensionsPluginExtension convention) {
-        if (convention.inspectionsFile != null) {
-            Node inspectionsXml = new XmlParser().parse(convention.inspectionsFile)
-            def name = inspectionsXml.option.find{it.@name == 'myName'}.@value
+    static def addInspectionProfile(Node rootNode, IdeaExtensionsPluginExtension convention) {
+        def defaultProfileName = null;
+        for (def path : convention.inspectionProfiles) {
+            def inspectionProfileFile = convention.project.file(path)
 
-            def builder = new NodeBuilder()
-            def inpsectionComponent = builder.component(name: 'InspectionProjectProfileManager') {
-                profiles {
-                    profile(version: '1.0', is_locked: 'false') {
-                        def p = currentNode
-                        inspectionsXml.children().each { n -> p.append(n) }
+            if (inspectionProfileFile != null) {
+                Node profileNode = buildInspectionProfile(inspectionProfileFile)
+                final String profileName = profileNode.option.find {it.@name == 'myName'}.@value
+
+                if (!defaultProfileName) {
+                    defaultProfileName = profileName
+                }
+
+                final Node inspectionProjectProfileManager = rootNode.component.find { it.@name == 'InspectionProjectProfileManager'}
+                if (inspectionProjectProfileManager == null) {
+                    inspectionProjectProfileManager = buildInspectionProfileManager(defaultProfileName)
+                    rootNode.append(inspectionProjectProfileManager)
+                } else {
+                    //sletter evt duplikater som er kommet inn ved feil rettet i SKTOOLS-82
+                    rootNode.component.findAll { it.@name == 'InspectionProjectProfileManager' }.each {
+                        if (it != inspectionProjectProfileManager) {
+                            rootNode.remove(it)
+                        } else {
+                            def debug = it
+                        }
                     }
                 }
-                option(name: 'PROJECT_PROFILE', value: name)
-//                option(name: 'USE_PROJECT_PROFILE', value: 'true')
-//                version(value: '1.0')
+
+                //sletter evt gammelt duplikat med samme navn
+                inspectionProjectProfileManager.profiles.profile.each {
+                    def name = it.option.find { it.@name = 'myName' }.@value
+                    if (profileName.equals(name)) {
+                        it.parent().remove(it)
+                    } else {
+                        def debug = name
+                    }
+                }
+
+                inspectionProjectProfileManager.profiles[0].append(profileNode)
             }
-            rootNode.append(inpsectionComponent)
         }
     }
+
+    /** @since 1.3 */
+    private static Node buildInspectionProfileManager(String defaultProfileName) {
+        def builder = new NodeBuilder()
+        builder.component(name: 'InspectionProjectProfileManager') {
+            profiles {
+            }
+            option(name: 'PROJECT_PROFILE', value: defaultProfileName)
+            option(name: 'USE_PROJECT_PROFILE', value: 'true')
+            version(value: '1.0')
+        }
+    }
+
+    /** @since 1.3 */
+    private static Node buildInspectionProfile(File inspectionProfileFile) {
+        Node profileNode = new XmlParser().parse(inspectionProfileFile)
+
+        //rename profile node for backward compatibility
+        if (profileNode.name().equals('inspections')) {
+            Node clone = new Node(null, 'profile', profileNode.attributes())
+            for (Node child : profileNode.children()) {
+                clone.append(child)
+            }
+            profileNode = clone
+        }
+
+        return profileNode
+    }
+
 }

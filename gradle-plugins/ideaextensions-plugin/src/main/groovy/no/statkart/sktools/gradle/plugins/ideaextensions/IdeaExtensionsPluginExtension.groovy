@@ -15,6 +15,10 @@ import org.gradle.api.Project
 class IdeaExtensionsPluginExtension {
     final Project project
 
+    IdeaExtensionsPluginExtension(Project project) {
+        this.project = project
+    }
+
     Set<String> ignoreMasks = ['*.iws', '*.ipr', '*.iml', '*.log']
     Set<File> ignorePaths = []
 
@@ -36,10 +40,20 @@ class IdeaExtensionsPluginExtension {
 
     /**
      * Angir en valgfri fil som inneholder inspection-instillinger eksportert fra IntelliJ.
+     * Første element i listen settes som default.
      *
-     * @since 1.2
+     * @since 1.3
      */
-    File inspectionsFile = null
+    List inspectionProfiles = []
+    void setInspectionProfile(def path) {
+        inspectionProfiles.clear()
+        inspectionProfiles.add(path)
+    }
+    /** @since 1.2 */
+    void setInspectionsFile(def path) {
+        project.logger.warn("Deprecation: ideaExtensions.inspectionsFile is deprecated and will be removed in sktools 1.4")
+        setInspectionProfile(path)
+    }
 
     /**
      * Setter default VCS mapping
