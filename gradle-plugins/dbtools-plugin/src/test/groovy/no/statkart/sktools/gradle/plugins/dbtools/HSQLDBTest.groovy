@@ -7,6 +7,7 @@ import groovy.sql.Sql
 import org.testng.annotations.AfterTest
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.AfterMethod
+import no.statkart.sktools.utils.databasepatcher.DatabasePatcherTestCase
 
 /**
  * Testklasse som setter opp en tom database.
@@ -25,6 +26,11 @@ abstract class HSQLDBTest {
     int testIdx = 0;
 
 
+    protected DatabasePatcherTestCase buildDatabasePatcherTestCase() {
+        def testCase = new DatabasePatcherTestCase(jdbcDriverClassString, sql.connection.metaData.URL, username, password)
+
+        return testCase
+    }
 
     /**
      * Connection som holder databasen oppe. Kallet gjør at en in memory database blir kreert og vil være tilgjengelig så lenge som denne connectionen lever.
@@ -68,5 +74,6 @@ abstract class HSQLDBTest {
     protected Sql buildSQLInstance(String url, String username, String password) {
         return Sql.newInstance(url, username, password, jdbcDriverClassString)
     }
+
 
 }

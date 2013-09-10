@@ -38,44 +38,30 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
     void testCustomTasksByConvention() {
         assert sql.connection.isValid(0)
 
-        //forks a new project in a temp folder
-        Project project = ProjectBuilder.builder().build()
-
+        final def testCase = new DbToolsPluginPatchTestCase()
 
         // STEG 1 - oppretter sql-filer relativt til prosjekt
-        File dir = new File('hsql', new File('src', project.rootDir))
-        assert dir.mkdirs()
 
-        File createShemaFile = new File('CreateSchema.sql', dir)
-        File dataFile = new File('data.sql', dir)
-
-        createShemaFile.withWriter { writer ->
-            writer << """\
-                CREATE TABLE TEST_TABLE (
-                   ID INTEGER NOT NULL,
-                   NAVN VARCHAR(32) NOT NULL,
-                   PRIMARY KEY (ID)
-                );
+        File createShemaFile = testCase.createNewFileWithDirsRelativeToProject('src/hsql/CreateSchema.sql', """\
+            CREATE TABLE TEST_TABLE (
+               ID INTEGER NOT NULL,
+               NAVN VARCHAR(32) NOT NULL,
+               PRIMARY KEY (ID)
+            );
             """
-        }
-
-        dataFile.withWriter { writer ->
-            writer << """\
+        )
+        File dataFile = testCase.createNewFileWithDirsRelativeToProject('src/hsql/data.sql', """\
             INSERT INTO TEST_TABLE (ID, NAVN) VALUES (1, 'CHUCK NORRIS');
             """
-        }
+        )
 
 
         // STEG 2 - konfigurering av plugin
-        project.ext.setProperty 'username', username
-        project.ext.setProperty 'password', password
-
-        project.apply plugin:'sktools-dbtools-plugin'
-
-
-        DbtoolsConvention convention = project.convention.getPlugin(DbtoolsConvention.class)
-        convention.configureDatabasePlugin {
+        testCase.configureDatabasePlugin {
             toolset( name:'Prefix', type:'hsqldb', prefix:'Prefix') {
+
+                credentials.username = username
+                credentials.password = password
 
                 url = sql.connection.properties.URL
                 driver = jdbcDriverClassString
@@ -87,8 +73,8 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
 
 
         // STEG 3 - tasks ihht konvensjon
-        Task createSchemaTask = project.tasks.getByName('prefixCreateSchema')
-        Task dataTask = project.tasks.getByName('prefixData')
+        Task createSchemaTask = testCase.project.tasks.getByName('prefixCreateSchema')
+        Task dataTask = testCase.project.tasks.getByName('prefixData')
 
         Assert.assertNotNull createSchemaTask, "Forventet task for ${createShemaFile.name}"
         Assert.assertNotNull dataTask, "Forventet task for ${dataFile.name}"
@@ -149,44 +135,30 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
     void testDynamicCredentials() {
         assert sql.connection.isValid(0)
 
-        //forks a new project in a temp folder
-        Project project = ProjectBuilder.builder().build()
-
+        final def testCase = new DbToolsPluginPatchTestCase()
 
         // STEG 1 - oppretter sql-filer relativt til prosjekt
-        File dir = new File('hsql', new File('src', project.rootDir))
-        assert dir.mkdirs()
 
-        File createShemaFile = new File('CreateSchema.sql', dir)
-        File createShema2File = new File('CreateSchema2.sql', dir)
-
-        createShemaFile.withWriter { writer ->
-            writer << """\
-                CREATE TABLE TEST_TABLE (
-                   ID INTEGER NOT NULL,
-                   NAVN VARCHAR(32) NOT NULL,
-                   PRIMARY KEY (ID)
-                );
+        File createShemaFile = testCase.createNewFileWithDirsRelativeToProject('src/hsql/CreateSchema.sql', """\
+            CREATE TABLE TEST_TABLE (
+               ID INTEGER NOT NULL,
+               NAVN VARCHAR(32) NOT NULL,
+               PRIMARY KEY (ID)
+            );
             """
-        }
+        )
 
-        createShema2File.withWriter { writer ->
-            writer << """\
+        File createShema2File = testCase.createNewFileWithDirsRelativeToProject('src/hsql/CreateSchema2.sql', """
                 CREATE TABLE TEST_TABLE2 (
                    ID INTEGER NOT NULL,
                    NAVN VARCHAR(32) NOT NULL,
                    PRIMARY KEY (ID)
                 );
             """
-        }
+        )
 
 
-        // STEG 2 - konfigurering av plugin
-        project.apply plugin:'sktools-dbtools-plugin'
-
-
-        DbtoolsConvention convention = project.convention.getPlugin(DbtoolsConvention.class)
-        convention.configureDatabasePlugin {
+        testCase.configureDatabasePlugin {
             useToolset('hsqldb', 'Prefix_', 'hsql') {
 
                 url = sql.connection.properties.URL
@@ -199,14 +171,14 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
 
 
         // STEG 3 - credentials ihht konfig
-        def credentials = convention.dbToolSets['Prefix_'].credentials
+        def credentials = testCase.convention.dbToolSets['Prefix_'].credentials
         Assert.assertEquals credentials.username, 'sa'
         Assert.assertEquals credentials.password, ''
 
-        Task createSchemaTask = project.tasks.getByName('prefix_CreateSchema')
+        Task createSchemaTask = testCase.project.tasks.getByName('prefix_CreateSchema')
         Assert.assertNotNull createSchemaTask, "Forventet task for ${createShemaFile.name}"
 
-        Task createSchema2Task = project.tasks.getByName('prefix_CreateSchema2')
+        Task createSchema2Task = testCase.project.tasks.getByName('prefix_CreateSchema2')
         Assert.assertNotNull createSchema2Task, "Forventet task for ${createShema2File.name}"
 
 
@@ -266,46 +238,32 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
         String db1URL = sql.connection.properties.URL
         String db2URL = "${db1URL}DB2"
 
-        //forks a new project in a temp folder
-        Project project = ProjectBuilder.builder().build()
+        final def testCase = new DbToolsPluginPatchTestCase()
 
 
         // STEG 1 - oppretter sql-filer relativt til prosjekt
-        File dir1 = new File('hsql', new File('src', project.rootDir))
-        File dir2 = new File('hsql2', new File('src', project.rootDir))
-        assert dir1.mkdirs()
-        assert dir2.mkdirs()
 
-        File createShemaFile = new File('CreateSchema.sql', dir1)
-        File createShema2File = new File('CreateSchema2.sql', dir2)
-
-        createShemaFile.withWriter { writer ->
-            writer << """\
-                CREATE TABLE TEST_TABLE (
-                   ID INTEGER NOT NULL,
-                   NAVN VARCHAR(32) NOT NULL,
-                   PRIMARY KEY (ID)
-                );
+        File createShemaFile = testCase.createNewFileWithDirsRelativeToProject('src/hsql/CreateSchema.sql', """\
+            CREATE TABLE TEST_TABLE (
+               ID INTEGER NOT NULL,
+               NAVN VARCHAR(32) NOT NULL,
+               PRIMARY KEY (ID)
+            );
             """
-        }
-
-        createShema2File.withWriter { writer ->
-            writer << """\
-                CREATE TABLE TEST_TABLE2 (
-                   ID INTEGER NOT NULL,
-                   NAVN VARCHAR(32) NOT NULL,
-                   PRIMARY KEY (ID)
-                );
+        )
+        File createShema2File = testCase.createNewFileWithDirsRelativeToProject('src/hsql2/CreateSchema2.sql', """\
+            CREATE TABLE TEST_TABLE2 (
+               ID INTEGER NOT NULL,
+               NAVN VARCHAR(32) NOT NULL,
+               PRIMARY KEY (ID)
+            );
             """
-        }
+        )
+
 
 
         // STEG 2 - konfigurering av plugin
-        project.apply plugin:'sktools-dbtools-plugin'
-
-
-        DbtoolsConvention convention = project.convention.getPlugin(DbtoolsConvention.class)
-        convention.configureDatabasePlugin {
+        testCase.configureDatabasePlugin {
             useToolset('hsqldb', 'DB1', 'hsql') {
 
                 url = "${db1URL}"
@@ -326,10 +284,10 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
 
 
         // STEG 3 - credentials ihht konfig
-        Task createSchemaTask = project.tasks.getByName('dB1CreateSchema')
+        Task createSchemaTask = testCase.project.tasks.getByName('dB1CreateSchema')
         Assert.assertNotNull createSchemaTask, "Forventet task for ${createShemaFile.name}"
 
-        Task createSchema2Task = project.tasks.getByName('dB2CreateSchema2')
+        Task createSchema2Task = testCase.project.tasks.getByName('dB2CreateSchema2')
         Assert.assertNotNull createSchema2Task, "Forventet task for ${createShema2File.name}"
 
 

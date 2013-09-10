@@ -1,13 +1,11 @@
 package no.statkart.sktools.gradle.plugins.dbtools
 
 import org.testng.annotations.Test
-import org.gradle.api.Project
-import org.gradle.testfixtures.ProjectBuilder
 import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsConvention
 import org.testng.Assert
 
 /**
- *
+ * Test av {@link no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsPlugin}
  */
 class DbToolsPluginTest {
 
@@ -17,12 +15,9 @@ class DbToolsPluginTest {
      */
     @Test
     void testAppplyPlugin() {
-        //forks a new project in a temp folder
-        Project project = ProjectBuilder.builder().build()
+        final def testCase = new DbToolsPluginTestCase()
 
-        project.apply plugin: 'sktools-dbtools-plugin'
-
-        Assert.assertTrue(project.convention.plugins.db instanceof DbtoolsConvention)
+        Assert.assertTrue(testCase.project.convention.plugins.db instanceof DbtoolsConvention)
 
     }
 
@@ -35,15 +30,11 @@ class DbToolsPluginTest {
      */
     @Test
     void testApplyCredentials() {
-        //forks a new project in a temp folder
-        Project project = ProjectBuilder.builder().build()
+        final def testCase = new DbToolsPluginTestCase()
 
-        project.apply plugin: 'sktools-dbtools-plugin'
+        testCase.createNewFileWithDirsRelativeToProject('src/hsql/PleaseAuthenticateMe.sql')
 
-        project.mkdir('src/hsql')
-        project.file('src/hsql/PleaseAuthenticateMe.sql').createNewFile()
-
-        project.configureDatabasePlugin {
+        testCase.configureDatabasePlugin {
             toolset(name:'coolDb', type:'hsqldb', prefix:'coolDb') {
                 url = "jdbc:hsqldb:mem:${this.class.simpleName}TestApplyCredentials"
                 driver = 'org.hsqldb.jdbcDriver'
@@ -56,17 +47,17 @@ class DbToolsPluginTest {
             }
         }
 
-        assert project.tasks.findByName('coolDbPleaseAuthenticateMe') != null //forutsetter at denne er lagt til
+        assert testCase.project.tasks.findByName('coolDbPleaseAuthenticateMe') != null //forutsetter at denne er lagt til
 
         //tester defaults - username og password blir lest ifra prosjekt properties
-        assert project.dbToolSets.coolDb.credentials.username == 'brukernavn'
-        assert project.dbToolSets.coolDb.credentials.password == 'passord'
-        assert project.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].username == 'brukernavn'
-        assert project.dbToolSets.coolDb.tasks.PleaseAuthenticateMe.password == 'passord'
+        assert testCase.convention.dbToolSets.coolDb.credentials.username == 'brukernavn'
+        assert testCase.convention.dbToolSets.coolDb.credentials.password == 'passord'
+        assert testCase.convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].username == 'brukernavn'
+        assert testCase.convention.dbToolSets.coolDb.tasks.PleaseAuthenticateMe.password == 'passord'
 
 
         //setter credentials på toolsetet
-        project.configureDatabasePlugin {
+        testCase.configureDatabasePlugin {
             toolset(type:'hsqldb', name:'coolDb') {
                 credentials.username = 'brukernavn2'
                 credentials.password = 'passord2'
@@ -74,45 +65,45 @@ class DbToolsPluginTest {
         }
 
         //sjekker at toolset har fått satt riktige credentials
-        assert project.dbToolSets.coolDb.credentials.username == 'brukernavn2'
-        assert project.dbToolSets.coolDb.credentials.password == 'passord2'
+        assert testCase.convention.dbToolSets.coolDb.credentials.username == 'brukernavn2'
+        assert testCase.convention.dbToolSets.coolDb.credentials.password == 'passord2'
         //sjekker at task leser credentials ifra toolset
-        assert project.dbToolSets.coolDb.tasks.PleaseAuthenticateMe.username == 'brukernavn2'
-        assert project.dbToolSets.coolDb.tasks.PleaseAuthenticateMe.password == 'passord2'
+        assert testCase.convention.dbToolSets.coolDb.tasks.PleaseAuthenticateMe.username == 'brukernavn2'
+        assert testCase.convention.dbToolSets.coolDb.tasks.PleaseAuthenticateMe.password == 'passord2'
 
 
         //setter passord på task
-        project.project.tasks.'coolDbPleaseAuthenticateMe'.password = 'passord3'
+        testCase.project.tasks.'coolDbPleaseAuthenticateMe'.password = 'passord3'
         //setter default brukernavn via project properties
-        project.ext.setProperty 'username', 'projectUser'
+        testCase.project.ext.setProperty 'username', 'projectUser'
 
 
-        assert project.dbToolSets.coolDb.credentials.username == 'brukernavn2'
-        assert project.dbToolSets.coolDb.credentials.password == 'passord2'
+        assert testCase.convention.dbToolSets.coolDb.credentials.username == 'brukernavn2'
+        assert testCase.convention.dbToolSets.coolDb.credentials.password == 'passord2'
         //sjekker at credentials blir bruk som en anatomisk enhet
-        assert project.dbToolSets.coolDb.tasks.PleaseAuthenticateMe.username == null    //fungerer kun n[r Console ikke finnes
-        assert project.dbToolSets.coolDb.tasks.PleaseAuthenticateMe.password == 'passord3'
+        assert testCase.convention.dbToolSets.coolDb.tasks.PleaseAuthenticateMe.username == null    //fungerer kun n[r Console ikke finnes
+        assert testCase.convention.dbToolSets.coolDb.tasks.PleaseAuthenticateMe.password == 'passord3'
 
 
 
         //clearer credentials på task
-        project.project.tasks.'coolDbPleaseAuthenticateMe'.credentials.clear()
+        testCase.project.tasks.'coolDbPleaseAuthenticateMe'.credentials.clear()
 
-        assert project.dbToolSets.coolDb.credentials.username == 'brukernavn2'
-        assert project.dbToolSets.coolDb.credentials.password == 'passord2'
+        assert testCase.convention.dbToolSets.coolDb.credentials.username == 'brukernavn2'
+        assert testCase.convention.dbToolSets.coolDb.credentials.password == 'passord2'
         //sjekker at credentials blir hentet ifra toolsetet igjen
-        assert project.dbToolSets.coolDb.tasks.PleaseAuthenticateMe.username == 'brukernavn2'
-        assert project.dbToolSets.coolDb.tasks.PleaseAuthenticateMe.password == 'passord2'
+        assert testCase.convention.dbToolSets.coolDb.tasks.PleaseAuthenticateMe.username == 'brukernavn2'
+        assert testCase.convention.dbToolSets.coolDb.tasks.PleaseAuthenticateMe.password == 'passord2'
 
 
         //setter credentials  på task
-        project.project.tasks.'coolDbPleaseAuthenticateMe'.username = 'brukernavn4'
-        project.project.tasks.'coolDbPleaseAuthenticateMe'.password = 'passord4'
+        testCase.project.tasks.'coolDbPleaseAuthenticateMe'.username = 'brukernavn4'
+        testCase.project.tasks.'coolDbPleaseAuthenticateMe'.password = 'passord4'
 
-        assert project.dbToolSets.coolDb.tasks.PleaseAuthenticateMe.username == 'brukernavn4'
-        assert project.dbToolSets.coolDb.tasks.PleaseAuthenticateMe.password == 'passord4'
-        assert project.dbToolSets.coolDb.tasks.PleaseAuthenticateMe.credentials.username == 'brukernavn4'
-        assert project.dbToolSets.coolDb.tasks.PleaseAuthenticateMe.credentials.password == 'passord4'
+        assert testCase.convention.dbToolSets.coolDb.tasks.PleaseAuthenticateMe.username == 'brukernavn4'
+        assert testCase.convention.dbToolSets.coolDb.tasks.PleaseAuthenticateMe.password == 'passord4'
+        assert testCase.convention.dbToolSets.coolDb.tasks.PleaseAuthenticateMe.credentials.username == 'brukernavn4'
+        assert testCase.convention.dbToolSets.coolDb.tasks.PleaseAuthenticateMe.credentials.password == 'passord4'
 
     }
 
@@ -124,12 +115,9 @@ class DbToolsPluginTest {
      */
     @Test
     void testOracleImportTask() {
-        //forks a new project in a temp folder
-        Project project = ProjectBuilder.builder().build()
+        final def testCase = new DbToolsPluginTestCase()
 
-        project.apply plugin: 'sktools-dbtools-plugin'
-
-        project.configureDatabasePlugin {
+        testCase.configureDatabasePlugin {
             toolset(name:'db1', type:'oracle') {
                 properties = [  //deklarering via felles properties for toolset
                         username: 'brukernavn',
@@ -147,9 +135,9 @@ class DbToolsPluginTest {
 
         1..2.each {
             def taskName = "db${it}Import"
-            assert project.tasks.findByName(taskName) != null //forutsetter at denne er lagt til
-            assert project.tasks[taskName].username == 'brukernavn'
-            assert project.tasks[taskName].password == 'passord'
+            assert testCase.project.tasks.findByName(taskName) != null //forutsetter at denne er lagt til
+            assert testCase.project.tasks[taskName].username == 'brukernavn'
+            assert testCase.project.tasks[taskName].password == 'passord'
         }
     }
 
@@ -160,12 +148,9 @@ class DbToolsPluginTest {
      */
     @Test
     void testOracleExportTask() {
-        //forks a new project in a temp folder
-        Project project = ProjectBuilder.builder().build()
+        final def testCase = new DbToolsPluginTestCase()
 
-        project.apply plugin: 'sktools-dbtools-plugin'
-
-        project.configureDatabasePlugin {
+        testCase.configureDatabasePlugin {
             toolset(name:'db1', type:'oracle') {
                 properties = [  //deklarering via felles properties for toolset
                         username: 'brukernavn',
@@ -183,9 +168,9 @@ class DbToolsPluginTest {
 
         1..2.each {
             def taskName = "db${it}Export"
-            assert project.tasks.findByName(taskName) != null //forutsetter at denne er lagt til
-            assert project.tasks[taskName].username == 'brukernavn'
-            assert project.tasks[taskName].password == 'passord'
+            assert testCase.project.tasks.findByName(taskName) != null //forutsetter at denne er lagt til
+            assert testCase.project.tasks[taskName].username == 'brukernavn'
+            assert testCase.project.tasks[taskName].password == 'passord'
         }
     }    
     

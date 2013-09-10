@@ -6,6 +6,8 @@ import no.statkart.sktools.gradle.plugins.dbtools.HSQLDBTest
 import no.statkart.sktools.utils.parsers.sql.SQLStatementParser
 import no.statkart.sktools.utils.parsers.sql.model.Expression
 
+import static no.statkart.sktools.gradle.plugins.dbtools.testutils.DbToolsTestCase.FILE_TYPE.SQL
+
 /**
  * Tester funksjonaliteten til {@link no.statkart.sktools.utils.databasepatcher.DatabasePatcher}
  *
@@ -13,29 +15,17 @@ import no.statkart.sktools.utils.parsers.sql.model.Expression
  */
 class DatabasePatcherTest extends HSQLDBTest {
 
-    private DatabasePatcher setUpDatabasePatcher(String component = null) {
-        DatabasePatcher databasePatcher = new DatabasePatcher()
-
-        System.setProperty("hibernate.connection.driver_class", jdbcDriverClassString)
-        System.setProperty("hibernate.connection.url", sql.connection.metaData.URL)
-        System.setProperty("hibernate.connection.username", username)
-        System.setProperty("hibernate.connection.password", password)
-
-        if (component != null) {
-            databasePatcher.component = component
-        }
-
-        return databasePatcher
-    }
 
     /**
      * Verifiserer at man kan angi absolutt filsti for "patch.sql"
      */
     @Test
     public void testAbsoluteFileName() {
-        File patchFile = createSimplePatchFile();
+        final DatabasePatcherTestCase testCase = buildDatabasePatcherTestCase()
 
-        DatabasePatcher databasePatcher = setUpDatabasePatcher();
+        File patchFile = testCase.createSimplePatchFile();
+
+        DatabasePatcher databasePatcher = testCase.setUpDatabasePatcher();
         databasePatcher.patch(patchFile.toString(), false);
 
         def row = sql.firstRow('select ID, NAVN from TEST_TABLE where ID = 1')
@@ -46,19 +36,22 @@ class DatabasePatcherTest extends HSQLDBTest {
 
     }
 
+
     /**
      * Verifiserer at man kan angi relativ filsti for "patch.sql"
      */
     @Test
     public void testRelativeFileName() {
+        final DatabasePatcherTestCase testCase = buildDatabasePatcherTestCase()
+
         File baseDir = new File(".")
         File subDir = new File(baseDir, "subdir")
         subDir.mkdir()
-        File patchFile = createSimplePatchFile(subDir);
+        File patchFile = testCase.createSimplePatchFile(subDir);
 
         String relativePath = "subdir/" + patchFile.getName()
 
-        DatabasePatcher databasePatcher = setUpDatabasePatcher();
+        DatabasePatcher databasePatcher = testCase.setUpDatabasePatcher();
         databasePatcher.patch(relativePath, false);
 
         def row = sql.firstRow('select ID, NAVN from TEST_TABLE where ID = 1')
@@ -75,9 +68,11 @@ class DatabasePatcherTest extends HSQLDBTest {
      */
     @Test
     public void testNoPatchdataTable() {
-        File patchFile = createEmptyFile();
+        final DatabasePatcherTestCase testCase = buildDatabasePatcherTestCase()
 
-        DatabasePatcher databasePatcher = setUpDatabasePatcher();
+        File patchFile = testCase.createTempFile("");
+
+        DatabasePatcher databasePatcher = testCase.setUpDatabasePatcher();
         databasePatcher.patch(patchFile.toString(), false);
 
         def row = sql.firstRow('select * from PATCHINFO')
@@ -93,15 +88,53 @@ class DatabasePatcherTest extends HSQLDBTest {
      */
     @Test
     public void testPatchdataForComponents() {
-        File patchAFile = createAPatchFile()
-        File patchBFile = createBPatchFile()
+        final DatabasePatcherTestCase testCase = buildDatabasePatcherTestCase()
 
-        DatabasePatcher databasePatcher = setUpDatabasePatcher();
+        File patchAFile = testCase.createTempFile(SQL, '''
+-- patch for default modul. Testen kjører kun første definerte patch.
+
+-- PATCH DB.MIN.VERSION="<any>"
+-- PATCH DATA DB.VERSION="1.0" PATCH.NO="1" "Create Atable"
+
+CREATE TABLE A_TABLE (
+   ID INTEGER NOT NULL,
+   NAVN VARCHAR(32) NOT NULL,
+   PRIMARY KEY (ID)
+);
+
+-- PATCH DATA DB.VERSION="1.0" PATCH.NO="3" "Inserting valueA"
+INSERT INTO A_TABLE (ID, NAVN) VALUES (1, 'valueA');
+
+        ''')
+
+        File patchBFile = testCase.createTempFile(SQL, '''
+-- patch for 'modulB'
+
+-- PATCH DB.MIN.VERSION="<any>"
+-- PATCH DATA DB.VERSION="0.2" PATCH.NO="1" "Create Btable"
+
+CREATE TABLE B_TABLE (
+   ID INTEGER NOT NULL,
+   NAVN VARCHAR(32) NOT NULL,
+   PRIMARY KEY (ID)
+);
+
+-- PATCH DATA DB.VERSION="0.2" PATCH.NO="3" "Inserting valueA"
+INSERT INTO B_TABLE (ID, NAVN) VALUES (1, 'valueA');
+
+-- PATCH DATA DB.VERSION="0.2" PATCH.NO="4" "Inserting valueB"
+INSERT INTO B_TABLE (ID, NAVN) VALUES (2, 'valueB');
+
+        ''')
+
+
+        DatabasePatcher databasePatcher = testCase.setUpDatabasePatcher();
 
         //kjører inn patch for "default" komponent
         databasePatcher.patch(patchAFile.toString(), true) //singlestep
 
         Assert.assertEquals(sql.firstRow('select count(*) from PATCHINFO').getAt(0), 1, "Forventet antall rader i patchinfo")
+        Assert.assertEquals(databasePatcher.getVersion().component, 'null', "forventet modul")
 
         def row = sql.firstRow('select * from PATCHINFO')
         Assert.assertNotNull(row, 'Forventer en rad')
@@ -121,6 +154,7 @@ class DatabasePatcherTest extends HSQLDBTest {
 
         }
 
+        Assert.assertEquals(databasePatcher.getVersion().component, 'modulB', "forventet modul")
         Assert.assertEquals(databasePatcher.getVersion().patchVersion.dbVersion, '0.2', "forventet patchversjon/dbVersion")
         Assert.assertEquals(databasePatcher.getVersion().patchVersion.patchNo, 4, "forventet patchnummer")
 
@@ -132,7 +166,9 @@ class DatabasePatcherTest extends HSQLDBTest {
      */
     @Test
     public void testParsing() {
-        File patchFile = createSimplePatchFile();
+        final DatabasePatcherTestCase testCase = buildDatabasePatcherTestCase()
+
+        File patchFile = testCase.createSimplePatchFile();
 
         List<? extends Expression> expressions = SQLStatementParser.parseExpressions(SqlExecutor.lesFilFraWorkingDir(patchFile.absolutePath));
 
@@ -146,111 +182,5 @@ class DatabasePatcherTest extends HSQLDBTest {
 
     }
 
-    // helper methods -->
-
-    private static File createEmptyFile(File dir = null) {
-        File patchFile = File.createTempFile("patch", ".sql", dir)
-        return patchFile
-    }
-
-    private static File createSimplePatchFile(File dir = null) {
-        File patchFile = File.createTempFile("patch", ".sql", dir)
-        patchFile.withPrintWriter {
-            it.println '''
-
---kommentar
-
--- PATCH DB.MIN.VERSION="<any>"
--- PATCH DATA DB.VERSION="1.0" PATCH.NO="1" "Create test table"
-
-CREATE TABLE TEST_TABLE (
-   ID INTEGER NOT NULL,
-   NAVN VARCHAR(32) NOT NULL,
-   PRIMARY KEY (ID)
-);
-
--- PATCH DATA DB.VERSION="1.0" PATCH.NO="3" "Inserting Chuck Norris"
-INSERT INTO TEST_TABLE (ID, NAVN) VALUES (1, 'CHUCK NORRIS');
-
-'''
-            it.flush()
-        }
-       return patchFile
-    }
-
-    /**
-     * Patch som inneholder patcher for tabell "A_TABLE".
-     * <p>
-     * Patchnummer:
-     * <ul>
-     *     <li> 1.0 patch# 1
-     *     <li> 1.0 patch# 3
-     * </ul>
-     *
-     */
-    private static File createAPatchFile(File dir = null) {
-        File patchFile = File.createTempFile("patchA", ".sql", dir)
-        patchFile.withPrintWriter {
-            it.println '''
-
---kommentar
-
--- PATCH DB.MIN.VERSION="<any>"
--- PATCH DATA DB.VERSION="1.0" PATCH.NO="1" "Create Atable"
-
-CREATE TABLE A_TABLE (
-   ID INTEGER NOT NULL,
-   NAVN VARCHAR(32) NOT NULL,
-   PRIMARY KEY (ID)
-);
-
--- PATCH DATA DB.VERSION="1.0" PATCH.NO="3" "Inserting valueA"
-INSERT INTO A_TABLE (ID, NAVN) VALUES (1, 'valueA');
-
-'''
-            it.flush()
-        }
-        return patchFile
-    }
-
-
-    /**
-     * Patch som inneholder patcher for tabell "B_TABLE".
-     * <p>
-     * Patchnummer:
-     * <ul>
-     *     <li> 0.2 patch# 1
-     *     <li> 0.2 patch# 3
-     *     <li> 0.2 patch# 4
-     * </ul>
-     *
-     */
-    private static File createBPatchFile(File dir = null) {
-        File patchFile = File.createTempFile("patchB", ".sql", dir)
-        patchFile.withPrintWriter {
-            it.println '''
-
---kommentar
-
--- PATCH DB.MIN.VERSION="<any>"
--- PATCH DATA DB.VERSION="0.2" PATCH.NO="1" "Create Btable"
-
-CREATE TABLE B_TABLE (
-   ID INTEGER NOT NULL,
-   NAVN VARCHAR(32) NOT NULL,
-   PRIMARY KEY (ID)
-);
-
--- PATCH DATA DB.VERSION="0.2" PATCH.NO="3" "Inserting valueA"
-INSERT INTO B_TABLE (ID, NAVN) VALUES (1, 'valueA');
-
--- PATCH DATA DB.VERSION="0.2" PATCH.NO="4" "Inserting valueB"
-INSERT INTO B_TABLE (ID, NAVN) VALUES (2, 'valueB');
-
-'''
-            it.flush()
-        }
-        return patchFile
-    }
 
 }
