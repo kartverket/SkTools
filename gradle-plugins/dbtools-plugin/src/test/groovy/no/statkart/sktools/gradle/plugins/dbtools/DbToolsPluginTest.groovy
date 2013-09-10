@@ -5,7 +5,9 @@ import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsConvention
 import org.testng.Assert
 
 /**
- * Test av {@link no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsPlugin}
+ * Test av {@link no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsPlugin} m.t.p. gradle mekanikker.
+ *
+ * For funksjonell testing av eksekvering av sql script, se {@link DbToolsPluginHSQLDBTest}
  */
 class DbToolsPluginTest {
 

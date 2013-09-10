@@ -12,7 +12,9 @@ import org.gradle.api.Task
 import org.gradle.api.tasks.TaskExecutionException
 
 /**
- * Tester plugin funjsonalitet via HSQLDB - en in memory database
+ * Tester funksjonell plugin funjsonalitet via HSQLDB - en in memory database
+ *
+ * Testene sjekker her at faktiske sql-setninger blir kjørt mot databasen som forventet.
  */
 class DbToolsPluginHSQLDBTest extends HSQLDBTest {
 
@@ -315,8 +317,80 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
             Assert.fail 'Forventer at tabell finnes'
         }
 
+    }
 
+
+    /**
+     * Tester at standard test blir lagt til for en "patch"
+     */
+    @Test
+    void testPatchStandardTasks() {
+        final def testCase = new DbToolsPluginPatchTestCase()
+
+        testCase.configureDatabasePlugin {
+            toolset(name: 'Prefix', type: 'hsqldb', prefix: 'Prefix') {
+
+                credentials.username = username
+                credentials.password = password
+
+
+                url = sql.connection.properties.URL
+                driver = jdbcDriverClassString
+
+                patch {
+                    //tom konfigurasjon
+                }
+
+            }
+        }
+
+        // STEG 3 - tester
+        Task printPatchVersionTask = testCase.project.tasks.getByName('prefixPrintPatchVersion')
+        Task setIndexInSyncWithPatchTask = testCase.project.tasks.getByName('prefixSetIndexInSyncWithPatch')
+
+        Assert.assertNotNull(printPatchVersionTask, "Forventet task for 'prefixPrintPatchVersion")
+        Assert.assertNotNull(setIndexInSyncWithPatchTask, "Forventet task for 'prefixSetIndexInSyncWithPatch")
 
     }
+
+    /**
+     * Tester patchDatabase target
+     */
+    @Test
+    void testPatchDatabase() {
+        final def testCase = new DbToolsPluginPatchTestCase()
+
+        // STEG 1 - setter opp testmaterie
+        File patchFile = testCase.createSimplePatchFile()
+
+        // STEG 2 - konfigurering av plugin
+        testCase.configureDatabasePlugin {
+            toolset(name: 'Prefix', type: 'hsqldb', prefix: 'Prefix') {
+
+                credentials.username = username
+                credentials.password = password
+
+                url = sql.connection.properties.URL
+                driver = jdbcDriverClassString
+
+                patch {
+                    patchTask('TestSchema', sqlFile:patchFile)
+                }
+
+            }
+        }
+
+        // STEG 3 - tester
+        Task printPatchVersionTask = testCase.project.tasks.getByName('prefixPatchTestSchema')
+
+//
+//        if (IntelliJTestUtil.isIntelliJTestRuntime) {
+//            printPatchVersionTask.classpath = project.files(this.class.classLoader.properties['URLs'])
+//        }
+
+        printPatchVersionTask.execute()
+
+    }
+
 
 }
