@@ -45,7 +45,7 @@ class IdeaExtensionsPlugin implements Plugin<Project> {
             project.idea.project.ipr.withXml { provider ->
                 Node rootNode = provider.asNode()
 
-                addGradle(rootNode, project)
+                addGradle(rootNode, extension)
                 addVcsMappings(rootNode, extension)
                 addInspectionProfile(rootNode, extension)
             }
@@ -103,14 +103,24 @@ class IdeaExtensionsPlugin implements Plugin<Project> {
     /**
      * @since 1.2
      */
-    static def addGradle(Node rootNode, Project project) {
-        def builder = new NodeBuilder()
+    static def addGradle(Node rootNode, IdeaExtensionsPluginExtension convention) {
 
-        def node = builder.component(name: 'GradleSettings') {
-            option(name: 'gradleHome', value: project.gradle.gradleHomeDir)
+        Node gradleComponentNode = rootNode.component.find { it.@name == 'GradleSettings' }
+
+        if (gradleComponentNode == null) {
+            def builder = new NodeBuilder()
+
+            gradleComponentNode = builder.component(name: 'GradleSettings') {
+                option(name: 'gradleHome', value: 'replace me!')
+            }
+
+            rootNode.append(gradleComponentNode)
         }
 
-        rootNode.append(node)
+        gradleComponentNode.option.find { it.@name == 'gradleHome' }.replaceNode {
+            option(name: 'gradleHome', value: convention.project.gradle.gradleHomeDir) {}
+        }
+
     }
 
     /**

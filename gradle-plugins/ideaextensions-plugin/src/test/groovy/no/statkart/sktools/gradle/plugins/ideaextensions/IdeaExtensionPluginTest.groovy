@@ -42,18 +42,18 @@ class IdeaExtensionPluginTest {
 
     /**
      * Tester angivelse xml for inspection profiles
+     * @since 1.3
      */
     @Test
     void testAddInspectionProfileClean() {
-        def testCase = new InspectionProfileTestCase()
+        final def testCase = new InspectionProfileTestCase()
         testCase.ideaTemplate = testCase.IDEA_TEMPLATE_EMPTY_XML
         testCase.addInspectionProfileFile(testCase.INSPECTION_PROFILE_1_XML)
         testCase.addInspectionProfileFile(testCase.INSPECTION_PROFILE_2_XML)
 
-        def extension = testCase.getExtension()
         def rootNode = testCase.buildIdeaTemplateNode()
 
-        IdeaExtensionsPlugin.addInspectionProfile(rootNode, extension)
+        IdeaExtensionsPlugin.addInspectionProfile(rootNode, testCase.extension)
 
         assert rootNode.component.findAll { it.@name == "InspectionProjectProfileManager" }.size() == 1 //forventet kun ett element
 
@@ -65,18 +65,18 @@ class IdeaExtensionPluginTest {
 
     /**
      * Tester angivelse xml for inspection profiles der profiler finnes ifra før (merge)
+     * @since 1.3
      */
     @Test
     void testAddInspectionProfileMerge() {
-        def testCase = new InspectionProfileTestCase()
+        final def testCase = new InspectionProfileTestCase()
         testCase.ideaTemplate = IDEA_TEMPLATE_WITH_INSPECTIONS_XML
         testCase.addInspectionProfileFile(buildInspectionProfile(INSPECTION_PROFILE_1_NAME, 'invalidBooleanValue'))
         testCase.addInspectionProfileFile(INSPECTION_PROFILE_2_XML)
 
-        def extension = testCase.getExtension()
         def rootNode = testCase.buildIdeaTemplateNode()
 
-        IdeaExtensionsPlugin.addInspectionProfile(rootNode, extension)
+        IdeaExtensionsPlugin.addInspectionProfile(rootNode, testCase.extension)
 
         assert rootNode.component.findAll { it.@name == "InspectionProjectProfileManager" }.size() == 1 //forventet kun ett element
 
@@ -90,4 +90,48 @@ class IdeaExtensionPluginTest {
     }
 
 
+    /**
+     * Tester deklarering av gradle
+     * @since 1.3
+     */
+    @Test
+    void testAddGradleClean() {
+        final def testCase = new GradleTestCase()
+        testCase.ideaTemplate = testCase.IDEA_TEMPLATE_EMPTY_XML
+
+        def rootNode = testCase.buildIdeaTemplateNode()
+
+        assert rootNode.component.findAll { it.@name == "GradleSettings" }.size() == 0 //forventet ingen elementer
+
+        IdeaExtensionsPlugin.addGradle(rootNode, testCase.extension)
+
+        assert rootNode.component.findAll { it.@name == "GradleSettings" }.size() == 1 //forventet ett element
+
+    }
+
+    /**
+     * Tester angivelse xml for inspection profiles der profiler finnes ifra før (merge)
+     * @since 1.3
+     */
+    @Test
+    void testGradleMerge() {
+        final def testCase = new GradleTestCase()
+        testCase.ideaTemplate = testCase.IDEA_TEMPLATE_WITH_GRADLE_XML
+
+        def rootNode = testCase.buildIdeaTemplateNode()
+
+        assert rootNode.component.findAll { it.@name == "GradleSettings" }.size() == 1 //forventet ett element
+        assert rootNode.component.find { it.@name == "GradleSettings" }.option.find { it.@name == "gradleHome" }  //forventet at option finnes
+        assert rootNode.component.find { it.@name == "GradleSettings" }.option.find { it.@name == "gradleHome" }.@value == testCase.GRADLE_SETTINGS_1_GRADLE_HOME
+
+        IdeaExtensionsPlugin.addGradle(rootNode, testCase.extension)
+        assert rootNode.component.findAll { it.@name == "GradleSettings" }.size() == 1 //forventet ett element
+        assert rootNode.component.find { it.@name == "GradleSettings" }.option.find { it.@name == "gradleHome" }  //forventet at option finnes
+        assert rootNode.component.find { it.@name == "GradleSettings" }.option.find { it.@name == "gradleHome" }.@value == testCase.project.gradle.gradleHomeDir
+
+
+        IdeaExtensionsPlugin.addGradle(rootNode, testCase.extension)
+        assert rootNode.component.findAll { it.@name == "GradleSettings" }.size() == 1 //forventet ett element
+
+    }
 }
