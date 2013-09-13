@@ -1,7 +1,6 @@
 package no.statkart.sktools.utils.databasepatcher;
 
 import no.statkart.sktools.utils.databasepatcher.exception.ConfigurationException;
-import no.statkart.sktools.utils.databasepatcher.exception.DatabasePatcherException;
 import no.statkart.sktools.utils.databasepatcher.exception.NotFoundException;
 import no.statkart.sktools.utils.databasepatcher.exception.OperationalException;
 import no.statkart.sktools.utils.databasepatcher.util.CompareUtil;
@@ -26,8 +25,8 @@ import java.util.regex.Matcher;
  */
 public class DatabasePatcher {
    private static Logger logger = Logger.getLogger(DatabasePatcher.class);
-   static Pattern pPatchDBVersion = Pattern.compile("^--\\s*PATCH\\s+((INDEX)|(DATA))\\s+DB\\.VERSION");
-   static Pattern pParsePatchDBVersion = Pattern.compile("^--\\s*PATCH\\s+((?:INDEX)|(?:DATA))\\s+DB\\.VERSION\\s*=\\s*\"([\\w\\.-]+)\"\\s+PATCH\\.NO\\s*=\\s*\"(\\d+)\"(\\s*(.*))?");
+   static Pattern pPatchDBVersion = Pattern.compile("^--\\s*PATCH\\s+(\\w+)\\s+DB\\.VERSION");
+   static Pattern pParsePatchDBVersion = Pattern.compile("^--\\s*PATCH\\s+(\\w+)\\s+DB\\.VERSION\\s*=\\s*\"([\\w\\.-]+)\"\\s+PATCH\\.NO\\s*=\\s*\"(\\d+)\"(\\s*(.*))?");
    static Pattern pPatchDBMinVersion = Pattern.compile("^--\\s*PATCH\\s+DB\\.MIN\\.VERSION");
    static Pattern pParsePatchMinVersion = Pattern.compile("^--\\s*PATCH\\s+DB\\.MIN\\.VERSION\\s*=\\s*\"([<>\\w\\.-]+)\"");
    static Pattern pStartsWithPatch = Pattern.compile("^--\\s*PATCH[\\s\\n]");
@@ -56,7 +55,7 @@ public class DatabasePatcher {
       public static final int DEFAULT_PATCH_NO = -1;
 
       // Angir om det er en data eller index patchblock
-      boolean isDataPatch;
+      PatchtypeKode patchtype;
       // Versjonsinfo
       String dbVersion;
       int patchNo;
@@ -64,18 +63,18 @@ public class DatabasePatcher {
       String kommentar;
 
       public PatchVersion(String kommentar) {
-         this(DEFAULT_DB_VERSION, DEFAULT_PATCH_NO, kommentar, false);
+         this(DEFAULT_DB_VERSION, DEFAULT_PATCH_NO, kommentar, null);
       }
 
       public PatchVersion(String dbVersion, int patchNo, String kommentar) {
-         this(dbVersion, patchNo, kommentar, false);
+         this(dbVersion, patchNo, kommentar, null);
       }
 
-      public PatchVersion(String dbVersion, int patchNo, String kommentar, boolean isDataPatch) {
+      public PatchVersion(String dbVersion, int patchNo, String kommentar, PatchtypeKode type) {
          this.dbVersion = dbVersion;
          this.patchNo = patchNo;
          this.kommentar = kommentar;
-         this.isDataPatch = isDataPatch;
+         this.patchtype = type;
       }
 
       public int compareTo(Object o) {
@@ -84,7 +83,7 @@ public class DatabasePatcher {
       }
 
       /**
-       * Patchversjons sammenlikning: {@code DB.VERSION="<any>"} < {@code DB.VERSION=null} < {@code DB.VERSION="<streng>" PATCH.NO="<number>"}
+       * Patchversjons sammenlikning: {@code DB.VERSION="<any>"} < {@code DB.VERSION=null} < {@code DB.VERSION="<string>" PATCH.NO="<number>"}
        */
       private int compareTo(PatchVersion o) {
          // Check null
@@ -118,7 +117,7 @@ public class DatabasePatcher {
       }
 
         public String toString() {
-         return "DB.VERSION=\"" + dbVersion + "\" PATCH.NO=\"" + patchNo + "\"";
+         return (patchtype != null ? patchtype : "   ") + " DB.VERSION=\"" + dbVersion + "\" PATCH.NO=\"" + patchNo + "\"";
       }
    }
 
@@ -250,8 +249,8 @@ public class DatabasePatcher {
     /**
     * Patcher eksisterende database i henhold til patchfil og eksisterende patcher som allerede er installert i databasen
     *
-    * @param patchFilePath
-    * @param singleStepPatches true hvis kun en ny patch skal utføres. Hvis false utføres alle patcher
+    * @param patchFilePath filsti for patchfil som skal eksekveres
+    * @param singleStepPatches {@code true} hvis kun en ny patch skal utføres. Hvis {@code false} utføres alle patcher
     * @return antall patchblokker påført (inkludert indekser dersom indexesInSyncWithPatch != true)
     */
    public int patch(String patchFilePath, boolean singleStepPatches) {
@@ -274,25 +273,30 @@ public class DatabasePatcher {
          }
 
          int executedPatchesCount = 0;
-         for( PatchVersion p : patches.keySet() ) {
-            List<? extends Expression> patchBlock = patches.get(p);
+         for (Map.Entry<PatchVersion, List<? extends Expression>> entry : patches.entrySet()) {
+             PatchVersion p = entry.getKey();
 
-            // Sjekke om databasen allerede er patchet med denne patch og om indexer er i sync.
-            if( p.compareTo(currentPatchInfo.patchVersion) < 1 ) {
-               // Patch har allerede blitt utført, men skal utføres på nytt hvis det er en index patch og indexer ikke er i sync
-               if( !p.isDataPatch && !currentPatchInfo.indexesInSyncWithPatch ) {
-                  executePatchBlock(con, p, patchBlock, false);
-                  executedPatchesCount++;
-               }
-            } else {
-               // Ny patch. Utfør alltid.
-               executePatchBlock(con, p, patchBlock, true);
-               executedPatchesCount++;
-               if( singleStepPatches ) break;
-            }
+             // Bestemmer om databasen allerede er patchet med denne patch og om indexer er i sync.
+             boolean newPatch = currentPatchInfo.patchVersion.compareTo(p) < 0;
+
+             // Patch har allerede blitt utført, men skal utføres på nytt hvis det er en index patch og indexer ikke er i sync
+             if (p.patchtype.isIndexPatch() && !currentPatchInfo.indexesInSyncWithPatch) {
+                 executePatchBlock(con, p, entry.getValue(), newPatch);
+                 executedPatchesCount++; //telles med når currentPatchInfo.indexesInSyncWithPatch == false
+             } else if (p.patchtype == PatchtypeKode.ALWAYS) {
+                 executePatchBlock(con, p, entry.getValue(), false);
+                 executedPatchesCount = executedPatchesCount; //oppdateres ikke antall eksekverte patchblokker da denne er såpass spesiell
+             } else if (newPatch) {
+                 // Ny patch. Utføres alltid.
+                 executePatchBlock(con, p, entry.getValue(), true);
+                 executedPatchesCount++;
+                 if( singleStepPatches ) {
+                    break;
+                 }
+             }
          }
 
-         setIndexesInSyncWithPatch(true);
+         setIndexesInSyncWithPatch(true); //indexer blir automatisk lagt til naar !indexesInSyncWithPatch
          return executedPatchesCount;
       } catch( SQLException e ) {
           throw new OperationalException(logger, "Feil ved sql", e);
@@ -310,11 +314,14 @@ public class DatabasePatcher {
             SqlExecutor.runScript(con, patchBlock, false);
             updatePatchInfo(con, p);
          } else {
-            if( p.isDataPatch ) {
-               throw new RuntimeException("Forsøk på å utføre data patch blokk flere ganger på samme database");
+            if( p.patchtype.isIndexPatch() || p.patchtype == PatchtypeKode.ALWAYS ) {
+                if (p.patchtype.isIndexPatch()) {
+                    logger.info("Utfører index patchblokk på nytt. Noen index statements kan feile : " + p);
+                }
+                SqlExecutor.runScript(con, patchBlock, false);
+            } else {
+                throw new RuntimeException("Forsøk på å utføre skjema patch blokk flere ganger mot samme database");
             }
-            logger.info("Utfører index patchblokk på nytt. Noen index statements kan feile : " + p);
-            SqlExecutor.runScript(con, patchBlock, false);
          }
       } catch( Exception e ) {
          throw new RuntimeException(e.getMessage(), e);
@@ -329,7 +336,7 @@ public class DatabasePatcher {
    private static LinkedHashMap<PatchVersion, List<? extends Expression>> parsePatches(List<? extends Expression> scriptLines) {
       LinkedHashMap<PatchVersion, List<? extends Expression>> result = new LinkedHashMap<PatchVersion, List<? extends Expression>>();
 
-      PatchVersion minPatchVersion = new PatchVersion("Unspecified min.version");
+      PatchVersion minDBVersion = new PatchVersion("Unspecified min.version");
       PatchVersion lastPatchVersion = null;
 
       int i = 0;
@@ -338,11 +345,11 @@ public class DatabasePatcher {
          i++;
       }
       if( i < scriptLines.size() && isMinDbVersion(scriptLines.get(i)) ) {
-         minPatchVersion = parseMinPatchVersion(scriptLines.get(i));
+         minDBVersion = parseMinDBVersion(scriptLines.get(i));
          i++;
       }
-      result.put(minPatchVersion, null);
-      lastPatchVersion = minPatchVersion;
+      result.put(minDBVersion, null);
+      lastPatchVersion = minDBVersion;
 
       // Skip kommentar linjer frem til første patchblock
       while( i < scriptLines.size() && isOrdinaryComment(scriptLines.get(i)) ) {
@@ -367,7 +374,7 @@ public class DatabasePatcher {
       }
       if( i != scriptLines.size() ) {
          if( isMinDbVersion(scriptLines.get(i)) ) {
-            throw new ConfigurationException("Feil: '-- PATCH DB.MIN.VERSION=\"<streng>\" allerede spesifisert: " + scriptLines.get(i));
+            throw new ConfigurationException("Feil: '-- PATCH DB.MIN.VERSION=\"<string>\" allerede spesifisert: " + scriptLines.get(i));
          } else if( isStatement(scriptLines.get(i)) ) {
             throw new ConfigurationException("Feil: SQL tilhører ingen patchblokk: " + scriptLines.get(i));
          } else {
@@ -388,7 +395,7 @@ public class DatabasePatcher {
    }
 
    /**
-    * Parser en kommentarlinje med format: '-- PATCH DB.VERSION="<streng>" PATCH.NO="<number>" [<kommentar>]
+    * Parser en kommentarlinje med format: {@code -- PATCH <type> DB.VERSION="<string>" PATCH.NO="<number>" [<kommentar>]}
     *
     * @param expression
     */
@@ -398,7 +405,7 @@ public class DatabasePatcher {
 
            Matcher m = pParsePatchDBVersion.matcher(comment.getText());
            if (m.find()) {
-               boolean isDataPatch = m.group(1).equals("DATA");
+               PatchtypeKode patchtype = PatchtypeKode.fromString(m.group(1));
                String version = m.group(2);
                int patchNo = Integer.parseInt(m.group(3));
                String kommentar = null;
@@ -406,14 +413,14 @@ public class DatabasePatcher {
                    kommentar = m.group(4).trim();
                    if (kommentar.equals("")) kommentar = null;
                }
-               return new PatchVersion(version, patchNo, kommentar, isDataPatch);
+               return new PatchVersion(version, patchNo, kommentar, patchtype);
            }
        }
-       throw new ConfigurationException("Feil: forventet -- PATCH (INDEX|DATA) DB.VERSION=\"<streng>\" PATCH.NO=\"<number>\": " + expression);
+       throw new ConfigurationException("Feil: forventet -- PATCH <type> DB.VERSION=\"<string>\" PATCH.NO=\"<number>\": " + expression);
    }
 
    /**
-    * Returnerer true hvis linje er en kommentar som starter med: '-- PATCH DB.VERSION...'
+    * Returnerer true hvis linje er en kommentar som starter med: {@code -- PATCH <type> DB.VERSION}
     *
     * @param expression
     */
@@ -429,11 +436,11 @@ public class DatabasePatcher {
 
 
    /**
-    * Parser en kommentarlinje med format: '-- PATCH DB.MIN.VERSION="<streng>"
+    * Parser en kommentarlinje med format: '-- PATCH DB.MIN.VERSION="<string>"
     *
     * @param expression
     */
-   private static PatchVersion parseMinPatchVersion(Expression expression) {
+   private static PatchVersion parseMinDBVersion(Expression expression) {
        if (expression instanceof Comment) {
            Comment comment = (Comment) expression;
            Matcher m = pParsePatchMinVersion.matcher(comment.getText());
@@ -442,7 +449,7 @@ public class DatabasePatcher {
                return new PatchVersion(version, -1, null);
            }
        }
-       throw new ConfigurationException("Feil: forventet -- PATCH DB.MIN.VERSION=\"<streng>\": " + expression);
+       throw new ConfigurationException("Feil: forventet -- PATCH DB.MIN.VERSION=\"<string>\": " + expression);
    }
 
    /**
@@ -460,7 +467,7 @@ public class DatabasePatcher {
    }
 
    /**
-    * Returnerer true hvis linjen er en kommentart som ikke starter med: '-- PATCH ...'
+    * Returnerer {@code true} hvis linjen er en kommentar som ikke starter med: {@code -- PATCH}...
     *
     * @param expression
     */
