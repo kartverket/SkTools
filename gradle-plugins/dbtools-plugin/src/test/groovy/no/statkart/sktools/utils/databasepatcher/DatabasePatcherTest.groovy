@@ -183,4 +183,91 @@ INSERT INTO B_TABLE (ID, NAVN) VALUES (2, 'valueB');
     }
 
 
+
+    /**
+     * Verifiserer at indexer blir kjørt inn igjen dersom ikke {@link DatabasePatcher.PatchInfo#indexesInSyncWithPatch}
+     */
+    @Test
+    public void testIndexesInSynchWithPatch() {
+        final DatabasePatcherTestCase testCase = buildDatabasePatcherTestCase()
+
+        File oldPatchFile = testCase.createTempFile("""-- patchefil uten patch#2
+-- PATCH DB.MIN.VERSION="<any>"
+${testCase.PATCH_01}
+${testCase.PATCH_03}
+""");
+
+        DatabasePatcher databasePatcher = testCase.setUpDatabasePatcher();
+
+        //STEG: Patcher opp basen med oldPatchFile
+        databasePatcher.patch(oldPatchFile.toString(), false);
+        sql.firstRow('''select count(*) from TEST_TABLE''').with { def row ->
+            Assert.assertEquals(row[0], 1, 'Forventer en rad')
+        }
+
+        sql.firstRow('select * from PATCHINFO').with { def row ->
+            Assert.assertNotNull(row, 'Forventer rad')
+            Assert.assertEquals(row.dbVersion, '1.0', "Patchversjon/dbVersion")
+            Assert.assertEquals(row.patchNo, 3, "patchNo")
+            Assert.assertEquals(row.indexesInSyncWithPatch, 1, "indexesInSyncWithPatch")
+        }
+
+        //STEG: Patcher opp basen igjen med oldPatchFile - forventer uforandret resultat
+        databasePatcher.patch(oldPatchFile.toString(), false);
+        sql.firstRow('''select count(*) from TEST_TABLE''').with { def row ->
+            Assert.assertEquals(row[0], 1, 'Forventer en rad')
+        }
+
+
+        File updatedPatchFileWithIndex = testCase.createTempFile("""-- patchefil med patch#2 - patchtype: INDEX
+-- PATCH DB.MIN.VERSION="<any>"
+${testCase.PATCH_01}
+${testCase.PATCH_02}
+${testCase.PATCH_03}
+""");
+
+        //STEG: Patcher opp databasen med oppdatert patchfil - forventer ikke endringer da databasen allerede har siste patch# og indexesInSyncWithPatch
+        databasePatcher.patch(updatedPatchFileWithIndex.toString(), false);
+        sql.firstRow('''select count(*) from TEST_TABLE''').with { def row ->
+            Assert.assertEquals(row[0], 1, 'Forventer fortsatt en rad da indexesInSyncWithPatch')
+        }
+
+        sql.firstRow('select * from PATCHINFO').with { def row ->
+            Assert.assertNotNull(row, 'Forventer rad')
+            Assert.assertEquals(row.dbVersion, '1.0', "Patchversjon/dbVersion")
+            Assert.assertEquals(row.patchNo, 3, "patchNo")
+            Assert.assertEquals(row.indexesInSyncWithPatch, 1, "indexesInSyncWithPatch")
+        }
+
+
+
+        //STEG: Setter indexesInSyncWithPatch = false og patcher opp databasen
+        databasePatcher.setIndexesInSyncWithPatch(false);
+
+        sql.firstRow('select * from PATCHINFO').with { def row ->
+            Assert.assertEquals(row.indexesInSyncWithPatch, 0, "indexesInSyncWithPatch")
+        }
+
+        databasePatcher.patch(updatedPatchFileWithIndex.toString(), false);
+
+        sql.firstRow('''select count(*) from TEST_TABLE''').with { def row ->
+            Assert.assertEquals(row[0], 2, 'Forventer fortsatt en rad da indexesInSyncWithPatch')
+        }
+        sql.firstRow('select * from PATCHINFO').with { def row ->
+            Assert.assertEquals(row.indexesInSyncWithPatch, 1, "indexesInSyncWithPatch")
+        }
+
+        
+        
+        //STEG: patcher opp databasen igjen - forventer ingen endringer
+        databasePatcher.patch(updatedPatchFileWithIndex.toString(), false);
+
+        sql.firstRow('''select count(*) from TEST_TABLE''').with { def row ->
+            Assert.assertEquals(row[0], 2, 'Forventer fortsatt en rad da indexesInSyncWithPatch')
+        }
+        sql.firstRow('select * from PATCHINFO').with { def row ->
+            Assert.assertEquals(row.indexesInSyncWithPatch, 1, "indexesInSyncWithPatch")
+        }
+    }
+
 }
