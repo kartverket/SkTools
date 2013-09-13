@@ -270,4 +270,56 @@ ${testCase.PATCH_03}
         }
     }
 
+
+
+    /**
+     * Verifiserer at patchblokker av type {@link PatchtypeKode#ALWAYS} alltid blir kjørt.
+     */
+    @Test
+    public void testAlwaysPatchblokkPatching() {
+        final DatabasePatcherTestCase testCase = buildDatabasePatcherTestCase()
+
+        final def PATCH2 = """
+-- PATCH ALWAYS DB.VERSION="1.0" PATCH.NO="2" "Inserting random rows"
+INSERT INTO TEST_TABLE (ID, NAVN) VALUES (1, 'GENERATED INDEX patch: ' || TO_CHAR(CURRENT_TIMESTAMP, 'MI:SS:FF'));
+"""
+
+        File patchFile = testCase.createTempFile("""-- patchefil uten patch#2
+-- PATCH DB.MIN.VERSION="<any>"
+${testCase.PATCH_01}
+${PATCH2}
+${testCase.PATCH_03}
+""");
+
+        DatabasePatcher databasePatcher = testCase.setUpDatabasePatcher();
+
+        //STEG: Patcher opp basen med patchFile
+        databasePatcher.patch(patchFile.toString(), false);
+        sql.firstRow('''select count(*) from TEST_TABLE''').with { def row ->
+            Assert.assertEquals(row[0], 2, 'Forventet antall rader')
+        }
+
+        sql.firstRow('select * from PATCHINFO').with { def row ->
+            Assert.assertNotNull(row, 'Forventer rad')
+            Assert.assertEquals(row.dbVersion, '1.0', "Patchversjon/dbVersion")
+            Assert.assertEquals(row.patchNo, 3, "patchNo")
+            Assert.assertEquals(row.indexesInSyncWithPatch, 1, "indexesInSyncWithPatch")
+        }
+
+
+        //STEG: Patcher opp basen igjen - forventer da at kun patch#2 blir kjørt  da denne er tagget som ALWAYS
+        databasePatcher.patch(patchFile.toString(), false);
+        sql.firstRow('''select count(*) from TEST_TABLE''').with { def row ->
+            Assert.assertEquals(row[0], 3, 'Forventet antall rader')
+        }
+
+        sql.firstRow('select * from PATCHINFO').with { def row ->
+            Assert.assertNotNull(row, 'Forventer rad')
+            Assert.assertEquals(row.dbVersion, '1.0', "Patchversjon/dbVersion")
+            Assert.assertEquals(row.patchNo, 3, "patchNo")
+            Assert.assertEquals(row.indexesInSyncWithPatch, 1, "indexesInSyncWithPatch")
+        }
+    }
+
+
 }
