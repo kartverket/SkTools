@@ -8,9 +8,9 @@ import org.testng.annotations.Test
  * @since 1.3
  * @author Leif Lislegård
  */
-@Test
 class CompareUtilTest {
 
+    @Test
     void testCompareDBVersions() {
 
         Assert.that("1").isEqualTo("1")
