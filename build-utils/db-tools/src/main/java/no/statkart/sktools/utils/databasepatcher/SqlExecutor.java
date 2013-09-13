@@ -221,26 +221,26 @@ public class SqlExecutor {
                 } else {
                     try {
                         statement.executeUpdate(sqlStatement.getSql());
-                        logger.debug("Executed : " + scriptLine);
+                        logger.debug("Executed : " + sqlStatement.getSql());
                     } catch( SQLException e ) {
                         String msg = e.getMessage();
                         if( msg.contains("02443") || msg.contains("02275") || msg.contains("00955") || msg.contains("01418") || msg.contains("00942") )
                         {
-                            logger.warn("Warning: " + scriptLine + ". Oracle feil: " + msg);
+                            logger.warn("Warning: Error executing line#" + scriptLine.getLineNumber() + ". Oracle error: " + msg);
                             antallWarnings++;
 
                             if( failOnWarning ) {
                                 throw new Exception("Feil under kjøring av script.", e);
                             }
                         } else {
-                            logger.error("Error: " + scriptLine + "\nOracle feil: " + msg);
+                            logger.error("Error: Error executing line#" + scriptLine.getLineNumber() + ". Oracle error: " + msg);
                             feilet = true;
                             antallFeil++;
                             if( "true".equals(System.getProperty("FailOnError")) ) {
                                 throw new Exception("Feil under kjøring av script.", e);
                             }
                         }
-
+                        logger.debug("Errors while executing : " + sqlStatement.getSql());
                     }
                 }
             }
