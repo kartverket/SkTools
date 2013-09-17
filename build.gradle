@@ -188,8 +188,7 @@ subprojects { Project project ->
 
 
         test {
-            // Vi ønsker vanligvis å kjøre alle tester i alle moduler.
-            ignoreFailures = true
+            ignoreFailures = gradle.startParameter.systemPropertiesArgs.get('ignoreFailures', 'true') == 'true' //Gradle feiler ikke dersom denne er true. Kan ikke være true dersom en gjør en install eller uploadArchives
 
             useTestNG() {
                 excludeGroups('broken')
