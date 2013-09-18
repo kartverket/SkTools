@@ -360,14 +360,19 @@ public class DatabasePatcher {
       while( i < scriptLines.size() && isPatchVersion(scriptLines.get(i)) ) {
          PatchVersion patchVersion = parsePatchVersion(scriptLines.get(i));
 
-          if (lastPatchVersion == minDBVersion && PatchtypeKode.ALWAYS.isTypeOf(patchVersion.patchtype)) {
-              //SKTOOLS-77: ALWAYS patcher kan ha patchnummer mindre enn db.min.version
-          } else if (lastPatchVersion.compareTo(patchVersion) >= 0) {
-              throw configurationException(scriptLines.get(i), String.format("Patchblokker må ha stigende versjonsnummer i fil (forrige var: %s ).", lastPatchVersion));
-          } else {
-              lastPatchVersion = patchVersion;
+          if (minDBVersion.compareTo(patchVersion) >= 0) {
+              if (PatchtypeKode.ALWAYS.isTypeOf(patchVersion.patchtype) && lastPatchVersion == minDBVersion) {
+                  //SKTOOLS-77: ALWAYS patcher kan ha patchnummer mindre enn db.min.version
+              } else {
+                  throw configurationException(scriptLines.get(i), String.format("Patchblokk må ha høyere versjonsnummer enn minversion (%s ).", minDBVersion));
+              }
           }
 
+          if (lastPatchVersion.compareTo(patchVersion) >= 0) {
+              throw configurationException(scriptLines.get(i), String.format("Patchblokker må ha stigende versjonsnummer i fil (forrige var: %s ).", lastPatchVersion));
+          }
+
+         lastPatchVersion = patchVersion;
          i++;
          List<Expression> patchScriptLines = new ArrayList<Expression>();
          while( i < scriptLines.size() && (isOrdinaryComment(scriptLines.get(i)) || isStatement(scriptLines.get(i))) ) {
