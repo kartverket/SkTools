@@ -360,10 +360,14 @@ public class DatabasePatcher {
       while( i < scriptLines.size() && isPatchVersion(scriptLines.get(i)) ) {
          PatchVersion patchVersion = parsePatchVersion(scriptLines.get(i));
 
-         if( lastPatchVersion.compareTo(patchVersion) >= 0 ) {
-             throw configurationException(scriptLines.get(i), String.format("Patchblokker må ha stigende versjonsnummer i fil (forrige var: %s ).", lastPatchVersion));
-         }
-         lastPatchVersion = patchVersion;
+          if (lastPatchVersion == minDBVersion && PatchtypeKode.ALWAYS.isTypeOf(patchVersion.patchtype)) {
+              //SKTOOLS-77: ALWAYS patcher kan ha patchnummer mindre enn db.min.version
+          } else if (lastPatchVersion.compareTo(patchVersion) >= 0) {
+              throw configurationException(scriptLines.get(i), String.format("Patchblokker må ha stigende versjonsnummer i fil (forrige var: %s ).", lastPatchVersion));
+          } else {
+              lastPatchVersion = patchVersion;
+          }
+
          i++;
          List<Expression> patchScriptLines = new ArrayList<Expression>();
          while( i < scriptLines.size() && (isOrdinaryComment(scriptLines.get(i)) || isStatement(scriptLines.get(i))) ) {
@@ -444,6 +448,7 @@ public class DatabasePatcher {
     * Parser en kommentarlinje med format: '-- PATCH DB.MIN.VERSION="<string>"
     *
     * @param expression uttrykk som skal parses
+    * @return parset patchversjon for db.version. Patch.version er satt til {@link Integer#MIN_VALUE}
     */
    private static PatchVersion parseMinDBVersion(Expression expression) {
        if (expression instanceof Comment) {
@@ -451,7 +456,7 @@ public class DatabasePatcher {
            Matcher m = pParsePatchMinVersion.matcher(comment.getText());
            if (m.find()) {
                String version = m.group(1);
-               return new PatchVersion(version, -1, null);
+               return new PatchVersion(version, Integer.MIN_VALUE, "DB.MIN.VERSION"); //SKTOOLS-77: patchversion slik at man tillater negative patchnummer for ALWYAS patcher
            }
        }
        throw configurationException(expression, "Forventet -- PATCH DB.MIN.VERSION=\"<string>\"");
@@ -662,7 +667,7 @@ public class DatabasePatcher {
     }
 
     PatchInfo getDefaultVersion() {
-        PatchVersion patchVersion = new PatchVersion(PatchVersion.DEFAULT_DB_VERSION, PatchVersion.DEFAULT_PATCH_NO, String.format("Automatisk opprettet patchistorikk den %s", new Date()));
+        PatchVersion patchVersion = new PatchVersion(String.format("Automatisk opprettet patchistorikk den %s", new Date()));
         PatchInfo patchInfo = new PatchInfo(component, patchVersion, true);
         patchInfo.indexesInSyncWithPatch = true; //indexes up to date by default
         return patchInfo;
