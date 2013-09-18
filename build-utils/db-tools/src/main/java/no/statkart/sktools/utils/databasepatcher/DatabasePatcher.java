@@ -361,7 +361,7 @@ public class DatabasePatcher {
          PatchVersion patchVersion = parsePatchVersion(scriptLines.get(i));
 
          if( lastPatchVersion.compareTo(patchVersion) >= 0 ) {
-            throw new ConfigurationException("Feil: Patchblokker må ha stigende versjonsnr i fil (forrige var: " + lastPatchVersion + " ): " + scriptLines.get(i));
+             throw configurationException(scriptLines.get(i), String.format("Patchblokker må ha stigende versjonsnummer i fil (forrige var: %s ).", lastPatchVersion));
          }
          lastPatchVersion = patchVersion;
          i++;
@@ -373,19 +373,24 @@ public class DatabasePatcher {
          result.put(patchVersion, patchScriptLines);
       }
       if( i != scriptLines.size() ) {
-         if( isMinDbVersion(scriptLines.get(i)) ) {
-            throw new ConfigurationException("Feil: '-- PATCH DB.MIN.VERSION=\"<string>\" allerede spesifisert: " + scriptLines.get(i));
+          String statementAsText = isStatement(scriptLines.get(i)) ? ((Statement)scriptLines.get(i)).getSql() : ((Comment)scriptLines.get(i)).getText();
+          if( isMinDbVersion(scriptLines.get(i)) ) {
+              throw configurationException(scriptLines.get(i), "'-- PATCH DB.MIN.VERSION=\"<string>\" allerede spesifisert.");
          } else if( isStatement(scriptLines.get(i)) ) {
-            throw new ConfigurationException("Feil: SQL tilhører ingen patchblokk: " + scriptLines.get(i));
+              throw configurationException(scriptLines.get(i), String.format("SQL tilhører ingen patchblokk: %s", statementAsText));
          } else {
-            throw new ConfigurationException("Feil i '-- PATCH direktiv': " + scriptLines.get(i));
+              throw configurationException(scriptLines.get(i), String.format("Feil i '-- PATCH direktiv': %s", statementAsText));
          }
       }
 
       return result;
    }
 
-   /**
+    private static ConfigurationException configurationException(Expression expression, String message) {
+        return new ConfigurationException(String.format("Feil i linje# %d: %s", expression.getLineNumber(), message));
+    }
+
+    /**
     * Returnerer true hvis linjen er en sql kommando
     *
     * @param expression
@@ -416,13 +421,13 @@ public class DatabasePatcher {
                return new PatchVersion(version, patchNo, kommentar, patchtype);
            }
        }
-       throw new ConfigurationException("Feil: forventet -- PATCH <type> DB.VERSION=\"<string>\" PATCH.NO=\"<number>\": " + expression);
+       throw configurationException(expression, "Forventet -- PATCH <type> DB.VERSION=\"<string>\" PATCH.NO=\"<number>\"");
    }
 
    /**
     * Returnerer true hvis linje er en kommentar som starter med: {@code -- PATCH <type> DB.VERSION}
     *
-    * @param expression
+    * @param expression uttrykk som skal parses
     */
    private static boolean isPatchVersion(Expression expression) {
        if (expression instanceof Comment) {
@@ -438,7 +443,7 @@ public class DatabasePatcher {
    /**
     * Parser en kommentarlinje med format: '-- PATCH DB.MIN.VERSION="<string>"
     *
-    * @param expression
+    * @param expression uttrykk som skal parses
     */
    private static PatchVersion parseMinDBVersion(Expression expression) {
        if (expression instanceof Comment) {
@@ -449,7 +454,7 @@ public class DatabasePatcher {
                return new PatchVersion(version, -1, null);
            }
        }
-       throw new ConfigurationException("Feil: forventet -- PATCH DB.MIN.VERSION=\"<string>\": " + expression);
+       throw configurationException(expression, "Forventet -- PATCH DB.MIN.VERSION=\"<string>\"");
    }
 
    /**
