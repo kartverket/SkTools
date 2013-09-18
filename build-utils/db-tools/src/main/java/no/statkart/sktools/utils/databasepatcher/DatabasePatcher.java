@@ -26,7 +26,7 @@ import java.util.regex.Matcher;
 public class DatabasePatcher {
    private static Logger logger = Logger.getLogger(DatabasePatcher.class);
    static Pattern pPatchDBVersion = Pattern.compile("^--\\s*PATCH\\s+(\\w+)\\s+DB\\.VERSION");
-   static Pattern pParsePatchDBVersion = Pattern.compile("^--\\s*PATCH\\s+(\\w+)\\s+DB\\.VERSION\\s*=\\s*\"([\\w\\.-]+)\"\\s+PATCH\\.NO\\s*=\\s*\"(\\d+)\"(\\s*(.*))?");
+   static Pattern pParsePatchDBVersion = Pattern.compile("^--\\s*PATCH\\s+(\\w+)\\s+DB\\.VERSION\\s*=\\s*\"([\\w\\.-]+)\"\\s+PATCH\\.NO\\s*=\\s*\"(-?\\d+)\"(\\s*(.*))?");
    static Pattern pPatchDBMinVersion = Pattern.compile("^--\\s*PATCH\\s+DB\\.MIN\\.VERSION");
    static Pattern pParsePatchMinVersion = Pattern.compile("^--\\s*PATCH\\s+DB\\.MIN\\.VERSION\\s*=\\s*\"([<>\\w\\.-]+)\"");
    static Pattern pStartsWithPatch = Pattern.compile("^--\\s*PATCH[\\s\\n]");
@@ -333,7 +333,7 @@ public class DatabasePatcher {
     *
     * @param scriptLines
     */
-   private static LinkedHashMap<PatchVersion, List<? extends Expression>> parsePatches(List<? extends Expression> scriptLines) {
+   static LinkedHashMap<PatchVersion, List<? extends Expression>> parsePatches(List<? extends Expression> scriptLines) {
       LinkedHashMap<PatchVersion, List<? extends Expression>> result = new LinkedHashMap<PatchVersion, List<? extends Expression>>();
 
       PatchVersion minDBVersion = new PatchVersion("Unspecified min.version");
@@ -349,7 +349,7 @@ public class DatabasePatcher {
          i++;
       }
       result.put(minDBVersion, null);
-      lastPatchVersion = minDBVersion;
+      lastPatchVersion = null;
 
       // Skip kommentar linjer frem til første patchblock
       while( i < scriptLines.size() && isOrdinaryComment(scriptLines.get(i)) ) {
@@ -361,14 +361,14 @@ public class DatabasePatcher {
          PatchVersion patchVersion = parsePatchVersion(scriptLines.get(i));
 
           if (minDBVersion.compareTo(patchVersion) >= 0) {
-              if (PatchtypeKode.ALWAYS.isTypeOf(patchVersion.patchtype) && lastPatchVersion == minDBVersion) {
+              if (PatchtypeKode.ALWAYS.isTypeOf(patchVersion.patchtype)) {
                   //SKTOOLS-77: ALWAYS patcher kan ha patchnummer mindre enn db.min.version
               } else {
                   throw configurationException(scriptLines.get(i), String.format("Patchblokk må ha høyere versjonsnummer enn minversion (%s ).", minDBVersion));
               }
           }
 
-          if (lastPatchVersion.compareTo(patchVersion) >= 0) {
+          if (lastPatchVersion != null && lastPatchVersion.compareTo(patchVersion) >= 0) {
               throw configurationException(scriptLines.get(i), String.format("Patchblokker må ha stigende versjonsnummer i fil (forrige var: %s ).", lastPatchVersion));
           }
 

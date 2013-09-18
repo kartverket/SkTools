@@ -7,6 +7,8 @@ import no.statkart.sktools.utils.parsers.sql.SQLStatementParser
 import no.statkart.sktools.utils.parsers.sql.model.Expression
 
 import static no.statkart.sktools.gradle.plugins.dbtools.testutils.DbToolsTestCase.FILE_TYPE.SQL
+import no.statkart.sktools.utils.parsers.sql.model.Statement
+import no.statkart.sktools.gradle.plugins.dbtools.testutils.DbToolsTestCase
 
 /**
  * Tester funksjonaliteten til {@link no.statkart.sktools.utils.databasepatcher.DatabasePatcher}
@@ -172,17 +174,97 @@ INSERT INTO B_TABLE (ID, NAVN) VALUES (2, 'valueB');
 
         List<? extends Expression> expressions = SQLStatementParser.parseExpressions(SqlExecutor.lesFilFraWorkingDir(patchFile.absolutePath));
 
+        int lineNo = 0
 
-        int lineno
+        Assert.assertTrue(expressions.get(lineNo++).text.trim().startsWith("--kommentar"));
+        Assert.assertTrue(expressions.get(lineNo++).text.trim().startsWith("-- PATCH DB.MIN.VERSION"));
+        Assert.assertTrue(expressions.get(lineNo++).text.trim().startsWith("-- PATCH DATA DB.VERSION"));
+        Assert.assertTrue(expressions.get(lineNo++).sql.trim().startsWith("CREATE TABLE TEST_TABLE"));
 
-        Assert.assertTrue(expressions.get(lineno++).text.trim().startsWith("--kommentar"));
-        Assert.assertTrue(expressions.get(lineno++).text.trim().startsWith("-- PATCH DB.MIN.VERSION"));
-        Assert.assertTrue(expressions.get(lineno++).text.trim().startsWith("-- PATCH DATA DB.VERSION"));
-        Assert.assertTrue(expressions.get(lineno++).sql.trim().startsWith("CREATE TABLE TEST_TABLE"));
+
+        final LinkedHashMap<DatabasePatcher.PatchVersion, List<? extends Expression>> patches = DatabasePatcher.parsePatches(expressions);
+
+        patches.entrySet().asList().with { def entries ->
+            int expressionNo = 0
+
+            Assert.assertNotNull(entries[expressionNo].key, "Forventer at første element er minversion")
+            Assert.assertEquals(entries[expressionNo].key.dbVersion, "<any>", "dbVersion")
+
+            expressionNo++
+            Assert.assertEquals(entries[expressionNo].key.patchtype.name, 'ALWAYS', "Forventer at element er data patch")
+            Assert.assertEquals(entries[expressionNo].key.dbVersion, '1.0', "Forventet dbVersion")
+            Assert.assertEquals(entries[expressionNo].key.patchNo, 1, "Forventet patchNo")
+            Assert.assertEquals(entries[expressionNo].key.kommentar, '"Create test table"', "Kommentar")
+            Assert.assertEquals(entries[expressionNo].value.findAll {it instanceof Statement}.size(), 1, "Forventet antall statements")
+
+            expressionNo++
+            Assert.assertEquals(entries[expressionNo].key.patchtype.name, 'DATA', "Forventer at element er data patch")
+            Assert.assertEquals(entries[expressionNo].key.dbVersion, '1.0', "Forventet dbVersion")
+            Assert.assertEquals(entries[expressionNo].key.patchNo, 3, "Forventet patchNo")
+            Assert.assertEquals(entries[expressionNo].value.findAll {it instanceof Statement}.size(), 1, "Forventet antall statements")
+
+            Assert.assertEquals(entries.size(), 3, "Forventet antall patcher + minversion")
+        }
 
     }
 
 
+    /**
+     * Verifiserer intern parse-mekanikk
+     */
+    @Test
+    public void testParsingOfAlwaysPatchBlocks() {
+        final DatabasePatcherTestCase testCase = buildDatabasePatcherTestCase()
+
+        File patchFile = testCase.createTempFile(DbToolsTestCase.FILE_TYPE.SQL, """
+-- PATCH DB.MIN.VERSION="1.0"
+
+-- PATCH ALWAYS DB.VERSION="0" PATCH.NO="-1" "Definerer skjema for påfølgende patcher"
+ALTER SESSION SET CURRENT_SCHEMA = "USER";
+
+
+-- PATCH SCHEMA DB.VERSION="1.1" PATCH.NO="1" "Create test table"
+CREATE TABLE TEST_TABLE;
+
+-- PATCH DATA DB.VERSION="1.1" PATCH.NO="2" "Create test tables"
+CREATE TABLE TEST_TABLE1;
+CREATE TABLE TEST_TABLE2;
+
+""");
+
+        List<? extends Expression> expressions = SQLStatementParser.parseExpressions(SqlExecutor.lesFilFraWorkingDir(patchFile.absolutePath));
+
+        final LinkedHashMap<DatabasePatcher.PatchVersion, List<? extends Expression>> patches = DatabasePatcher.parsePatches(expressions);
+
+        patches.entrySet().asList().with { def entries ->
+            int expressionNo = 0
+
+            Assert.assertNotNull(entries[expressionNo].key, "Forventer at første element er minversion")
+            Assert.assertEquals(entries[expressionNo].key.dbVersion, "1.0", "dbVersion")
+
+            expressionNo++
+            Assert.assertEquals(entries[expressionNo].key.patchtype.name, 'ALWAYS', "Forventer at element er data patch")
+            Assert.assertEquals(entries[expressionNo].key.dbVersion, '0', "Forventet dbVersion")
+            Assert.assertEquals(entries[expressionNo].key.patchNo, -1, "Forventet patchNo")
+            Assert.assertEquals(entries[expressionNo].key.kommentar, '"Definerer skjema for påfølgende patcher"', "Kommentar")
+            Assert.assertEquals(entries[expressionNo].value.findAll {it instanceof Statement}.size(), 1, "Forventet antall statements")
+
+            expressionNo++
+            Assert.assertEquals(entries[expressionNo].key.patchtype.name, 'SCHEMA', "Forventer at element er data patch")
+            Assert.assertEquals(entries[expressionNo].key.dbVersion, '1.1', "Forventet dbVersion")
+            Assert.assertEquals(entries[expressionNo].key.patchNo, 1, "Forventet patchNo")
+            Assert.assertEquals(entries[expressionNo].value.findAll {it instanceof Statement}.size(), 1, "Forventet antall statements")
+
+            expressionNo++
+            Assert.assertEquals(entries[expressionNo].key.patchtype.name, 'DATA', "Forventer at element er data patch")
+            Assert.assertEquals(entries[expressionNo].key.dbVersion, '1.1', "Forventet dbVersion")
+            Assert.assertEquals(entries[expressionNo].key.patchNo, 2, "Forventet patchNo")
+            Assert.assertEquals(entries[expressionNo].value.findAll {it instanceof Statement}.size(), 2, "Forventet antall statements")
+
+            Assert.assertEquals(entries.size(), 4, "Forventet antall patcher + minversion")
+        }
+
+    }
 
     /**
      * Verifiserer at indexer blir kjørt inn igjen dersom ikke {@link DatabasePatcher.PatchInfo#indexesInSyncWithPatch}
