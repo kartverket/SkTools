@@ -448,7 +448,7 @@ public class DatabasePatcher {
     * Parser en kommentarlinje med format: '-- PATCH DB.MIN.VERSION="<string>"
     *
     * @param expression uttrykk som skal parses
-    * @return parset patchversjon for db.version. Patch.version er satt til {@link Integer#MIN_VALUE}
+    * @return parset patchversjon for db.version.
     */
    private static PatchVersion parseMinDBVersion(Expression expression) {
        if (expression instanceof Comment) {
@@ -456,7 +456,7 @@ public class DatabasePatcher {
            Matcher m = pParsePatchMinVersion.matcher(comment.getText());
            if (m.find()) {
                String version = m.group(1);
-               return new PatchVersion(version, Integer.MIN_VALUE, "DB.MIN.VERSION"); //SKTOOLS-77: patchversion slik at man tillater negative patchnummer for ALWYAS patcher
+               return new PatchVersion(version, PatchVersion.DEFAULT_PATCH_NO, "DB.MIN.VERSION");
            }
        }
        throw configurationException(expression, "Forventet -- PATCH DB.MIN.VERSION=\"<string>\"");
