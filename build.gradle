@@ -40,7 +40,7 @@ project.ext.libraries = [
         groovy: dependencies.localGroovy(),
 
         // Testing
-        testng: 'org.testng:testng:6.0.1@jar',
+        testng: 'org.testng:testng:6.8.7@jar',
         hsqldb: 'org.hsqldb:hsqldb:2.2.8',
 ]
 
@@ -192,6 +192,7 @@ subprojects { Project project ->
 
             useTestNG() {
                 excludeGroups('broken')
+                listeners << 'org.testng.reporters.XMLReporter' // For Jenkins siden Gradle 1.5+ ikke tar med default listerners som standard lenger
             }
 
             jvmArgs '-Xmx512m'
@@ -201,6 +202,8 @@ subprojects { Project project ->
                 jvmArgs '-Xrunjdwp:transport=dt_socket,address=8787,server=y,suspend=y'
             }
 
+//            systemProperty "file.encoding", "UTF-8"
+//            defaultCharacterEncoding = "UTF-8"
 
             //listening to test execution events
             afterTest { descriptor, result  ->
