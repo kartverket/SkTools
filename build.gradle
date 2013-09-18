@@ -222,7 +222,12 @@ subprojects { Project project ->
             }
 
         }
-    }	
+    }
+
+    tasks.withType(GroovyCompile) {
+        groovyOptions.encoding = System.getProperty('file.encoding') //SKTOOLS-83: groovy source files in system encoding (default is UTF-8)
+    }
+
 }
 
 allprojects {
