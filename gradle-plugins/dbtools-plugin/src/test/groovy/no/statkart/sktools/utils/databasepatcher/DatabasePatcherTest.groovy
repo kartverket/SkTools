@@ -191,7 +191,7 @@ INSERT INTO B_TABLE (ID, NAVN) VALUES (2, 'valueB');
             Assert.assertEquals(entries[expressionNo].key.dbVersion, "<any>", "dbVersion")
 
             expressionNo++
-            Assert.assertEquals(entries[expressionNo].key.patchtype.name, 'ALWAYS', "Forventer at element er data patch")
+            Assert.assertEquals(entries[expressionNo].key.patchtype.name, 'DATA', "Forventer at element er data patch")
             Assert.assertEquals(entries[expressionNo].key.dbVersion, '1.0', "Forventet dbVersion")
             Assert.assertEquals(entries[expressionNo].key.patchNo, 1, "Forventet patchNo")
             Assert.assertEquals(entries[expressionNo].key.kommentar, '"Create test table"', "Kommentar")
