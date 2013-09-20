@@ -269,7 +269,7 @@ public class DatabasePatcher {
          PatchVersion minVersion = patches.entrySet().iterator().next().getKey();
          patches.remove(minVersion);
          if( currentPatchInfo.patchVersion.compareTo(minVersion) < 0 ) {
-            throw new RuntimeException("Kan ikke patch database. Krever minimum versjon: " + minVersion);
+            throw new RuntimeException("Kan ikke patche database. Krever minimum versjon: " + minVersion);
          }
 
          int executedPatchesCount = 0;
@@ -279,19 +279,22 @@ public class DatabasePatcher {
              // Bestemmer om databasen allerede er patchet med denne patch og om indexer er i sync.
              boolean newPatch = currentPatchInfo.patchVersion.compareTo(p) < 0;
 
-             // Patch har allerede blitt utført, men skal utføres på nytt hvis det er en index patch og indexer ikke er i sync
-             if (p.patchtype.isIndexPatch() && !currentPatchInfo.indexesInSyncWithPatch) {
-                 executePatchBlock(con, p, entry.getValue(), newPatch);
-                 executedPatchesCount++; //telles med når currentPatchInfo.indexesInSyncWithPatch == false
-             } else if (p.patchtype == PatchtypeKode.ALWAYS) {
+             if (p.patchtype == PatchtypeKode.ALWAYS) {
+                 // ALWAYS patch. Utføres alltid.
                  executePatchBlock(con, p, entry.getValue(), false);
                  executedPatchesCount = executedPatchesCount; //oppdateres ikke antall eksekverte patchblokker da denne er såpass spesiell
              } else if (newPatch) {
                  // Ny patch. Utføres alltid.
-                 executePatchBlock(con, p, entry.getValue(), true);
+                 executePatchBlock(con, p, entry.getValue(), newPatch);
                  executedPatchesCount++;
                  if( singleStepPatches ) {
                     break;
+                 }
+             } else {
+                 // Patch har allerede blitt utført, men skal utføres på nytt hvis det er en index patch og indexer ikke er i sync
+                 if (p.patchtype.isIndexPatch() && !currentPatchInfo.indexesInSyncWithPatch) {
+                     executePatchBlock(con, p, entry.getValue(), newPatch);
+                     executedPatchesCount++; //telles med når currentPatchInfo.indexesInSyncWithPatch == false
                  }
              }
          }
