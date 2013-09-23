@@ -72,6 +72,6 @@ public class ExecSpecs {
     String url
     String driver
 
-    //SKIF-206
+    //SKTOOLS-27
     boolean failOnError
 }

@@ -13,6 +13,9 @@ import no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractSQLTask
  */
 abstract class DatabasePatchTask extends AbstractSQLTask {
 
+    //SKTOOLS-84
+    boolean failOnWarning = failOnError
+
     @Input
     String component
 
@@ -34,6 +37,8 @@ abstract class DatabasePatchTask extends AbstractSQLTask {
         spec.systemProperties.put('hibernate.connection.username', getUsername())
         spec.systemProperties.put('hibernate.connection.password', getPassword())
 
+        spec.systemProperties.put('failOnError', getFailOnError())
+        spec.systemProperties.put('failOnWarning', getFailOnWarning())
 
         spec.setMaxHeapSize('128m')
 

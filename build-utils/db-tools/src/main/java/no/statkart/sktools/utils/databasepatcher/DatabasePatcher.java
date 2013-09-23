@@ -34,6 +34,9 @@ public class DatabasePatcher {
    //SKTOOLS-34: modulbasert patching
    public String component = PatchInfo.DEFAULT_MODULE;
 
+    //SKTOOLS-84: error håndtering
+    boolean failOnError, failOnWarning;
+
 
     /**
      * Mulighet for programatisk konfigurering av properties.
@@ -161,6 +164,10 @@ public class DatabasePatcher {
 
         if (args.length > 0) {
             DatabasePatcher databasePatcher = new DatabasePatcher();
+            databasePatcher.failOnError = "true".equalsIgnoreCase(System.getProperty("failOnError", "true")); //SKTOOLS-84: defaults to true
+            databasePatcher.failOnWarning = "true".equalsIgnoreCase(System.getProperty("failOnWarning", "true")); //SKTOOLS-84: defaults to true
+            databasePatcher.validate();
+
             String commandName = args[idx++];
 
            //finner optionalt nivå
@@ -311,17 +318,18 @@ public class DatabasePatcher {
    }
 
    private void executePatchBlock(Connection con, PatchVersion p, List<? extends Expression> patchBlock, boolean isNewPatch) {
-      try {
+       SqlExecutor sqlExecutor = buildSqlExecutor();
+       try {
          if( isNewPatch ) {
             logger.info("Utfører patchblokk: " + p + ((p.kommentar == null) ? "" : " " + p.kommentar));
-            SqlExecutor.runScript(con, patchBlock, false);
+            sqlExecutor.runScript(con, patchBlock);
             updatePatchInfo(con, p);
          } else {
             if( p.patchtype.isIndexPatch() || p.patchtype == PatchtypeKode.ALWAYS ) {
                 if (p.patchtype.isIndexPatch()) {
                     logger.info("Utfører index patchblokk på nytt. Noen index statements kan feile : " + p);
                 }
-                SqlExecutor.runScript(con, patchBlock, false);
+                sqlExecutor.runScript(con, patchBlock);
             } else {
                 throw new RuntimeException("Forsøk på å utføre skjema patch blokk flere ganger mot samme database");
             }
@@ -331,7 +339,17 @@ public class DatabasePatcher {
       }
    }
 
-   /**
+    /**
+     * @since 1.3
+     */
+    private SqlExecutor buildSqlExecutor() {
+        final SqlExecutor sqlExecutor = new SqlExecutor();
+        sqlExecutor.failOnError = failOnError;
+        sqlExecutor.failOnWarning = failOnWarning;
+        return sqlExecutor;
+    }
+
+    /**
     * Parser en liste av script lines og deler dem opp i patchblokker.
     *
     * @param scriptLines
@@ -856,6 +874,16 @@ public class DatabasePatcher {
          JDBCHelper.close(rs, stmt);
       }
    }
+
+
+    /**
+     * @since 1.3
+     */
+    void validate() {
+        if (failOnWarning && !failOnError) {
+            throw new ConfigurationException("Ulogisk parameterisering: failOnWarning=true kan ikke benyttes uten failOnError=true");
+        }
+    }
 
 }
 

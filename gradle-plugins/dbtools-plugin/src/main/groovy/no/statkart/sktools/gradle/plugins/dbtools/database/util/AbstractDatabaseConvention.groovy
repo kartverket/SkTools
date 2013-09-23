@@ -249,7 +249,7 @@ abstract class AbstractDatabaseConvention {
 
     }
 
-    //SKIF-211
+    //SKTOOLS-21
     String getEncoding() {
         Map<String, String> sysProperties = new HashMap<String, String>();
         sysProperties.putAll((Map) System.getProperties());

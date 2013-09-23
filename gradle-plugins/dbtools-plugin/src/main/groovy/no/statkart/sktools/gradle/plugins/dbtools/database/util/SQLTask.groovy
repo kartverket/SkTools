@@ -24,9 +24,6 @@ public class SQLTask extends AbstractSQLTask {
     @Input
     String sqlString
 
-    //SKIF-206
-    boolean failOnError = true
-
 
     @TaskAction
     def exec() {

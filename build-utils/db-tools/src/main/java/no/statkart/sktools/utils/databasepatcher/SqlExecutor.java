@@ -32,8 +32,10 @@ import java.util.List;
 public class SqlExecutor {
    private static Logger logger = Logger.getLogger(SqlExecutor.class);
 
+    //SKTOOLS-84: error håndtering
+    boolean failOnError, failOnWarning;
 
-   /**
+    /**
     * Hjelpeklasse som inneholder en sql statement som godt kan strekke seg over flere linjer.
     */
    public static class ScriptLine {
@@ -76,9 +78,9 @@ public class SqlExecutor {
     *
     * @param sqlScriptNavn, navn på filen som skal lastes.
     */
-   public static void runScript(String sqlScriptNavn) throws Exception {
+   public void runScript(String sqlScriptNavn) throws Exception {
       Connection con = null;
-      try {
+       try {
          con = JDBCHelper.createConnection();
          runScript(con, lesFilFraWorkingDir(sqlScriptNavn));
       } finally {
@@ -178,21 +180,20 @@ public class SqlExecutor {
     * @param sqlScript  scriptet som skal kjøres.
     * @return resultSet hvis det er kalt en stored procedure ommgitt av {} som gir resultatsett, gir flere linjer resultatsett blir disse lagt sammen i den rekkefølgen de er laget.
     */
-   public static ResultSet[] runScript(Connection connection, String sqlScript) throws Exception {
+   public ResultSet[] runScript(Connection connection, String sqlScript) throws Exception {
       if( connection == null ) {
          throw new ConfigurationException("Kan ikke kjøre databasescript med connection = null");
       }
       if( sqlScript == null ) {
          throw new ConfigurationException("Det må anngis ett sqlscript, sqlSript = null.");
       }
-      boolean failOnWarning = "true".equals(System.getProperty("FailOnWarning"));
 
        List<? extends Expression> expressions = SQLStatementParser.parseExpressions(sqlScript);
 
-       return runScript(connection, expressions, failOnWarning);
+       return runScript(connection, expressions);
    }
 
-   public static ResultSet[] runScript(Connection connection, List<? extends Expression> scriptLines, boolean failOnWarning) throws Exception {
+   public ResultSet[] runScript(Connection connection, List<? extends Expression> scriptLines) throws Exception {
       List rsList = new ArrayList();
       boolean feilet = false;
       int antallFeil = 0;
@@ -223,20 +224,18 @@ public class SqlExecutor {
                         statement.executeUpdate(sqlStatement.getSql());
                         logger.debug("Executed : " + sqlStatement.getSql());
                     } catch( SQLException e ) {
-                        String msg = e.getMessage();
-                        if( msg.contains("02443") || msg.contains("02275") || msg.contains("00955") || msg.contains("01418") || msg.contains("00942") )
-                        {
-                            logger.warn("Warning: Error executing line#" + scriptLine.getLineNumber() + ". Oracle error: " + msg);
+                        if (isWarning(e)) {
+                            logger.warn("Warning: Error executing line#" + scriptLine.getLineNumber() + ". Oracle error: " + e.getMessage());
                             antallWarnings++;
 
                             if( failOnWarning ) {
                                 throw new Exception("Feil under kjøring av script.", e);
                             }
                         } else {
-                            logger.error("Error: Error executing line#" + scriptLine.getLineNumber() + ". Oracle error: " + msg);
+                            logger.error("Error: Error executing line#" + scriptLine.getLineNumber() + ". Oracle error: " + e.getMessage());
                             feilet = true;
                             antallFeil++;
-                            if( "true".equals(System.getProperty("FailOnError")) ) {
+                            if( failOnError ) {
                                 throw new Exception("Feil under kjøring av script.", e);
                             }
                         }
@@ -259,7 +258,12 @@ public class SqlExecutor {
       return (ResultSet[]) rsList.toArray(new ResultSet[rsList.size()]);
    }
 
-   private static CallableStatement callCallable(String scriptLine, Connection connection, List rsList) throws SQLException {
+    static boolean isWarning(SQLException e) {
+        String msg = e.getMessage();
+        return msg.contains("02443") || msg.contains("02275") || msg.contains("00955") || msg.contains("01418") || msg.contains("00942");
+    }
+
+    private static CallableStatement callCallable(String scriptLine, Connection connection, List rsList) throws SQLException {
       //prøver å ta hensyn til at det kan returneres flere Resultset fra ett storedProcedure kall.
       logger.info("Procedure: " + scriptLine);
       CallableStatement callablStatement = connection.prepareCall(scriptLine);
@@ -276,14 +280,33 @@ public class SqlExecutor {
       return callablStatement;
    }
 
-   public static void main(String[] args) throws Exception {
+
+    /**
+     * Denne klassen er brukt i fra Ant.
+     * <p/>
+     * Hvis parameteren FailOnError er med, vil det bli kastet en exception ved ORACLE SQL error
+     * fra feil med andre feilkoder en: 02443, 02275, 00955, 01418, 00942
+     * <p/>
+     * Kjører sql script på database anngitt som VM-Parametere, parameterebrukt:
+     * -DFailOnError=true
+     * -DFailOnWarning=false
+     *
+     * @param args navn på filen som skal lastes.
+     */
+    public static void main(String[] args) throws Exception {
       if( args == null || args.length < 1 ) {
-         throw new OperationalException("Scriptfilen som skal kjøres må være anngitt som parameter.");
+         throw new OperationalException("Scriptfilen(e) som skal kjøres må være anngitt som parameter.");
       }
-      for( int i = 0; i < args.length; i++ ) {
-         runScript(args[i]);
-      }
-   }
+
+        final SqlExecutor executor = new SqlExecutor();
+        executor.failOnError = "true".equals(System.getProperty("FailOnError", "true"));
+        executor.failOnWarning = "true".equals(System.getProperty("FailOnWarning", "false"));
+
+
+        for (int i = 0; i < args.length; i++) {
+            executor.runScript(args[i]);
+        }
+    }
 
 
 

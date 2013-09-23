@@ -11,6 +11,9 @@ import org.gradle.api.internal.ConventionTask
  */
 abstract class AbstractSQLTask extends ConventionTask {
 
+    //SKTOOLS-27, SKTOOLS-84
+    boolean failOnError = !project.gradle.startParameter.isContinueOnFailure()
+
     /**
      * Disse credentials blir benyttet dersom {@code useTaskCredentials == true}
      *
@@ -49,7 +52,7 @@ abstract class AbstractSQLTask extends ConventionTask {
         credentials.password = password
     }
 
-    //SKIF-211
+    //SKTOOLS-21
     String encoding
 
 
