@@ -28,7 +28,7 @@ class DatabasePatcherTest extends HSQLDBTest {
         File patchFile = testCase.createSimplePatchFile();
 
         DatabasePatcher databasePatcher = testCase.setUpDatabasePatcher();
-        databasePatcher.patch(patchFile.toString(), false);
+        databasePatcher.patch(patchFile.toString());
 
         def row = sql.firstRow('select ID, NAVN from TEST_TABLE where ID = 1')
 
@@ -54,7 +54,7 @@ class DatabasePatcherTest extends HSQLDBTest {
         String relativePath = "subdir/" + patchFile.getName()
 
         DatabasePatcher databasePatcher = testCase.setUpDatabasePatcher();
-        databasePatcher.patch(relativePath, false);
+        databasePatcher.patch(relativePath);
 
         def row = sql.firstRow('select ID, NAVN from TEST_TABLE where ID = 1')
 
@@ -75,7 +75,7 @@ class DatabasePatcherTest extends HSQLDBTest {
         File patchFile = testCase.createTempFile("");
 
         DatabasePatcher databasePatcher = testCase.setUpDatabasePatcher();
-        databasePatcher.patch(patchFile.toString(), false);
+        databasePatcher.patch(patchFile.toString());
 
         def row = sql.firstRow('select * from PATCHINFO')
 
@@ -133,7 +133,8 @@ INSERT INTO B_TABLE (ID, NAVN) VALUES (2, 'valueB');
         DatabasePatcher databasePatcher = testCase.setUpDatabasePatcher();
 
         //kjører inn patch for "default" komponent
-        databasePatcher.patch(patchAFile.toString(), true) //singlestep
+        databasePatcher.singleStepPatches = true  //singlestep
+        databasePatcher.patch(patchAFile.toString())
 
         Assert.assertEquals(sql.firstRow('select count(*) from PATCHINFO').getAt(0), 1, "Forventet antall rader i patchinfo")
         Assert.assertEquals(databasePatcher.getVersion().component, 'null', "forventet modul")
@@ -147,7 +148,8 @@ INSERT INTO B_TABLE (ID, NAVN) VALUES (2, 'valueB');
         databasePatcher.component = 'modulB'
 
 
-        while (databasePatcher.patch(patchBFile.toString(), true) != 0) { //singlestepper igjennom alle patcher for "modulB"
+        databasePatcher.singleStepPatches = true  //singlestep
+        while (databasePatcher.patch(patchBFile.toString()) != 0) { //singlestepper igjennom alle patcher for "modulB"
             Assert.assertEquals(sql.firstRow('select count(*) from PATCHINFO').getAt(0), 2, "Forventet antall rader i patchinfo")
 
             def result = sql.firstRow('select * from PATCHINFO where component=?', 'modulB')
@@ -282,7 +284,7 @@ ${testCase.PATCH_03}
         DatabasePatcher databasePatcher = testCase.setUpDatabasePatcher();
 
         //STEG: Patcher opp basen med oldPatchFile
-        databasePatcher.patch(oldPatchFile.toString(), false);
+        databasePatcher.patch(oldPatchFile.toString());
         sql.firstRow('''select count(*) from TEST_TABLE''').with { def row ->
             Assert.assertEquals(row[0], 1, 'Forventer en rad')
         }
@@ -295,7 +297,7 @@ ${testCase.PATCH_03}
         }
 
         //STEG: Patcher opp basen igjen med oldPatchFile - forventer uforandret resultat
-        databasePatcher.patch(oldPatchFile.toString(), false);
+        databasePatcher.patch(oldPatchFile.toString());
         sql.firstRow('''select count(*) from TEST_TABLE''').with { def row ->
             Assert.assertEquals(row[0], 1, 'Forventer en rad')
         }
@@ -309,7 +311,7 @@ ${testCase.PATCH_03}
 """);
 
         //STEG: Patcher opp databasen med oppdatert patchfil - forventer ikke endringer da databasen allerede har siste patch# og indexesInSyncWithPatch
-        databasePatcher.patch(updatedPatchFileWithIndex.toString(), false);
+        databasePatcher.patch(updatedPatchFileWithIndex.toString());
         sql.firstRow('''select count(*) from TEST_TABLE''').with { def row ->
             Assert.assertEquals(row[0], 1, 'Forventer fortsatt en rad da indexesInSyncWithPatch')
         }
@@ -330,7 +332,7 @@ ${testCase.PATCH_03}
             Assert.assertEquals(row.indexesInSyncWithPatch, 0, "indexesInSyncWithPatch")
         }
 
-        databasePatcher.patch(updatedPatchFileWithIndex.toString(), false);
+        databasePatcher.patch(updatedPatchFileWithIndex.toString());
 
         sql.firstRow('''select count(*) from TEST_TABLE''').with { def row ->
             Assert.assertEquals(row[0], 2, 'Forventer fortsatt en rad da indexesInSyncWithPatch')
@@ -342,7 +344,7 @@ ${testCase.PATCH_03}
         
         
         //STEG: patcher opp databasen igjen - forventer ingen endringer
-        databasePatcher.patch(updatedPatchFileWithIndex.toString(), false);
+        databasePatcher.patch(updatedPatchFileWithIndex.toString());
 
         sql.firstRow('''select count(*) from TEST_TABLE''').with { def row ->
             Assert.assertEquals(row[0], 2, 'Forventer fortsatt en rad da indexesInSyncWithPatch')
@@ -376,7 +378,7 @@ ${testCase.PATCH_03}
         DatabasePatcher databasePatcher = testCase.setUpDatabasePatcher();
 
         //STEG: Patcher opp basen med patchFile
-        databasePatcher.patch(patchFile.toString(), false);
+        databasePatcher.patch(patchFile.toString());
         sql.firstRow('''select count(*) from TEST_TABLE''').with { def row ->
             Assert.assertEquals(row[0], 2, 'Forventet antall rader')
         }
@@ -390,7 +392,7 @@ ${testCase.PATCH_03}
 
 
         //STEG: Patcher opp basen igjen - forventer da at kun patch#2 blir kjørt  da denne er tagget som ALWAYS
-        databasePatcher.patch(patchFile.toString(), false);
+        databasePatcher.patch(patchFile.toString());
         sql.firstRow('''select count(*) from TEST_TABLE''').with { def row ->
             Assert.assertEquals(row[0], 3, 'Forventet antall rader')
         }

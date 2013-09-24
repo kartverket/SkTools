@@ -34,6 +34,8 @@ public class DatabasePatcher {
    //SKTOOLS-34: modulbasert patching
    public String component = PatchInfo.DEFAULT_MODULE;
 
+    boolean singleStepPatches = false;
+
     //SKTOOLS-84: error håndtering
     boolean failOnError, failOnWarning;
 
@@ -196,11 +198,8 @@ public class DatabasePatcher {
                }
 
            } else if( commandName.equals("patch") ) {
-               boolean singleStepPatches = "true".equalsIgnoreCase(System.getProperty("singlestep"));
-               if( singleStepPatches ) {
-                   logger.info("Kjøre patcher i singlestep mode slik at kun en ny patch blir utført per kall");
-               }
-               databasePatcher.patch(args[idx++], singleStepPatches);
+               configureSinglestepFromArgs(databasePatcher, args, false); //default false
+               databasePatcher.patch(args[idx++]);
                System.exit(0);
 
            } else if( commandName.equals("assertVersion") ) {
@@ -252,15 +251,18 @@ public class DatabasePatcher {
        System.exit(1);
    }
 
+    private static void configureSinglestepFromArgs(DatabasePatcher databasePatcher, String[] args, boolean def) {
+        databasePatcher.singleStepPatches = "true".equalsIgnoreCase(System.getProperty("singlestep", (def ? "true" : "false")));
+    }
+
 
     /**
     * Patcher eksisterende database i henhold til patchfil og eksisterende patcher som allerede er installert i databasen
     *
     * @param patchFilePath filsti for patchfil som skal eksekveres
-    * @param singleStepPatches {@code true} hvis kun en ny patch skal utføres. Hvis {@code false} utføres alle patcher
     * @return antall patchblokker påført (inkludert indekser dersom indexesInSyncWithPatch != true)
     */
-   public int patch(String patchFilePath, boolean singleStepPatches) {
+   public int patch(String patchFilePath) {
       Connection con = null;
 
       try {
@@ -277,6 +279,10 @@ public class DatabasePatcher {
          patches.remove(minVersion);
          if( currentPatchInfo.patchVersion.compareTo(minVersion) < 0 ) {
             throw new RuntimeException("Kan ikke patche database. Krever minimum versjon: " + minVersion);
+         }
+
+         if( singleStepPatches ) {
+            logger.info("Kjøre patcher i singlestep mode slik at kun en ny patch blir utført per kall");
          }
 
          int executedPatchesCount = 0;
