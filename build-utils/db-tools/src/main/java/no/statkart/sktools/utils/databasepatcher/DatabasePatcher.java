@@ -153,9 +153,10 @@ public class DatabasePatcher {
 
     private static void printUsage() {
         System.err.println("Usage: DatabasePatcher getVersion [-component <component>]");
-        System.err.println("Usage: DatabasePatcher patch sqlPatchfil [-component <component>]");
-        System.err.println("Usage: DatabasePatcher syncPatch sqlPatchfil -types <type>[,<type>]* [-component <component>]");
+        System.err.println("Usage: DatabasePatcher patch <patchfile> [-component <component>]");
+        System.err.println("Usage: DatabasePatcher syncPatch <patchfile> -types <type>[,<type>]* [-component <component>]");
         System.err.println("Usage: DatabasePatcher setIndexesInSyncWithPatch (true|false) [-component <component>]");
+        System.err.println("Usage: DatabasePatcher setLatestVersionFromPatchfile <patchfile> [-component <component>]");
         System.err.println("Usage: DatabasePatcher defineVersion DB.VERSION [PATCH.NO] -component <component>");
         System.err.println("Usage: DatabasePatcher assertVersion DB.VERSION [PATCH.NO] -component <component>");
     }
@@ -240,19 +241,28 @@ public class DatabasePatcher {
                        }
                    }
 
-                   boolean ok = databasePatcher.defineVersion(dbVersion, patchNumber);
+                   boolean ok = databasePatcher.defineVersion(dbVersion, patchNumber, false);
                    if (!ok) {
                        System.exit(2);
                    }
                    System.exit(0);
 
                }
+           } else if( commandName.equals("setLatestVersionFromPatchfile") ) {
+               PatchVersion patchVersion = parseLatestPatchVersionExisting(args[idx++]);
+
+               boolean ok = databasePatcher.defineVersion(patchVersion.dbVersion, patchVersion.patchNo, true);
+               if (!ok) {
+                   System.exit(2);
+               }
+               System.exit(0);
            }
+
         }
-       //feil ved parsing av kommando
-       printUsage();
-       System.exit(1);
-   }
+        //feil ved parsing av kommando
+        printUsage();
+        System.exit(1);
+    }
 
     private static void configureSinglestepFromArgs(DatabasePatcher databasePatcher, String[] args, boolean def) {
         databasePatcher.singleStepPatches = "true".equalsIgnoreCase(System.getProperty("singlestep", (def ? "true" : "false")));
@@ -310,6 +320,26 @@ public class DatabasePatcher {
         int executedPatchesCount = patch_impl(patchFilePath, true, patchtypes);
         setIndexesInSyncWithPatch(true);
         return executedPatchesCount;
+    }
+
+
+    /**
+     * SKTOOLS-87
+     * @since 1.3
+     */
+    static PatchVersion parseLatestPatchVersionExisting(String patchFilePath) {
+        try {
+            List<? extends Expression> statements = SQLStatementParser.parseExpressions(SqlExecutor.lesFilFraWorkingDir(patchFilePath));
+            LinkedHashMap<PatchVersion, List<? extends Expression>> patches = parsePatches(statements);
+
+            ArrayList<PatchVersion> patchVersions = new ArrayList<PatchVersion>(patches.keySet());
+            assert !patchVersions.isEmpty(); //skal alltid inneholde minst ett element
+
+            return patchVersions.get(patchVersions.size());//returnerer siste element i sorter liste
+
+        } catch (IOException e) {
+            throw new OperationalException(logger, "Feil ved parsing av sql-fil", e);
+        }
     }
 
     /**
@@ -802,7 +832,7 @@ public class DatabasePatcher {
      *
      * @return {@code false} if the version already exists
      */
-    public boolean defineVersion(String dbVersion, int patchNumber) {
+    public boolean defineVersion(String dbVersion, int patchNumber, boolean indexesInSyncWithPatch) {
         Connection con = null;
         try {
             con = createConnection();
@@ -845,6 +875,7 @@ public class DatabasePatcher {
                 PatchVersion patchVersion = patchInfo.patchVersion;
                 patchVersion.dbVersion = dbVersion;
                 patchVersion.patchNo = patchNumber;
+                patchInfo.indexesInSyncWithPatch = indexesInSyncWithPatch;
 
                 PatchInfo currentPatchInfo = getOrCreatePatchInfo(con, patchInfo);
                 logger.info((String.format("Database versjon: component=%s db.version=%s patch.no=%d indexesInSyncWithPatch=%b", currentPatchInfo.component, currentPatchInfo.patchVersion.dbVersion, currentPatchInfo.patchVersion.patchNo, currentPatchInfo.indexesInSyncWithPatch)));

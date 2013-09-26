@@ -6,6 +6,9 @@ import org.testng.Assert
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.PatchTask
 import org.gradle.api.Task
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.SyncPatchTask
+import no.statkart.sktools.gradle.plugins.dbtools.database.oracle.OracleExportTask
+import no.statkart.sktools.gradle.plugins.dbtools.database.oracle.OracleImportTask
+import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.DefineLatestPatchVersionTask
 
 /**
  * Test av {@link no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsPlugin} m.t.p. gradle mekanikker.
@@ -116,7 +119,7 @@ class DbToolsPluginTest {
 
     /**
      * Tester deklarering av import task for oracle.
-     *
+     * @see OracleImportTask
      */
     @Test
     void testOracleImportTask() {
@@ -141,15 +144,18 @@ class DbToolsPluginTest {
         1..2.each {
             def taskName = "db${it}Import"
             assert testCase.project.tasks.findByName(taskName) != null //forutsetter at denne er lagt til
-            assert testCase.project.tasks[taskName].username == 'brukernavn'
-            assert testCase.project.tasks[taskName].password == 'passord'
+            assert testCase.project.tasks[taskName] instanceof OracleImportTask
+            with { OracleImportTask task ->
+                assert task.username == 'brukernavn'
+                assert task.password == 'passord'
+            }
         }
     }
 
     
     /**
      * Tester deklarering av import task for oracle.
-     *
+     * @see OracleExportTask
      */
     @Test
     void testOracleExportTask() {
@@ -174,14 +180,17 @@ class DbToolsPluginTest {
         1..2.each {
             def taskName = "db${it}Export"
             assert testCase.project.tasks.findByName(taskName) != null //forutsetter at denne er lagt til
-            assert testCase.project.tasks[taskName].username == 'brukernavn'
-            assert testCase.project.tasks[taskName].password == 'passord'
+            assert testCase.project.tasks[taskName] instanceof OracleExportTask
+            with { OracleExportTask task ->
+                assert task.username == 'brukernavn'
+                assert task.password == 'passord'
+            }
         }
     }
 
 
     /**
-     * Tester deklarering av patch task
+     * Tester deklarering av {@link PatchTask} task
      * @since 1.3
      */
     @Test
@@ -231,7 +240,7 @@ class DbToolsPluginTest {
     }
 
     /**
-     * Tester deklarering av SyncPatch task
+     * Tester deklarering av {@link SyncPatch} task
      * @since 1.3
      */
     @Test
@@ -285,4 +294,42 @@ class DbToolsPluginTest {
 
     }
 
+
+
+    /**
+     * Tester deklarering av {@link DefineLatestPatchVersionTask} task
+     * @since 1.3
+     */
+    @Test
+    void testDefineLatestPatchVersionTask() {
+        final def testCase = new DbToolsPluginTestCase()
+
+        testCase.configureDatabasePlugin {
+            toolset(name:'db1', type:'oracle') {
+                patch {
+                    defineLatestPatchVersionTask('AssignLatestPatchlevel', sqlFile:"foo.sql", description: 'Task med verdier ifra konfigurasjon og convention')
+                }
+            }
+        }
+
+        Assert.assertNotNull(testCase.convention.dbToolSets.db1, "Forventet toolset objekt")
+        Assert.assertNotNull(testCase.convention.dbToolSets.db1.patch['null'], "Forventet patch objekt")
+        Assert.assertNotNull(testCase.convention.dbToolSets.db1.patch['null'].tasks['AssignLatestPatchlevel'], "Forventet patch task")
+        Assert.assertTrue(testCase.convention.dbToolSets.db1.patch['null'].tasks['AssignLatestPatchlevel'] instanceof DefineLatestPatchVersionTask, "Forventet type")
+
+        testCase.convention.dbToolSets.db1.patch['null'].tasks['AssignLatestPatchlevel'].with { DefineLatestPatchVersionTask task ->
+            Assert.assertEquals(task.sqlFile, testCase.project.file("foo.sql"), "Fil for patch task")
+            Assert.assertEquals(task.component, 'null', "component for patch task")
+        }
+
+        final Task independentTask = testCase.project.task('IndependentTask', type: DefineLatestPatchVersionTask.class) {
+            desciption = "Task som ikke legges til via convention/configuration, men konfigureres manuelt"
+            sqlFile = project.file("patchFoo.sql")
+        }
+        independentTask.with { DefineLatestPatchVersionTask task ->
+            Assert.assertEquals(task.sqlFile, testCase.project.file("patchFoo.sql"), "Fil for patch task")
+            Assert.assertEquals(task.component, 'null', "component for patch task")
+        }
+
+    }
 }

@@ -134,6 +134,28 @@ class PatchConfiguration {
 
 
     /**
+     * Task som assigner siste pathcversjon.
+     * @since 1.3 - SKTOOLS-87
+     */
+    public DefineLatestPatchVersionTask defineLatestPatchVersionTask(Map params = [:], String name, Closure closure = null) {
+        if (name == null) {
+            throw new ConfigurationException("Name is mandatory and have to be declared!")
+        }
+        String definePatchVersionTaskName = name
+
+        DefineLatestPatchVersionTask task = configurePatchTask(params, definePatchVersionTaskName, DefineLatestPatchVersionTask.class, closure)
+        task.conventionMapping.with {
+            map 'component', { this.getName() }
+            map 'classpath', { findJdbcDependencies() + findDbToolsDependencies() }
+        }
+        return task
+    }
+    public DefineLatestPatchVersionTask defineLatestPatchVersionTask(String name, Closure closure) {
+        return definePatchVersionTask([:], name, closure)
+    }
+
+
+    /**
      * @since 1.2 - SKTOOLS-33
      */
     public IndexesInSyncWithPatchTask setIndexesInSyncWithPatchTask(Map params, String name = null, Closure closure = null) {
