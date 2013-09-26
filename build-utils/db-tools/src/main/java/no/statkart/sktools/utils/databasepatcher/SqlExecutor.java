@@ -185,7 +185,7 @@ public class SqlExecutor {
          throw new ConfigurationException("Kan ikke kjøre databasescript med connection = null");
       }
       if( sqlScript == null ) {
-         throw new ConfigurationException("Det må anngis ett sqlscript, sqlSript = null.");
+         throw new ConfigurationException("Det må angis ett sqlscript, sqlSript = null.");
       }
 
        List<? extends Expression> expressions = SQLStatementParser.parseExpressions(sqlScript);

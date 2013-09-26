@@ -56,7 +56,7 @@ class PatchTask extends DatabasePatchTask {
         super.validate();
 
         if (getSqlFile() == null) {
-            throw new Exception("sqlFile må anngis!")
+            throw new Exception("sqlFile må angis!")
         }
 
         if (!getSqlFile().exists()) {

@@ -51,7 +51,7 @@ public class SQLTask extends AbstractSQLTask {
         validateAbstractSQLTask()
 
         if (getSqlFile() == null && getSqlString() == null) {
-            throw new Exception("sqlFile eller sqlString må anngis!")
+            throw new Exception("sqlFile eller sqlString må angis!")
         }
 
         if (getSqlFile() != null) {
@@ -60,7 +60,7 @@ public class SQLTask extends AbstractSQLTask {
             }
 
             if (getSqlString() != null) {
-                throw new Exception("Enten sqlFile eller sqlString kan anngis!")
+                throw new Exception("Enten sqlFile eller sqlString kan angis!")
             }
         }
 
@@ -70,7 +70,7 @@ public class SQLTask extends AbstractSQLTask {
             }
 
             if (getSqlFile() != null) {
-                throw new Exception("Enten sqlFile eller sqlString kan anngis!")
+                throw new Exception("Enten sqlFile eller sqlString kan angis!")
             }
         }
 

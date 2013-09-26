@@ -137,7 +137,7 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
                         //oppdaterer convention
                         webservice.schemaFiles = resolvedFiles
                     } else {
-                        throw new GradleException("Enten shamaFiles eller baseWar må anngis i ${WeblogicWsClientPlugin.class.simpleName}-convention")
+                        throw new GradleException("Enten shamaFiles eller baseWar må angis i ${WeblogicWsClientPlugin.class.simpleName}-convention")
                     }
 
                     getOutputs().files(webservice.schemaFiles) //registrerer output for task

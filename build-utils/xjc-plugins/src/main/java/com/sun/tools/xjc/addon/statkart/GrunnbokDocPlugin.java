@@ -24,7 +24,7 @@ import java.util.List;
  * Plug in som dekorerer genererte java klasser med dokumentasjon.
  * <p/>
  * #doc tag er valgfri
- * #see tag kan enten anngis, eller så mappes det til et standard pakkenavn.
+ * #see tag kan enten angis, eller så mappes det til et standard pakkenavn.
  * <p/>
  * Eksempel på bruk:
  * <xjc ...>
