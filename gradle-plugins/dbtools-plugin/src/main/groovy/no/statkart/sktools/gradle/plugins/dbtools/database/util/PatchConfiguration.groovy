@@ -1,19 +1,14 @@
 package no.statkart.sktools.gradle.plugins.dbtools.database.util
 
-import org.gradle.api.file.FileCollection
-import org.gradle.api.artifacts.Dependency
 import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsConvention
 import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsPlugin
+import no.statkart.sktools.utils.databasepatcher.exception.ConfigurationException
 import org.apache.commons.lang.StringUtils
 import org.gradle.api.Project
-import no.statkart.sktools.utils.databasepatcher.exception.ConfigurationException
-import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.AssertPatchversionTask
-import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.DefinePatchversionTask
-import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.PrintPatchversionTask
-import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.DatabasePatchTask
-import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.IndexesInSyncWithPatchTask
-import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.PatchTask
 import org.gradle.api.Task
+import org.gradle.api.artifacts.Dependency
+import org.gradle.api.file.FileCollection
+import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.*
 
 /**
  *
@@ -71,13 +66,19 @@ class PatchConfiguration {
      * @since 1.2 - SKTOOLS-33
      */
     public PatchTask patchTask(Map params, String name, Closure closure = null) {
-        PatchTask task = configureAbstractSQLTask(params, name, 'patch', PatchTask.class, closure)
-        task.conventionMapping.with {
-            map 'component', { this.getName() }
-            map 'classpath', { findJdbcDependencies() + findDbToolsDependencies() }
-        }
+        configurePatchTask(params, name, 'patch', PatchTask.class, closure)
+    }
+
+    /**
+     * @since 1.3 - SKTOOLS-86
+     */
+    public PatchTask syncPatchTask(Map params, String name, Closure closure = null) {
+        SyncPatchTask task = configurePatchTask(params, name, 'syncPatch', SyncPatchTask.class, closure)
+        //benytter default verdier definert av plugin..
+//        task.conventionMapping.with { map 'patchTypes', { ['INDEX'] } }
         return task
     }
+
 
     /**
      * @since 1.2 - SKTOOLS-33
@@ -215,6 +216,22 @@ class PatchConfiguration {
                 map 'component', { 'null' }
             }
         }
+
+        project.tasks.withType(SyncPatchTask.class) {
+            it.conventionMapping.with {
+                map 'patchTypes', { ['INDEX', 'TYPE', 'PACKAGE', 'FUNCTION'] } //SKTOOLS-86
+                map 'failOnWarning', { false } //SKTOOLS-86
+            }
+        }
+    }
+
+    PatchTask configurePatchTask(Map params, String name, String verb = 'patch', Class type, Closure closure) {
+        PatchTask task = configureAbstractSQLTask(params, name, verb, type, closure)
+        task.conventionMapping.with {
+            map 'component', { this.getName() }
+            map 'classpath', { findJdbcDependencies() + findDbToolsDependencies() }
+        }
+        return task
     }
 
     AbstractSQLTask configureAbstractSQLTask(Map params, String target, String verb = '', Class type, Closure closure) {

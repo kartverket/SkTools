@@ -154,6 +154,7 @@ public class DatabasePatcher {
     private static void printUsage() {
         System.err.println("Usage: DatabasePatcher getVersion [-component <component>]");
         System.err.println("Usage: DatabasePatcher patch sqlPatchfil [-component <component>]");
+        System.err.println("Usage: DatabasePatcher syncPatch sqlPatchfil -types <type>[,<type>]* [-component <component>]");
         System.err.println("Usage: DatabasePatcher setIndexesInSyncWithPatch (true|false) [-component <component>]");
         System.err.println("Usage: DatabasePatcher defineVersion DB.VERSION [PATCH.NO] -component <component>");
         System.err.println("Usage: DatabasePatcher assertVersion DB.VERSION [PATCH.NO] -component <component>");
@@ -166,22 +167,16 @@ public class DatabasePatcher {
 
         if (args.length > 0) {
             DatabasePatcher databasePatcher = new DatabasePatcher();
-            databasePatcher.failOnError = "true".equalsIgnoreCase(System.getProperty("failOnError", "true")); //SKTOOLS-84: defaults to true
-            databasePatcher.failOnWarning = "true".equalsIgnoreCase(System.getProperty("failOnWarning", "true")); //SKTOOLS-84: defaults to true
+            configureFailOnErrorFromArgs(databasePatcher, args, true); //SKTOOLS-84: defaults to true
+            configureFailOnWarningFromArgs(databasePatcher, args, true); //SKTOOLS-84: defaults to true
             databasePatcher.validate();
 
             String commandName = args[idx++];
 
-           //finner optionalt nivå
-           for (int i = idx; i < args.length; i++) {
-               String arg = args[i];
-               if ("-component".equals(arg) && args.length > i+1) {
-                   databasePatcher.component = args[i+1];
-                   hasComponentArg = true;
-               }
-           }
+           //finner optional component
+           hasComponentArg = configureComponentFromArgs(databasePatcher, args, false);
 
-           //parser kommando
+            //parser kommando
            if( commandName.equals("getVersion") ) {
                try {
                    databasePatcher.getVersion();
@@ -198,8 +193,16 @@ public class DatabasePatcher {
                }
 
            } else if( commandName.equals("patch") ) {
-               configureSinglestepFromArgs(databasePatcher, args, false); //default false
+               configureSinglestepFromArgs(databasePatcher, args, false); //default to false
                databasePatcher.patch(args[idx++]);
+               System.exit(0);
+
+           } else if( commandName.equals("syncPatch") ) {
+               configureFailOnWarningFromArgs(databasePatcher, args, false); //SKTOOLS-84: defaults to false
+               configureSinglestepFromArgs(databasePatcher, args, false); //default to false
+
+               Collection<PatchtypeKode> patchtypes = configurePatchtypeFromArgs(databasePatcher, args, true);
+               databasePatcher.syncPatch(args[idx++], patchtypes);
                System.exit(0);
 
            } else if( commandName.equals("assertVersion") ) {
@@ -255,14 +258,69 @@ public class DatabasePatcher {
         databasePatcher.singleStepPatches = "true".equalsIgnoreCase(System.getProperty("singlestep", (def ? "true" : "false")));
     }
 
+    private static void configureFailOnErrorFromArgs(DatabasePatcher databasePatcher, String[] args, boolean def) {
+        databasePatcher.failOnError = "true".equalsIgnoreCase(System.getProperty("failOnError", (def ? "true" : "false")));
+    }
+
+    private static void configureFailOnWarningFromArgs(DatabasePatcher databasePatcher, String[] args, boolean def) {
+        databasePatcher.failOnWarning = "true".equalsIgnoreCase(System.getProperty("failOnWarning", (def ? "true" : "false")));
+    }
+
+    private static Collection<PatchtypeKode> configurePatchtypeFromArgs(DatabasePatcher databasePatcher, String[] args, boolean mandatory) {
+        HashSet<PatchtypeKode> patchtypeKodeSet = new HashSet<PatchtypeKode>();
+        for (int i = 0; i < args.length; i++) {
+            String arg = args[i];
+            if ("-types".equals(arg) && args.length > i+1) {
+                StringTokenizer tokenizer = new StringTokenizer(args[i + 1], ",", false);
+                while (tokenizer.hasMoreTokens()) {
+                    final String token = tokenizer.nextToken();
+                    patchtypeKodeSet.add(PatchtypeKode.fromString(token));
+                }
+                return patchtypeKodeSet;
+            }
+        }
+
+        return null;
+    }
+
+    private static boolean configureComponentFromArgs(DatabasePatcher databasePatcher, String[] args, boolean mandatory) {
+        for (int i = 0; i < args.length; i++) {
+            String arg = args[i];
+            if ("-component".equals(arg) && args.length > i+1) {
+                databasePatcher.component = args[i+1];
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @see #patch_impl(String, boolean, java.util.Collection)
+     * @since 1.3
+     */
+    public int patch(String patchFilePath) {
+        return patch_impl(patchFilePath, false, Collections.singleton(PatchtypeKode.ALL));
+    }
+
+    /**
+     * @see #patch_impl(String, boolean, java.util.Collection)
+     * @since 1.3
+     */
+    public int syncPatch(String patchFilePath, Collection<PatchtypeKode> patchtypes) {
+        int executedPatchesCount = patch_impl(patchFilePath, true, patchtypes);
+        setIndexesInSyncWithPatch(true);
+        return executedPatchesCount;
+    }
 
     /**
     * Patcher eksisterende database i henhold til patchfil og eksisterende patcher som allerede er installert i databasen
     *
     * @param patchFilePath filsti for patchfil som skal eksekveres
+    * @param synchToPatchlevel dersom {@code true} så kjøres patcher frem til patchnivå om igjen.
+    * @param patchtypes filter av patchtyper som skal påføres. {@link PatchtypeKode#isTypeOf(PatchtypeKode)}
     * @return antall patchblokker påført (inkludert indekser dersom indexesInSyncWithPatch != true)
     */
-   public int patch(String patchFilePath) {
+   public int patch_impl(String patchFilePath, boolean synchToPatchlevel, Collection<PatchtypeKode> patchtypes) {
       Connection con = null;
 
       try {
@@ -289,30 +347,40 @@ public class DatabasePatcher {
          for (Map.Entry<PatchVersion, List<? extends Expression>> entry : patches.entrySet()) {
              PatchVersion p = entry.getKey();
 
+
              // Bestemmer om databasen allerede er patchet med denne patch og om indexer er i sync.
              boolean newPatch = currentPatchInfo.patchVersion.compareTo(p) < 0;
+
+             //hopper ut når synchToPatchlevel
+             if (synchToPatchlevel && newPatch) {
+                 break; //skal kun eksekvere patcher til og med currentPatchInfo
+             }
 
              if (p.patchtype == PatchtypeKode.ALWAYS) {
                  // ALWAYS patch. Utføres alltid.
                  executePatchBlock(con, p, entry.getValue(), false);
                  executedPatchesCount = executedPatchesCount; //oppdateres ikke antall eksekverte patchblokker da denne er såpass spesiell
-             } else if (newPatch) {
-                 // Ny patch. Utføres alltid.
-                 executePatchBlock(con, p, entry.getValue(), newPatch);
-                 executedPatchesCount++;
-                 if( singleStepPatches ) {
-                    break;
-                 }
              } else {
-                 // Patch har allerede blitt utført, men skal utføres på nytt hvis det er en index patch og indexer ikke er i sync
-                 if (p.patchtype.isIndexPatch() && !currentPatchInfo.indexesInSyncWithPatch) {
+                 if (newPatch) {
+                     // Ny patch. Utføres alltid.
                      executePatchBlock(con, p, entry.getValue(), newPatch);
-                     executedPatchesCount++; //telles med når currentPatchInfo.indexesInSyncWithPatch == false
+                     executedPatchesCount++;
+                     if (singleStepPatches) {
+                         break;
+                     }
+                 } else if (synchToPatchlevel) {
+                     // Dersom synchToPatchlevel
+                     if (p.patchtype.isContaintedBy(patchtypes)) { //filtrerer på type
+                         // Patch har allerede blitt utført, men skal utføres på nytt hvis indexer ikke er i sync
+                         if (!currentPatchInfo.indexesInSyncWithPatch) {
+                             executePatchBlock(con, p, entry.getValue(), newPatch);
+                             executedPatchesCount++; //telles med når currentPatchInfo.indexesInSyncWithPatch == false
+                         }
+                     }
                  }
              }
          }
 
-         setIndexesInSyncWithPatch(true); //indexer blir automatisk lagt til naar !indexesInSyncWithPatch
          return executedPatchesCount;
       } catch( SQLException e ) {
           throw new OperationalException(logger, "Feil ved sql", e);
@@ -331,14 +399,12 @@ public class DatabasePatcher {
             sqlExecutor.runScript(con, patchBlock);
             updatePatchInfo(con, p);
          } else {
-            if( p.patchtype.isIndexPatch() || p.patchtype == PatchtypeKode.ALWAYS ) {
-                if (p.patchtype.isIndexPatch()) {
-                    logger.info("Utfører index patchblokk på nytt. Noen index statements kan feile : " + p);
-                }
-                sqlExecutor.runScript(con, patchBlock);
-            } else {
-                throw new RuntimeException("Forsøk på å utføre skjema patch blokk flere ganger mot samme database");
-            }
+             if (p.patchtype != PatchtypeKode.ALWAYS) {
+                 logger.info(String.format("Utfører %s patchblokk på nytt. Noen statements kan feile : %s", p.patchtype.name, p));
+             } else {
+                 logger.info("Utfører patchblokk: " + p + ((p.kommentar == null) ? "" : " " + p.kommentar));
+             }
+             sqlExecutor.runScript(con, patchBlock);
          }
       } catch( Exception e ) {
          throw new RuntimeException(e.getMessage(), e);
@@ -577,7 +643,7 @@ public class DatabasePatcher {
                  stmt.setString(1, candidatePatchInfo.component);
                  stmt.setString(2, candidatePatchInfo.patchVersion.dbVersion);
                  stmt.setInt(3, candidatePatchInfo.patchVersion.patchNo);
-                 stmt.setInt(4, candidatePatchInfo.indexesInSyncWithPatch ? 0 : 1);
+                 stmt.setInt(4, candidatePatchInfo.indexesInSyncWithPatch ? 1 : 0);
                  stmt.setString(5, candidatePatchInfo.patchVersion.kommentar);
 
                  logger.info(String.format("Defining patchInfo: %s", candidatePatchInfo));
@@ -775,7 +841,6 @@ public class DatabasePatcher {
             } else {
                 //legger inn versjon
                 PatchInfo patchInfo = getDefaultVersion();
-                patchInfo.indexesInSyncWithPatch = false;
 
                 PatchVersion patchVersion = patchInfo.patchVersion;
                 patchVersion.dbVersion = dbVersion;
@@ -864,7 +929,7 @@ public class DatabasePatcher {
       PreparedStatement stmt = null;
       ResultSet rs = null;
       try {
-         stmt = con.prepareStatement("update PATCHINFO set dbVersion=?, patchNo=?, indexesInSyncWithPatch=1, kommentar=? WHERE component=?");
+         stmt = con.prepareStatement("update PATCHINFO set dbVersion=?, patchNo=?, kommentar=? WHERE component=?");
          stmt.setString(1, p.dbVersion);
          stmt.setInt(2, p.patchNo);
          stmt.setString(3, p.kommentar);

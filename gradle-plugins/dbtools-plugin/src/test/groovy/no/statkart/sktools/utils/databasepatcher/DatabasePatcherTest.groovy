@@ -297,9 +297,12 @@ ${testCase.PATCH_03}
         }
 
         //STEG: Patcher opp basen igjen med oldPatchFile - forventer uforandret resultat
-        databasePatcher.patch(oldPatchFile.toString());
+        databasePatcher.syncPatch(oldPatchFile.toString(), Collections.singleton(PatchtypeKode.INDEX));
         sql.firstRow('''select count(*) from TEST_TABLE''').with { def row ->
             Assert.assertEquals(row[0], 1, 'Forventer en rad')
+        }
+        sql.firstRow('select * from PATCHINFO').with { def row ->
+            Assert.assertEquals(row.indexesInSyncWithPatch, 1, "indexesInSyncWithPatch")
         }
 
 
@@ -311,7 +314,7 @@ ${testCase.PATCH_03}
 """);
 
         //STEG: Patcher opp databasen med oppdatert patchfil - forventer ikke endringer da databasen allerede har siste patch# og indexesInSyncWithPatch
-        databasePatcher.patch(updatedPatchFileWithIndex.toString());
+        databasePatcher.syncPatch(updatedPatchFileWithIndex.toString(), Collections.singleton(PatchtypeKode.INDEX));
         sql.firstRow('''select count(*) from TEST_TABLE''').with { def row ->
             Assert.assertEquals(row[0], 1, 'Forventer fortsatt en rad da indexesInSyncWithPatch')
         }
@@ -332,10 +335,10 @@ ${testCase.PATCH_03}
             Assert.assertEquals(row.indexesInSyncWithPatch, 0, "indexesInSyncWithPatch")
         }
 
-        databasePatcher.patch(updatedPatchFileWithIndex.toString());
+        databasePatcher.syncPatch(updatedPatchFileWithIndex.toString(), Collections.singleton(PatchtypeKode.INDEX));
 
         sql.firstRow('''select count(*) from TEST_TABLE''').with { def row ->
-            Assert.assertEquals(row[0], 2, 'Forventer fortsatt en rad da indexesInSyncWithPatch')
+            Assert.assertEquals(row[0], 2, 'Forventer ny rad da indexesInSyncWithPatch==false')
         }
         sql.firstRow('select * from PATCHINFO').with { def row ->
             Assert.assertEquals(row.indexesInSyncWithPatch, 1, "indexesInSyncWithPatch")
@@ -344,7 +347,7 @@ ${testCase.PATCH_03}
         
         
         //STEG: patcher opp databasen igjen - forventer ingen endringer
-        databasePatcher.patch(updatedPatchFileWithIndex.toString());
+        databasePatcher.syncPatch(updatedPatchFileWithIndex.toString(), Collections.singleton(PatchtypeKode.INDEX));
 
         sql.firstRow('''select count(*) from TEST_TABLE''').with { def row ->
             Assert.assertEquals(row[0], 2, 'Forventer fortsatt en rad da indexesInSyncWithPatch')

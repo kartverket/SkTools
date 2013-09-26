@@ -1,5 +1,6 @@
 package no.statkart.sktools.utils.databasepatcher;
 
+import java.util.Collection;
 import java.util.HashMap;
 
 /**
@@ -10,6 +11,9 @@ import java.util.HashMap;
  */
 public class PatchtypeKode {
     private final static HashMap<String, PatchtypeKode> _staticLookup = new HashMap<String, PatchtypeKode>();
+
+    /** @since 1.3 */
+    public final static PatchtypeKode ALL = new PatchtypeKode("", "Alle patchtyper"); //samme som schema + always
 
     /** @since 1.3 */
     public final static PatchtypeKode SCHEMA = new PatchtypeKode("SCHEMA", "Patching av skjema");
@@ -45,25 +49,36 @@ public class PatchtypeKode {
         _staticLookup.put(name, this);
     }
 
+    /**
+     * @since 1.3
+     * @return {@code true} dersom denne koden er en subtype av parameterisert kode
+     */
     public boolean isTypeOf(PatchtypeKode patchtype) {
         return patchtype != null && isTypeOf(patchtype.name);
     }
 
     /**
      * @since 1.3
+     * @see #isTypeOf(PatchtypeKode)
+     * @return {@code true} dersom koden er et subsett av samlingen av koder.
      */
-    public boolean isIndexPatch() {
-        return PatchtypeKode.INDEX.isTypeOf(this);
+    public boolean isContaintedBy(Collection<PatchtypeKode> patchtypes) {
+        if (this == ALL || this == ALWAYS || this == SCHEMA ) {
+            return true;
+        } else {
+            for (PatchtypeKode patchtypeKode : patchtypes) {
+                if (isTypeOf(patchtypeKode)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
+
 
     public boolean isTypeOf(String patchtypeName) {
         if (patchtypeName == null) return false;
-
-        if (this == ALWAYS || this == SCHEMA) {
-            return true;
-        } else {
-            return patchtypeName.startsWith(name);
-        }
+        return name.startsWith(patchtypeName);
     }
 
     public String toString() {
