@@ -255,6 +255,13 @@ allprojects {
             }
         }
     }
+
+    tasks.withType(Upload) {
+        doLast {
+            logger.lifecycle "Uploaded artifacts for ${project.path} version '${project.version}'. Description: '${description}'"
+        }
+    }
+
 }
 
 afterEvaluate {
