@@ -19,7 +19,7 @@ class PatchTask extends DatabasePatchTask {
     Boolean singlestep
     void setSinglestep(def value) {
         if (value != null) {
-            singlestep = Boolean.parseBoolean(value)
+            singlestep = Boolean.parseBoolean("${value}")
         } else {
             singlestep = null
         }
