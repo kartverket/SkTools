@@ -335,7 +335,7 @@ public class DatabasePatcher {
             ArrayList<PatchVersion> patchVersions = new ArrayList<PatchVersion>(patches.keySet());
             assert !patchVersions.isEmpty(); //skal alltid inneholde minst ett element
 
-            return patchVersions.get(patchVersions.size());//returnerer siste element i sorter liste
+            return patchVersions.get(patchVersions.size()-1);//returnerer siste element i sortert liste
 
         } catch (IOException e) {
             throw new OperationalException(logger, "Feil ved parsing av sql-fil", e);
