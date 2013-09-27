@@ -241,7 +241,10 @@ public class DatabasePatcher {
                        }
                    }
 
-                   boolean ok = databasePatcher.defineVersion(dbVersion, patchNumber, false);
+                   PatchVersion patchVersion = databasePatcher.getDefaultPatchVersion();
+                   patchVersion.dbVersion = dbVersion;
+                   patchVersion.patchNo = patchNumber;
+                   boolean ok = databasePatcher.defineVersion(patchVersion);
                    if (!ok) {
                        System.exit(2);
                    }
@@ -250,8 +253,9 @@ public class DatabasePatcher {
                }
            } else if( commandName.equals("setLatestVersionFromPatchfile") ) {
                PatchVersion patchVersion = parseLatestPatchVersionExisting(args[idx++]);
-
-               boolean ok = databasePatcher.defineVersion(patchVersion.dbVersion, patchVersion.patchNo, true);
+               patchVersion.kommentar += String.format(" (patchversjon satt ifra byggesystem)");
+               boolean ok = databasePatcher.defineVersion(patchVersion);
+               databasePatcher.setIndexesInSyncWithPatch(true);
                if (!ok) {
                    System.exit(2);
                }
@@ -359,7 +363,7 @@ public class DatabasePatcher {
          LinkedHashMap<PatchVersion, List<? extends Expression>> patches = parsePatches(statements);
 
          con = createConnection();
-         PatchInfo currentPatchInfo = getOrCreatePatchInfo(con, getDefaultVersion());
+         PatchInfo currentPatchInfo = getOrCreatePatchInfo(con, getDefaultPatchInfo());
          logger.info("Nåværende patchinformasjon: " + currentPatchInfo);
 
          // Første entry inneholder min version.
@@ -794,8 +798,12 @@ public class DatabasePatcher {
         }
     }
 
-    PatchInfo getDefaultVersion() {
-        PatchVersion patchVersion = new PatchVersion(String.format("Automatisk opprettet patchistorikk den %s", new Date()));
+    PatchVersion getDefaultPatchVersion() {
+        return new PatchVersion(String.format("Automatisk opprettet patchistorikk den %s", new Date()));
+    }
+
+    PatchInfo getDefaultPatchInfo() {
+        PatchVersion patchVersion = getDefaultPatchVersion();
         PatchInfo patchInfo = new PatchInfo(component, patchVersion, true);
         patchInfo.indexesInSyncWithPatch = true; //indexes up to date by default
         return patchInfo;
@@ -832,7 +840,7 @@ public class DatabasePatcher {
      *
      * @return {@code false} if the version already exists
      */
-    public boolean defineVersion(String dbVersion, int patchNumber, boolean indexesInSyncWithPatch) {
+    public boolean defineVersion(PatchVersion patchVersion) {
         Connection con = null;
         try {
             con = createConnection();
@@ -840,14 +848,10 @@ public class DatabasePatcher {
             if (hasVersion(con, null)) { //version info for component exists
                 PatchInfo currentPatchInfo = getOrCreatePatchInfo(con, null);
 
-                if (currentPatchInfo.patchVersion.dbVersion.equals(dbVersion)) {
-                    if (currentPatchInfo.patchVersion.patchNo != patchNumber) { //allows update across the same dbversion
+                if (currentPatchInfo.patchVersion.dbVersion.equals(patchVersion.dbVersion)) {
+                    if (currentPatchInfo.patchVersion.patchNo != patchVersion.patchNo) { //allows update across the same dbversion
+
                         //update version
-                        PatchVersion patchVersion = currentPatchInfo.patchVersion;
-
-                        patchVersion.dbVersion = dbVersion;
-                        patchVersion.patchNo = patchNumber;
-
                         updatePatchInfo(con, patchVersion);
 
                         currentPatchInfo = getOrCreatePatchInfo(con, null);
@@ -870,12 +874,8 @@ public class DatabasePatcher {
 
             } else {
                 //legger inn versjon
-                PatchInfo patchInfo = getDefaultVersion();
-
-                PatchVersion patchVersion = patchInfo.patchVersion;
-                patchVersion.dbVersion = dbVersion;
-                patchVersion.patchNo = patchNumber;
-                patchInfo.indexesInSyncWithPatch = indexesInSyncWithPatch;
+                PatchInfo patchInfo = getDefaultPatchInfo();
+                patchInfo.patchVersion = patchVersion;
 
                 PatchInfo currentPatchInfo = getOrCreatePatchInfo(con, patchInfo);
                 logger.info((String.format("Database versjon: component=%s db.version=%s patch.no=%d indexesInSyncWithPatch=%b", currentPatchInfo.component, currentPatchInfo.patchVersion.dbVersion, currentPatchInfo.patchVersion.patchNo, currentPatchInfo.indexesInSyncWithPatch)));
