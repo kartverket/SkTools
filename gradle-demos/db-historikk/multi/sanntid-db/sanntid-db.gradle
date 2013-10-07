@@ -10,7 +10,11 @@ configureDatabasePlugin {
 
 
     /**
-     * Toolset for SYSTEM-bruker
+     * Toolset for DBA med script for:
+     *
+     *  - Vedlikehold av grants for brukere på systemnivå
+     *  - Opprettelse/sletting av tablespace
+     *  - Opprettelse/sletting av brukere
      */
     toolset(name: 'system', type: 'oracle', prefix: 'system') {
 
@@ -56,8 +60,8 @@ configureDatabasePlugin {
 
         if (System.properties.containsKey('db.oradata')) { properties.put('db_oradata', System.getProperty('db.oradata')) }
 
-        credentials.username = sanntid_admin_db_username
-        credentials.password = sanntid_admin_db_password
+        credentials.username = sanntid_db_system_username
+        credentials.password = sanntid_db_system_password
         url = "jdbc:oracle:thin:@${sanntid_db_hostname}:${sanntid_db_port}:${sanntid_db_sid}"
         driver = 'oracle.jdbc.OracleDriver'
     }
@@ -65,7 +69,12 @@ configureDatabasePlugin {
 
 
     /**
-     * Toolset for SANNTID-bruker
+     * Toolset for SA-bruker med script for:
+     *
+     *  - Vedlikehold av grants for brukere på skjema-nivå
+     *  - Opprettelse og vedlikehold av skjema (inkludert patching)
+     *
+     *  - Mekanikk for migrering til og fra historikk skjema
      */
     toolset(name: 'sanntid', type: 'oracle', prefix: 'sanntid') {
 
@@ -104,8 +113,8 @@ configureDatabasePlugin {
         ]
 
 
-        credentials.username = sanntid_admin_db_username
-        credentials.password = sanntid_admin_db_password
+        credentials.username = sanntid_db_system_username
+        credentials.password = sanntid_db_system_password
         url = "jdbc:oracle:thin:@${sanntid_db_hostname}:${sanntid_db_port}:${sanntid_db_sid}"
         driver = 'oracle.jdbc.OracleDriver'
     }

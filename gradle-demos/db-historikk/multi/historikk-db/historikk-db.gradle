@@ -13,7 +13,11 @@ configureDatabasePlugin {
 
 
     /**
-     * Toolset for historikk-bruker
+     * Toolset for DBA med script for:
+     *
+     *  - Vedlikehold av grants for brukere på systemnivå
+     *  - Opprettelse/sletting av tablespace
+     *  - Opprettelse/sletting av brukere
      */
     toolset(name: 'system', type: 'oracle', prefix: 'system') {
 
@@ -45,15 +49,20 @@ configureDatabasePlugin {
 
         if (System.properties.containsKey('db.oradata')) { properties.put('db_oradata', System.getProperty('db.oradata')) }
 
-        credentials.username = historikk_admin_db_username
-        credentials.password = historikk_admin_db_password
+        credentials.username = historikk_db_system_username
+        credentials.password = historikk_db_system_password
         url = "jdbc:oracle:thin:@${historikk_db_hostname}:${historikk_db_port}:${historikk_db_sid}"
         driver = 'oracle.jdbc.OracleDriver'
     }
 
 
     /**
-     * Toolset for SYSTEM-bruker
+     * Toolset for SA-bruker med script for:
+     *
+     *  - Vedlikehold av grants for brukere på skjema-nivå
+     *  - Opprettelse og vedlikehold av skjema (inkludert patching)
+     *
+     *  - Mekanikk for migrering til og fra historikk skjema
      */
     toolset(name: 'historikk', type: 'oracle', prefix: 'historikk') {
 
@@ -166,8 +175,8 @@ configureDatabasePlugin {
         ]
 
 
-        credentials.username = historikk_admin_db_username
-        credentials.password = historikk_admin_db_password
+        credentials.username = historikk_db_system_username
+        credentials.password = historikk_db_system_password
         url = "jdbc:oracle:thin:@${historikk_db_hostname}:${historikk_db_port}:${historikk_db_sid}"
         driver = 'oracle.jdbc.OracleDriver'
     }
