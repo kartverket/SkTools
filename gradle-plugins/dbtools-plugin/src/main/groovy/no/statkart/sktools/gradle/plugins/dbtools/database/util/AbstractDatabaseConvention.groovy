@@ -15,7 +15,7 @@ abstract class AbstractDatabaseConvention {
 
     protected final DbtoolsConvention dbtoolsConvention
 
-    public final String name
+    protected final String name
     protected final Map<String, Object> properties = new HashMap<String, Object>() // HashMap allows null values
 
     /**

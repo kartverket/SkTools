@@ -75,8 +75,8 @@ class DbtoolsPlugin implements Plugin<Project>  {
             doLast {
                 println "Dbtools configuration for ${project.path}:"
 
-                dbtoolsConvention.dbToolSets.each { AbstractDatabaseConvention toolset ->
-                    println "\n\nInfo for toolset ${CONVENTION_NAME}.dbToolSets['${toolset.name}'] (prefix: '${toolset.prefix}')"
+                dbtoolsConvention.dbToolSets.each { String name, AbstractDatabaseConvention toolset ->
+                    println "\n\nInfo for toolset ${CONVENTION_NAME}.dbToolSets['${name}'] (prefix: '${toolset.prefix}')"
                     toolset.printInfo()
                 }
                 if (dbtoolsConvention.dbToolSets.isEmpty()) {

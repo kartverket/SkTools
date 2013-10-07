@@ -333,4 +333,26 @@ class DbToolsPluginTest {
         }
 
     }
+
+
+    /**
+     * @since 1.3 - SKTOOLS-88
+     */
+    @Test
+    void testInfoTask() {
+        final def testCase = new DbToolsPluginTestCase()
+
+        testCase.configureDatabasePlugin {
+            toolset(name:'coolDb', type:'hsqldb', prefix:'coolDb') {
+                url = "jdbc:hsqldb:mem:${this.class.simpleName}TestApplyCredentials"
+                driver = 'org.hsqldb.jdbcDriver'
+            }
+        }
+
+        final Task info = testCase.project.tasks.findByName('info')
+        Assert.assertNotNull(info, "Forventet at task er lagt til")
+
+        info.execute()
+    }
+
 }
