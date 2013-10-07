@@ -69,7 +69,7 @@ class DbtoolsPlugin implements Plugin<Project>  {
 
     /** @since 1.3 - SKTOOLS-88  **/
     private Task configureInfo(final Project project, final DbtoolsConvention pluginConvention) {
-        final Task checkSQLTasks = project.tasks.create('Info') {
+        final Task checkSQLTasks = project.tasks.create('info') {
             description = 'Displays current configuration of dbToolsets'
             group = 'help'
             doLast {
