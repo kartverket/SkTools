@@ -44,7 +44,7 @@ public class DbtoolsConvention {
 
     protected final List<Dependency> jdbcDependencies = new ArrayList<Dependency>(4);
 
-    public final Map<String, ?> dbToolSets = new HashMap<String, Object>()
+    public final Map<String, ? extends AbstractDatabaseConvention> dbToolSets = new HashMap<String, AbstractDatabaseConvention>()
 
     DbtoolsConvention(Project project) {
         this.project = project
@@ -55,7 +55,7 @@ public class DbtoolsConvention {
      *
      * Configuration methods:
      * <ul>
-     *     <li> {@link #toolset(Map<java.lang.String, ?>, groovy.lang.Closure) }
+     *     <li> {@link #toolset(Map, Closure) }
      *     <li> {@link #useDrivers(Object)}
      * </ul>
      */

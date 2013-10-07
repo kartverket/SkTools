@@ -15,7 +15,7 @@ abstract class AbstractDatabaseConvention {
 
     protected final DbtoolsConvention dbtoolsConvention
 
-    protected final String name
+    public final String name
     protected final Map<String, Object> properties = new HashMap<String, Object>() // HashMap allows null values
 
     /**
@@ -171,21 +171,7 @@ abstract class AbstractDatabaseConvention {
     }
 
 
-    /**
-     * Printer viktige definerte properties
-     */
-    protected def addInfoTask(Project project) {
-        Task infoTask = project.task("${prefix}Info") {
-            description = "Viser gjeldende konfigurasjon for toolset ${name}"
-
-            doLast {
-                printInfo()
-            }
-        }
-        getTasks().addTask('Info', infoTask)
-    }
-
-    protected void printInfo() {
+    public void printInfo() {
         80.times {project.print '*'}; project.println ''
 
         println "${this.class.simpleName} for \"${prefix}\":"

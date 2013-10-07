@@ -15,7 +15,7 @@ import org.gradle.api.plugins.JavaBasePlugin
 
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractSQLTask
 import org.gradle.api.Task
-import org.gradle.api.plugins.JavaPlugin
+import no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractDatabaseConvention
 
 /**
  * Gradle plugin for database-moduler.
@@ -55,10 +55,11 @@ class DbtoolsPlugin implements Plugin<Project>  {
         dbtoolsConvention = new DbtoolsConvention(project)
         project.getConvention().getPlugins().put(CONVENTION_NAME, dbtoolsConvention);
 
-        configureConfigurations(project)
+        configureConfiguration(project)
         assignConventionMappings(project)
 
         configureTest(project, dbtoolsConvention); //SKTOOLS-81
+        configureInfo(project, dbtoolsConvention); //SKTOOLS-88
 
         project.afterEvaluate {
             assignConventionalValues(project);
@@ -66,8 +67,29 @@ class DbtoolsPlugin implements Plugin<Project>  {
         }
     }
 
+    /** @since 1.3 - SKTOOLS-88  **/
+    private Task configureInfo(final Project project, final DbtoolsConvention pluginConvention) {
+        final Task checkSQLTasks = project.tasks.create('Info') {
+            description = 'Displays current configuration of dbToolsets'
+            group = 'help'
+            doLast {
+                println "Dbtools configuration for ${project.path}:"
 
-    private void configureTest(final Project project, final DbtoolsConvention pluginConvention) {
+                dbtoolsConvention.dbToolSets.each { AbstractDatabaseConvention toolset ->
+                    println "\n\nInfo for toolset ${CONVENTION_NAME}.dbToolSets['${toolset.name}'] (prefix: '${toolset.prefix}')"
+                    toolset.printInfo()
+                }
+                if (dbtoolsConvention.dbToolSets.isEmpty()) {
+                    println "\n\nNo toolsets defined."
+                }
+            }
+        }
+        return checkSQLTasks
+    }
+
+
+    /** @since 1.3 - SKTOOLS-81  **/
+    private Task configureTest(final Project project, final DbtoolsConvention pluginConvention) {
         final Task checkSQLTasks = project.tasks.create('checkSQLTasks') {
             description = 'Verifies configuration of SQLTasks'
             group = JavaBasePlugin.VERIFICATION_GROUP
@@ -85,10 +107,12 @@ class DbtoolsPlugin implements Plugin<Project>  {
             Task checkTask = project.getTasks().findByName(CHECK_TASK_NAME) ?: project.task(CHECK_TASK_NAME, description: 'Checks the dbTools configuration', group: JavaBasePlugin.VERIFICATION_GROUP)
             checkTask.dependsOn checkSQLTasks
         }
+        return checkSQLTasks
     }
 
-    private void configureConfigurations(Project project) {
+    private Configuration configureConfiguration(Project project) {
         Configuration configuration = project.configurations.create(DBTOOLS_CONFIGURATION);
+        return configuration
     }
 
     void assignConventionMappings(Project project) {

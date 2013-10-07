@@ -16,7 +16,6 @@ class HsqldbTasksConvention extends AbstractDatabaseConvention {
 
     HsqldbTasksConvention(DbtoolsConvention dbtoolsConvention, String propertyPrefix, String name) {
         super(dbtoolsConvention, propertyPrefix, name, 'org.hsqldb.jdbc.JDBCDriver')
-        addInfoTask(project)
     }
 
 

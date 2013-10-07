@@ -23,7 +23,6 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
 
     OracleTasksConvention(DbtoolsConvention dbtoolsConvention, String propertyPrefix, String name) {
         super(dbtoolsConvention, propertyPrefix, name, 'oracle.jdbc.OracleDriver')
-        addInfoTask(project)
 
         ExtraPropertiesExtension ext = project.getExtensions().getExtraProperties()
         
