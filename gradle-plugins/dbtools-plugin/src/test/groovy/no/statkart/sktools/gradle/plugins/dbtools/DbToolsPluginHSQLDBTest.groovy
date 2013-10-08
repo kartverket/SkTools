@@ -34,7 +34,6 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
      */
     @Test
     void testCustomTasksByConvention() {
-        defineDatabaseUser("USER1", "");
 
         assert sql.connection.isValid(0)
 
@@ -60,8 +59,8 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
         testCase.configureDatabasePlugin {
             toolset( name:'Prefix', type:'hsqldb', prefix:'Prefix') {
 
-                credentials.username = username
-                credentials.password = password
+                credentials.username = defaultCredentials.username
+                credentials.password = defaultCredentials.password
 
                 url = sql.connection.properties.URL
                 driver = jdbcDriverClassString
@@ -133,7 +132,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
      */
     @Test
     void testDynamicCredentials() {
-        assert sql.connection.isValid(0)
+        Assert.assertTrue sql.connection.isValid(0)
 
         final def testCase = new DbToolsPluginPatchTestCase()
 
@@ -164,16 +163,16 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
                 url = sql.connection.properties.URL
                 driver = jdbcDriverClassString
 
-                credentials.username = 'sa'
-                credentials.password = ''
+                credentials.username = defaultCredentials.username
+                credentials.password = defaultCredentials.password
             }
         }
 
 
         // STEG 3 - credentials ihht konfig
         def credentials = testCase.convention.dbToolSets['Prefix_'].credentials
-        Assert.assertEquals credentials.username, 'sa'
-        Assert.assertEquals credentials.password, ''
+        Assert.assertEquals credentials.username, defaultCredentials.username
+        Assert.assertEquals credentials.password, defaultCredentials.password
 
         Task createSchemaTask = testCase.project.tasks.getByName('prefix_CreateSchema')
         Assert.assertNotNull createSchemaTask, "Forventet task for ${createShemaFile.name}"
@@ -331,8 +330,8 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
         testCase.configureDatabasePlugin {
             toolset(name: 'Prefix', type: 'hsqldb', prefix: 'Prefix') {
 
-                credentials.username = username
-                credentials.password = password
+                credentials.username = defaultCredentials.username
+                credentials.password = defaultCredentials.password
 
 
                 url = sql.connection.properties.URL
@@ -368,8 +367,8 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
         testCase.configureDatabasePlugin {
             toolset(name: 'Prefix', type: 'hsqldb', prefix: 'Prefix') {
 
-                credentials.username = username
-                credentials.password = password
+                credentials.username = defaultCredentials.username
+                credentials.password = defaultCredentials.password
 
                 url = sql.connection.properties.URL
                 driver = jdbcDriverClassString

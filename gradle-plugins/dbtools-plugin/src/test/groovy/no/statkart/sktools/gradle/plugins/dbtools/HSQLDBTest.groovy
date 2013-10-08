@@ -12,6 +12,14 @@ import no.statkart.sktools.utils.databasepatcher.DatabasePatcherTestCase
 /**
  * Testklasse som setter opp en tom database.
  *
+ * Hver test får definert opp
+ * <ul>
+ *     <li> system-bruker - {@link #systemCredentials}
+ *     <li> standard-bruker - {@link #defaultCredentials}
+ * </ul>
+ *
+ * Ytterlige brukere defineres via {@link #defineDatabaseUser(String, String)}
+ *
  */
 abstract class HSQLDBTest {
 
@@ -28,7 +36,8 @@ abstract class HSQLDBTest {
         return "${this.class.simpleName}${suffix}"
     }
 
-    protected final HSQLDBTest.Credentials defaultCredentials = new Credentials('sa', '')
+    protected final static HSQLDBTest.Credentials systemCredentials = new Credentials('sa', '')
+    public HSQLDBTest.Credentials defaultCredentials
     int testIdx = 0;
 
 
@@ -80,7 +89,7 @@ abstract class HSQLDBTest {
             throw new RuntimeException("Failed to load JDBC driver", e);
         }
 
-        connection = DriverManager.getConnection(url, defaultCredentials.username, defaultCredentials.password)
+        connection = DriverManager.getConnection(url, systemCredentials.username, systemCredentials.password)
     }
 
     @AfterTest
@@ -93,7 +102,8 @@ abstract class HSQLDBTest {
     void setupSql() {
         testIdx++
         sqls.clear();
-        buildSQLInstance(url, defaultCredentials);
+        buildSQLInstance(url, systemCredentials);
+        defaultCredentials = defineDatabaseUser("BRUKER${testIdx}", '')
     }
 
     @AfterMethod
@@ -118,9 +128,9 @@ abstract class HSQLDBTest {
     }
 
     private void addDatabaseUser(Credentials credentials, def schemaName) {
-        sql.execute("CREATE USER ${credentials.username} PASSWORD ${credentials.password}".toString());
-        sql.execute("CREATE SCHEMA ${schemaName} AUTHORIZATION ${credentials.username}".toString());
-        sql.execute("ALTER USER ${credentials.username} SET INITIAL SCHEMA ${schemaName}".toString());
+        getSql(systemCredentials).execute("CREATE USER ${credentials.username} PASSWORD ${credentials.password}".toString());
+        getSql(systemCredentials).execute("CREATE SCHEMA ${schemaName} AUTHORIZATION ${credentials.username}".toString());
+        getSql(systemCredentials).execute("ALTER USER ${credentials.username} SET INITIAL SCHEMA ${schemaName}".toString());
     }
 
     private Sql buildSQLInstance(String url, Credentials credentials) {
