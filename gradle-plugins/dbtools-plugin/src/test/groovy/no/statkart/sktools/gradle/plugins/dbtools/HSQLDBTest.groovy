@@ -16,18 +16,53 @@ import no.statkart.sktools.utils.databasepatcher.DatabasePatcherTestCase
 abstract class HSQLDBTest {
 
     private Connection connection
-    protected Sql sql
+    protected final LinkedHashMap<Credentials, Sql> sqls = new LinkedHashMap<Credentials, Sql>(2)
 
     protected final jdbcDriverClassString = 'org.hsqldb.jdbcDriver'
-    private String url = "jdbc:hsqldb:mem:${this.class.simpleName}"
-    protected final def username = 'sa'
-    protected final def password = ''
 
+    protected String getUrl(def SCHEMA_NAME = getSchemaName()) {
+        return "jdbc:hsqldb:mem:${SCHEMA_NAME}"
+    }
+
+    private String getSchemaName(def suffix = '') {
+        return "${this.class.simpleName}${suffix}"
+    }
+
+    protected final HSQLDBTest.Credentials defaultCredentials = new Credentials('sa', '')
     int testIdx = 0;
 
 
+    /** immutable */
+    static final class Credentials {
+        final String username, password
+
+        Credentials(username, password) {
+            this.username = username
+            this.password = password
+        }
+
+        @Override
+        int hashCode() {
+            return username.hashCode()
+        }
+
+        @Override
+        boolean equals(Object obj) {
+            if (obj instanceof Credentials) {
+              username.equals(obj.username) && password.equals(obj.password)
+            }
+            false
+        }
+
+        @Override
+        String toString() {
+            return "${username}/${password}"
+        }
+    }
+
+
     protected DatabasePatcherTestCase buildDatabasePatcherTestCase() {
-        def testCase = new DatabasePatcherTestCase(jdbcDriverClassString, sql.connection.metaData.URL, username, password)
+        def testCase = new DatabasePatcherTestCase(jdbcDriverClassString, sql.connection.metaData.URL, defaultCredentials.username, defaultCredentials.password)
 
         return testCase
     }
@@ -45,7 +80,7 @@ abstract class HSQLDBTest {
             throw new RuntimeException("Failed to load JDBC driver", e);
         }
 
-        connection = DriverManager.getConnection(url, username, password)
+        connection = DriverManager.getConnection(url, defaultCredentials.username, defaultCredentials.password)
     }
 
     @AfterTest
@@ -57,22 +92,41 @@ abstract class HSQLDBTest {
     @BeforeMethod
     void setupSql() {
         testIdx++
-        sql = buildSQLInstance(url + testIdx, username, password)
+        sqls.clear();
+        buildSQLInstance(url, defaultCredentials);
     }
 
     @AfterMethod
     void cleanupSql() {
-        sql.close()
+        sqls.each { def key, Sql sql ->
+            sql.close();
+        }
     }
 
 
-
-    protected Sql buildSQLInstance(String url) {
-        return buildSQLInstance(url, 'sa', '')
+    public Sql getSql(Credentials credentials = defaultCredentials) {
+        sqls.get(credentials)
     }
 
-    protected Sql buildSQLInstance(String url, String username, String password) {
-        return Sql.newInstance(url, username, password, jdbcDriverClassString)
+    public HSQLDBTest.Credentials defineDatabaseUser(String username, String password) {
+        Credentials credentials = new Credentials(username, password)
+        testIdx++
+        addDatabaseUser(credentials, getSchemaName(testIdx));
+        buildSQLInstance(getUrl(getSchemaName(testIdx)), credentials)
+
+        credentials
+    }
+
+    private void addDatabaseUser(Credentials credentials, def schemaName) {
+        sql.execute("CREATE USER ${credentials.username} PASSWORD ${credentials.password}".toString());
+        sql.execute("CREATE SCHEMA ${schemaName} AUTHORIZATION ${credentials.username}".toString());
+        sql.execute("ALTER USER ${credentials.username} SET INITIAL SCHEMA ${schemaName}".toString());
+    }
+
+    private Sql buildSQLInstance(String url, Credentials credentials) {
+        Sql newInstance = Sql.newInstance(url, credentials.username, credentials.password, jdbcDriverClassString)
+        sqls.put(credentials, newInstance)
+        return newInstance
     }
 
 

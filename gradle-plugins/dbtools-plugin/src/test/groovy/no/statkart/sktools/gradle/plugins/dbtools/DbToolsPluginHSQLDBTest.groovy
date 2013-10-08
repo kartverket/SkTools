@@ -2,11 +2,7 @@ package no.statkart.sktools.gradle.plugins.dbtools
 
 import org.testng.annotations.Test
 
-import org.gradle.api.Project
-import org.gradle.testfixtures.ProjectBuilder
-
 import org.testng.Assert
-import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsConvention
 import java.sql.SQLSyntaxErrorException
 import org.gradle.api.Task
 import org.gradle.api.tasks.TaskExecutionException
@@ -38,6 +34,8 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
      */
     @Test
     void testCustomTasksByConvention() {
+        defineDatabaseUser("USER1", "");
+
         assert sql.connection.isValid(0)
 
         final def testCase = new DbToolsPluginPatchTestCase()
@@ -235,10 +233,13 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
      */
     @Test
     void testMultipleDatabases() {
-        assert sql.connection.isValid(0)
 
-        String db1URL = sql.connection.properties.URL
-        String db2URL = "${db1URL}DB2"
+        Credentials user1 = defaultCredentials
+        Credentials user2 = defineDatabaseUser('USER2', '')
+
+        Assert.assertTrue getSql(user1).connection.isValid(0)
+        Assert.assertTrue getSql(user2).connection.isValid(0)
+
 
         final def testCase = new DbToolsPluginPatchTestCase()
 
@@ -268,19 +269,19 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
         testCase.configureDatabasePlugin {
             useToolset('hsqldb', 'DB1', 'hsql') {
 
-                url = "${db1URL}"
+                url = "${getSql(user1).connection.properties.URL}"
                 driver = jdbcDriverClassString
 
-                credentials.username = 'sa'
-                credentials.password = ''
+                credentials.username = user1.username
+                credentials.password = user1.password
             }
             useToolset('hsqldb', 'DB2', 'hsql2') {
 
-                url = "${db2URL}"
+                url = "${getSql(user2).connection.properties.URL}"
                 driver = jdbcDriverClassString
 
-                credentials.username = 'sa'
-                credentials.password = ''
+                credentials.username = user2.username
+                credentials.password = user2.password
             }
         }
 
@@ -299,7 +300,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
         createSchemaTask.execute()
 
         try {
-            def row = sql.firstRow('select * from TEST_TABLE')
+            def row = getSql(user1).firstRow('select * from TEST_TABLE')
             Assert.assertNull row, 'Forventer ingen rader'
         } catch (SQLSyntaxErrorException sqlsee) {
             Assert.fail 'Forventer at tabell finnes'
@@ -311,7 +312,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
         createSchema2Task.execute()
 
         try {
-            def row = buildSQLInstance(db2URL, 'sa', '').firstRow('select * from TEST_TABLE2')
+            def row = getSql(user2).firstRow('select * from TEST_TABLE2')
             Assert.assertNull row, 'Forventer ingen rader'
         } catch (SQLSyntaxErrorException sqlsee) {
             Assert.fail 'Forventer at tabell finnes'
