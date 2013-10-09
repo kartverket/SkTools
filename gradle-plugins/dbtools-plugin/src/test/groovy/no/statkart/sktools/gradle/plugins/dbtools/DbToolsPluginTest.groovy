@@ -222,10 +222,11 @@ class DbToolsPluginTest {
             Assert.assertEquals(task.failOnWarning, true, "FailOnWarning for patch task")
 
             Assert.assertEquals(task.singlestep, false, "singlestep for patch task")
+            Assert.assertNull(task.schema, "schema for patch task")
         }
 
         final Task independentTask = testCase.project.task('IndependentTask', type: PatchTask.class) {
-            desciption = "Task som ikke legges til via convention/configuration, men konfigureres manuelt"
+            description = "Task som ikke legges til via convention/configuration, men konfigureres manuelt"
             sqlFile = project.file("patchFoo.sql")
             singlestep = true
         }
@@ -236,9 +237,56 @@ class DbToolsPluginTest {
             Assert.assertEquals(task.failOnWarning, true, "FailOnWarning for patch task")
 
             Assert.assertEquals(task.singlestep, true, "singlestep for patch task")
+            Assert.assertNull(task.schema, "schema for patch task")
         }
 
     }
+
+    /**
+     * Tester deklarering av {@link PatchTask} task
+     * @since 1.3
+     */
+    @Test
+    void testPatchTaskSchema() {
+        final def testCase = new DbToolsPluginTestCase()
+
+        testCase.configureDatabasePlugin {
+            toolset(name:'db1', type:'oracle') {
+                properties = [  //deklarering via felles properties for toolset
+                        username: 'brukernavn',
+                        password: 'passord',
+                ]
+
+                patch {
+                    schema = 'schema2'
+                    patchTask('TestSchema', sqlFile:"foo.sql", description: 'Task med verdier ifra konfigurasjon og convention')
+                }
+            }
+        }
+
+        Assert.assertNotNull(testCase.convention.dbToolSets.db1, "Forventet toolset objekt")
+        Assert.assertNotNull(testCase.convention.dbToolSets.db1.patch['null'], "Forventet patch objekt")
+        Assert.assertNotNull(testCase.convention.dbToolSets.db1.patch['null'].tasks['TestSchema'], "Forventet patch task")
+
+        testCase.convention.dbToolSets.db1.patch['null'].tasks['TestSchema'].with { PatchTask task ->
+            Assert.assertNotNull(task.schema, "schema for patch task")
+            Assert.assertEquals(task.schema, 'schema2', "schema for patch task")
+        }
+
+        final Task independentTask = testCase.project.task('IndependentTask', type: PatchTask.class) {
+            description = "Task som ikke legges til via convention/configuration, men konfigureres manuelt"
+            sqlFile = project.file("patchFoo.sql")
+            singlestep = true
+            schema = 'schema3'
+        }
+        independentTask.with { PatchTask task ->
+            Assert.assertNotNull(task.schema, "schema for patch task")
+            Assert.assertEquals(task.schema, 'schema3', "schema for patch task")
+        }
+
+    }
+
+
 
     /**
      * Tester deklarering av {@link SyncPatchTask} task
@@ -279,7 +327,7 @@ class DbToolsPluginTest {
         }
 
         final Task independentTask = testCase.project.task('IndependentTask', type: SyncPatchTask.class) {
-            desciption = "Task som ikke legges til via convention/configuration, men konfigureres manuelt"
+            description = "Task som ikke legges til via convention/configuration, men konfigureres manuelt"
             sqlFile = project.file("patchFoo.sql")
             singlestep = true
         }
@@ -324,7 +372,7 @@ class DbToolsPluginTest {
         }
 
         final Task independentTask = testCase.project.task('IndependentTask', type: DefineLatestPatchVersionTask.class) {
-            desciption = "Task som ikke legges til via convention/configuration, men konfigureres manuelt"
+            description = "Task som ikke legges til via convention/configuration, men konfigureres manuelt"
             sqlFile = project.file("patchFoo.sql")
         }
         independentTask.with { DefineLatestPatchVersionTask task ->

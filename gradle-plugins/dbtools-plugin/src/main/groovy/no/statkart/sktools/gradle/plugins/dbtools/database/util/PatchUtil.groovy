@@ -38,6 +38,7 @@ public class PatchUtil {
     public String getCurrentVersion() {
         DatabasePatcher databasePatcher = setUpDatabasePatcher()
         databasePatcher.component = configuration.name
+        databasePatcher.schema = configuration.schema
 
         try {
             return databasePatcher.getVersion().patchVersion.dbVersion

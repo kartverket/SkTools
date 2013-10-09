@@ -22,6 +22,9 @@ class PatchConfiguration {
     //SKTOOLS-34: navn for komponent som skal patches
     protected String name
 
+    //SKTOOLS-77: skjema for patchtabell (benyttes bla av systembruker der patchtabell ikke befinner seg i eget skjema)
+    protected String schema
+
     //default metodenavn
     protected String printPatchVersionTaskName
     protected String setIndexesInSyncWithPatchTaskName
@@ -61,6 +64,9 @@ class PatchConfiguration {
     String getName() {
         return name
     }
+    String getSchema() {
+        return schema
+    }
 
     /**
      * @since 1.2 - SKTOOLS-33
@@ -87,11 +93,8 @@ class PatchConfiguration {
         if (name != null) {
             printPatchVersionTaskName = name
         }
-        PrintPatchversionTask task = configureAbstractSQLTask(params, printPatchVersionTaskName, PrintPatchversionTask.class, closure)
-        task.conventionMapping.with {
-            map 'component', { this.getName() }
-            map 'classpath', { findJdbcDependencies() + findDbToolsDependencies() }
-        }
+        PrintPatchversionTask task = configureDatabasePatchTask(params, printPatchVersionTaskName, PrintPatchversionTask.class, closure)
+
         return task
     }
 
@@ -103,11 +106,8 @@ class PatchConfiguration {
         if (name != null) {
             assertPatchVersionTaskName = name
         }
-        AssertPatchversionTask task = configureAbstractSQLTask(params, assertPatchVersionTaskName, AssertPatchversionTask.class, closure)
-        task.conventionMapping.with {
-            map 'component', { this.getName() }
-            map 'classpath', { findJdbcDependencies() + findDbToolsDependencies() }
-        }
+        AssertPatchversionTask task = configureDatabasePatchTask(params, assertPatchVersionTaskName, AssertPatchversionTask.class, closure)
+
         return task
     }
 
@@ -121,11 +121,8 @@ class PatchConfiguration {
         }
         String definePatchVersionTaskName = name
 
-        DefinePatchversionTask task = configureAbstractSQLTask(params, definePatchVersionTaskName, DefinePatchversionTask.class, closure)
-        task.conventionMapping.with {
-            map 'component', { this.getName() }
-            map 'classpath', { findJdbcDependencies() + findDbToolsDependencies() }
-        }
+        DefinePatchversionTask task = configureDatabasePatchTask(params, definePatchVersionTaskName, DefinePatchversionTask.class, closure)
+
         return task
     }
     public DefinePatchversionTask definePatchVersionTask(String name, Closure closure) {
@@ -144,10 +141,6 @@ class PatchConfiguration {
         String definePatchVersionTaskName = name
 
         DefineLatestPatchVersionTask task = configurePatchTask(params, definePatchVersionTaskName, DefineLatestPatchVersionTask.class, closure)
-        task.conventionMapping.with {
-            map 'component', { this.getName() }
-            map 'classpath', { findJdbcDependencies() + findDbToolsDependencies() }
-        }
         return task
     }
     public DefineLatestPatchVersionTask defineLatestPatchVersionTask(String name, Closure closure) {
@@ -162,10 +155,8 @@ class PatchConfiguration {
         if (name != null) {
             setIndexesInSyncWithPatchTaskName = name
         }
-        IndexesInSyncWithPatchTask task = configureAbstractSQLTask(params, setIndexesInSyncWithPatchTaskName, IndexesInSyncWithPatchTask.class, closure)
+        IndexesInSyncWithPatchTask task = configureDatabasePatchTask(params, setIndexesInSyncWithPatchTaskName, IndexesInSyncWithPatchTask.class, closure)
         task.conventionMapping.with {
-            map 'component', { this.getName() }
-            map 'classpath', { findJdbcDependencies() + findDbToolsDependencies() }
             map 'indexesUpToDate', { Boolean.TRUE }
         }
         return task
@@ -178,10 +169,8 @@ class PatchConfiguration {
         if (name != null) {
             unSetIndexesInSyncWithPatchTaskName = name
         }
-        IndexesInSyncWithPatchTask task = configureAbstractSQLTask(params, unSetIndexesInSyncWithPatchTaskName, IndexesInSyncWithPatchTask.class, closure)
+        IndexesInSyncWithPatchTask task = configureDatabasePatchTask(params, unSetIndexesInSyncWithPatchTaskName, IndexesInSyncWithPatchTask.class, closure)
         task.conventionMapping.with {
-            map 'component', { this.getName() }
-            map 'classpath', { findJdbcDependencies() + findDbToolsDependencies() }
             map 'indexesUpToDate', { Boolean.FALSE }
         }
         return task
@@ -248,17 +237,18 @@ class PatchConfiguration {
     }
 
     PatchTask configurePatchTask(Map params, String name, String verb = 'patch', Class type, Closure closure) {
-        PatchTask task = configureAbstractSQLTask(params, name, verb, type, closure)
-        task.conventionMapping.with {
-            map 'component', { this.getName() }
-            map 'classpath', { findJdbcDependencies() + findDbToolsDependencies() }
-        }
+        PatchTask task = configureDatabasePatchTask(params, name, verb, type, closure)
         return task
     }
 
-    AbstractSQLTask configureAbstractSQLTask(Map params, String target, String verb = '', Class type, Closure closure) {
+    DatabasePatchTask configureDatabasePatchTask(Map params, String target, String verb = '', Class type, Closure closure) {
         def taskName = getTaskName(verb, target)
         def task = databaseConvention.configureAbstractSQLTask(params, taskName, type, closure)
+        task.conventionMapping.with {
+            map 'schema', { this.getSchema() }
+            map 'component', { this.getName() }
+            map 'classpath', { findJdbcDependencies() + findDbToolsDependencies() }
+        }
         getTasks().addTask(target, task)
     }
 

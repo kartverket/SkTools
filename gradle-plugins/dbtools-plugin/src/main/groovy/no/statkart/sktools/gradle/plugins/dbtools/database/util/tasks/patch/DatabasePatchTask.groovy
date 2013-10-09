@@ -16,6 +16,10 @@ abstract class DatabasePatchTask extends AbstractSQLTask {
     //SKTOOLS-84
     boolean failOnWarning = failOnError
 
+    //SKTOOLS-77
+    @Input
+    String schema
+
     @Input
     String component
 
@@ -36,6 +40,10 @@ abstract class DatabasePatchTask extends AbstractSQLTask {
         spec.systemProperties.put('hibernate.connection.url', getUrl())
         spec.systemProperties.put('hibernate.connection.username', getUsername())
         spec.systemProperties.put('hibernate.connection.password', getPassword())
+
+        if (getSchema() != null) {
+            spec.systemProperties.put('hibernate.connection.schema', getSchema())
+        }
 
         spec.systemProperties.put('failOnError', getFailOnError())
         spec.systemProperties.put('failOnWarning', getFailOnWarning())
