@@ -12,15 +12,17 @@ class DatabasePatcherTestCase<T extends DatabasePatcherTestCase> extends DbTools
     String url
     String username
     String password
+    String schema
 
-    DatabasePatcherTestCase(String jdbcDriverClassString, String url, String username, String password) {
+    DatabasePatcherTestCase(String jdbcDriverClassString, String url, String username, String password, String schema) {
         this.jdbcDriverClassString = jdbcDriverClassString
         this.url = url
         this.username = username
         this.password = password
+        this.schema = schema
     }
 
-    protected DatabasePatcher setUpDatabasePatcher(String component = null) {
+    protected DatabasePatcher setUpDatabasePatcher(Map<String, String> props = [:]) {
         DatabasePatcher databasePatcher = new DatabasePatcher()
 
         System.setProperty("hibernate.connection.driver_class", jdbcDriverClassString)
@@ -28,8 +30,12 @@ class DatabasePatcherTestCase<T extends DatabasePatcherTestCase> extends DbTools
         System.setProperty("hibernate.connection.username", username)
         System.setProperty("hibernate.connection.password", password)
 
-        if (component != null) {
-            databasePatcher.component = component
+        if (props.component != null) {
+            databasePatcher.component = props.component
+        }
+
+        if (schema != null) {
+            System.setProperty("hibernate.connection.schema", schema)
         }
 
         return databasePatcher

@@ -138,11 +138,16 @@ public class JDBCHelper {
       String url = connectionProperties.getProperty("hibernate.connection.url");
       String usr = connectionProperties.getProperty("hibernate.connection.username");
       String pwd = connectionProperties.getProperty("hibernate.connection.password");
-      Connection con = JDBCHelper.createConnection(driver, url, usr, pwd);
+       Connection con = JDBCHelper.createConnection(driver, url, usr, pwd);
       if( con == null ) {
          throw new OperationalException(logger, "Klarte ikke opprette connection til " + url + " med bruker " + usr);
       }
       return con;
+   }
+
+   public static String getConnectionSchema() {
+       String schema = connectionProperties.getProperty("hibernate.connection.schema");
+       return schema;
    }
 
 

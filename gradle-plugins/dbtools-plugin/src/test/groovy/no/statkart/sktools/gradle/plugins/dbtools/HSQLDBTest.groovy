@@ -8,6 +8,8 @@ import org.testng.annotations.AfterTest
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.AfterMethod
 import no.statkart.sktools.utils.databasepatcher.DatabasePatcherTestCase
+import org.slf4j.LoggerFactory
+import org.slf4j.Logger
 
 /**
  * Testklasse som setter opp en tom database.
@@ -22,32 +24,30 @@ import no.statkart.sktools.utils.databasepatcher.DatabasePatcherTestCase
  *
  */
 abstract class HSQLDBTest {
+    final Logger logger = LoggerFactory.getLogger(this.class)
 
     private Connection connection
     protected final LinkedHashMap<Credentials, Sql> databaseUsers = new LinkedHashMap<Credentials, Sql>(2)
 
     protected final jdbcDriverClassString = 'org.hsqldb.jdbcDriver'
 
-    protected String getUrl(def SCHEMA_NAME = getSchemaName()) {
-        return "jdbc:hsqldb:mem:${SCHEMA_NAME}"
+    protected String getUrl() {
+        return "jdbc:hsqldb:mem:${this.class.getSimpleName()}"
     }
 
-    private String getSchemaName(def suffix = '') {
-        return "${this.class.simpleName}${suffix}"
-    }
-
-    protected final static HSQLDBTest.Credentials systemCredentials = new Credentials('sa', '')
+    protected final static HSQLDBTest.Credentials systemCredentials = new Credentials('SA', '', null)
     public HSQLDBTest.Credentials defaultCredentials
-    int testIdx = 0;
+    int brukerIdx = 1;
 
 
     /** immutable */
     static final class Credentials {
-        final String username, password
+        final String username, password, defaultSchema
 
-        Credentials(username, password) {
+        Credentials(username, password, schema) {
             this.username = username
             this.password = password
+            this.defaultSchema = schema
         }
 
         @Override
@@ -70,16 +70,13 @@ abstract class HSQLDBTest {
     }
 
 
-    protected DatabasePatcherTestCase buildDatabasePatcherTestCase() {
-        return buildDatabasePatcherTestCase(defaultCredentials)
-    }
-
     /**
      * Setter opp databasePatcher med angitte credentials
      */
-    protected DatabasePatcherTestCase buildDatabasePatcherTestCase(Credentials credentials) {
+    protected DatabasePatcherTestCase buildDatabasePatcherTestCase(Credentials credentials = defaultCredentials, Credentials schemaCredentials = null) {
         Sql sql = getSql(credentials)
-        def testCase = new DatabasePatcherTestCase(jdbcDriverClassString, sql.connection.metaData.URL, credentials.username, credentials.password)
+        String schema = (credentials.equals(schemaCredentials)) ? null : (schemaCredentials != null) ? schemaCredentials.defaultSchema : credentials.defaultSchema
+        def testCase = new DatabasePatcherTestCase(jdbcDriverClassString, getUrl(), credentials.username, credentials.password, schema)
 
         return testCase
     }
@@ -108,15 +105,23 @@ abstract class HSQLDBTest {
 
     @BeforeMethod
     void setupDatabaseUsers() {
-        testIdx++
         databaseUsers.clear();
         addDatabaseUser(url, systemCredentials);
-        defaultCredentials = defineDatabaseUser("BRUKER${testIdx}", '')
+        defaultCredentials = defineDatabaseUser("BRUKER${brukerIdx}", '', "SKJEMA${brukerIdx}")
     }
 
     @AfterMethod
     void cleanupDatabaseUsers() {
-        databaseUsers.each { def key, Sql sql ->
+        databaseUsers.reverseEach { def credentials, Sql sql ->
+            if (credentials != systemCredentials) {
+                [
+                        "DROP SCHEMA \"${credentials.defaultSchema}\" CASCADE",
+                ].each { String sqlString ->
+                    logger.debug("SQL: ${sqlString}")
+                    getSql(systemCredentials).execute(sqlString);
+                }
+            }
+
             sql.close();
         }
     }
@@ -126,19 +131,25 @@ abstract class HSQLDBTest {
         databaseUsers.get(credentials)
     }
 
-    public HSQLDBTest.Credentials defineDatabaseUser(String username, String password) {
-        Credentials credentials = new Credentials(username, password)
-        testIdx++
-        setUpDatabaseUser(credentials, getSchemaName(testIdx));
-        addDatabaseUser(getUrl(getSchemaName(testIdx)), credentials)
+    public HSQLDBTest.Credentials defineDatabaseUser(String username, String password, String schema = username) {
+        Credentials credentials = new Credentials(username, password, schema)
+
+        setUpDatabaseUser(credentials);
+        addDatabaseUser(getUrl(), credentials)
+        brukerIdx++
 
         credentials
     }
 
-    private void setUpDatabaseUser(Credentials credentials, def schemaName) {
-        getSql(systemCredentials).execute("CREATE USER ${credentials.username} PASSWORD ${credentials.password}".toString());
-        getSql(systemCredentials).execute("CREATE SCHEMA ${schemaName} AUTHORIZATION ${credentials.username}".toString());
-        getSql(systemCredentials).execute("ALTER USER ${credentials.username} SET INITIAL SCHEMA ${schemaName}".toString());
+    private void setUpDatabaseUser(Credentials credentials) {
+        [
+                "CREATE USER \"${credentials.username}\" PASSWORD \"${credentials.password}\"",
+                "CREATE SCHEMA \"${credentials.defaultSchema}\" AUTHORIZATION \"${credentials.username}\"",
+                "ALTER USER \"${credentials.username}\" SET INITIAL SCHEMA \"${credentials.defaultSchema}\"",
+        ].each { String sqlString ->
+            logger.debug("SQL: ${sqlString}")
+            getSql(systemCredentials).execute(sqlString);
+        }
     }
 
     private Sql addDatabaseUser(String url, Credentials credentials) {

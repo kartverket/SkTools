@@ -39,6 +39,11 @@ public class DatabasePatcher {
     //SKTOOLS-84: error håndtering
     boolean failOnError, failOnWarning;
 
+    //SKTOOLS-77: patching av valgfritt skjema
+    public String getSchema() {
+        return JDBCHelper.getConnectionSchema();
+    }
+
 
     /**
      * Mulighet for programatisk konfigurering av properties.
@@ -638,7 +643,7 @@ public class DatabasePatcher {
 
           //finner ut om tabell finnes i databasen ved å spørre på metadata
           {
-              rs = con.getMetaData().getTables(con.getCatalog(), null, "PATCHINFO", new String[]{"TABLE"});
+              rs = con.getMetaData().getTables(con.getCatalog(), getSchema(), "PATCHINFO", new String[]{"TABLE"});
               boolean patchTableExists = rs.next();
               JDBCHelper.close(rs, stmt);
               if (!patchTableExists) {
@@ -648,7 +653,7 @@ public class DatabasePatcher {
 
           //finner ut om en evt trenger å utvide tabell
           {
-              rs = con.getMetaData().getColumns(con.getCatalog(), null, "PATCHINFO", null);
+              rs = con.getMetaData().getColumns(con.getCatalog(), getSchema(), "PATCHINFO", null);
               boolean hasComponentColumn = false;
               while (rs.next()) {
                   if ("COMPONENT".equals(rs.getString("COLUMN_NAME"))) {
@@ -662,8 +667,7 @@ public class DatabasePatcher {
               }
           }
 
-
-         stmt = con.prepareStatement("SELECT count(*) FROM PATCHINFO WHERE component=?");
+         stmt = con.prepareStatement("SELECT count(*) FROM " + patchInfoTableName(con) + " WHERE component=?");
          stmt.setString(1, component);
          rs = stmt.executeQuery();
 
@@ -673,7 +677,7 @@ public class DatabasePatcher {
 
          if( rowCount == 0 ) {
              if (candidatePatchInfo != null) {
-                 stmt = con.prepareStatement("insert into PATCHINFO (component, dbVersion, patchNo, indexesInSyncWithPatch, kommentar) values (?, ?, ?, ?, ?)");
+                 stmt = con.prepareStatement("INSERT INTO " + patchInfoTableName(con) + " (component, dbVersion, patchNo, indexesInSyncWithPatch, kommentar) VALUES (?, ?, ?, ?, ?)");
                  stmt.setString(1, candidatePatchInfo.component);
                  stmt.setString(2, candidatePatchInfo.patchVersion.dbVersion);
                  stmt.setInt(3, candidatePatchInfo.patchVersion.patchNo);
@@ -714,7 +718,7 @@ public class DatabasePatcher {
         ResultSet rs = null;
         try {
 
-            stmt = con.prepareStatement("SELECT dbVersion, patchNo, indexesInSyncWithPatch, kommentar FROM PATCHINFO WHERE component=?");
+            stmt = con.prepareStatement("SELECT dbVersion, patchNo, indexesInSyncWithPatch, kommentar FROM " + patchInfoTableName(con) + " WHERE component=?");
             stmt.setString(1, component);
             rs = stmt.executeQuery();
 
@@ -740,13 +744,13 @@ public class DatabasePatcher {
     *
     * @param con
     */
-   private static void createPatchInfoTable(Connection con) {
+   private void createPatchInfoTable(Connection con) {
       java.sql.Statement stmt = null;
       ResultSet rs = null;
       try {
          stmt = con.createStatement();
-          logger.info("Creating table PATCHINFO");
-         stmt.execute("CREATE TABLE PATCHINFO (dbVersion varchar(255), patchNo INTEGER NOT NULL, indexesInSyncWithPatch SMALLINT NOT NULL, kommentar VARCHAR(255))");
+          logger.info("Creating table " + patchInfoTableName(con));
+         stmt.execute("CREATE TABLE " + patchInfoTableName(con) + " (dbVersion varchar(255), patchNo INTEGER NOT NULL, indexesInSyncWithPatch SMALLINT NOT NULL, kommentar VARCHAR(255))");
       } catch( SQLException e ) {
          throw new RuntimeException(e);
       } finally {
@@ -759,13 +763,13 @@ public class DatabasePatcher {
      *
      * @param con
      */
-    private static void addComponentColumn(Connection con) {
+    private void addComponentColumn(Connection con) {
         java.sql.Statement stmt = null;
         ResultSet rs = null;
         try {
             stmt = con.createStatement();
-            logger.info("Adding column component to PATCHINFO");
-            stmt.execute(String.format("ALTER TABLE PATCHINFO ADD component varchar(64) DEFAULT '%s' NOT NULL", PatchInfo.DEFAULT_MODULE));
+            logger.info("Adding column 'component' to " + patchInfoTableName(con));
+        stmt.execute(String.format("ALTER TABLE " + patchInfoTableName(con) + " ADD component VARCHAR(64) DEFAULT '%s' NOT NULL", PatchInfo.DEFAULT_MODULE));
         } catch( SQLException e ) {
             throw new RuntimeException(e);
         } finally {
@@ -899,7 +903,7 @@ public class DatabasePatcher {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            String sqlString = "SELECT count(*) FROM PATCHINFO WHERE component=?";
+            String sqlString = "SELECT count(*) FROM " + patchInfoTableName(con) + " WHERE component=?";
             if (dbVersion != null) {
                 sqlString += " AND dbVersion=?";
             }
@@ -937,7 +941,7 @@ public class DatabasePatcher {
       PreparedStatement stmt = null;
       ResultSet rs = null;
       try {
-         stmt = con.prepareStatement("update PATCHINFO set indexesInSyncWithPatch=? WHERE component=?");
+         stmt = con.prepareStatement("UPDATE " + patchInfoTableName(con) + " SET indexesInSyncWithPatch=? WHERE component=?");
          stmt.setInt(1, value ? 1 : 0);
          stmt.setString(2, component);
 
@@ -960,7 +964,7 @@ public class DatabasePatcher {
       PreparedStatement stmt = null;
       ResultSet rs = null;
       try {
-         stmt = con.prepareStatement("update PATCHINFO set dbVersion=?, patchNo=?, kommentar=? WHERE component=?");
+         stmt = con.prepareStatement("UPDATE " + patchInfoTableName(con) + " SET dbVersion=?, patchNo=?, kommentar=? WHERE component=?");
          stmt.setString(1, p.dbVersion);
          stmt.setInt(2, p.patchNo);
          stmt.setString(3, p.kommentar);
@@ -985,6 +989,23 @@ public class DatabasePatcher {
         if (failOnWarning && !failOnError) {
             throw new ConfigurationException("Ulogisk parameterisering: failOnWarning=true kan ikke benyttes uten failOnError=true");
         }
+    }
+
+
+    /**
+     * @since 1.3 - SKTOOLS-77
+     */
+    CharSequence patchInfoTableName(Connection con) throws SQLException {
+        final StringBuilder stringBuilder = new StringBuilder();
+        if (getSchema() != null) {
+            stringBuilder
+                    .append(con.getMetaData().getIdentifierQuoteString())
+                    .append(getSchema())
+                    .append(con.getMetaData().getIdentifierQuoteString())
+                    .append('.');
+        }
+        stringBuilder.append("\"PATCHINFO\"");
+        return stringBuilder;
     }
 
 }
