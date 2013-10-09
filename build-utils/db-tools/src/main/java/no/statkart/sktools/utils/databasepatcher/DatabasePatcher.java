@@ -39,10 +39,9 @@ public class DatabasePatcher {
     //SKTOOLS-84: error håndtering
     boolean failOnError, failOnWarning;
 
+
     //SKTOOLS-77: patching av valgfritt skjema
-    public String getSchema() {
-        return JDBCHelper.getConnectionSchema();
-    }
+    public String schema = JDBCHelper.getConnectionSchema();
 
 
     /**
@@ -463,7 +462,7 @@ public class DatabasePatcher {
     /**
     * Parser en liste av script lines og deler dem opp i patchblokker.
     *
-    * @param scriptLines
+    * @param scriptLines list of sql expressions
     */
    static LinkedHashMap<PatchVersion, List<? extends Expression>> parsePatches(List<? extends Expression> scriptLines) {
       LinkedHashMap<PatchVersion, List<? extends Expression>> result = new LinkedHashMap<PatchVersion, List<? extends Expression>>();
@@ -534,8 +533,8 @@ public class DatabasePatcher {
     /**
     * Returnerer true hvis linjen er en sql kommando
     *
-    * @param expression
-    */
+     * @param expression linje som kan være av typen kommando
+     */
    private static boolean isStatement(Expression expression) {
       return expression instanceof Statement;
    }
@@ -543,7 +542,7 @@ public class DatabasePatcher {
    /**
     * Parser en kommentarlinje med format: {@code -- PATCH <type> DB.VERSION="<string>" PATCH.NO="<number>" [<kommentar>]}
     *
-    * @param expression
+    * @param expression linje som kan være av typen kommentar
     */
    private static PatchVersion parsePatchVersion(Expression expression) {
        if (expression instanceof Comment) {
@@ -602,7 +601,7 @@ public class DatabasePatcher {
    /**
     * Returnerer true hvis linjen er en kommentar som starter med: '-- PATCH DB.MIN.VERSION..."
     *
-    * @param expression
+    * @param expression linje som kan være av typen kommentar
     */
    private static boolean isMinDbVersion(Expression expression) {
        if (expression instanceof Comment) {
@@ -616,7 +615,7 @@ public class DatabasePatcher {
    /**
     * Returnerer {@code true} hvis linjen er en kommentar som ikke starter med: {@code -- PATCH}...
     *
-    * @param expression
+    * @param expression linje som kan være av typen kommentar
     */
    private static boolean isOrdinaryComment(Expression expression) {
        if (expression instanceof Comment) {
@@ -632,7 +631,7 @@ public class DatabasePatcher {
     * Henter ut nåværende PatchVersion for en database. Hvis databasen ikke har noe PatchVersion
     * tabell opprettes en.
     *
-    * @param con
+    * @param con connection
     * @return patch info for databasen.
     * @throws NotFoundException if no patchinfo for component exists
     */
@@ -643,7 +642,7 @@ public class DatabasePatcher {
 
           //finner ut om tabell finnes i databasen ved å spørre på metadata
           {
-              rs = con.getMetaData().getTables(con.getCatalog(), getSchema(), "PATCHINFO", new String[]{"TABLE"});
+              rs = con.getMetaData().getTables(con.getCatalog(), schema, "PATCHINFO", new String[]{"TABLE"});
               boolean patchTableExists = rs.next();
               JDBCHelper.close(rs, stmt);
               if (!patchTableExists) {
@@ -653,7 +652,7 @@ public class DatabasePatcher {
 
           //finner ut om en evt trenger å utvide tabell
           {
-              rs = con.getMetaData().getColumns(con.getCatalog(), getSchema(), "PATCHINFO", null);
+              rs = con.getMetaData().getColumns(con.getCatalog(), schema, "PATCHINFO", null);
               boolean hasComponentColumn = false;
               while (rs.next()) {
                   if ("COMPONENT".equals(rs.getString("COLUMN_NAME"))) {
@@ -710,7 +709,7 @@ public class DatabasePatcher {
     /**
      * Henter ut nåværende PatchVersion for en database.
      *
-     * @param con
+     * @param con connection
      * @return patch info for databasen.
      */
     private PatchInfo getPatchInfo(Connection con) {
@@ -742,7 +741,7 @@ public class DatabasePatcher {
     /**
     * Oppretter tabell 'PatchVersion' og legger inn initiell rad.
     *
-    * @param con
+    * @param con connection
     */
    private void createPatchInfoTable(Connection con) {
       java.sql.Statement stmt = null;
@@ -761,7 +760,7 @@ public class DatabasePatcher {
     /**
      * Utvider tabell 'PatchVersion' med rad for "component"/komponent.
      *
-     * @param con
+     * @param con connection
      */
     private void addComponentColumn(Connection con) {
         java.sql.Statement stmt = null;
@@ -997,10 +996,10 @@ public class DatabasePatcher {
      */
     CharSequence patchInfoTableName(Connection con) throws SQLException {
         final StringBuilder stringBuilder = new StringBuilder();
-        if (getSchema() != null) {
+        if (schema != null) {
             stringBuilder
                     .append(con.getMetaData().getIdentifierQuoteString())
-                    .append(getSchema())
+                    .append(schema)
                     .append(con.getMetaData().getIdentifierQuoteString())
                     .append('.');
         }

@@ -23,19 +23,16 @@ class DatabasePatcherTestCase<T extends DatabasePatcherTestCase> extends DbTools
     }
 
     protected DatabasePatcher setUpDatabasePatcher(Map<String, String> props = [:]) {
-        DatabasePatcher databasePatcher = new DatabasePatcher()
 
         System.setProperty("hibernate.connection.driver_class", jdbcDriverClassString)
         System.setProperty("hibernate.connection.url", url)
         System.setProperty("hibernate.connection.username", username)
         System.setProperty("hibernate.connection.password", password)
+        System.setProperty("hibernate.connection.schema", schema)
 
+        DatabasePatcher databasePatcher = new DatabasePatcher()
         if (props.component != null) {
             databasePatcher.component = props.component
-        }
-
-        if (schema != null) {
-            System.setProperty("hibernate.connection.schema", schema)
         }
 
         return databasePatcher
