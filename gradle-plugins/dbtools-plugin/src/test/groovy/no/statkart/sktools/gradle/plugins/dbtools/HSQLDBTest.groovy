@@ -24,7 +24,7 @@ import no.statkart.sktools.utils.databasepatcher.DatabasePatcherTestCase
 abstract class HSQLDBTest {
 
     private Connection connection
-    protected final LinkedHashMap<Credentials, Sql> sqls = new LinkedHashMap<Credentials, Sql>(2)
+    protected final LinkedHashMap<Credentials, Sql> databaseUsers = new LinkedHashMap<Credentials, Sql>(2)
 
     protected final jdbcDriverClassString = 'org.hsqldb.jdbcDriver'
 
@@ -71,7 +71,15 @@ abstract class HSQLDBTest {
 
 
     protected DatabasePatcherTestCase buildDatabasePatcherTestCase() {
-        def testCase = new DatabasePatcherTestCase(jdbcDriverClassString, sql.connection.metaData.URL, defaultCredentials.username, defaultCredentials.password)
+        return buildDatabasePatcherTestCase(defaultCredentials)
+    }
+
+    /**
+     * Setter opp databasePatcher med angitte credentials
+     */
+    protected DatabasePatcherTestCase buildDatabasePatcherTestCase(Credentials credentials) {
+        Sql sql = getSql(credentials)
+        def testCase = new DatabasePatcherTestCase(jdbcDriverClassString, sql.connection.metaData.URL, credentials.username, credentials.password)
 
         return testCase
     }
@@ -99,43 +107,43 @@ abstract class HSQLDBTest {
 
 
     @BeforeMethod
-    void setupSql() {
+    void setupDatabaseUsers() {
         testIdx++
-        sqls.clear();
-        buildSQLInstance(url, systemCredentials);
+        databaseUsers.clear();
+        addDatabaseUser(url, systemCredentials);
         defaultCredentials = defineDatabaseUser("BRUKER${testIdx}", '')
     }
 
     @AfterMethod
-    void cleanupSql() {
-        sqls.each { def key, Sql sql ->
+    void cleanupDatabaseUsers() {
+        databaseUsers.each { def key, Sql sql ->
             sql.close();
         }
     }
 
 
     public Sql getSql(Credentials credentials = defaultCredentials) {
-        sqls.get(credentials)
+        databaseUsers.get(credentials)
     }
 
     public HSQLDBTest.Credentials defineDatabaseUser(String username, String password) {
         Credentials credentials = new Credentials(username, password)
         testIdx++
-        addDatabaseUser(credentials, getSchemaName(testIdx));
-        buildSQLInstance(getUrl(getSchemaName(testIdx)), credentials)
+        setUpDatabaseUser(credentials, getSchemaName(testIdx));
+        addDatabaseUser(getUrl(getSchemaName(testIdx)), credentials)
 
         credentials
     }
 
-    private void addDatabaseUser(Credentials credentials, def schemaName) {
+    private void setUpDatabaseUser(Credentials credentials, def schemaName) {
         getSql(systemCredentials).execute("CREATE USER ${credentials.username} PASSWORD ${credentials.password}".toString());
         getSql(systemCredentials).execute("CREATE SCHEMA ${schemaName} AUTHORIZATION ${credentials.username}".toString());
         getSql(systemCredentials).execute("ALTER USER ${credentials.username} SET INITIAL SCHEMA ${schemaName}".toString());
     }
 
-    private Sql buildSQLInstance(String url, Credentials credentials) {
+    private Sql addDatabaseUser(String url, Credentials credentials) {
         Sql newInstance = Sql.newInstance(url, credentials.username, credentials.password, jdbcDriverClassString)
-        sqls.put(credentials, newInstance)
+        databaseUsers.put(credentials, newInstance)
         return newInstance
     }
 

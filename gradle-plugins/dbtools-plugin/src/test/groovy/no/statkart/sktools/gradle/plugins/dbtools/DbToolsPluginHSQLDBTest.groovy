@@ -233,8 +233,8 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
     @Test
     void testMultipleDatabases() {
 
-        Credentials user1 = defaultCredentials
-        Credentials user2 = defineDatabaseUser('USER2', '')
+        def user1 = defaultCredentials
+        def user2 = defineDatabaseUser('USER2', '')
 
         Assert.assertTrue getSql(user1).connection.isValid(0)
         Assert.assertTrue getSql(user2).connection.isValid(0)

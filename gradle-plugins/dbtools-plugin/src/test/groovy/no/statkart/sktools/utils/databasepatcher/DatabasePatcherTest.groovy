@@ -69,7 +69,7 @@ class DatabasePatcherTest extends HSQLDBTest {
      * Verifiserer at tabell for patchdata opprettes automatisk
      */
     @Test
-    public void testNoPatchdataTable() {
+    public void testNoPatchinfoTable() {
         final DatabasePatcherTestCase testCase = buildDatabasePatcherTestCase()
 
         File patchFile = testCase.createTempFile("");
@@ -77,11 +77,43 @@ class DatabasePatcherTest extends HSQLDBTest {
         DatabasePatcher databasePatcher = testCase.setUpDatabasePatcher();
         databasePatcher.patch(patchFile.toString());
 
-        def row = sql.firstRow('select * from PATCHINFO')
+        try {
+            def row = sql.firstRow('select * from PATCHINFO')
 
-        Assert.assertNotNull(row, 'Forventer rad')
-        Assert.assertEquals(row.dbVersion, null, "Patchversjon/dbVersion")
+            Assert.assertNotNull(row, 'Forventer rad')
+            Assert.assertEquals(row.dbVersion, null, "Patchversjon/dbVersion")
 
+        } catch (Exception e) {
+            Assert.fail("Forventer å finne PATCHINFO tabell", e)
+        }
+
+    }
+
+    /**
+     * Verifiserer at tabell for patchdata opprettes automatisk
+     * @since 1.3
+     */
+    @Test(enabled = false)
+    public void testNoPatchinfoTableSystemUser() {
+
+        def user1 = systemCredentials
+        def user2 = defaultCredentials
+
+        final DatabasePatcherTestCase testCase = buildDatabasePatcherTestCase(systemCredentials)
+
+        File patchFile = testCase.createTempFile("");
+
+        DatabasePatcher databasePatcher = testCase.setUpDatabasePatcher();
+        databasePatcher.patch(patchFile.toString());
+
+        try {
+            def row = sql.firstRow('select * from PATCHINFO')
+
+            Assert.assertNotNull(row, 'Forventer rad')
+            Assert.assertEquals(row.dbVersion, null, "Patchversjon/dbVersion")
+        } catch (Exception e) {
+            Assert.fail("Forventer å finne PATCHINFO tabell", e)
+        }
     }
 
 
