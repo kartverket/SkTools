@@ -4,6 +4,7 @@ import org.gradle.api.tasks.Input
 import org.gradle.process.JavaExecSpec
 import org.gradle.api.file.FileCollection
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractSQLTask
+import org.gradle.api.tasks.Optional
 
 /**
  * Task for patching av schema over JDBC.
@@ -18,6 +19,7 @@ abstract class DatabasePatchTask extends AbstractSQLTask {
 
     //SKTOOLS-77
     @Input
+    @Optional
     String schema
 
     @Input
