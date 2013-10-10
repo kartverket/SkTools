@@ -20,7 +20,7 @@ Dette kan endres via properties i gradle.properties
 Her er typisk bruk av demo:
  * gradle dbSetUpUsers - setter opp tablespace og brukere
  * gradle dbInit - oppretter skjema definisjoner
- * gradle engageHistorikk - aktiverer historikk
+ * gradle dbEngageHistorikk - aktiverer historikk
  * gradle dbDisengageHistorikk - deaktiverer historikk generering
  * gradle dbClean - rydder opp elementer lagt inn i denne demoen
 

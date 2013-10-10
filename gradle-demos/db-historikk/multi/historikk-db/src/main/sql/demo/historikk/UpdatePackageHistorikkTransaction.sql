@@ -22,7 +22,7 @@ CREATE OR REPLACE PACKAGE BODY "@historikk_db_schema@".HISTORIKK_TRANSACTION AS
 
   t_Trans SNAPSHOT_TRANS.v%TYPE;
   
-  --todo: make session variable like t_Trans
+  --todo: make transaction scoped variable like t_Trans
   userInfo VARCHAR(255 CHAR);
 
 
