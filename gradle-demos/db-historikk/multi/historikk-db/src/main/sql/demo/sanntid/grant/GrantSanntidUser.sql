@@ -4,6 +4,7 @@
 
 PROMPT Granting historikk access for @sanntid_db_username@...
 
+-- GRANTS...
 GRANT EXECUTE ON "@historikk_db_schema@".SNAPSHOT_TIME TO "@sanntid_db_username@";
 
 -- Kan velge om sanntidsbruker skal ha tilgang til aa modifisere paa transaksjonsnivaa  (slått på for denne demoen)
