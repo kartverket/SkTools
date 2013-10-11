@@ -25,6 +25,7 @@ CREATE OR REPLACE PACKAGE BODY "@historikk_db_schema@".HISTORIKK_TRANSACTION AS
   --todo: make transaction scoped variable like t_Trans
   userInfo VARCHAR(255 CHAR);
 
+  minimum_unit_of_time CONSTANT INTERVAL DAY(0) TO SECOND(9) := INTERVAL '0.000000001' SECOND; --denne må samsvare med granualitet til SNAPSHOT_TRANS.v
 
   FUNCTION To_T(timestampAsString IN VARCHAR2) RETURN TIMESTAMP IS
   BEGIN
@@ -50,6 +51,7 @@ CREATE OR REPLACE PACKAGE BODY "@historikk_db_schema@".HISTORIKK_TRANSACTION AS
 
   -- options & 2 == validate_ascending //GBOK-1858
   -- options & 4 == fix_inncorrect_timestamps  //GBOK-1858
+  -- options & 8 : initialize session to latest timestamp //GBOK-2134
   PROCEDURE Set_T_Trans(newValue IN SNAPSHOT_TRANS.v%TYPE, opts IN NUMBER := 2)
   IS
     validate_ascending BOOLEAN := BITAND(opts, 2) <> 0;
@@ -59,6 +61,7 @@ CREATE OR REPLACE PACKAGE BODY "@historikk_db_schema@".HISTORIKK_TRANSACTION AS
     t_Trans_old SNAPSHOT_TRANS.v%TYPE;
     isNewTransaction BOOLEAN;
   BEGIN
+    --sanity check of parameters...
     IF validate_ascending THEN
       IF newValue IS NULL THEN
         IF t_Trans IS NOT NULL THEN
@@ -81,7 +84,7 @@ CREATE OR REPLACE PACKAGE BODY "@historikk_db_schema@".HISTORIKK_TRANSACTION AS
       IF fix_inncorrect_timestamps AND (t_Trans_old IS NOT NULL) THEN
         --sjekke om det er en ny transaksjon. Korrigerer kun om nødvendig.
         IF newValue <= t_Trans_old THEN
-          t_Trans_new := t_Trans_old + NUMTODSINTERVAL(1/1000000000,'SECOND'); --denne må samsvare med granualitet til SNAPSHOT_TRANS.v
+          t_Trans_new := t_Trans_old + minimum_unit_of_time;
           DBMS_OUTPUT.PUT_LINE('adding one ns to last transaction time set!');
         END IF;
       END IF;
