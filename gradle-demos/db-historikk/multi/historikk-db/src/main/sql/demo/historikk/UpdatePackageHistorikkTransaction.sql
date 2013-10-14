@@ -20,12 +20,52 @@ END HISTORIKK_TRANSACTION;
 
 CREATE OR REPLACE PACKAGE BODY "@historikk_db_schema@".HISTORIKK_TRANSACTION AS
 
+  -- package private variables and functions
+
   t_Trans SNAPSHOT_TRANS.v%TYPE;
   
   --todo: make transaction scoped variable like t_Trans
   userInfo VARCHAR(255 CHAR);
 
   minimum_unit_of_time CONSTANT INTERVAL DAY(0) TO SECOND(9) := INTERVAL '0.000000001' SECOND; --denne må samsvare med granualitet til SNAPSHOT_TRANS.v
+
+
+  FUNCTION findLastTransactionFromData
+  RETURN SNAPSHOT_TRANS.v%TYPE
+  IS
+    greatestT SNAPSHOT_TRANS.v%TYPE := NULL;
+    max_t_End SNAPSHOT_TRANS.v%TYPE;
+    max_t_Begin SNAPSHOT_TRANS.v%TYPE;
+  BEGIN
+
+    FOR i IN (SELECT * FROM user_tables WHERE TABLE_NAME LIKE '%\_H' escape '\')
+    LOOP
+      BEGIN
+        EXECUTE IMMEDIATE 'SELECT max(tBegin) FROM ' || i.TABLE_NAME INTO max_t_Begin;   -- todo: substituere tEnd og tBegin med implemententerte navn for løsning
+        EXECUTE IMMEDIATE 'SELECT max(tEnd) FROM ' || i.TABLE_NAME || ' WHERE tEnd != :t_Current' INTO max_t_End
+          USING SNAPSHOT_TIME.Get_T_CURRENT();
+
+        IF (greatestT IS NOT NULL) THEN
+            greatestT := greatest(nvl(max_t_End, greatestT), nvl(max_t_Begin, greatestT), greatestT);
+        ELSE
+            greatestT := greatest(nvl(max_t_End, max_t_Begin), nvl(max_t_Begin, max_t_End));
+        END IF;
+
+        DBMS_OUTPUT.PUT_LINE('Analyzed historikk table ' || i.TABLE_NAME);
+
+      EXCEPTION
+        WHEN OTHERS THEN
+          DBMS_OUTPUT.PUT_LINE('ERROR: error analyzing historikk table ' || i.TABLE_NAME);
+      END;
+    END LOOP;
+
+    RETURN greatestT;
+  END findLastTransactionFromData;
+
+
+
+
+  -- package impl
 
   FUNCTION To_T(timestampAsString IN VARCHAR2) RETURN TIMESTAMP IS
   BEGIN
@@ -52,7 +92,7 @@ CREATE OR REPLACE PACKAGE BODY "@historikk_db_schema@".HISTORIKK_TRANSACTION AS
   -- options & 2 == validate_ascending //GBOK-1858
   -- options & 4 == fix_inncorrect_timestamps  //GBOK-1858
   -- options & 8 : initialize session to latest timestamp //GBOK-2134
-  PROCEDURE Set_T_Trans(newValue IN SNAPSHOT_TRANS.v%TYPE, opts IN NUMBER := 2)
+  PROCEDURE Set_T_Trans(newValue IN SNAPSHOT_TRANS.v%TYPE, opts IN NUMBER := 10)
   IS
     validate_ascending BOOLEAN := BITAND(opts, 2) <> 0;
     fix_inncorrect_timestamps BOOLEAN := BITAND(opts, 4) <> 0;
@@ -80,12 +120,22 @@ CREATE OR REPLACE PACKAGE BODY "@historikk_db_schema@".HISTORIKK_TRANSACTION AS
     IF isNewTransaction THEN
       t_Trans_new := newValue;
 
+      IF t_Trans_old IS NULL THEN
+        IF BITAND(opts, 8) <> 0 THEN
+          DBMS_OUTPUT.PUT_LINE('searching for previous transaction-time in historikk data...');
+          t_Trans_old := findLastTransactionFromData();
+          DBMS_OUTPUT.PUT_LINE('...previous transaction-time found: ' || t_Trans_old);
+        ELSE
+          DBMS_OUTPUT.PUT_LINE('WARNING: previous transaction-time for session is NULL - see GBOK-2134 for details');
+        END IF;
+      END IF;
+
       --må sjekke dette her før en evt overskriver t_Trans ved ny transaksjon...
-      IF fix_inncorrect_timestamps AND (t_Trans_old IS NOT NULL) THEN
+      IF t_Trans_old IS NOT NULL THEN
         --sjekke om det er en ny transaksjon. Korrigerer kun om nødvendig.
-        IF newValue <= t_Trans_old THEN
+        IF fix_inncorrect_timestamps AND newValue <= t_Trans_old THEN
           t_Trans_new := t_Trans_old + minimum_unit_of_time;
-          DBMS_OUTPUT.PUT_LINE('adding one ns to last transaction time set!');
+          DBMS_OUTPUT.PUT_LINE('adding one ns to last set transaction time!');
         END IF;
       END IF;
 
