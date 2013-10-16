@@ -40,6 +40,7 @@ class ClientConfiguration {
     private final String name;
 
     private SigningConfiguration signingConfiguration
+    private Map<String, String> manifestAttributes = new LinkedHashMap<String, String>();
     private List<JnlpConfiguration> jnlpConfigurations = new ArrayList<JnlpConfiguration>();
     private ConfigurableFileCollection jarDependencies
 
@@ -58,6 +59,9 @@ class ClientConfiguration {
         this.name = name
 
         jarDependencies = project.files()
+
+        // Dette er hardkodet i template.jnlp. Prosjekter bør ikke overstyre denne verdien, selv om de kan.
+        manifestAttributes.put("Permissions", "all-permissions");
     }
 
     String getName() {
@@ -66,6 +70,10 @@ class ClientConfiguration {
 
     public void sign(File keystore, String alias, String password) {
         signingConfiguration = new SigningConfiguration(keystore, alias, password)
+    }
+
+    public void manifestAttribute(String name, String value) {
+        manifestAttributes.put(name, value);
     }
 
     public void jnlp(Closure config) {
@@ -84,6 +92,10 @@ class ClientConfiguration {
 
     SigningConfiguration getSigningConfiguration() {
         return signingConfiguration
+    }
+
+    Map<String, String> getManifestAttributes() {
+        return manifestAttributes
     }
 
     List<JnlpConfiguration> getJnlpConfigurations() {

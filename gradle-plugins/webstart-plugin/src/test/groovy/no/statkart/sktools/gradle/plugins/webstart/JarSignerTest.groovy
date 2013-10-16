@@ -2,6 +2,7 @@ package no.statkart.sktools.gradle.plugins.webstart
 
 import no.statkart.sktools.gradle.plugins.webstart.util.FileHashIdent
 
+import java.util.jar.JarEntry
 import java.util.jar.JarFile
 import no.statkart.sktools.gradle.testutils.ProjectHelper
 import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
@@ -35,6 +36,7 @@ class JarSignerTest {
             setCertificateFile(certificateFile)
             setPassword('SagZ45_p1')
             setAlias('statenskartverk')
+            manifestAttribute('Permissions', 'sandbox')
         } as JarSigner
     }
 
@@ -199,6 +201,7 @@ class JarSignerTest {
     public static void assertSignedJar(File file) {
         Assert.assertTrue(file.getName().endsWith('.jar'), "Jar fil skal ende på '.jar")
         JarFile jarFile = new JarFile(file, true);
+        Assert.assertEquals(jarFile.manifest.mainAttributes.getValue("Permissions"), "sandbox", "Permissions");
     }
 
     /**

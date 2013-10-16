@@ -1,17 +1,19 @@
 package no.statkart.sktools.gradle.plugins.webstart;
 
+import groovy.lang.Closure;
 import no.statkart.sktools.gradle.plugins.webstart.util.FileHashIdent;
 import org.apache.commons.io.FileUtils;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.ExecTask;
+import org.codehaus.groovy.runtime.MethodClosure;
 import org.gradle.api.GradleException;
 import org.gradle.api.internal.ConventionTask;
 import org.gradle.api.tasks.*;
+import org.gradle.process.ExecSpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 
 /**
@@ -34,8 +36,9 @@ public class JarSigner extends ConventionTask {
     private String password;
     private String alias;
 
-    private Object jarFilesToSign;
+    private Map<String, String> manifestAttributes = new LinkedHashMap<String, String>();
 
+    private Object jarFilesToSign;
 
     public Map<FileHashIdent, Map<String, FileHashIdent>> getSignedArtifactsForCertificates() {
         if (signedArtifactsForCertificates == null) {
@@ -69,6 +72,20 @@ public class JarSigner extends ConventionTask {
                 getSignedArtifactsForCertificates().put(certificateFileIdent, signedArtifacts);
             }
 
+            File manifestAddendum = null;
+            if (!manifestAttributes.isEmpty()) {
+                manifestAddendum = new File(getTemporaryDir(), "addendum.mf");
+
+                PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(manifestAddendum, false), "UTF-8"));
+                try {
+                    for (Map.Entry<String, String> entry : manifestAttributes.entrySet()) {
+                        writer.format("%s: %s\n", entry.getKey(), entry.getValue());
+                    }
+                } finally {
+                    writer.close();
+                }
+            }
+
             Set<File> filesToSign = getProject().files(getJarFilesToSign()).getFiles();
             for (File unsignedJar : filesToSign) {
                 FileHashIdent jarFileIdent = new FileHashIdent(unsignedJar);
@@ -96,7 +113,7 @@ public class JarSigner extends ConventionTask {
 
                     //signing jar
                     try {
-                        signJar(tempFile);
+                        signJar(tempFile, manifestAddendum);
 
                         signedJarFile.delete(); //SKIF-209: sletter evt eksisterende fil før move..
                         tempFile.renameTo(signedJarFile);
@@ -121,43 +138,45 @@ public class JarSigner extends ConventionTask {
         }
     }
 
-    private void signJar(File jarFile) {
+    private void signJar(final File jarFile, final File manifestAddendum) {
 
-        Project antProject = getAnt().getAntProject();
-        ExecTask signJarTask = (ExecTask) antProject.createTask("exec");
+        if (manifestAddendum != null) {
+            logger.info(String.format("Updating manifest for %s ...", jarFile.getPath()));
 
-        signJarTask.setTaskName("signjar");
-        signJarTask.setDir(jarFile.getParentFile());
-        signJarTask.setFailIfExecutionFails(true);
-        signJarTask.setFailonerror(true);
-        signJarTask.setExecutable("jarsigner.exe");
-        signJarTask.createArg().setValue("-keystore");
-        signJarTask.createArg().setValue(getCertificateFile().getAbsolutePath());
-        signJarTask.createArg().setValue("-storepass");
-        signJarTask.createArg().setValue(getPassword());
-        signJarTask.createArg().setValue(jarFile.getName());    //file to sign in same dir - see ...setDir(File)
-        signJarTask.createArg().setValue(getAlias());
+            getProject().exec(new Closure(this) {
+                public void doCall() {
+                    ExecSpec execSpec = (ExecSpec) getDelegate();
 
-        if (logger.isInfoEnabled()) {
-            signJarTask.createArg().setValue("-verbose");
+                    execSpec.setWorkingDir(jarFile.getParent());
+                    execSpec.setIgnoreExitValue(false);
+                    execSpec.setExecutable("jar.exe");
+                    execSpec.args("ufm", jarFile.getName(), manifestAddendum.getAbsolutePath());
+                }
+            });
         }
 
         logger.info(String.format("Signing file %s ...", jarFile.getPath()));
 
-        signJarTask.execute();
+        getProject().exec(new Closure(this) {
+            public void doCall() {
+                ExecSpec execSpec = (ExecSpec) getDelegate();
 
+                execSpec.setWorkingDir(jarFile.getParentFile());
+                execSpec.setIgnoreExitValue(false);
+                execSpec.setExecutable("jarsigner.exe");
+                execSpec.args(
+                        "-keystore", getCertificateFile().getAbsolutePath(),
+                        "-storepass", getPassword(),
+                        jarFile.getName(),    //file to sign in same dir - see ...setDir(File)
+                        getAlias()
+                );
 
-//        project.ant.exec(executable: 'jarsigner', failonerror: true) {
-//            if (project.logger.isEnabled(LogLevel.INFO)) {
-//                arg(value: '-verbose')
-//            }
-//            arg(value: '-keystore')
-//            arg(value: keystoreFile)
-//            arg(value: '-storepass')
-//            arg(value: keystorePassword)
-//            arg(value: signedJarFileName)
-//            arg(value: alias)
-//
+                if (logger.isInfoEnabled()) {
+                    execSpec.args("-verbose");
+                }
+            }
+        });
+
     }
 
     @InputFile
@@ -199,6 +218,23 @@ public class JarSigner extends ConventionTask {
 
     public void setAlias(String alias) {
         this.alias = alias;
+    }
+
+    @Input
+    public Map<String, String> getManifestAttributes() {
+        return manifestAttributes;
+    }
+
+    public void setManifestAttributes(Map<String, String> manifestAttributes) {
+        this.manifestAttributes = manifestAttributes;
+    }
+
+    public void manifestAttributes(Map<String, String> attibutes) {
+        manifestAttributes.putAll(attibutes);
+    }
+
+    public void manifestAttribute(String name, String value) {
+        manifestAttributes.put(name, value);
     }
 
     void initCache() throws IOException {
