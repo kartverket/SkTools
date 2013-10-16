@@ -7,7 +7,7 @@ CREATE OR REPLACE PACKAGE "@historikk_db_schema@".HISTORIKK_TRANSACTION AUTHID D
   -- Definerer timestamp for transaksjon. Denne blir benyttet ved kreering av endringsinnslag ved oppdateringer (insert, update og delete)
   -- localtimestamp_on_missing == TRUE setter LOCALTIMESTAMP som transaksjonsverdi
   FUNCTION Get_T_Trans(localtimestamp_on_missing IN BOOLEAN := TRUE) RETURN SNAPSHOT_TRANS.v%TYPE;
-  PROCEDURE Set_T_Trans(newValue IN SNAPSHOT_TRANS.v%TYPE, opts IN NUMBER := 2);
+  PROCEDURE Set_T_Trans(newValue IN SNAPSHOT_TRANS.v%TYPE, opts IN NUMBER := 10);
 
   Function Get_UserInfo(validate_not_null IN BOOLEAN := FALSE) Return VARCHAR2;
   PROCEDURE Set_UserInfo(username IN VARCHAR2, opts IN NUMBER := 0);
