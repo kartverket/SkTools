@@ -73,7 +73,7 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
 
         String taskName = String.format("collect%sSchema", StringUtils.capitalize(webService.name));
 
-        Sync task = project.tasks.add(taskName, Sync);
+        Sync task = project.tasks.replace(taskName, Sync);
 
         task.destinationDir = new File(new File(project.buildDir, 'wsclient'), taskName);
         task.inputs.files webService.baseWars, webService.schemaFiles
