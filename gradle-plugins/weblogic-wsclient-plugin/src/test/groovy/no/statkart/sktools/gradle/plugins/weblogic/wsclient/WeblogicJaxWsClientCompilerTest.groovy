@@ -6,13 +6,11 @@ import org.gradle.api.Project
 import no.statkart.sktools.gradle.testutils.builder.WeblogicWsWarProjectBuilder
 import no.statkart.sktools.gradle.plugins.weblogic.wswar.WeblogicWsWarPlugin
 
-import org.apache.commons.io.FileUtils
 import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
 import org.gradle.api.file.FileCollection
 
 import org.gradle.api.tasks.util.PatternSet
 import no.statkart.sktools.gradle.testutils.filewriter.WeblogicWsWarTestutilFilewriter
-import org.gradle.api.internal.file.UnionFileCollection
 import no.statkart.sktools.gradle.plugins.weblogic.compile.DefaultWeblogicCompileSpec
 
 /**
@@ -68,15 +66,13 @@ class WeblogicJaxWsClientCompilerTest {
 
         //konfigurerer compiler
         WeblogicJaxWsClientCompiler compiler = new WeblogicJaxWsClientCompiler()
-        compiler.ant = rootProject.createAntBuilder()
-        compiler.webServices = [new WebServiceConfig(null)].each { WebServiceConfig webServiceConfig ->
-            webServiceConfig.schemaFiles = new UnionFileCollection(someDirFiles, additionalFiles)
-
-        }
+        compiler.project = rootProject
+        compiler.webService = new WebServiceConfig(rootProject)
+        compiler.webService.schemaFiles someDirFiles, additionalFiles
         DefaultWeblogicCompileSpec compileSpec = new DefaultWeblogicCompileSpec()
         compileSpec.setWeblogicClasspath(rootProjectHelper.weblogicClasspath + rootProjectHelper.toolsJar)
         compileSpec.setDestinationDir(rootProject.buildDir)
-        compileSpec.source = rootProject.files('somedir')
+        compileSpec.source = compiler.webService.schemaFiles.asFileTree.matching {include '**/*.wsdl'}
 
 
         //eksekverer
@@ -130,15 +126,14 @@ class WeblogicJaxWsClientCompilerTest {
         }
         rootProjectHelper.assertFileExists('somedir/ExceptionService1WS.wsdl')
 
-        FileCollection schemaFiles = rootProject.files('somedir').getAsFileTree().matching(new PatternSet(includes: ['*.wsdl', '*.xsd']))
+        FileCollection schemaFiles = rootProject.fileTree('somedir').matching(new PatternSet(includes: ['*.wsdl']))
 
         //konfigurerer compiler
         WeblogicJaxWsClientCompiler compiler = new WeblogicJaxWsClientCompiler()
-        compiler.ant = rootProject.createAntBuilder()
-        compiler.webServices = [new WebServiceConfig(null)].each { WebServiceConfig webServiceConfig ->
-                webServiceConfig.schemaFiles = schemaFiles
-                webServiceConfig.exceptionReusePackage('no.statkart.test.exceptiondemo01.common')
-        }
+        compiler.project = rootProject
+        compiler.webService = new WebServiceConfig(rootProject)
+        compiler.webService.schemaFiles(schemaFiles)
+        compiler.webService.exceptionReusePackage('no.statkart.test.exceptiondemo01.common')
 
         DefaultWeblogicCompileSpec compileSpec = new DefaultWeblogicCompileSpec()
         compileSpec.setWeblogicClasspath(rootProjectHelper.weblogicClasspath + rootProjectHelper.toolsJar)

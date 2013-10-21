@@ -195,7 +195,7 @@ subprojects { Project project ->
                 listeners << 'org.testng.reporters.XMLReporter' // For Jenkins siden Gradle 1.5+ ikke tar med default listerners som standard lenger
             }
 
-            jvmArgs '-Xmx512m'
+            jvmArgs '-Xmx512m', '-XX:PermSize=128m', '-XX:MaxPermSize=256m'
             if (rootProject.hasProperty('test.remote.debug')) {
                 jvmArgs '-Xdebug'
                 jvmArgs '-Xnoagent'

@@ -1,10 +1,10 @@
 package no.statkart.sktools.gradle.plugins.weblogic.wsclient
 
+import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
-import org.gradle.api.artifacts.Dependency
+import org.gradle.api.artifacts.Configuration
 
 import org.gradle.api.file.FileCollection
-import org.gradle.api.internal.file.UnionFileCollection
 import org.gradle.api.tasks.util.PatternSet
 import org.apache.commons.lang.builder.EqualsBuilder
 
@@ -15,15 +15,19 @@ import org.apache.commons.lang.builder.EqualsBuilder
  *
  * @since 1.1
  * @author Leif Lislegård
+ * @author Tor Egil R. Strand
  */
 class WeblogicWsClientConvention {
     protected final transient Project project
 
-    protected final Collection<WebServiceConfig> webService = new ArrayList<WebServiceConfig>()
+    protected final NamedDomainObjectContainer<WebServiceConfig> webService;
     protected def genDir
 
     WeblogicWsClientConvention(Project project) {
         this.project = project
+        webService = project.container(WebServiceConfig) { String name ->
+            new WebServiceConfig(this, name)
+        }
     }
 
     /**
@@ -31,104 +35,71 @@ class WeblogicWsClientConvention {
      * @since 1.0
      */
     def weblogicWsClient(Closure closure) {
-        closure.setResolveStrategy(Closure.DELEGATE_FIRST);
-        closure.delegate = this
-        closure()
-    }
-
-    /**
-     * Legger til konfigurasjon for en service.
-     * @since 1.1
-     */
-    protected def webService(Closure closure) {
-        webService.add(
-                new WebServiceConfig(this).name("webService Closure#${webService.size() + 1}").configure(closure)
-        )
+        webService.configure closure
     }
 
     /**
      * Bestemmer katalog for genererte filer.
      * @since 1.1
      */
-    protected def WeblogicWsClientConvention genDir(Object path) {
+    def WeblogicWsClientConvention genDir(Object path) {
         genDir = path
         this
     }
 
-    protected def getGenDir() {
+    def getGenDir() {
         return genDir
     }
-
-    /**
-     * Konfigurerer source set for plugin
-     * @since 1.1
-     * @deprecated since 1.2 - bruk heller std javaplugin konfigurasjon
-     */
-    @Deprecated
-    protected def sourceSet(Closure closure) {
-        println 'sourceSet{closure} is now depricated - use project.sourceSets.main{closure} instead!'
-        closure.setResolveStrategy(Closure.DELEGATE_FIRST);
-        closure.delegate = project.sourceSets.main
-        closure()
-    }
-
 }
 
 /**
  * @since 1.1
  */
-class WebServiceConfig implements Serializable {
-    private final static long serialVersionUID = 1L;
+class WebServiceConfig {
     private final WeblogicWsClientConvention convention;
+    protected final String name;
 
-    protected String name;
-    protected FileCollection schemaFiles;
-    protected transient Dependency baseWar;
-    protected PatternSet matching;
+    protected final FileCollection schemaFiles;
+    protected final List schemaFilesSpecs = [];
+    protected final Configuration baseWars;
+
     protected ExceptionConfig exception;
 
 
-    WebServiceConfig(WeblogicWsClientConvention convention) {
+    WebServiceConfig(WeblogicWsClientConvention convention, String name) {
+        this.name = name
         this.convention = convention
+        this.baseWars = convention.project.configurations.detachedConfiguration()
+        this.schemaFiles = convention.project.files(schemaFilesSpecs)
     }
 
-
-    private void setDefaults() {
-        if (schemaFiles == null) {
-            if (matching == null) {
-                matching = new PatternSet(includes: ['**/*.wsdl', '**/*.xsd'], caseSensitive: false)
-            }
-        }
+    /**
+     * Kun for testing
+     */
+    WebServiceConfig(Project project) {
+        this.name = null
+        this.convention = new WeblogicWsClientConvention(project)
+        this.baseWars = convention.project.configurations.detachedConfiguration()
+        this.schemaFiles = convention.project.files(schemaFilesSpecs)
     }
 
     protected WebServiceConfig configure(Closure closure) {
         closure.setResolveStrategy(Closure.DELEGATE_FIRST);
         closure.delegate = this
         closure()
-        setDefaults()
         return this
     }
 
-    /**
-     * Optionalt navn for identifikasjon.
-     */
-    public WebServiceConfig name(String name) {
-        this.name = name;
-        return this;
+    String getName() {
+        return name
     }
-
-    /**
+/**
      * Alternativ spesifisering av wsdl filer dersom en ønsker overstyring av default verdier.
      *
      * @see Project#files(Object... paths)
      */
     public WebServiceConfig schemaFiles(Object... paths) {
-        FileCollection fileCollection = convention.project.files(paths)
-        if (schemaFiles == null) {
-            schemaFiles = new UnionFileCollection(fileCollection)
-        } else {
-            schemaFiles.add(fileCollection)
-        }
+        schemaFilesSpecs.addAll paths
         return this
     }
 
@@ -143,7 +114,7 @@ class WebServiceConfig implements Serializable {
 
 
     /**
-     * Bestemmer hvor wsdl schema befinner seg. Benytt denne evt sammen med {@link #matching} for filtrerinv av schema-filer.
+     * Bestemmer hvor wsdl schema befinner seg.
      *
      * Legger til en baseWar der {@code dependencyNotation} er på formen beskrevet i {@link org.gradle.api.artifacts.dsl.DependencyHandler}
      */
@@ -156,8 +127,8 @@ class WebServiceConfig implements Serializable {
 
 
     public void baseWar(Object notation) {
-        //legger baseWar til 'default' configuration - dette for at man senere kan lese ut innhold i war fil..
-        baseWar = convention.project.dependencies.add(Dependency.DEFAULT_CONFIGURATION, notation)
+        def baseWar = convention.project.dependencies.create(notation)
+        baseWars.dependencies.add(baseWar)
     }
 
     /**
@@ -196,12 +167,7 @@ class WebServiceConfig implements Serializable {
     }
 
     public String toString() {
-        return (name != null) ? name : getClass().getSimpleName() + "@" + Integer.toHexString(hashCode());
-    }
-
-
-    public boolean equals(Object obj) {
-        return EqualsBuilder.reflectionEquals(this, obj);
+        return getClass().getSimpleName() + ": " + name;
     }
 
 }
@@ -211,8 +177,7 @@ class WebServiceConfig implements Serializable {
  *
  * @since 1.1
  */
-class ExceptionConfig implements Serializable {
-    private final static long serialVersionUID = 1L;
+class ExceptionConfig {
     private final WebServiceConfig convention;
 
     protected String packageOrPathString

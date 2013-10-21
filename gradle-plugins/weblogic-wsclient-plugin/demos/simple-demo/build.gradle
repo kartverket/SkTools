@@ -15,8 +15,7 @@ dependencies {
 
 
 weblogicWsClient {
-    webService {
-        name 'client1'
+    client1 {
         baseWar { project(path:':war1', configuration:'weblogic') }
     }
 }

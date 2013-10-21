@@ -25,7 +25,7 @@ class WeblogicWsClientPluginTest {
      * Tester registrering av plugin via navn
      */
     @Test
-    void testAppplyPlugin() {
+    void testApplyPlugin() {
         //forks a new project in a temp folder
         Project project = ProjectBuilder.builder().build()
 
@@ -51,23 +51,21 @@ class WeblogicWsClientPluginTest {
         //konfigurerer prosjekt
         wsClientProjectHelper.configureProject {
             weblogicWsClient {
-                webService {
-                    name 'example1'
+                example1 {
                     baseWar { 'org.organisation:someproject:1.1' }
                 }
-                webService {
-                    name 'example2'
+                example2 {
                     baseWar 'org.organisation:someproject:1.1'
                     exceptionReusePackage 'reduce.to.this.pkg'
                 }
-                webService {
+                example3 {
                     baseWar "org.organisation:someproject:1.1"
                     schemaFiles project.files('some.wsdl', 'some.xsd')
                 }
-                webService {
+                some1 {
                     schemaFiles 'some.wsdl', 'some.xsd'
                 }
-                webService {
+                some2 {
                     schemaFiles {
                         project.files('some.wsdl', 'some.xsd')
                     }
@@ -77,32 +75,30 @@ class WeblogicWsClientPluginTest {
 
         wsClientProjectHelper.initializeProject()
 
-        def convention = wsClientProject.convention.plugins.get(WeblogicWsClientPlugin.CONVENTION_NAME)
+        def convention = wsClientProject.convention.plugins.get(WeblogicWsClientPlugin.CONVENTION_NAME) as WeblogicWsClientConvention
 
         assert convention != null
         assert convention.genDir == 'gen/main/wsclient'
-        assert convention.webService[1].exception.packageOrPathString != null
+        assert convention.webService['example2'].exception.packageOrPathString != null
 
         //tester baseWar
-        (0..2).each {
-            assert convention.webService[it].baseWar instanceof org.gradle.api.artifacts.Dependency
-            assert convention.webService[it].baseWar.version == '1.1'
-            assert convention.webService[it].baseWar.name == 'someproject'
-            assert convention.webService[it].baseWar.group == 'org.organisation'
+        ['example1','example2','example3'].each {
+            def webService = convention.webService[it]
+            def dependencies = webService.baseWars.dependencies
+            assert dependencies.size() == 1
+            def dependency = dependencies.iterator().next()
+            assert dependency instanceof org.gradle.api.artifacts.Dependency
+            assert dependency.version == '1.1'
+            assert dependency.name == 'someproject'
+            assert dependency.group == 'org.organisation'
         }
 
         //tester schema files
         Set<File> someFiles = wsClientProject.files('some.wsdl', 'some.xsd').files
-        (2..4).each {
+        ['example3', 'some1', 'some2'].each {
             assert convention.webService[it] != null
             assert convention.webService[it].schemaFiles.files.containsAll(someFiles)   //forventer at filer finnes
         }
-
-        //tester name
-        (0..1).each {
-            assert convention.webService[it].name == 'example' + (it + 1)
-        }
-
 
     }
 
@@ -214,10 +210,15 @@ class WeblogicWsClientPluginTest {
             dependencies {
                 weblogicProvided files(someJarFile)
             }
+
+            weblogicWsClient {
+                webService {
+                }
+            }
         }
 
 
-        Task task = projectHelper.project.tasks.getByName('genWsClientSource')
+        Task task = projectHelper.project.tasks.getByName('genWebServiceWsClientSource')
 
         assert task.weblogicClasspath.files.contains(someJarFile)
 

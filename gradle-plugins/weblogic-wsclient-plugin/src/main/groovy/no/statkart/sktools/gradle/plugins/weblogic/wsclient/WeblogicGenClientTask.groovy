@@ -22,7 +22,7 @@ import org.gradle.api.tasks.InputFiles
  * @author Leif Lislegård
  */
 class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInterface {
-    private final WeblogicWsClientConvention weblogicWsClientConvention = (WeblogicWsClientConvention) project.getConvention().getPlugins().get(WeblogicWsClientPlugin.CONVENTION_NAME);
+    WebServiceConfig webServiceConfig;
 
     private WeblogicJaxWsClientCompiler compiler;
     private final DefaultWeblogicCompileSpec spec = new DefaultWeblogicCompileSpec();
@@ -30,12 +30,12 @@ class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInter
     private FileCollection weblogicClasspath;
     private File dependencyCacheDir;
 
-
     WeblogicGenClientTask() {
         logging.captureStandardOutput LogLevel.INFO
         logging.captureStandardError LogLevel.DEBUG
 
         compiler = new WeblogicJaxWsClientCompiler();
+        compiler.project = getProject()
 
         include('**/*.wsdl') //inkluderer denne som input fra sourceset (benyttes bla for skipIfEmpty beregning)
 
@@ -48,8 +48,7 @@ class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInter
 
     @TaskAction
     protected void compile() {
-        compiler.ant = getAnt()
-        compiler.webServices = weblogicWsClientConvention.webService
+        compiler.webService = webServiceConfig
         spec.setWeblogicClasspath(getWeblogicClasspath().files)
         spec.setTempDir(project.file("${project.buildDir}/tmp/weblogic"))
 

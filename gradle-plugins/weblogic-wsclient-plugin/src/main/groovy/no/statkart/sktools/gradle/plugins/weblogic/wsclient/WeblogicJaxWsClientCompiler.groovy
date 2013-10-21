@@ -1,6 +1,7 @@
 package no.statkart.sktools.gradle.plugins.weblogic.wsclient
 
 import org.gradle.api.AntBuilder
+import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.WorkResult
 import org.slf4j.Logger
@@ -17,14 +18,15 @@ import no.statkart.sktools.gradle.plugins.weblogic.compile.DefaultWeblogicCompil
  * NB: For Weblogic 10.3.5 biblioteker (eller nyere?) så må tools.jar ligge med på classpath
  *
  * @author Leif Lislegård
+ * @author Tor Egil R. Strand
  */
 class WeblogicJaxWsClientCompiler implements org.gradle.api.internal.tasks.compile.Compiler<DefaultWeblogicCompileSpec>, Serializable {
     private static final Logger logger = LoggerFactory.getLogger(WeblogicJaxWsClientCompiler.class)
     private static final String WEBLOGIC_CLASSPATH_ID = "weblogic_classpath_id"
     private static final String WEBLOGIC_WSCLIENT_CLASSPATH_ID = "weblogic_wsclient_classpath_id"
 
-    AntBuilder ant;
-    Collection<WebServiceConfig> webServices;
+    Project project;
+    WebServiceConfig webService;
 
     //for overriding av package navn for genererte stubber
     String packageName;
@@ -35,6 +37,7 @@ class WeblogicJaxWsClientCompiler implements org.gradle.api.internal.tasks.compi
 
     @Override
     WorkResult execute(DefaultWeblogicCompileSpec spec) {
+        AntBuilder ant = project.createAntBuilder()
 
         ant.setProperty('build.compiler', 'modern')
         if (spec.sourceCompatibility != null) {
@@ -78,36 +81,19 @@ class WeblogicJaxWsClientCompiler implements org.gradle.api.internal.tasks.compi
             attributes.destEncoding = attributes.encoding
             attributes.remove('encoding')
         }
+        attributes.fork = false
 
-        webServices.each { WebServiceConfig webService ->
-
-            FileCollection oldFiles = new SimpleFileCollection(new SimpleFileCollection(spec.destinationDir).getAsFileTree().getFiles())
-            FileCollection newFiles = new SimpleFileCollection(spec.destinationDir).minus(oldFiles)
-
-            //genererer en og en webService modul..
-            FileTree fileTree = webService.schemaFiles.getAsFileTree()
-
-            //access all files in case of FileCollection that wraps an archive.
-            // This wil trigger gradle to explode all the defined source to a temp directory
-            fileTree.files
-
-            FileCollection wsdls = fileTree.matching(new PatternSet(includes: ['**/*.wsdl'], caseSensitive:false)) //iterates over the WSDLs only
-            wsdls.files.each {
-                if (!it.exists()) {
-                    logger.warn("wsdl input file ${it} does not exist!")
-                }
-                attributes.wsdl = it
-                logger.info('Calling clientgen with attributes = ' + attributes)
-                def result = ant.clientgen(attributes) {
-                    //nested <fileset> fungerer ikke (testet for WLS 10.3.1), må angi en og en wsdl-fil
-                }
+        spec.source.files.each {
+            attributes.wsdl = it
+            logger.info('Calling clientgen with attributes = ' + attributes)
+            def result = ant.clientgen(attributes) {
+                //nested <fileset> fungerer ikke (testet for WLS 10.3.1), må angi en og en wsdl-fil
             }
+        }
 
-            if (webService.exception != null) {
-                logger.info("Reusing exceptions for module ${webService}")
-                reuseExceptions(spec.destinationDir, newFiles, webService.exception, ant)
-            }
-
+        if (webService.exception != null) {
+            logger.info("Reusing exceptions for module ${webService}")
+            reuseExceptions(spec.destinationDir, webService.exception)
         }
 
         return { spec.destinationDir.list().size() > 0 } as WorkResult
@@ -117,13 +103,12 @@ class WeblogicJaxWsClientCompiler implements org.gradle.api.internal.tasks.compi
      * Samler alle exceptions for services til felles pakke.
      * Dette da vi ønsker at den genererte klientkoden skal gjenspeile strukturen til serveren, samt at man ønsker å gjenbruke exception klassene.
      */
-    protected static void reuseExceptions(File genSourceDir, FileCollection files, ExceptionConfig exceptionConfig, AntBuilder ant) {
+    protected void reuseExceptions(File genSourceDir, ExceptionConfig exceptionConfig) {
         String packageString = exceptionConfig.packageOrPathString.replace('/', '.').replace('\\', '.')
 //
         File exceptionPackageDir = new File(genSourceDir, packageString.replace((char) '.', File.separatorChar))
-        FileCollection exceptionFiles = new SimpleFileCollection(exceptionPackageDir).getAsFileTree().matching(new PatternSet(includes: ['*.java']))
 
-        FileTree javaFiles = files.minus(exceptionFiles).getAsFileTree().matching(new PatternSet(includes: ['**/*.java']))
+        FileCollection javaFiles = project.fileTree(dir: genSourceDir, includes: ['**/*.java'])
 
         exceptionPackageDir.mkdirs()
 
