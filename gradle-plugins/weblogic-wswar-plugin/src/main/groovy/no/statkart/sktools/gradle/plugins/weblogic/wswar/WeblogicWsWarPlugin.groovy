@@ -57,7 +57,7 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
         JavaPluginConvention javaConvention = project.getConvention().getPlugins().get("java") as JavaPluginConvention;
 
         Configuration weblogicConfiguration = createWeblogicConfiguration(project);
-        SourceSet weblogicSourceSet = javaConvention.getSourceSets().add(WeblogicWsWarPlugin.WEBLOGIC_SOURCE_SET_NAME)
+        SourceSet weblogicSourceSet = javaConvention.getSourceSets().create(WeblogicWsWarPlugin.WEBLOGIC_SOURCE_SET_NAME)
 
         configureSourceSet(weblogicSourceSet, javaConvention);
         configureConfigurations(weblogicSourceSet, javaConvention);

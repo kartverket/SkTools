@@ -207,7 +207,7 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
 
         SourceSet sourceSet = sourceSets.findByName(SourceSet.MAIN_SOURCE_SET_NAME)
         if (!sourceSet) {
-            sourceSet = sourceSets.add(SourceSet.MAIN_SOURCE_SET_NAME) //legger til nytt sourcesett
+            sourceSet = sourceSets.create(SourceSet.MAIN_SOURCE_SET_NAME) //legger til nytt sourcesett
         }
 
         return sourceSet;

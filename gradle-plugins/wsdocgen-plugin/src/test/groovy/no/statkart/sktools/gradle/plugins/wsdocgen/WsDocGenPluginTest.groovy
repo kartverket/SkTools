@@ -91,7 +91,7 @@ class WsDocGenPluginTest {
         Project project = projectHelper.project
 
         JavaPluginConvention javaConvention = project.getConvention().getPlugins().get("java");
-        javaConvention.getSourceSets().add('custom')
+        javaConvention.getSourceSets().create('custom')
 
 
         projectHelper.initializeProject()
