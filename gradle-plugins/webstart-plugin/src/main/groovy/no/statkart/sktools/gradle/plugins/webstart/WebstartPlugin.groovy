@@ -43,6 +43,11 @@ class WebstartPlugin implements Plugin<Project> {
                 configureClient(project, clientConfiguration)
             }
         })
+
+        if (project.gradle.gradleVersion >= '1.7') {
+            War war = project.tasks.getByName(WarPlugin.WAR_TASK_NAME) as War
+            war.duplicatesStrategy = org.gradle.api.file.DuplicatesStrategy.EXCLUDE
+        }
     }
 
     private static void configureClient(Project project, ClientConfiguration clientConfiguration) {
