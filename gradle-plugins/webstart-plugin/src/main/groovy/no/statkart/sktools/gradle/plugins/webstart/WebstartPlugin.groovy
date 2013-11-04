@@ -44,10 +44,11 @@ class WebstartPlugin implements Plugin<Project> {
             }
         })
 
-        if (project.gradle.gradleVersion >= '1.7') {
-            War war = project.tasks.getByName(WarPlugin.WAR_TASK_NAME) as War
-            war.duplicatesStrategy = org.gradle.api.file.DuplicatesStrategy.EXCLUDE
-        }
+// Disse linjene virker for meg, men Roar får feil om at egenskapen 'org' ikke finnes. Kan ikke bruke import, for da vil det sikkert ikke kompilere med eldre Gradle.
+//        if (project.gradle.gradleVersion >= '1.7') {
+//            War war = project.tasks.getByName(WarPlugin.WAR_TASK_NAME) as War
+//            war.duplicatesStrategy = org.gradle.api.file.DuplicatesStrategy.EXCLUDE
+//        }
     }
 
     private static void configureClient(Project project, ClientConfiguration clientConfiguration) {
