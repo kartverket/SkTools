@@ -3,15 +3,10 @@ package no.statkart.sktools.gradle.plugins.webstart
 import no.statkart.sktools.gradle.testutils.ProjectHelper
 import no.statkart.sktools.gradle.testutils.builder.WebstartProjectBuilder
 import org.gradle.api.Project
-
-import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.Dependency
-import org.gradle.api.file.FileTree
 import org.gradle.testfixtures.ProjectBuilder
 import org.testng.Assert
 import org.testng.annotations.Test
 
-import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
 /**
@@ -64,8 +59,6 @@ class WebstartPluginTest {
         projectHelper.assertFileExists("build/webstart/" + projectHelper.project.name + '.jnlp')
     }
 
-
-
     /**
      * Tester og demonstrerer angivelse av konfigurasjon for dependencies/resouces.
      */
@@ -115,7 +108,7 @@ class WebstartPluginTest {
                         description 'Description client1'
                         title 'Client1 title'
                         resources {
-                            systemProperties pop1: 'test', prop2: 'test2', 'jnlp.versionEnabled':true
+                            systemProperties pop1: 'test', prop2: 'test2', 'jnlp.versionEnabled': true
                         }
                     }
                 }
@@ -135,7 +128,88 @@ class WebstartPluginTest {
         List<String> entryNames = Collections.list(warFile.entries()).collect { it.name }
         warFile.close()
 
-        Assert.assertTrue(entryNames.containsAll(['root.jnlp','lib/webstartHelper__Vunknown.jar','lib/wsClientRuntime__V1.0.jar','lib/projectA__V1.0.jar','lib/projectB__V1.2.jar']))
+        Assert.assertTrue(entryNames.containsAll(['root.jnlp', 'lib/webstartHelper__Vunknown.jar', 'lib/wsClientRuntime__V1.0.jar', 'lib/projectA__V1.0.jar', 'lib/projectB__V1.2.jar']))
+    }
+
+    /**
+     * Tester problem med duplikate jar-filer dersom man har flere klienter.
+     */
+    @Test
+    void testDuplicates() {
+        ProjectHelper projectHelper = WebstartProjectBuilder.builder().withName('root').applyWebstartPlugin().build()
+        projectHelper.setProjectProperties(version: '2.0')
+
+        ProjectHelper aProjectHelper = WebstartProjectBuilder.builder().withName('projectA').withParent(projectHelper).applyJavaPlugin().build()
+        aProjectHelper.setProjectProperties(version: '1.0')
+
+        ProjectHelper bProjectHelper = WebstartProjectBuilder.builder().withName('projectB').withParent(projectHelper).applyJavaPlugin().build()
+        bProjectHelper.setProjectProperties(version: '1.2')
+
+        File wsClientRuntimeJar = bProjectHelper.project.file('../wsClientRuntime-1.0.jar')
+        assert wsClientRuntimeJar.createNewFile()
+
+        bProjectHelper.configureProject {
+            dependencies {
+                runtime files('../wsClientRuntime-1.0.jar')
+            }
+        }
+        aProjectHelper.configureProject {
+            dependencies {
+                runtime project(':projectB')    //dependency on projectB
+            }
+        }
+
+        File webstartHelperJar = projectHelper.project.file('webstartHelper.jar')
+        assert webstartHelperJar.createNewFile()
+        projectHelper.configureProject {
+            configurations {
+                webstartJars
+            }
+
+            dependencies {
+                webstartJars files(webstartHelperJar)
+                webstartJars project(path: ':projectA')
+            }
+
+            webstart {
+                client1 {
+                    jarDependencies configurations.webstartJars
+                    jnlp {
+                        jnlpFilename 'client1.jnlp'
+                        description 'Description client1'
+                        title 'Client1 title'
+                    }
+                }
+                client2 {
+                    jarDependencies configurations.webstartJars
+                    jnlp {
+                        jnlpFilename 'client2.jnlp'
+                        description 'Description client2'
+                        title 'Client2 title'
+                    }
+                }
+            }
+        }
+
+        projectHelper.initializeProject()
+
+        projectHelper.executeTask('assemble')
+
+        final Project project = projectHelper.project
+
+        if (project.gradle.gradleVersion < '1.7') {
+            return
+        }
+
+        File warPath = project.war.archivePath
+        Assert.assertTrue(warPath.exists())
+
+        ZipFile warFile = new ZipFile(warPath)
+        List<String> entryNames = Collections.list(warFile.entries()).collect { it.name }
+        warFile.close()
+
+        Set<String> entryNames2 = new HashSet<String>(entryNames)
+        Assert.assertEquals(entryNames2.size(), entryNames.size())
     }
 
 
