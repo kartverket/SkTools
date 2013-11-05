@@ -4,7 +4,7 @@ package no.statkart.sktools.gradle.plugins.dbtools
  * @since 1.3
  * @author Leif Lislegård
  */
-class DbToolsPluginPatchTestCase<T extends DbToolsPluginPatchTestCase> extends DbToolsPluginTestCase<T> {
+class DbToolsPluginPatchTestContext<T extends DbToolsPluginPatchTestContext> extends DbToolsPluginTestContext<T> {
 
     static File createSimplePatchFile(File dir = null) {
         createTempFile(FILE_TYPE.Patch, dir, '''

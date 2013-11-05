@@ -1,13 +1,10 @@
 package no.statkart.sktools.gradle.plugins.ideaextensions
 
-import org.gradle.api.Project
-import org.gradle.testfixtures.ProjectBuilder
-
 /**
  * @since 1.3
  * @author Leif Lislegård
  */
-class GradleTestCase extends IdeaTestCase<GradleTestCase> {
+class GradleTestContext extends IdeaTestContext<GradleTestContext> {
 
     static String GRADLE_SETTINGS_1_GRADLE_HOME = "X:\\testcase\\gradle\\gradle-1.6"
     static String GRADLE_SETTINGS_1_XML = buildGradleSettings(GRADLE_SETTINGS_1_GRADLE_HOME)

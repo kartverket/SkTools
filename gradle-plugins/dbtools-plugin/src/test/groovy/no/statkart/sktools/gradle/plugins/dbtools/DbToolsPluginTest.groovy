@@ -23,7 +23,7 @@ class DbToolsPluginTest {
      */
     @Test
     void testAppplyPlugin() {
-        final def testCase = new DbToolsPluginTestCase()
+        final def testCase = new DbToolsPluginTestContext()
 
         Assert.assertTrue(testCase.project.convention.plugins.db instanceof DbtoolsConvention)
 
@@ -38,7 +38,7 @@ class DbToolsPluginTest {
      */
     @Test
     void testApplyCredentials() {
-        final def testCase = new DbToolsPluginTestCase()
+        final def testCase = new DbToolsPluginTestContext()
 
         testCase.createNewFileWithDirsRelativeToProject('src/hsql/PleaseAuthenticateMe.sql')
 
@@ -124,7 +124,7 @@ class DbToolsPluginTest {
      */
     @Test
     void testOracleImportTask() {
-        final def testCase = new DbToolsPluginTestCase()
+        final def testCase = new DbToolsPluginTestContext()
 
         testCase.configureDatabasePlugin {
             toolset(name:'db1', type:'oracle') {
@@ -160,7 +160,7 @@ class DbToolsPluginTest {
      */
     @Test
     void testOracleExportTask() {
-        final def testCase = new DbToolsPluginTestCase()
+        final def testCase = new DbToolsPluginTestContext()
 
         testCase.configureDatabasePlugin {
             toolset(name:'db1', type:'oracle') {
@@ -196,7 +196,7 @@ class DbToolsPluginTest {
      */
     @Test
     void testPatchTask() {
-        final def testCase = new DbToolsPluginTestCase()
+        final def testCase = new DbToolsPluginTestContext()
 
         testCase.configureDatabasePlugin {
             toolset(name:'db1', type:'oracle') {
@@ -248,7 +248,7 @@ class DbToolsPluginTest {
      */
     @Test
     void testPatchTaskSchema() {
-        final def testCase = new DbToolsPluginTestCase()
+        final def testCase = new DbToolsPluginTestContext()
 
         testCase.configureDatabasePlugin {
             toolset(name:'db1', type:'oracle') {
@@ -294,7 +294,7 @@ class DbToolsPluginTest {
      */
     @Test
     void testSyncPatchTask() {
-        final def testCase = new DbToolsPluginTestCase()
+        final def testCase = new DbToolsPluginTestContext()
 
         testCase.configureDatabasePlugin {
             toolset(name:'db1', type:'oracle') {
@@ -351,7 +351,7 @@ class DbToolsPluginTest {
      */
     @Test
     void testDefineLatestPatchVersionTask() {
-        final def testCase = new DbToolsPluginTestCase()
+        final def testCase = new DbToolsPluginTestContext()
 
         testCase.configureDatabasePlugin {
             toolset(name:'db1', type:'oracle') {
@@ -388,7 +388,7 @@ class DbToolsPluginTest {
      */
     @Test
     void testInfoTask() {
-        final def testCase = new DbToolsPluginTestCase()
+        final def testCase = new DbToolsPluginTestContext()
 
         testCase.configureDatabasePlugin {
             toolset(name:'coolDb', type:'hsqldb', prefix:'coolDb') {

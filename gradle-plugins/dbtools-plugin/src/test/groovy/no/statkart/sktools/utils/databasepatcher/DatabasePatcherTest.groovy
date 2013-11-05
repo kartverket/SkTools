@@ -6,9 +6,9 @@ import no.statkart.sktools.gradle.plugins.dbtools.HSQLDBTest
 import no.statkart.sktools.utils.parsers.sql.SQLStatementParser
 import no.statkart.sktools.utils.parsers.sql.model.Expression
 
-import static no.statkart.sktools.gradle.plugins.dbtools.testutils.DbToolsTestCase.FILE_TYPE.SQL
+import static DbToolsTestContext.FILE_TYPE.SQL
 import no.statkart.sktools.utils.parsers.sql.model.Statement
-import no.statkart.sktools.gradle.plugins.dbtools.testutils.DbToolsTestCase
+import no.statkart.sktools.gradle.plugins.dbtools.testutils.DbToolsTestContext
 
 /**
  * Tester funksjonaliteten til {@link no.statkart.sktools.utils.databasepatcher.DatabasePatcher}
@@ -23,11 +23,11 @@ class DatabasePatcherTest extends HSQLDBTest {
      */
     @Test
     public void testAbsoluteFileName() {
-        final DatabasePatcherTestCase testCase = buildDatabasePatcherTestCase()
+        final DatabasePatcherTestContext testContext = buildDatabasePatcherTestFixture()
 
-        File patchFile = testCase.createSimplePatchFile();
+        File patchFile = testContext.createSimplePatchFile();
 
-        DatabasePatcher databasePatcher = testCase.setUpDatabasePatcher();
+        DatabasePatcher databasePatcher = testContext.setUpDatabasePatcher();
         databasePatcher.patch(patchFile.toString());
 
         def row = sql.firstRow('select ID, NAVN from TEST_TABLE where ID = 1')
@@ -44,16 +44,16 @@ class DatabasePatcherTest extends HSQLDBTest {
      */
     @Test
     public void testRelativeFileName() {
-        final DatabasePatcherTestCase testCase = buildDatabasePatcherTestCase()
+        final DatabasePatcherTestContext testContext = buildDatabasePatcherTestFixture()
 
         File baseDir = new File(".")
         File subDir = new File(baseDir, "subdir")
         subDir.mkdir()
-        File patchFile = testCase.createSimplePatchFile(subDir);
+        File patchFile = testContext.createSimplePatchFile(subDir);
 
         String relativePath = "subdir/" + patchFile.getName()
 
-        DatabasePatcher databasePatcher = testCase.setUpDatabasePatcher();
+        DatabasePatcher databasePatcher = testContext.setUpDatabasePatcher();
         databasePatcher.patch(relativePath);
 
         def row = sql.firstRow('select ID, NAVN from TEST_TABLE where ID = 1')
@@ -70,11 +70,11 @@ class DatabasePatcherTest extends HSQLDBTest {
      */
     @Test
     public void testNoPatchinfoTable() {
-        final DatabasePatcherTestCase testCase = buildDatabasePatcherTestCase()
+        final DatabasePatcherTestContext testContext = buildDatabasePatcherTestFixture()
 
-        File patchFile = testCase.createTempFile("");
+        File patchFile = testContext.createTempFile("");
 
-        DatabasePatcher databasePatcher = testCase.setUpDatabasePatcher();
+        DatabasePatcher databasePatcher = testContext.setUpDatabasePatcher();
         databasePatcher.patch(patchFile.toString());
 
         try {
@@ -99,11 +99,11 @@ class DatabasePatcherTest extends HSQLDBTest {
         def user1 = systemCredentials
         def user2 = defaultCredentials
 
-        final DatabasePatcherTestCase testCase = buildDatabasePatcherTestCase(systemCredentials, defaultCredentials)
+        final DatabasePatcherTestContext testContext = buildDatabasePatcherTestFixture(systemCredentials, defaultCredentials)
 
-        File patchFile = testCase.createTempFile("");
+        File patchFile = testContext.createTempFile("");
 
-        DatabasePatcher databasePatcher = testCase.setUpDatabasePatcher();
+        DatabasePatcher databasePatcher = testContext.setUpDatabasePatcher();
         databasePatcher.patch(patchFile.toString());
 
         try {
@@ -122,9 +122,9 @@ class DatabasePatcherTest extends HSQLDBTest {
      */
     @Test
     public void testPatchdataForComponents() {
-        final DatabasePatcherTestCase testCase = buildDatabasePatcherTestCase()
+        final DatabasePatcherTestContext testContext = buildDatabasePatcherTestFixture()
 
-        File patchAFile = testCase.createTempFile(SQL, '''
+        File patchAFile = testContext.createTempFile(SQL, '''
 -- patch for default modul. Testen kjører kun første definerte patch.
 
 -- PATCH DB.MIN.VERSION="<any>"
@@ -141,7 +141,7 @@ INSERT INTO A_TABLE (ID, NAVN) VALUES (1, 'valueA');
 
         ''')
 
-        File patchBFile = testCase.createTempFile(SQL, '''
+        File patchBFile = testContext.createTempFile(SQL, '''
 -- patch for 'modulB'
 
 -- PATCH DB.MIN.VERSION="<any>"
@@ -162,7 +162,7 @@ INSERT INTO B_TABLE (ID, NAVN) VALUES (2, 'valueB');
         ''')
 
 
-        DatabasePatcher databasePatcher = testCase.setUpDatabasePatcher();
+        DatabasePatcher databasePatcher = testContext.setUpDatabasePatcher();
 
         //kjører inn patch for "default" komponent
         databasePatcher.singleStepPatches = true  //singlestep
@@ -202,9 +202,9 @@ INSERT INTO B_TABLE (ID, NAVN) VALUES (2, 'valueB');
      */
     @Test
     public void testParsing() {
-        final DatabasePatcherTestCase testCase = buildDatabasePatcherTestCase()
+        final DatabasePatcherTestContext testContext = buildDatabasePatcherTestFixture()
 
-        File patchFile = testCase.createSimplePatchFile();
+        File patchFile = testContext.createSimplePatchFile();
 
         List<? extends Expression> expressions = SQLStatementParser.parseExpressions(SqlExecutor.lesFilFraWorkingDir(patchFile.absolutePath));
 
@@ -248,9 +248,9 @@ INSERT INTO B_TABLE (ID, NAVN) VALUES (2, 'valueB');
      */
     @Test
     public void testParsingOfAlwaysPatchBlocks() {
-        final DatabasePatcherTestCase testCase = buildDatabasePatcherTestCase()
+        final DatabasePatcherTestContext testContext = buildDatabasePatcherTestFixture()
 
-        File patchFile = testCase.createTempFile(DbToolsTestCase.FILE_TYPE.SQL, """
+        File patchFile = testContext.createTempFile(DbToolsTestContext.FILE_TYPE.SQL, """
 -- PATCH DB.MIN.VERSION="1.0"
 
 -- PATCH ALWAYS DB.VERSION="0" PATCH.NO="-1" "Definerer skjema for påfølgende patcher"
@@ -305,15 +305,15 @@ CREATE TABLE TEST_TABLE2;
      */
     @Test
     public void testIndexesInSynchWithPatch() {
-        final DatabasePatcherTestCase testCase = buildDatabasePatcherTestCase()
+        final DatabasePatcherTestContext testContext = buildDatabasePatcherTestFixture()
 
-        File oldPatchFile = testCase.createTempFile("""-- patchefil uten patch#2
+        File oldPatchFile = testContext.createTempFile("""-- patchefil uten patch#2
 -- PATCH DB.MIN.VERSION="<any>"
-${testCase.PATCH_01}
-${testCase.PATCH_03}
+${testContext.PATCH_01}
+${testContext.PATCH_03}
 """);
 
-        DatabasePatcher databasePatcher = testCase.setUpDatabasePatcher();
+        DatabasePatcher databasePatcher = testContext.setUpDatabasePatcher();
 
         //STEG: Patcher opp basen med oldPatchFile
         databasePatcher.patch(oldPatchFile.toString());
@@ -338,11 +338,11 @@ ${testCase.PATCH_03}
         }
 
 
-        File updatedPatchFileWithIndex = testCase.createTempFile("""-- patchefil med patch#2 - patchtype: INDEX
+        File updatedPatchFileWithIndex = testContext.createTempFile("""-- patchefil med patch#2 - patchtype: INDEX
 -- PATCH DB.MIN.VERSION="<any>"
-${testCase.PATCH_01}
-${testCase.PATCH_02}
-${testCase.PATCH_03}
+${testContext.PATCH_01}
+${testContext.PATCH_02}
+${testContext.PATCH_03}
 """);
 
         //STEG: Patcher opp databasen med oppdatert patchfil - forventer ikke endringer da databasen allerede har siste patch# og indexesInSyncWithPatch
@@ -396,21 +396,21 @@ ${testCase.PATCH_03}
      */
     @Test
     public void testAlwaysPatchblokkPatching() {
-        final DatabasePatcherTestCase testCase = buildDatabasePatcherTestCase()
+        final DatabasePatcherTestContext testContext = buildDatabasePatcherTestFixture()
 
         final def PATCH2 = """
 -- PATCH ALWAYS DB.VERSION="1.0" PATCH.NO="2" "Inserting random rows"
 INSERT INTO TEST_TABLE (ID, NAVN) VALUES (1, 'GENERATED INDEX patch: ' || TO_CHAR(CURRENT_TIMESTAMP, 'MI:SS:FF'));
 """
 
-        File patchFile = testCase.createTempFile("""-- patchefil uten patch#2
+        File patchFile = testContext.createTempFile("""-- patchefil uten patch#2
 -- PATCH DB.MIN.VERSION="<any>"
-${testCase.PATCH_01}
+${testContext.PATCH_01}
 ${PATCH2}
-${testCase.PATCH_03}
+${testContext.PATCH_03}
 """);
 
-        DatabasePatcher databasePatcher = testCase.setUpDatabasePatcher();
+        DatabasePatcher databasePatcher = testContext.setUpDatabasePatcher();
 
         //STEG: Patcher opp basen med patchFile
         databasePatcher.patch(patchFile.toString());

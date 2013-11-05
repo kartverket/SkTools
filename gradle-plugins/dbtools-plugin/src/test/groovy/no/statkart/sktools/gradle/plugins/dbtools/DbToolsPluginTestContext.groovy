@@ -3,19 +3,19 @@ package no.statkart.sktools.gradle.plugins.dbtools
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsConvention
-import no.statkart.sktools.gradle.plugins.dbtools.testutils.DbToolsTestCase
+import no.statkart.sktools.gradle.plugins.dbtools.testutils.DbToolsTestContext
 
 /**
  * @since 1.3
  * @author Leif Lislegård
  */
-class DbToolsPluginTestCase<T extends DbToolsPluginTestCase> extends DbToolsTestCase<T> {
+class DbToolsPluginTestContext<T extends DbToolsPluginTestContext> extends DbToolsTestContext<T> {
 
     final Project project
     final DbtoolsConvention convention
 
 
-    DbToolsPluginTestCase() {
+    DbToolsPluginTestContext() {
         //forks a new project in a temp folder
         project = ProjectBuilder.builder().build()
 

@@ -1,13 +1,11 @@
 package no.statkart.sktools.gradle.plugins.ideaextensions
 
-import org.gradle.api.Project
-import org.gradle.testfixtures.ProjectBuilder
 
 /**
  * @since 1.3
  * @author Leif Lislegård
  */
-class InspectionProfileTestCase extends IdeaTestCase<InspectionProfileTestCase> {
+class InspectionProfileTestContext extends IdeaTestContext<InspectionProfileTestContext> {
 
     static String INSPECTION_PROFILE_1_NAME = 'Test profile 1'
     static String INSPECTION_PROFILE_1_LOCAL = 'false'
@@ -17,7 +15,7 @@ class InspectionProfileTestCase extends IdeaTestCase<InspectionProfileTestCase> 
     static String IDEA_TEMPLATE_WITH_INSPECTIONS_XML = buildInspectionSettings(INSPECTION_PROFILE_1_XML)
 
 
-    InspectionProfileTestCase addInspectionProfileFile(String xml) {
+    InspectionProfileTestContext addInspectionProfileFile(String xml) {
         File file = File.createTempFile('inspection_profile', '.xml')
         file.deleteOnExit()
         file.withPrintWriter("UTF-8") {

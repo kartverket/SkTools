@@ -1,12 +1,12 @@
 package no.statkart.sktools.utils.databasepatcher
 
-import no.statkart.sktools.gradle.plugins.dbtools.testutils.DbToolsTestCase
+import no.statkart.sktools.gradle.plugins.dbtools.testutils.DbToolsTestContext
 
 /**
  * @since 1.3
  * @author Leif Lislegård
  */
-class DatabasePatcherTestCase<T extends DatabasePatcherTestCase> extends DbToolsTestCase<T> {
+class DatabasePatcherTestContext<T extends DatabasePatcherTestContext> extends DbToolsTestContext<T> {
 
     String jdbcDriverClassString
     String url
@@ -14,7 +14,7 @@ class DatabasePatcherTestCase<T extends DatabasePatcherTestCase> extends DbTools
     String password
     String schema
 
-    DatabasePatcherTestCase(String jdbcDriverClassString, String url, String username, String password, String schema) {
+    DatabasePatcherTestContext(String jdbcDriverClassString, String url, String username, String password, String schema) {
         this.jdbcDriverClassString = jdbcDriverClassString
         this.url = url
         this.username = username
@@ -66,7 +66,7 @@ INSERT INTO TEST_TABLE (ID, NAVN) VALUES (1, 'CHUCK NORRIS');
      * </ul>
      */
     static File createSimplePatchFile(File dir = null) {
-        createTempFile(DbToolsTestCase.FILE_TYPE.SQL, dir, """
+        createTempFile(DbToolsTestContext.FILE_TYPE.SQL, dir, """
 
 --kommentar
 

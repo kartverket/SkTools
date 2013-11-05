@@ -7,7 +7,7 @@ import org.gradle.testfixtures.ProjectBuilder
  * @since 1.3
  * @author Leif Lislegård
  */
-class IdeaTestCase<T extends IdeaTestCase> {
+class IdeaTestContext<T extends IdeaTestContext> {
 
     static String IDEA_TEMPLATE_EMPTY_XML = buildIdeaTemplate()
 
@@ -16,7 +16,7 @@ class IdeaTestCase<T extends IdeaTestCase> {
     protected String ideaTemplate
 
 
-    IdeaTestCase() {
+    IdeaTestContext() {
         project = ProjectBuilder.builder().build()
 
         project.apply plugin: 'sktools-ideaextensions-plugin'

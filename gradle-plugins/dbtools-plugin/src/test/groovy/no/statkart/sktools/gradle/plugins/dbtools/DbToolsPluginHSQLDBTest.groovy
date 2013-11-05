@@ -37,7 +37,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
 
         assert sql.connection.isValid(0)
 
-        final def testCase = new DbToolsPluginPatchTestCase()
+        final def testCase = new DbToolsPluginPatchTestContext()
 
         // STEG 1 - oppretter sql-filer relativt til prosjekt
 
@@ -134,7 +134,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
     void testDynamicCredentials() {
         Assert.assertTrue sql.connection.isValid(0)
 
-        final def testCase = new DbToolsPluginPatchTestCase()
+        final def testCase = new DbToolsPluginPatchTestContext()
 
         // STEG 1 - oppretter sql-filer relativt til prosjekt
 
@@ -240,7 +240,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
         Assert.assertTrue getSql(user2).connection.isValid(0)
 
 
-        final def testCase = new DbToolsPluginPatchTestCase()
+        final def testCase = new DbToolsPluginPatchTestContext()
 
 
         // STEG 1 - oppretter sql-filer relativt til prosjekt
@@ -325,7 +325,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
      */
     @Test
     void testPatchStandardTasks() {
-        final def testCase = new DbToolsPluginPatchTestCase()
+        final def testCase = new DbToolsPluginPatchTestContext()
 
         testCase.configureDatabasePlugin {
             toolset(name: 'Prefix', type: 'hsqldb', prefix: 'Prefix') {
@@ -358,7 +358,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
      */
     @Test
     void testPatchDatabase() {
-        final def testCase = new DbToolsPluginPatchTestCase()
+        final def testCase = new DbToolsPluginPatchTestContext()
 
         // STEG 1 - setter opp testmaterie
         File patchFile = testCase.createSimplePatchFile()

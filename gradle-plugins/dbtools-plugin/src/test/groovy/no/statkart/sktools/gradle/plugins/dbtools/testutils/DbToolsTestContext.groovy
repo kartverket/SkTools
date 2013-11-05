@@ -4,7 +4,7 @@ package no.statkart.sktools.gradle.plugins.dbtools.testutils
  * @since 1.3
  * @author Leif Lislegård
  */
-class DbToolsTestCase<T extends DbToolsTestCase> {
+class DbToolsTestContext<T extends DbToolsTestContext> {
     static enum FILE_TYPE {
         Patch('.sql'),
         SQL('.sql'),

@@ -7,7 +7,7 @@ import groovy.sql.Sql
 import org.testng.annotations.AfterTest
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.AfterMethod
-import no.statkart.sktools.utils.databasepatcher.DatabasePatcherTestCase
+import no.statkart.sktools.utils.databasepatcher.DatabasePatcherTestContext
 import org.slf4j.LoggerFactory
 import org.slf4j.Logger
 
@@ -73,12 +73,12 @@ abstract class HSQLDBTest {
     /**
      * Setter opp databasePatcher med angitte credentials
      */
-    protected DatabasePatcherTestCase buildDatabasePatcherTestCase(Credentials credentials = defaultCredentials, Credentials schemaCredentials = null) {
+    protected DatabasePatcherTestContext buildDatabasePatcherTestFixture(Credentials credentials = defaultCredentials, Credentials schemaCredentials = null) {
         Sql sql = getSql(credentials)
         String schema = (credentials.equals(schemaCredentials)) ? null : (schemaCredentials != null) ? schemaCredentials.defaultSchema : credentials.defaultSchema
-        def testCase = new DatabasePatcherTestCase(jdbcDriverClassString, getUrl(), credentials.username, credentials.password, schema)
+        def testContext = new DatabasePatcherTestContext(jdbcDriverClassString, getUrl(), credentials.username, credentials.password, schema)
 
-        return testCase
+        return testContext
     }
 
     /**
