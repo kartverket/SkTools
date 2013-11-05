@@ -126,13 +126,14 @@ subprojects { Project project ->
 
         sourceCompatibility = '1.6'
         targetCompatibility = '1.6'
+    }
 
+
+    project.plugins.withType(JavaPlugin) {
 
         // appropriately inject common dependencies into each sub-project
         dependencies {
-
             testCompile libraries.testng
-
         }
 
 
@@ -187,34 +188,21 @@ subprojects { Project project ->
         }
 
 
+        /**
+         * Testing via TestNG grupper. Se bruk av @Test(groups = "") i koden.
+         *
+         * -DignoreFailures=true stopper ikke eksekvering etter feilende modul og kjører videre. Kjekt for integrasjonstesting som ønsker å kjøre alle tester alltid.
+         */
         test {
             ignoreFailures = gradle.startParameter.systemPropertiesArgs.get('ignoreFailures', 'true') == 'true' //Gradle feiler ikke dersom denne er true. Kan ikke være true dersom en gjør en install eller uploadArchives
 
-            useTestNG() {
-                excludeGroups('broken')
-                listeners << 'org.testng.reporters.XMLReporter' // For Jenkins siden Gradle 1.5+ ikke tar med default listerners som standard lenger
+            testFramework.options.with {
+                //ekstra konfigurasjon av testngOptions her...
             }
+
 
             jvmArgs '-Xmx512m', '-XX:PermSize=128m', '-XX:MaxPermSize=256m'
-            if (rootProject.hasProperty('test.remote.debug')) {
-                jvmArgs '-Xdebug'
-                jvmArgs '-Xnoagent'
-                jvmArgs '-Xrunjdwp:transport=dt_socket,address=8787,server=y,suspend=y'
-            }
-
-
-            if (gradle.gradleVersion <= '1.2') {
-                systemProperty "file.encoding", "UTF-8" //SKTOOLS-83: workaround for encoding i testrapporter
-//            defaultCharacterEncoding = "UTF-8"
-            }
-
-            //listening to test execution events
-            afterTest { descriptor, result  ->
-              logger.lifecycle("${result.toString() == 'SUCCESS' ? ' Sucessfully tested' : 'Failed testing'} : ${descriptor.className}#${descriptor.name}")
-              if (result.resultType.name() == 'FAILURE') {
-                  logger.error("${result.exception}")
-              }
-            }
+//            testLogging.showStandardStreams = true
 
             onOutput { descriptor, event ->
                 if (event.destination == TestOutputEvent.Destination.StdErr) {
@@ -226,6 +214,41 @@ subprojects { Project project ->
 
         }
     }
+
+    project.tasks.withType(Test) { //felles for alle test-tasks
+
+        useTestNG() {  //benytter kun TestNG over alt
+            excludeGroups('broken')
+
+            listeners << 'org.testng.reporters.XMLReporter' // For Jenkins, siden Gradle 1.4+ ikke tar med default listeners som standard lenger
+//            listeners << 'org.uncommons.reportng.HTMLReporter' // Gradles innebygde rapport viser ikke skipped
+        }
+
+        systemProperties "org.uncommons.reportng.stylesheet": "${project.rootProject.file('all/test/report/reportng-1.1.3/stylesheets/hudsonesque.css')}"
+        systemProperties "org.uncommons.reportng.title": "${project.name} Report"
+
+
+        if (gradle.gradleVersion <= '1.2') {
+            systemProperty "file.encoding", "UTF-8" //SKTOOLS-83: workaround for encoding i testrapporter
+//            defaultCharacterEncoding = "UTF-8"
+        }
+
+
+        if (rootProject.hasProperty('test.remote.debug')) {
+            jvmArgs '-Xdebug'
+            jvmArgs '-Xnoagent'
+            jvmArgs '-Xrunjdwp:transport=dt_socket,address=8787,server=y,suspend=y'
+        }
+
+        //listening to test execution events
+        afterTest { descriptor, result ->
+            logger.lifecycle("${result.toString() == 'SUCCESS' ? ' Sucessfully tested' : 'Failed testing'} : ${descriptor.className}#${descriptor.name}")
+            if (result.resultType.name() == 'FAILURE') {
+                logger.error("${result.exception}")
+            }
+        }
+    }
+
 
     tasks.withType(GroovyCompile) {
         groovyOptions.encoding = System.getProperty('file.encoding') //SKTOOLS-83: groovy source files in system encoding (default is UTF-8)
