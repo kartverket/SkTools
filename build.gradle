@@ -105,10 +105,6 @@ libraries.weblogic = files(
 
 
 
-def boolean isJavaProject(Project project) {
-    return project.subprojects.size() == 0 && !project.name.endsWith('-ear') && !project.name.endsWith('-test')
-}
-
 
 subprojects { Project project ->
     apply plugin: 'project-report'
@@ -118,14 +114,6 @@ subprojects { Project project ->
     repositories {
         mavenLocal()
         mavenRepo name: 'public', url: "${rootProject.MAVEN_REPO}"
-    }
-
-
-    if (isJavaProject(project)) {
-        apply plugin: 'java'
-
-        sourceCompatibility = '1.6'
-        targetCompatibility = '1.6'
     }
 
 
@@ -158,6 +146,9 @@ subprojects { Project project ->
 
 
     project.plugins.withType(JavaPlugin) {
+
+        sourceCompatibility = '1.6'
+        targetCompatibility = '1.6'
 
         // appropriately inject common dependencies into each sub-project
         dependencies {
