@@ -129,6 +129,34 @@ subprojects { Project project ->
     }
 
 
+    def filterTestGroup = { Test test = test, String group, String value ->
+        test.with {
+            if (testFramework.class.simpleName == 'TestNGTestFramework') {
+                if (value == 'INCLUDE') {
+                    testFramework.options.includeGroups group
+                    logger.info "${test.name} configuration: including group '${group}'"
+                } else if (value == 'EXCLUDE') {
+                    testFramework.options.excludeGroups group
+                    logger.info "${test.name} configuration: excluding group '${group}'"
+                } else if (value == 'EXCLUDE_WHEN_NO_INCLUDES') {
+                    project.afterEvaluate {
+                        if (testFramework.options.includeGroups.isEmpty()) {
+                            testFramework.options.excludeGroups group
+                            logger.info "${test.name} configuration: excluding group '${group}'"
+                        } else {
+//                        logger.info "${test.name} configuration: ignoring group '${group}'"
+                        }
+                    }
+                } else {
+                    assert value == 'IGNORED' //feil ved ikke gyldig verdi for filtrering av tester
+                }
+            } else {
+                logger.warn "${test.name} configuration: unable to configure groups('${group}') for ${testFramework.class.simpleName}"
+            }
+        }
+    }
+
+
     project.plugins.withType(JavaPlugin) {
 
         // appropriately inject common dependencies into each sub-project
@@ -196,13 +224,12 @@ subprojects { Project project ->
         test {
             ignoreFailures = gradle.startParameter.systemPropertiesArgs.get('ignoreFailures', 'true') == 'true' //Gradle feiler ikke dersom denne er true. Kan ikke være true dersom en gjør en install eller uploadArchives
 
-            testFramework.options.with {
-                //ekstra konfigurasjon av testngOptions her...
-            }
-
 
             jvmArgs '-Xmx512m', '-XX:PermSize=128m', '-XX:MaxPermSize=256m'
 //            testLogging.showStandardStreams = true
+
+            inputs.property 'excludedGroups', testFramework.options.includeGroups //trigger re-kjøring av test ved endring av grupper
+            inputs.property 'includedGroups', testFramework.options.excludeGroups //trigger re-kjøring av test ved endring av grupper
 
             onOutput { descriptor, event ->
                 if (event.destination == TestOutputEvent.Destination.StdErr) {
@@ -215,14 +242,14 @@ subprojects { Project project ->
         }
     }
 
-    project.tasks.withType(Test) { //felles for alle test-tasks
+    project.tasks.withType(Test) { Test test -> //felles for alle test-tasks
 
         useTestNG() {  //benytter kun TestNG over alt
-            excludeGroups('broken')
-
             listeners << 'org.testng.reporters.XMLReporter' // For Jenkins, siden Gradle 1.4+ ikke tar med default listeners som standard lenger
 //            listeners << 'org.uncommons.reportng.HTMLReporter' // Gradles innebygde rapport viser ikke skipped
         }
+
+        filterTestGroup(test, 'broken', 'EXCLUDE')
 
         systemProperties "org.uncommons.reportng.stylesheet": "${project.rootProject.file('all/test/report/reportng-1.1.3/stylesheets/hudsonesque.css')}"
         systemProperties "org.uncommons.reportng.title": "${project.name} Report"
