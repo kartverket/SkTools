@@ -66,6 +66,7 @@ class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInter
         setDidWork(result.getDidWork());
 
         fixResourceLoaders() // Som egen @TaskAction virker det ikke av en eller annen grunn
+        deleteTemporaryFiles()
     }
 
     /**
@@ -81,6 +82,16 @@ class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInter
                 include(name: '**/*.java')
             }
         }
+    }
+
+    /**
+     * Det etterlates noen midlertidige filer i output-katalogen. Disse slettes automatisk (kanskje når Java-prosessen
+     * er ferdig), men innen da har Gradle sett dem og registrert dem som output-filer. Siden de er vekk ved neste
+     * kjøring anser Gradle tasken som ikke up-to-date.
+     */
+    protected void deleteTemporaryFiles() {
+        def dontWantThese = project.fileTree(dir: getDestinationDir(), include: 'META-INF/wsdls/*', exclude: 'META-INF/wsdls/*.*')
+        dontWantThese.files.each { it.delete() }
     }
 
 
