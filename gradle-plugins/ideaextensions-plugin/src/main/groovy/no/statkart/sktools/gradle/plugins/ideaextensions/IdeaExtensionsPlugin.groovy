@@ -48,6 +48,7 @@ class IdeaExtensionsPlugin implements Plugin<Project> {
                 addGradle(rootNode, extension)
                 addVcsMappings(rootNode, extension)
                 addInspectionProfile(rootNode, extension)
+                addCodeStyle(rootNode, extension)
             }
 
         } else { //ikke root
@@ -143,6 +144,27 @@ class IdeaExtensionsPlugin implements Plugin<Project> {
                 def builder = new NodeBuilder()
 
                 it.append(builder.mapping(directory: path, vcs: vcs))
+            }
+        }
+    }
+
+    /**
+     * Legger til code style dersom angitt
+     * @since 1.3
+     */
+    static def addCodeStyle(Node rootNode, IdeaExtensionsPluginExtension convention) {
+        for (def path : convention.codeStyles) {
+            def codeStyleFile = convention.project.file(path)
+
+            if (codeStyleFile != null) {
+                Node profileNode = new XmlParser().parse(codeStyleFile)
+
+                //sletter evt gamle noder
+                profileNode.component.each { def newComponent ->
+                    rootNode.component.findAll { it.@name == newComponent.@name }.each { rootNode.remove(it) }
+                }
+
+                rootNode.append(profileNode)
             }
         }
     }

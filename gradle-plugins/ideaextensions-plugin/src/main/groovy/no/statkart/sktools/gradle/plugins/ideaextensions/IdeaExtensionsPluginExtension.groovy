@@ -38,6 +38,15 @@ class IdeaExtensionsPluginExtension {
      */
     boolean createAllSourceDirs = true
 
+
+    /**
+     * Definert code style for prosjektet definert i xml-fil
+     */
+    List codeStyles = []
+    void setCodeStyle(def path) {
+        codeStyles.add(path)
+    }
+
     /**
      * Angir en valgfri fil som inneholder inspection-instillinger eksportert fra IntelliJ.
      * Første element i listen settes som default.

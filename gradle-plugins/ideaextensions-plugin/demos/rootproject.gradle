@@ -11,6 +11,8 @@ targetCompatibility = '1.6'
 ideaExtensions {
     ignoreMasks += '*.tmp'
     vcs 'Perforce'
+    inspectionProfile = 'inspections.xml'
+    codeStyle = 'codestyle.xml'
 }
 
 
@@ -27,6 +29,8 @@ tasks.clean.dependsOn 'cleanIdea' //cleans out generated idea files
 task runDemo() {
     dependsOn 'testMasks'
     dependsOn 'testVCS'
+    dependsOn 'testInspections'
+    dependsOn 'testCodeStyle'
 }
 
 
@@ -36,4 +40,12 @@ task testMasks(dependsOn:'idea') << {
 
 task testVCS(dependsOn:'idea') << {
     assert file("${project.name}.ipr").text.contains('vcs="Perforce"')
+}
+
+task testInspections(dependsOn:'idea') << {
+    assert file("${project.name}.ipr").text.contains('"SKTools Default"')
+}
+
+task testCodeStyle(dependsOn:'idea') << {
+    assert file("${project.name}.ipr").text.contains('"XML_ATTRIBUTE_WRAP"')
 }
