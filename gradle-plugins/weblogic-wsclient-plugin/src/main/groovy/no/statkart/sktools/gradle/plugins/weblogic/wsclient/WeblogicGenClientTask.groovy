@@ -1,18 +1,12 @@
 package no.statkart.sktools.gradle.plugins.weblogic.wsclient
 
 import no.statkart.sktools.gradle.plugins.weblogic.WeblogicTaskInterface
-import no.statkart.sktools.gradle.plugins.weblogic.compile.DefaultWeblogicCompileSpec
-import no.statkart.sktools.gradle.plugins.weblogic.compile.WeblogicCompileSpec
+import org.apache.commons.io.FileUtils
 import org.gradle.api.file.FileCollection
 import org.gradle.api.logging.LogLevel
-import org.gradle.api.tasks.Nested
-import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.TaskAction
-import org.gradle.api.tasks.WorkResult
+import org.gradle.api.tasks.*
 import org.gradle.api.tasks.compile.AbstractCompile
 import org.gradle.api.tasks.compile.CompileOptions
-import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.InputFiles
 
 /**
  * Task for generering av weblogic webservice klient
@@ -22,10 +16,14 @@ import org.gradle.api.tasks.InputFiles
  * @author Leif Lislegård
  */
 class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInterface {
+    private static final String WEBLOGIC_CLASSPATH_ID = "weblogic_classpath_id"
+    private static final String WEBLOGIC_WSCLIENT_CLASSPATH_ID = "weblogic_wsclient_classpath_id"
+
     WebServiceConfig webServiceConfig;
 
-    private WeblogicJaxWsClientCompiler compiler;
-    private final DefaultWeblogicCompileSpec spec = new DefaultWeblogicCompileSpec();
+    String packageName;
+
+    private final CompileOptions compileOptions = new CompileOptions();
 
     private FileCollection weblogicClasspath;
     private File dependencyCacheDir;
@@ -33,9 +31,6 @@ class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInter
     WeblogicGenClientTask() {
         logging.captureStandardOutput LogLevel.INFO
         logging.captureStandardError LogLevel.DEBUG
-
-        compiler = new WeblogicJaxWsClientCompiler();
-        compiler.project = getProject()
 
         include('**/*.wsdl') //inkluderer denne som input fra sourceset (benyttes bla for skipIfEmpty beregning)
 
@@ -48,25 +43,131 @@ class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInter
 
     @TaskAction
     protected void compile() {
-        compiler.webService = webServiceConfig
-        spec.setWeblogicClasspath(getWeblogicClasspath().files)
-        spec.setTempDir(project.file("${project.buildDir}/tmp/weblogic"))
-
-        spec.setSource(getSource());
-        spec.setDestinationDir(getDestinationDir());
-        spec.setClasspath(getClasspath());
-        spec.setDependencyCacheDir(getDependencyCacheDir());
-        spec.setSourceCompatibility(getSourceCompatibility());
-        spec.setTargetCompatibility(getTargetCompatibility());
-
         //clean resources
         project.delete(getDestinationDir())
 
-        WorkResult result = compiler.execute(spec);
-        setDidWork(result.getDidWork());
+        gen();
 
         fixResourceLoaders() // Som egen @TaskAction virker det ikke av en eller annen grunn
         deleteTemporaryFiles()
+    }
+
+    void gen() {
+        org.gradle.api.AntBuilder ant = project.createAntBuilder()
+
+        ant.setProperty('build.compiler', 'modern')
+        if (sourceCompatibility != null) {
+            ant.setProperty('ant.build.javac.source', sourceCompatibility)
+        }
+        if (targetCompatibility != null) {
+            ant.setProperty('ant.build.javac.target', targetCompatibility)
+        }
+
+        createAntClassPath(ant, getWeblogicClasspath(), WEBLOGIC_CLASSPATH_ID)
+        createAntClassPath(ant, getClasspath(), WEBLOGIC_WSCLIENT_CLASSPATH_ID)
+
+
+        ant.taskdef(name: 'clientgen', classname: 'weblogic.wsee.tools.anttasks.ClientGenTask', classpathref: WEBLOGIC_CLASSPATH_ID)
+
+        def attributes = [
+                wsdl: null,
+                destdir: getDestinationDir(),
+                type: 'JAXWS',
+                includeantruntime: false,
+                tempdir: temporaryDir
+                // kodegenerering avhenger kun av providede weblogic klasser. Definerer derfor ingen eksplisitt classpath.
+        ]
+
+        /**
+         * Dersom {@code false} genereres META-INF/jax-ws-catalog.xml med relativ mapping til wsdl schema filer
+         * Dersom {@code true} legges wsdl shema filer til META-INF/wsdls/*
+         */
+        attributes.copywsdl = true
+
+        if (packageName != null) {
+            attributes.packageName = packageName
+        }
+
+        //attributes.catalog //todo: teste ut denne
+
+        attributes += compileOptions.optionMap()
+
+        if (attributes.encoding) {
+            attributes.srcEncoding = attributes.encoding
+            attributes.destEncoding = attributes.encoding
+            attributes.remove('encoding')
+        }
+        attributes.fork = false
+
+        File lastFile = null
+        source.files.each { File f ->
+            if (webServiceConfig.lastWsdl == f.name) {
+                lastFile = f
+            } else {
+                attributes.wsdl = f
+                logger.info('Calling clientgen with attributes = ' + attributes)
+                def result = ant.clientgen(attributes) {
+                    //nested <fileset> fungerer ikke (testet for WLS 10.3.1), må angi en og en wsdl-fil
+                }
+            }
+        }
+        if (lastFile != null) {
+            attributes.wsdl = lastFile
+            logger.info('Calling clientgen last with attributes = ' + attributes)
+            def result = ant.clientgen(attributes) {
+                //nested <fileset> fungerer ikke (testet for WLS 10.3.1), må angi en og en wsdl-fil
+            }
+        }
+
+        if (webServiceConfig.exception != null) {
+            logger.info("Reusing exceptions for module ${webServiceConfig}")
+            reuseExceptions(getDestinationDir(), webServiceConfig.exception)
+        }
+    }
+
+    /**
+     * Samler alle exceptions for services til felles pakke.
+     * Dette da vi ønsker at den genererte klientkoden skal gjenspeile strukturen til serveren, samt at man ønsker å gjenbruke exception klassene.
+     */
+    protected void reuseExceptions(File genSourceDir, ExceptionConfig exceptionConfig) {
+        String packageString = exceptionConfig.packageOrPathString.replace('/', '.').replace('\\', '.')
+        //
+        File exceptionPackageDir = new File(genSourceDir, packageString.replace((char) '.', File.separatorChar))
+
+        FileCollection javaFiles = project.fileTree(dir: genSourceDir, includes: ['**/*.java'])
+
+        exceptionPackageDir.mkdirs()
+
+        //flytter alle exceptions til felles katalog
+        javaFiles.matching(exceptionConfig.exceptionFilePatternSet).files.each { File file ->
+            File relocatedFile = new File(exceptionPackageDir, file.getName())
+            logger.info("merging exception ${relocatedFile} <- ${file}")
+
+            FileUtils.copyFileToDirectory(file, exceptionPackageDir)
+            file.delete()
+
+            //kjører regexp replace på package statement for flyttet fil
+            relocatedFile.text = relocatedFile.text.replaceFirst(/(?ms)package[^;]+/, "package " + packageString)
+
+        }
+
+        //legger til import statements for de andre java filene
+        javaFiles.files.each { File file ->
+            logger.debug("adding exception import statement in ${file}")
+            file.text = file.text.replaceFirst('import ', "import ${packageString}.*;\nimport ")
+        }
+
+
+    }
+
+    private void createAntClassPath(org.gradle.api.AntBuilder ant, Iterable classpath, String id) {
+        logger.debug('Defining Ant classpath id={}', id)
+        ant.path(id: id) {
+            classpath.each {
+                logger.debug("\t{} += {}", id, it)
+                pathelement(location: it)
+            }
+        }
     }
 
     /**
@@ -112,17 +213,8 @@ class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInter
      */
     @Nested
     public CompileOptions getOptions() {
-        return spec.getCompileOptions();
+        return this.compileOptions;
     }
-
-    public org.gradle.api.internal.tasks.compile.Compiler<WeblogicCompileSpec> getCompiler() {
-        return compiler;
-    }
-
-    public void setCompiler(org.gradle.api.internal.tasks.compile.Compiler<WeblogicCompileSpec> compiler) {
-        this.compiler = compiler;
-    }
-
 
     public void setWeblogicClasspath(FileCollection weblogicClasspath) {
         this.weblogicClasspath = weblogicClasspath;

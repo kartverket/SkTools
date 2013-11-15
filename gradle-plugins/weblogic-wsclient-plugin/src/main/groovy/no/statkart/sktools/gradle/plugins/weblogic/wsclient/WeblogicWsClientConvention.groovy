@@ -65,6 +65,8 @@ class WebServiceConfig {
 
     protected ExceptionConfig exception;
 
+    protected String lastWsdl = null;
+
 
     WebServiceConfig(WeblogicWsClientConvention convention, String name) {
         this.name = name
@@ -164,6 +166,10 @@ class WebServiceConfig {
             exception = new ExceptionConfig(this);
         }
         return exception
+    }
+
+    public void lastWsdl(String wsdl) {
+        lastWsdl = wsdl;
     }
 
     public String toString() {
