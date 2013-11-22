@@ -32,8 +32,6 @@ class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInter
         logging.captureStandardOutput LogLevel.INFO
         logging.captureStandardError LogLevel.DEBUG
 
-        include('**/*.wsdl') //inkluderer denne som input fra sourceset (benyttes bla for skipIfEmpty beregning)
-
         getOptions().setFork(true)
         getOptions().setListFiles(true)
         getOptions().setVerbose(logger.isDebugEnabled())
@@ -100,7 +98,7 @@ class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInter
         attributes.fork = false
 
         File lastFile = null
-        source.files.each { File f ->
+        source.matching {include '**/*.wsdl'}.files.each { File f ->
             if (webServiceConfig.lastWsdl == f.name) {
                 lastFile = f
             } else {
