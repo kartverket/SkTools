@@ -69,7 +69,7 @@ class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInter
 
         def attributes = [
                 wsdl: null,
-                destdir: getDestinationDir(),
+                destDir: getDestinationDir(),
                 type: 'JAXWS',
                 includeantruntime: false,
                 tempdir: temporaryDir
@@ -98,22 +98,15 @@ class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInter
         attributes.fork = false
 
         File lastFile = null
-        source.matching {include '**/*.wsdl'}.files.each { File f ->
-            if (webServiceConfig.lastWsdl == f.name) {
-                lastFile = f
-            } else {
+
+        //SKTOOLS-94: lastWsdl for workaround der wsclient kun genererer delsett av refererte domeneklasser
+        source.matching {include '**/*.wsdl'}.files.split { webServiceConfig.lastWsdl != it.name }.each { Collection groups ->
+            groups.each { File f ->
                 attributes.wsdl = f
                 logger.info('Calling clientgen with attributes = ' + attributes)
                 def result = ant.clientgen(attributes) {
                     //nested <fileset> fungerer ikke (testet for WLS 10.3.1), må angi en og en wsdl-fil
                 }
-            }
-        }
-        if (lastFile != null) {
-            attributes.wsdl = lastFile
-            logger.info('Calling clientgen last with attributes = ' + attributes)
-            def result = ant.clientgen(attributes) {
-                //nested <fileset> fungerer ikke (testet for WLS 10.3.1), må angi en og en wsdl-fil
             }
         }
 
@@ -169,10 +162,9 @@ class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInter
     }
 
     /**
-     * Action som retter loading av wsdl filer ifra webstart klienter osv.
-     * Rettinger blir påført i klikdekoden.
+     * Retter loading av wsdl filer ifra webstart klienter osv.
+     * Rettinger blir påført i kildekoden.
      */
-//    @TaskAction
     protected void fixResourceLoaders() {
         ant.replaceregexp {
             regexp(pattern: /URL baseUrl;[^=]+\s(.*getResource).*;[^=]*.*baseUrl, "(.*)".*;([^{]*)MalformedURL/)
