@@ -174,6 +174,7 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
             }
 
             // Kopier ressurser og patchede java-filer inn i gen-katalogen slik at IntelliJ IDEA ser dem.
+            project.delete(wsClientConvention.genDir) //no dirty files
             project.copy { //source files
                 into wsClientConvention.genDir
                 from { project.tasks.withType(WeblogicGenClientTask).collect { WeblogicGenClientTask genTask -> genTask.destinationDir } }
