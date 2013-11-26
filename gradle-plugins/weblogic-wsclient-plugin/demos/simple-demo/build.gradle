@@ -40,6 +40,10 @@ afterEvaluate {
 
 task runDemo() << {
 
+    //SKTOOLS-56: viser tempdir konfigurasjon
+    println "Java tempdir for gradle prosjekt: ${System.getProperty('java.io.tmpdir')}"
+    println "genWeblogicWsClient.temporaryDir: ${genWeblogicWsClient.temporaryDir}"
+
     println 'Tester kodegenerering...'
     forkGradle(['genWeblogicWsClient', 'assertGenWeblogicWsClient'])
 
