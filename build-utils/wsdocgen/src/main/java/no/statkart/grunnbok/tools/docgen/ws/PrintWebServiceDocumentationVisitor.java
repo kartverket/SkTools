@@ -480,15 +480,17 @@ public class PrintWebServiceDocumentationVisitor extends SimpleDeclarationVisito
 
 
         //finner aller metoder + interfaces
-        ClassDeclaration typeDecl = impltypeDecl;
-        while (!typeDecl.getQualifiedName().equals(Object.class.getName())) {
-            methods.addAll(typeDecl.getMethods());
-            interfaces.addAll(typeDecl.getSuperinterfaces());
+        if (impltypeDecl != null) {
+            ClassDeclaration typeDecl = impltypeDecl;
+            while (typeDecl != null && !Object.class.getName().equals(typeDecl.getQualifiedName())) {
+                methods.addAll(typeDecl.getMethods());
+                interfaces.addAll(typeDecl.getSuperinterfaces());
 
-            if (typeDecl.getSuperclass() != null ) {
-                typeDecl = typeDecl.getSuperclass().getDeclaration();
-            } else {
-                break;
+                if (typeDecl.getSuperclass() != null ) {
+                    typeDecl = typeDecl.getSuperclass().getDeclaration();
+                } else {
+                    break;
+                }
             }
         }
 
