@@ -1,5 +1,6 @@
 package no.statkart.sktools.utils.databasepatcher
 
+import no.statkart.sktools.utils.databasepatcher.testutils.DatabasePatcherTestContext
 import org.testng.annotations.Test
 import org.testng.Assert
 import no.statkart.sktools.gradle.plugins.dbtools.HSQLDBTest

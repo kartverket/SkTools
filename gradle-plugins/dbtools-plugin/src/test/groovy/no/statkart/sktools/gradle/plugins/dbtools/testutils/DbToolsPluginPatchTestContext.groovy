@@ -1,4 +1,4 @@
-package no.statkart.sktools.gradle.plugins.dbtools
+package no.statkart.sktools.gradle.plugins.dbtools.testutils
 
 /**
  * @since 1.3

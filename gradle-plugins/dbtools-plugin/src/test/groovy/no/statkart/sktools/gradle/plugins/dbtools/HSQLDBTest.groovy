@@ -7,7 +7,7 @@ import groovy.sql.Sql
 import org.testng.annotations.AfterTest
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.AfterMethod
-import no.statkart.sktools.utils.databasepatcher.DatabasePatcherTestContext
+import no.statkart.sktools.utils.databasepatcher.testutils.DatabasePatcherTestContext
 import org.slf4j.LoggerFactory
 import org.slf4j.Logger
 

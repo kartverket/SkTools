@@ -1,9 +1,8 @@
-package no.statkart.sktools.gradle.plugins.dbtools
+package no.statkart.sktools.gradle.plugins.dbtools.testutils
 
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsConvention
-import no.statkart.sktools.gradle.plugins.dbtools.testutils.DbToolsTestContext
 
 /**
  * @since 1.3

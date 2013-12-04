@@ -1,6 +1,7 @@
-package no.statkart.sktools.utils.databasepatcher
+package no.statkart.sktools.utils.databasepatcher.testutils
 
 import no.statkart.sktools.gradle.plugins.dbtools.testutils.DbToolsTestContext
+import no.statkart.sktools.utils.databasepatcher.DatabasePatcher
 
 /**
  * @since 1.3

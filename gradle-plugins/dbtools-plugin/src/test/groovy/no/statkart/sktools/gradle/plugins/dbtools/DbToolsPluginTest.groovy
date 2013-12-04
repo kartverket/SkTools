@@ -1,5 +1,6 @@
 package no.statkart.sktools.gradle.plugins.dbtools
 
+import no.statkart.sktools.gradle.plugins.dbtools.testutils.DbToolsPluginTestContext
 import org.testng.annotations.Test
 import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsConvention
 import org.testng.Assert
