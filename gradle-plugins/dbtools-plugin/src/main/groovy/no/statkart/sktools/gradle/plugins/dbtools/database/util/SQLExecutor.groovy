@@ -47,14 +47,25 @@ class SQLExecutor {
             try {
                 sql.execute(statement.sql)
             } catch (SQLException sqle) {
+
                 if (specs.failOnError) {
+                    logger.info("Exception: ", sqle)
+                    if (!logger.isInfoEnabled()) {
+                        logger.error("Statement: \n${statement.sql.trim()}\n")
+                    }
+                    logger.error("Message: \n${sqle.message}\n")
+                } else {
+                    logger.debug("Exception: ", sqle)
+                    logger.warn("Message: \n${sqle.message}\n")
+                }
+
+                if (!specs.failOnError) {
+                    logger.warn("Error when executing statement at line#${statement.lineNumber}... failOnError is '${specs.failOnError}' meaning we continue...")
+                } else {
                     logger.error("Error when executing statement at line#${statement.lineNumber}")
                     throw sqle
                 }
-                logger.error("Error when executing statement at line#${statement.lineNumber}... failOnError is '${specs.failOnError}' so we ignore it!")
-                logger.error("Statement: \n${statement.sql.trim()}\n")
-                logger.error("Message: \n${sqle.message}\n")
-                logger.info("Exception: ", sqle)
+
             }
         }
 
