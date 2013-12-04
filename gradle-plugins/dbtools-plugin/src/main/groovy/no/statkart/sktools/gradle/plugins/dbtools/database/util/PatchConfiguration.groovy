@@ -179,16 +179,16 @@ class PatchConfiguration {
 
     //registrerer opprettelse av taskSequence til dette toolset
     protected Task taskSequence(String verb, Closure config = null) {
-        def taskName = getTaskName(name)
+        def taskName = getTaskName(verb)
         def task = databaseConvention.taskSequence(taskName, config)
 
-        getTasks().addTask(name, task)
+        getTasks().addTask(verb, task)
     }
-    protected Task taskSequence(Map params, String name, Closure config = null) {
-        def taskName = getTaskName(name)
+    protected Task taskSequence(Map params, String verb, Closure config = null) {
+        def taskName = getTaskName(verb)
         def task = databaseConvention.taskSequence(params, taskName, config)
 
-        getTasks().addTask(name, task)
+        getTasks().addTask(verb, task)
     }
 
     //registrerer opprettelse av task til dette toolset
