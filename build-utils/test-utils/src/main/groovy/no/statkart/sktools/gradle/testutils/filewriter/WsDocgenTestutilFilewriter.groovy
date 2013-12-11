@@ -50,6 +50,11 @@ class WsDocgenTestutilFilewriter {
 
                          }
 
+                         /** Eksponeres ikke */
+                         @javax.jws.WebMethod( exclude = true)
+                         public void secret() {
+
+                         }
 
                      }
                 """
@@ -136,6 +141,8 @@ class WsDocgenTestutilFilewriter {
                          @javax.jws.WebMethod
                          void interfaceDocumentedMethod();
 
+                         @javax.jws.WebMethod
+                         Char stringToChar(String value);
 
                      }
                  """
@@ -162,7 +169,9 @@ class WsDocgenTestutilFilewriter {
                     public class InterfaceServiceWSBean implements InterfaceServiceInterface {
 
 
-                        //setter targetnamespace her da det ikke er definert for SimpleClass...
+                        /**
+                        * TargetNamespace definert i implementasjonsklassen. Ikke i SimpleClass...
+                        **/
                         @javax.jws.WebResult(targetNamespace = "http://sktools.statkart.no/test/service/interfaceservice/domain")
                         public SimpleClass ping(String value) {
                             return new SimpleClass(value);
@@ -171,6 +180,10 @@ class WsDocgenTestutilFilewriter {
 
                         public void interfaceDocumentedMethod() {
                             ;
+                        }
+
+                        public Char stringToChar(String value) {
+                            return null;
                         }
 
 
@@ -184,5 +197,111 @@ class WsDocgenTestutilFilewriter {
     }
 
 
+
+    /**
+     * Skriver XSLT eksempel-skjema til disk.
+     *
+     * @since 1.3
+     */
+    public static File writeSimpleXSLT(ProjectHelper projectHelper, String targetPath, String filename = 'transform.xslt') {
+        ArrayList<File> generatedFiles = new ArrayList<File>()
+
+        generatedFiles.add projectHelper.project.file(targetPath + '/' + filename).with { File file ->
+            file.parentFile.mkdirs()
+            file.withPrintWriter { writer ->
+                writer.print """
+<xsl:stylesheet version="2.0"
+xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+
+<xsl:output method="xml" version="1.0" indent="yes"
+  doctype-public="-//W3C//DTD XHTML 1.0 Strict//EN"
+  doctype-system="http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"
+  media-type="text/html"
+  omit-xml-declaration="no" />
+
+<xsl:template match="/services/service">
+
+<html>
+<head>
+  <title><xsl:value-of select="@name"/></title>
+</head>
+
+<body>
+
+   name=<span><xsl:value-of select="@name"/></span>
+   description=<span><xsl:value-of select="@description"/></span>
+   namespace=<span><xsl:value-of select="@namespace"/></span>
+
+    <div>
+        <ul>
+            <xsl:for-each select="methods/method">
+                <xsl:sort select="@name"/><!-- ordered TOC by name -->
+                <li><a href=""><xsl:value-of select="@name"/></a></li>
+            </xsl:for-each>
+        </ul>
+    </div>
+    <div>
+        <xsl:for-each select="methods/method">
+          <div>
+            <h4><xsl:value-of select="@name"/></h4>
+            <p><xsl:value-of select="@description"/></p>
+
+            <h5>Input</h5>
+            <ul>
+              <xsl:for-each select="parameters/parameter">
+                <li>
+                   <span><xsl:value-of select="@name"/></span>
+                   <span><xsl:value-of select="@description"/></span>
+                   <div>
+                     <span><xsl:value-of select="type/@name"/></span>
+                     <span><xsl:value-of select="type/@namespace"/></span>
+                     <span><xsl:value-of select="type/@javadocPath"/></span>
+                   </div>
+                </li>
+              </xsl:for-each>
+            </ul>
+
+            <h5>Response</h5>
+            <ul>
+              <xsl:for-each select="returns/parameter">
+                <li>
+                   <span><xsl:value-of select="@name"/></span>
+                   <span><xsl:value-of select="@description"/></span>
+                   <div>
+                     <span><xsl:value-of select="type/@name"/></span>
+                     <span><xsl:value-of select="type/@namespace"/></span>
+                     <span><xsl:value-of select="type/@javadocPath"/></span>
+                   </div>
+                </li>
+              </xsl:for-each>
+              <xsl:for-each select="exceptions/exception">
+                <li>
+                   <span><xsl:value-of select="@name"/></span>
+                   <span><xsl:value-of select="@description"/></span>
+                   <div>
+                     <span><xsl:value-of select="type/@name"/></span>
+                     <span><xsl:value-of select="type/@namespace"/></span>
+                     <span><xsl:value-of select="type/@javadocPath"/></span>
+                   </div>
+                </li>
+              </xsl:for-each>
+            </ul>
+          </div>
+        </xsl:for-each>
+    </div>
+
+</body></html>
+
+</xsl:template>
+
+</xsl:stylesheet>
+
+                """
+            }
+            return file
+        }
+
+        return generatedFiles.iterator().next();
+    }
 
 }
