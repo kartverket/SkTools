@@ -7,7 +7,7 @@ import no.statkart.sktools.gradle.testutils.ProjectHelper
  *
  * @author Leif Lislegård
  */
-class FilterPropertiesTestutilFilewriter {
+class FilterPropertiesTestutilFilewriter extends AbstractTestutilFilewriter {
 
     /**
      * Oppretter to ressursfiler med navn <code>simpleResource1.txt</code> og <code>simpleResource2.txt</code>
@@ -52,20 +52,4 @@ class FilterPropertiesTestutilFilewriter {
         return generatedFiles
     }
 
-    /**
-     * Oppretter fil og skriver evaluert innhold til fil
-     */
-    public static Collection<File> writeCustomFile(ProjectHelper projectHelper, String targetPath, Closure text) {
-        ArrayList<File> generatedFiles = new ArrayList<File>()
-
-        generatedFiles.add projectHelper.project.file(targetPath).with { File file ->
-            file.parentFile.mkdirs()
-            file.withPrintWriter { writer ->
-                writer.print(text.call())
-            }
-            return file
-        }
-
-        return generatedFiles
-    }
 }

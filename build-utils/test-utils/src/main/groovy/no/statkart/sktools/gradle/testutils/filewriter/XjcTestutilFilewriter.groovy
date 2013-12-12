@@ -7,7 +7,7 @@ import no.statkart.sktools.gradle.testutils.ProjectHelper
  *
  * @author Leif Lislegård
  */
-class XjcTestutilFilewriter {
+class XjcTestutilFilewriter extends AbstractTestutilFilewriter {
 
     /**
      * Skriver enkelt schema til fil.

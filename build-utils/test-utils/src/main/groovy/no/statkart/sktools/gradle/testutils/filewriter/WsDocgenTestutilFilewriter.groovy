@@ -7,7 +7,7 @@ import no.statkart.sktools.gradle.testutils.ProjectHelper
  *
  * @author Leif Lislegård
  */
-class WsDocgenTestutilFilewriter {
+class WsDocgenTestutilFilewriter extends AbstractTestutilFilewriter {
 
     /**
      * Skriver kildekode for en simpel testservice implementasjon (WebService) til fil.

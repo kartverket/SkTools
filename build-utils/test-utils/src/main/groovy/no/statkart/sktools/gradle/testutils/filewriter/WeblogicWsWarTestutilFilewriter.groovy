@@ -7,7 +7,7 @@ import no.statkart.sktools.gradle.testutils.ProjectHelper
  *
  * @author Leif Lislegård
  */
-class WeblogicWsWarTestutilFilewriter {
+class WeblogicWsWarTestutilFilewriter extends AbstractTestutilFilewriter {
 
     /**
      * Skriver kildekode til fil for en simpel webservice implementasjon.

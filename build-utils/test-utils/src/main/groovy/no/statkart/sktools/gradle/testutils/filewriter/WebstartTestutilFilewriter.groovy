@@ -8,7 +8,7 @@ import org.apache.commons.io.FileUtils
  *
  * @author Leif Lislegård
  */
-class WebstartTestutilFilewriter {
+class WebstartTestutilFilewriter extends AbstractTestutilFilewriter {
 
     /**
      * Kopierer ut <code>kodesignering.jks</code> til targetPath.
