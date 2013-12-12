@@ -12,6 +12,8 @@ import javax.lang.model.type.TypeMirror;
 import javax.xml.bind.annotation.XmlSchema;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.namespace.QName;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -77,8 +79,46 @@ class XMLTypeBuilder {
         org.w3c.dom.Element type = document.createElement("type");
         type.setAttribute("name", name);
         type.setAttribute("namespace", ns);
-        type.setAttribute("javadocPath", buildJavadocPath(ns, name));
+        type.setAttribute("javadocPath", buildJavadocPath(processingEnv.getOptions().get("javaDocLookupPath"), ns, name));
         return type;
+    }
+
+
+    public static String buildJavadocPath(String basePath, String ns, String clazz) {
+        String javadocPath = basePath == null ? "VALUE_NOT_PARAMETRIZED" : basePath;
+        javadocPath += '?' + buildJavadocPath(ns, clazz);
+        return javadocPath;
+
+    }
+
+    /**
+     getJavadocURL("http://grunnbok.statkart.no/borett/info/wsapi/exception", "ServiceException")
+
+     => "no/statkart/grunnbok/borett/info/wsapi/exception/ServiceException.html"
+     **/
+    public static String buildJavadocPath(String ns, String clazz) {
+        if (ns != null) {
+            try {
+                URL url = new URL(ns);
+                String host = url.getHost();
+                String path = url.getPath();
+
+                StringBuilder builder = new StringBuilder();
+                for (String str : host.split("\\.")) {
+                    builder.insert(0, str + "/");
+                }
+                builder.append(path);
+                builder.append("/");
+                builder.append(clazz);
+                builder.append(".html");
+
+                return builder.toString().replace("//", "/");
+            } catch (MalformedURLException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            return null;
+        }
     }
 
 

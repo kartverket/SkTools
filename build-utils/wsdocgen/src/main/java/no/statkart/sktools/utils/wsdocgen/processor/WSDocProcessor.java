@@ -65,7 +65,7 @@ import java.util.Set;
  */
 @SupportedAnnotationTypes(value= {"javax.jws.WebMethod"})
 @SupportedSourceVersion(SourceVersion.RELEASE_6)
-@SupportedOptions(value = {"xslt"})
+@SupportedOptions(value = {"xslt", "javaDocLookupPath"})
 public class WSDocProcessor extends AbstractProcessor {
 
 

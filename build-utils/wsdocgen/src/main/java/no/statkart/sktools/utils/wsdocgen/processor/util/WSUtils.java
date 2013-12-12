@@ -84,33 +84,5 @@ public class WSUtils {
         return name;
     }
 
-    /**
-     getJavadocURL("http://grunnbok.statkart.no/borett/info/wsapi/exception", "ServiceException")
 
-     => "no/statkart/grunnbok/borett/info/wsapi/exception/ServiceException.html"
-     **/
-    public static String buildJavadocPath(String ns, String clazz) {
-        if (ns != null) {
-            try {
-                URL url = new URL(ns);
-                String host = url.getHost();
-                String path = url.getPath();
-
-                StringBuilder builder = new StringBuilder();
-                for (String str : host.split("\\.")) {
-                    builder.insert(0, str + "/");
-                }
-                builder.append(path);
-                builder.append("/");
-                builder.append(clazz);
-                builder.append(".html");
-
-                return builder.toString().replace("//", "/");
-            } catch (MalformedURLException e) {
-                throw new RuntimeException(e);
-            }
-        } else {
-            return null;
-        }
-    }
 }
