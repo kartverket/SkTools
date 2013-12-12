@@ -13,7 +13,7 @@ abstract class AbstractTestutilFilewriter {
     /**
      * Oppretter fil og skriver evaluert innhold til fil
      */
-    public static Collection<File> writeCustomFile(ProjectHelper projectHelper, String targetPath, Closure text) {
+    public static File writeCustomFile(ProjectHelper projectHelper, String targetPath, Closure text) {
         ArrayList<File> generatedFiles = new ArrayList<File>()
 
         generatedFiles.add projectHelper.project.file(targetPath).with { File file ->
@@ -24,7 +24,7 @@ abstract class AbstractTestutilFilewriter {
             return file
         }
 
-        return generatedFiles
+        return generatedFiles.iterator().next();
     }
 
 }
