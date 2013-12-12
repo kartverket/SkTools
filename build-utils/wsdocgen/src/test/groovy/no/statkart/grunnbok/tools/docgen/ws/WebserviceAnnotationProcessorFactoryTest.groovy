@@ -14,6 +14,7 @@ import no.statkart.sktools.gradle.testutils.filewriter.WsDocgenTestutilFilewrite
  * Test av {@link WebserviceAnnotationProcessorFactory}
  *
  * @author Leif Lislegård
+ * @deprecated utgaar til 1.3
  */
 class WebserviceAnnotationProcessorFactoryTest {
 
@@ -65,11 +66,11 @@ class WebserviceAnnotationProcessorFactoryTest {
             assert html.head.title.text().contains('TestService')
 
             //sjekker dokumenterte metoder
-            assert html.body.div[0].ul.li.size() == 2 //forventet antall metoder
+            assert html.body.div[0].ul.li.size() == 3 //forventet antall metoder
             assert html.body.div[0].ul.li[0].a.text() == 'noPing'  //forventet metodenavn
             assert html.body.div[0].ul.li[1].a.text() == 'ping'  //forventet metodenavn
 
-            assert html.body.div[1].div.size() == 2 //forventet antall metoder
+            assert html.body.div[1].div.size() == 3 //forventet antall metoder
             html.body.div[1].div.each {
                 assert it.p.text().trim() in ['Returnerer PONG', 'Returnerer ikke noe'] //forventet dokumentasjon
                 assert it.h4.text().trim() in ['ping', 'noPing'] //forventet overskrift

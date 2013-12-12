@@ -44,6 +44,7 @@ import static com.sun.mirror.util.DeclarationVisitors.getDeclarationScanner;
  *
  * @author Leif Lislegård
  * @since 0.3
+ * @deprecated utgår til 1.3
  */
 public class WebserviceAnnotationProcessorFactory implements AnnotationProcessorFactory {
 
