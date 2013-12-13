@@ -338,6 +338,77 @@ afterEvaluate {
 
 }
 
+//defaults for IntelliJ Workspace iws file
+rootProject.idea.workspace.iws.withXml { provider ->
+    def rootNode = provider.asNode()
+    final def weblogicHome = WEBLOGIC_HOME
+
+    /**
+     * Eksempler og dokumentasjon på hvordan man kan benytte groovy xml og Node funksjonalitet
+     * <br> http://groovy.codehaus.org/Reading+XML+using+Groovy%27s+XmlSlurper
+     * <br> http://groovy.codehaus.org/Updating+XML+with+XmlSlurper
+     */
+    def runManagerNode = rootNode.component.find { it.@name == 'RunManager'}.with { runManager ->
+
+        //default settings for TestNG
+        runManager.configuration.find { it.@type == 'TestNG' && it.'@default' == 'true' }.with {
+            if( it.is(null) ) {
+                it = new XmlParser().parseText('''\
+          <configuration default="true" type="TestNG" factoryName="TestNG">
+            <extension name="coverage" enabled="false" merge="false" runner="emma" />
+            <module name="" />
+            <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+            <option name="ALTERNATIVE_JRE_PATH" />
+            <option name="SUITE_NAME" />
+            <option name="PACKAGE_NAME" />
+            <option name="MAIN_CLASS_NAME" />
+            <option name="METHOD_NAME" />
+            <option name="GROUP_NAME" />
+            <option name="TEST_OBJECT" value="CLASS" />
+            <option name="VM_PARAMETERS" value="" />
+            <option name="PARAMETERS" />
+            <option name="WORKING_DIRECTORY" />
+            <option name="OUTPUT_DIRECTORY" />
+            <option name="ANNOTATION_TYPE" />
+            <option name="ENV_VARIABLES" />
+            <option name="PASS_PARENT_ENVS" value="true" />
+            <option name="TEST_SEARCH_SCOPE">
+              <value defaultName="moduleWithDependencies" />
+            </option>
+            <option name="USE_DEFAULT_REPORTERS" value="false" />
+            <option name="PROPERTIES_FILE" />
+            <envs />
+            <properties />
+            <listeners />
+            <method>
+              <option name="BuildArtifacts" enabled="false" />
+              <option name="Make" enabled="true" />
+            </method>
+          </configuration>
+        ''')
+                runManager.append(it)
+            }
+            it.option.find {it.@name == 'TEST_OBJECT'}.@value = 'CLASS'
+
+        }
+
+
+
+        runManager.configuration.findAll { ['TestNG', 'Application', 'Remote', 'JUnit', 'WebApp'].contains(it.@type)}.each {
+            //default path variables
+            it.envs.each {
+                it.findAll {"${it.@name}".startsWith('WEBLOGIC_HOME')}.each {it.replaceNode{}} //tar vekk evt gammel
+                it.appendNode('env', [name: 'WEBLOGIC_HOME', value: weblogicHome]) //legger til weblogic for testing av gradle-plugins som trenger dette
+
+                it.findAll {"${it.@name}".startsWith('WEBLOGIC_VERSION')}.each {it.replaceNode{}} //tar vekk evt gammel
+                it.appendNode('env', [name: 'WEBLOGIC_VERSION', value: weblogicVersion])
+            }
+
+        }
+    }
+
+}
+
 buildscript {
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
