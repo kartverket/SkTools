@@ -16,13 +16,13 @@ import org.apache.commons.lang.builder.EqualsBuilder
  */
 class WsDocGenConvention implements Serializable {
     private final static long serialVersionUID = 1L;
-    final static protected transient String GEN_TASK_NAME_PATTERN = "gen%sWsDoc"
+    final static protected transient String GEN_TASK_NAME_PATTERN = "gen%s%sWsDoc"
     final transient Project project
 
     protected final List<Group> groups = new ArrayList<Group>()
 
     /**
-     * Styrer hvilket source set som det skal genereres til.
+     * Styrer hvilket source set som det skal genereres ifra.
      */
     protected String sourceSetName;    //defaults to "main"
 
@@ -87,6 +87,12 @@ class Group implements Serializable {
     final transient Project project
     final transient WsDocGenConvention convention
 
+    /**
+     * Navn for gruppe - blir automatisk tildelt dersom ikke spesifisert
+     * @since 1.3
+     */
+    protected name;
+
     protected Collection<String> includes;
 
     /**
@@ -95,6 +101,8 @@ class Group implements Serializable {
     protected File targetDir
 
     protected String lookupPath
+
+    protected File xsltFile
 
 
     protected Group(WsDocGenConvention convention) {
@@ -137,6 +145,13 @@ class Group implements Serializable {
         return this;
     }
 
+    /**
+     * @since 1.3
+     */
+    Group xslt(Object path) {
+        xsltFile = project.file(path);
+        return this;
+    }
 
 
     public boolean equals(Object obj) {

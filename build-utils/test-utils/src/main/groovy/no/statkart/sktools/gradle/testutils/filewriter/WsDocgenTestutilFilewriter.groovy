@@ -142,7 +142,7 @@ class WsDocgenTestutilFilewriter extends AbstractTestutilFilewriter {
                          void interfaceDocumentedMethod();
 
                          @javax.jws.WebMethod
-                         Char stringToChar(String value);
+                         Character stringToChar(String value);
 
                      }
                  """
@@ -182,7 +182,7 @@ class WsDocgenTestutilFilewriter extends AbstractTestutilFilewriter {
                             ;
                         }
 
-                        public Char stringToChar(String value) {
+                        public Character stringToChar(String value) {
                             return null;
                         }
 

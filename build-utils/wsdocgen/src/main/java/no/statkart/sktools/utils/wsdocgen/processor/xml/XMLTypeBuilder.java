@@ -162,9 +162,11 @@ class XMLTypeBuilder {
     private void initializeCommponTypes() {
         typeCache = new HashMap<Element, QName>();
         defineCachedType(String.class,                 new QName(W3C_XML_SCHEMA_NS_URI, "string"));
+        defineCachedType(Character.class,              new QName(W3C_XML_SCHEMA_NS_URI, "string"));
+        defineCachedType(char.class,                   new QName(W3C_XML_SCHEMA_NS_URI, "string"));
         defineCachedType(java.math.BigInteger.class,   new QName(W3C_XML_SCHEMA_NS_URI, "integer"));
         defineCachedType(int.class,                    new QName(W3C_XML_SCHEMA_NS_URI, "int"));
-        defineCachedType(Integer.class,                    new QName(W3C_XML_SCHEMA_NS_URI, "int"));
+        defineCachedType(Integer.class,                new QName(W3C_XML_SCHEMA_NS_URI, "int"));
         defineCachedType(long.class,                   new QName(W3C_XML_SCHEMA_NS_URI, "long"));
         defineCachedType(Long.class,                   new QName(W3C_XML_SCHEMA_NS_URI, "long"));
         defineCachedType(short.class,                  new QName(W3C_XML_SCHEMA_NS_URI, "short"));

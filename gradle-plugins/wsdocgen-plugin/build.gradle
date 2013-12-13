@@ -28,6 +28,8 @@ task sourcesJar(type: Jar, dependsOn:classes) {
 }
 
 
+install.dependsOn ':build-utils:wsdocgen:install' //deployer automatisk også denne..
+
 artifacts {
     archives sourcesJar
 }
