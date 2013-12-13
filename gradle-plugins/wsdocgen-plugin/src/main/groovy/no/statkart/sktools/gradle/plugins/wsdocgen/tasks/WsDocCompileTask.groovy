@@ -1,10 +1,13 @@
 package no.statkart.sktools.gradle.plugins.wsdocgen.tasks
 
 import no.statkart.sktools.gradle.plugins.wsdocgen.Group
+import org.gradle.api.file.FileCollection
+import org.gradle.api.logging.LogLevel
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskExecutionException
 import org.gradle.api.tasks.compile.CompileOptions
 import org.gradle.api.tasks.compile.JavaCompile
+import no.statkart.sktools.gradle.plugins.wsdocgen.WsDocGenPlugin
 
 /**
  * @since 1.3
@@ -40,13 +43,22 @@ class WsDocCompileTask extends JavaCompile {
     }
 
     WsDocCompileTask() {
-//        logging.captureStandardOutput LogLevel.INFO
-//        logging.captureStandardError LogLevel.DEBUG
+        logging.captureStandardOutput LogLevel.INFO
+        logging.captureStandardError LogLevel.DEBUG
 
         options.compilerArgs = [
                 "-proc:only",
                 "-processor", "no.statkart.sktools.utils.wsdocgen.processor.WSDocProcessor",
         ]
+
+        final FileCollection processorClasspath = WsDocGenPlugin.findPluginClasspath(project)
+        if (processorClasspath != null) {
+            options.compilerArgs << "-processorpath"
+            options.compilerArgs << processorClasspath.asFileTree.asPath
+        } else {
+            //ok under testing
+        }
+
 
     }
 
@@ -54,7 +66,7 @@ class WsDocCompileTask extends JavaCompile {
     @Override
     CompileOptions getOptions() {
         final CompileOptions options = super.getOptions()
-        options.setVerbose(true)
+        options.setListFiles(true)
 
         return options
     }

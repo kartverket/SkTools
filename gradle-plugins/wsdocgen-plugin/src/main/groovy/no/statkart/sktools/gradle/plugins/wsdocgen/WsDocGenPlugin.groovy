@@ -22,16 +22,15 @@ import org.gradle.api.artifacts.Dependency
 import java.util.concurrent.Callable
 
 /**
- * Dokumentasjon-generering av WSBean.java - JAX-WS implementasjon på server.
+ * Dokumentasjon-generering av {@code *WSBean.java} - JAX-WS implementasjon på server.
  *
  *
  * @since 1.0
- * @author Thor Åge Eldby
+ * @author Leif Lislegård
  */
 class WsDocGenPlugin implements Plugin<Project> {
 
     final public static String CONVENTION_NAME = 'wsdoc'
-    final public static String CONFIGURATION_NAME = 'wsdoc'
     final public static String GEN_TASK_NAME = String.format(WsDocGenConvention.GEN_TASK_NAME_PATTERN, '', '')
     final public static String ARCHIVE_TASK_NAME = 'packWsDoc'
 
@@ -42,8 +41,6 @@ class WsDocGenPlugin implements Plugin<Project> {
 
         final WsDocGenConvention wsDocGenConvention = new WsDocGenConvention(project)
         project.convention.plugins.put(WsDocGenPlugin.CONVENTION_NAME, wsDocGenConvention);
-
-        final Configuration configuration = createConfiguration(project)
 
         //creates the task
         Task genWsDocTask = project.task(WsDocGenPlugin.GEN_TASK_NAME)
@@ -58,12 +55,6 @@ class WsDocGenPlugin implements Plugin<Project> {
         }
     }
 
-
-    private Configuration createConfiguration(Project project) {
-
-        //Trenger denne classpathen for innkobling av {@link no.statkart.grunnbok.tools.docgen.ws.WebserviceAnnotationProcessorFactory}
-        return project.configurations.create(WsDocGenPlugin.CONFIGURATION_NAME).setTransitive(false).setDescription('Webservice documentation artifact');
-    }
 
     /**
      * Legger til evt defaultverdier.
@@ -96,13 +87,6 @@ class WsDocGenPlugin implements Plugin<Project> {
             if (it.targetDir == null) {
                 it.targetPath("${project.relativePath(project.buildDir)}/${wsDocGenConvention.sourceSetName}/docs/wsdoc")
             }
-        }
-
-        Configuration configuration = project.configurations.getByName(WsDocGenPlugin.CONFIGURATION_NAME)
-
-        //default classpath for apt task - benytter jar dependency for hvor denne pluginen befinner seg
-        if (configuration.getDependencies().isEmpty()) {
-            project.getDependencies().add(WsDocGenPlugin.CONFIGURATION_NAME, wsDocGenConvention.project.buildscript.configurations.getByName(ScriptHandler.CLASSPATH_CONFIGURATION).getAsFileTree())
         }
 
     }
@@ -145,7 +129,7 @@ class WsDocGenPlugin implements Plugin<Project> {
                 });
                 map("classpath", new Callable() {
                     public Object call() {
-                        return new UnionFileCollection(sourceSet.getCompileClasspath(), findPluginClasspath(project)).getAsFileTree();
+                        return sourceSet.getCompileClasspath();
                     }
                 });
                 map("destinationDir", new Callable() {
@@ -160,7 +144,7 @@ class WsDocGenPlugin implements Plugin<Project> {
 
     }
 
-    private static FileCollection findPluginClasspath(final Project project) {
+    public static FileCollection findPluginClasspath(final Project project) {
 
         Closure<Boolean> pluginDependencyMatcher = {Dependency dependency -> dependency.getGroup() == 'no.statkart.sktools.gradle' && dependency.getName() == 'wsdocgen-plugin'}
         Closure<Boolean> samlepomDependencyMatcher = {Dependency dependency -> dependency.getGroup() == 'no.statkart.sktools.gradle' && dependency.getName() == 'gradle-plugins'}
@@ -182,7 +166,6 @@ class WsDocGenPlugin implements Plugin<Project> {
         }
 
         FileCollection candidate = candidateFileCollections.find { !it.isEmpty() }
-        if (candidate == null) candidate = project.files(); //ok under eksekvering av test
 
         return candidate;
     }
@@ -193,11 +176,11 @@ class WsDocGenPlugin implements Plugin<Project> {
 
 
         Zip zip = (Zip) project.task(type: Zip, ARCHIVE_TASK_NAME)
-        zip.setClassifier(WsDocGenPlugin.CONFIGURATION_NAME)
+        zip.setClassifier(WsDocGenPlugin.CONVENTION_NAME)
         zip.from(project.getTasks().withType(WsDocCompileTask.class)) //legger dynamiskt til alle definerte output kataloger for 'genWsDocTask'
 
         ArchivePublishArtifact artifact = new ArchivePublishArtifact(zip)
-        project.getArtifacts().add(WsDocGenPlugin.CONFIGURATION_NAME, artifact);
+        project.getArtifacts().add(Dependency.ARCHIVES_CONFIGURATION, artifact);
 
     }
 

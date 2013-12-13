@@ -70,7 +70,7 @@ public class WSDocProcessor extends AbstractProcessor {
 
 
     public WSDocProcessor() {
-        System.out.println(String.format("Constructing class %s", this.getClass().getSimpleName()));
+//        System.out.println(String.format("Constructing class %s", this.getClass().getSimpleName()));
     }
 
     @Override

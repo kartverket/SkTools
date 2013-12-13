@@ -10,10 +10,6 @@ wsDoc {
   }
 }
 
-dependencies {
-    wsdoc libraries['tools.jar']
-}
-
 
 task runDemo() {
     dependsOn 'testGenWsDoc'
