@@ -14,7 +14,7 @@ dependencies {
     runtime 'commons-lang:commons-lang:2.6@jar'
 
 
-    compile project(':build-utils:wsdocgen')
+//    compile libraries.'tools.jar'
     compile project(':gradle-plugins:weblogic-plugin')
 
     //test
