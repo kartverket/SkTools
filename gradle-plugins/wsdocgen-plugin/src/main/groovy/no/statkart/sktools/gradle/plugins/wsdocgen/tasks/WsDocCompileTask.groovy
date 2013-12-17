@@ -43,7 +43,7 @@ class WsDocCompileTask extends JavaCompile {
     }
 
     WsDocCompileTask() {
-        logging.captureStandardOutput LogLevel.QUIET
+        logging.captureStandardOutput LogLevel.INFO
         logging.captureStandardError LogLevel.ERROR
 
         options.compilerArgs = [

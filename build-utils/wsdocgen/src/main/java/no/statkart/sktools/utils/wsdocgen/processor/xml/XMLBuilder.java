@@ -40,7 +40,7 @@ public class XMLBuilder {
     org.w3c.dom.Element buildService(Document document, Element element) {
         final org.w3c.dom.Element serviceElement = document.createElement("service");
 
-        System.out.println("Beskrivelse : " + findComment(element));
+        processingEnv.getMessager().printMessage(Diagnostic.Kind.OTHER, String.format("Beskrivelse : %s", findComment(element)));
 
         serviceElement.setAttribute("name", WSUtils.findWebServiceName(element));
         serviceElement.setAttribute("namespace", WSUtils.findTargetNamespace(element));
@@ -89,7 +89,7 @@ public class XMLBuilder {
             ExecutableElement executableElement = (ExecutableElement) methodElement;
             method = document.createElement("method");
 
-            System.out.println(String.format("Found method: %s", methodElement));
+            processingEnv.getMessager().printMessage(Diagnostic.Kind.OTHER, String.format("Found method: %s", methodElement));
 
             method.setAttribute("name", WSUtils.findName(executableElement, usingWebMethodAnnotation));
             method.setAttribute("description", findComment(executableElement));
