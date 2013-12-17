@@ -43,8 +43,8 @@ class WsDocCompileTask extends JavaCompile {
     }
 
     WsDocCompileTask() {
-        logging.captureStandardOutput LogLevel.INFO
-        logging.captureStandardError LogLevel.DEBUG
+        logging.captureStandardOutput LogLevel.QUIET
+        logging.captureStandardError LogLevel.ERROR
 
         options.compilerArgs = [
                 "-proc:only",
@@ -66,7 +66,8 @@ class WsDocCompileTask extends JavaCompile {
     @Override
     CompileOptions getOptions() {
         final CompileOptions options = super.getOptions()
-        options.setListFiles(true)
+        options.setListFiles(logger.isDebugEnabled())
+        options.setVerbose(logger.isInfoEnabled())
 
         return options
     }
