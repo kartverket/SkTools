@@ -1,6 +1,6 @@
 package no.statkart.sktools.utils.wsdocgen.processor.xml;
 
-import no.statkart.sktools.utils.wsdocgen.processor.util.WSUtils;
+import no.statkart.sktools.utils.wsdocgen.processor.util.*;
 import org.w3c.dom.Document;
 
 import javax.annotation.processing.ProcessingEnvironment;
@@ -10,6 +10,7 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
+import java.util.Map;
 
 /**
  * Builds XML structure for web services.
@@ -39,12 +40,14 @@ public class XMLBuilder {
 
     org.w3c.dom.Element buildService(Document document, Element element) {
         final org.w3c.dom.Element serviceElement = document.createElement("service");
+        JavaDocUtils javaDocUtils = findComment(element);
 
-        processingEnv.getMessager().printMessage(Diagnostic.Kind.OTHER, String.format("Beskrivelse : %s", findComment(element)));
+        System.out.println(String.format("Beskrivelse : %s %s", javaDocUtils.getText(), javaDocUtils.getAllTags()));
 
         serviceElement.setAttribute("name", WSUtils.findWebServiceName(element));
+        serviceElement.setAttribute("portName", WSUtils.findWebServicePortTypeName(element));
         serviceElement.setAttribute("namespace", WSUtils.findTargetNamespace(element));
-        serviceElement.setAttribute("description", findComment(element));
+        serviceElement.setAttribute("description", javaDocUtils.getText());
 
         serviceElement.appendChild(buildMethods(document, element));
 
@@ -89,31 +92,34 @@ public class XMLBuilder {
             ExecutableElement executableElement = (ExecutableElement) methodElement;
             method = document.createElement("method");
 
-            processingEnv.getMessager().printMessage(Diagnostic.Kind.OTHER, String.format("Found method: %s", methodElement));
+            System.out.println(String.format("Found method: %s", methodElement));
+            //processingEnv.getMessager().printMessage(Diagnostic.Kind.OTHER, String.format("Found method: %s", methodElement));
+
+            JavaDocUtils javaDocUtils = findComment(executableElement);
 
             method.setAttribute("name", WSUtils.findName(executableElement, usingWebMethodAnnotation));
-            method.setAttribute("description", findComment(executableElement));
+            method.setAttribute("description", javaDocUtils.getText());
 
-            method.appendChild(buildParameters(document, executableElement));
-            method.appendChild(buildReturns(document, executableElement));
-            method.appendChild(buildExceptions(document, executableElement));
+            method.appendChild(buildParameters(document, executableElement, javaDocUtils.getParams()));
+            method.appendChild(buildReturns(document, executableElement, javaDocUtils.getReturn()));
+            method.appendChild(buildExceptions(document, executableElement, javaDocUtils.getThrows()));
         }
         return method;
     }
 
-    org.w3c.dom.Element buildParameters(Document document, ExecutableElement element) {
+    org.w3c.dom.Element buildParameters(Document document, ExecutableElement element, Map<String, String> paramsDocumentation) {
         org.w3c.dom.Element parameters = document.createElement("parameters");
         for (VariableElement variableElement : element.getParameters()) {
             org.w3c.dom.Element parameter = document.createElement("parameter");
             parameter.setAttribute("name", WSUtils.findName(variableElement));
-            parameter.setAttribute("descriptions", findComment(variableElement));
+            parameter.setAttribute("description", paramsDocumentation.get(variableElement.getSimpleName().toString()));
             parameter.appendChild(buildType(document, variableElement));
             parameters.appendChild(parameter);
         }
         return parameters;
     }
 
-    org.w3c.dom.Element buildReturns(Document document, ExecutableElement element) {
+    org.w3c.dom.Element buildReturns(Document document, ExecutableElement element, String returnDocumentation) {
         org.w3c.dom.Element returns = document.createElement("returns");
         final TypeMirror returnType = element.getReturnType();
 
@@ -123,7 +129,7 @@ public class XMLBuilder {
             if (parameter.getAttribute("name") == null) {
                 parameter.setAttribute("name", "return"); //weblogic defaulter til dette navnet?
             }
-            parameter.setAttribute("descriptions", ""); //todo
+            parameter.setAttribute("description", returnDocumentation);
             parameter.appendChild(buildType(document, returnType));
 
             returns.appendChild(parameter);
@@ -132,7 +138,7 @@ public class XMLBuilder {
     }
 
 
-    org.w3c.dom.Element buildExceptions(Document document, ExecutableElement element) {
+    org.w3c.dom.Element buildExceptions(Document document, ExecutableElement element, Map<String, String> exceptionsDocumentation) {
         org.w3c.dom.Element exceptions = document.createElement("exceptions");
 
         for (TypeMirror exceptionType : element.getThrownTypes()) {
@@ -140,10 +146,10 @@ public class XMLBuilder {
             if (exceptionType instanceof DeclaredType) {
                 final Element exceptionElement = ((DeclaredType) exceptionType).asElement();
                 exception.setAttribute("name", WSUtils.findName(exceptionElement));
-                exception.setAttribute("descriptions", processingEnv.getElementUtils().getDocComment(exceptionElement));
+                exception.setAttribute("description", processingEnv.getElementUtils().getDocComment(exceptionElement));
 
             } else {
-                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, String.format("Unknown exception type: %s", exceptionType));
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.WARNING, String.format("Unknown exception type: %s", exceptionType));
             }
             exception.appendChild(buildType(document, exceptionType));
             exceptions.appendChild(exception);
@@ -161,12 +167,9 @@ public class XMLBuilder {
     }
 
 
-    private String findComment(Element element) {
+    private JavaDocUtils findComment(Element element) {
         String docComment = processingEnv.getElementUtils().getDocComment(element);
-        if (docComment == null) {
-            docComment = "";
-        }
-        return docComment.trim();
+        return JavaDocUtils.parse(docComment);
     }
 
 

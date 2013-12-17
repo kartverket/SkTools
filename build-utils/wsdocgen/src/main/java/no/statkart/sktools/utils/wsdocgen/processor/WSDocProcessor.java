@@ -33,7 +33,7 @@ import java.util.Set;
  * <b>XML-structure for XSLT processing built by {@link XMLBuilder}: <b/><pre> {@code
 
 <services>
-  <service name="" namespace="" description="">
+  <service name="" portName="" namespace="" description="">
     <methods>
       <method name="" description="">
         <parameters>
@@ -63,23 +63,23 @@ import java.util.Set;
  * @author Leif Lislegård
  * @since 1.3 - ny grunnbok sprint 30
  */
-@SupportedAnnotationTypes(value= {"javax.jws.WebMethod"})
+@SupportedAnnotationTypes(value= {"javax.jws.WebService"})
 @SupportedSourceVersion(SourceVersion.RELEASE_6)
 @SupportedOptions(value = {"xslt", "javaDocLookupPath"})
 public class WSDocProcessor extends AbstractProcessor {
 
 
     public WSDocProcessor() {
-//        System.out.println(String.format("Constructing class %s", this.getClass().getSimpleName()));
+        int debug = 0;
+ //       System.out.println(String.format("Constructing class %s", this.getClass().getSimpleName()));
     }
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
 
         for (Element element : roundEnv.getElementsAnnotatedWith(WebService.class)) {
-            processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, String.format("Processing class: %s ", element));
-
-
+            System.out.println(String.format("Processing class: %s ", element));
+            //processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, String.format("Processing class: %s ", element));
 
             DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder docBuilder;

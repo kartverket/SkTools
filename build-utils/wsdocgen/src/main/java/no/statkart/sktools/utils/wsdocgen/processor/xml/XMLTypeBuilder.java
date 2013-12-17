@@ -10,8 +10,6 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.Types;
-import javax.tools.Diagnostic;
 import javax.xml.bind.annotation.XmlSchema;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.namespace.QName;
@@ -19,9 +17,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import no.statkart.sktools.utils.wsdocgen.processor.util.*;
 
 import static javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI;
-import static no.statkart.sktools.utils.wsdocgen.processor.util.WSUtils.*;
 
 /**
  * @author Leif Lislegård
@@ -47,9 +45,11 @@ class XMLTypeBuilder {
 
     public org.w3c.dom.Node buildType(Element element) {
         if (element instanceof VariableElement || element instanceof TypeElement) {
-            final String name = findName(element);
+            final String name = WSUtils.findName(element);
             final String ns = findObjectNamespace(element);
-            return buildTypeImpl(document, name, ns);
+            String docComment = processingEnv.getElementUtils().getDocComment(element);
+            final JavaDocUtils javaDocUtils = JavaDocUtils.parse(docComment);
+            return buildTypeImpl(document, name, ns, javaDocUtils.getText());
         } else {
             throw new RuntimeException(String.format("Unhandled element type: %s", element.getSimpleName()));
         }
@@ -60,7 +60,7 @@ class XMLTypeBuilder {
             if (entry.getKey().equals(typeMirror)) {
                 final String name = entry.getValue().getLocalPart();
                 final String ns = entry.getValue().getNamespaceURI();
-                return buildTypeImpl(document, name, ns);
+                return buildTypeImpl(document, name, ns, null);
             }
         }
 
@@ -70,7 +70,7 @@ class XMLTypeBuilder {
 
             final String name = declaredElement.getSimpleName().toString();
             final String ns = findObjectNamespace(declaredType);
-            return buildTypeImpl(document, name, ns);
+            return buildTypeImpl(document, name, ns, null);
         }
 
         throw new RuntimeException(String.format("Unhandled type: %s", typeMirror));
@@ -78,11 +78,12 @@ class XMLTypeBuilder {
 
 
 
-    private org.w3c.dom.Node buildTypeImpl(Document document, String name, String ns) {
+    private org.w3c.dom.Node buildTypeImpl(Document document, String name, String ns, String description) {
         org.w3c.dom.Element type = document.createElement("type");
         type.setAttribute("name", name);
         type.setAttribute("namespace", ns);
         type.setAttribute("javadocPath", buildJavadocPath(processingEnv.getOptions().get("javaDocLookupPath"), ns, name));
+        type.setNodeValue(description);
         return type;
     }
 
@@ -153,7 +154,9 @@ class XMLTypeBuilder {
             }
         }
         if (objectNS == null || objectNS.isEmpty()) {
-            processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, String.format("WARNING: no namespace defined for %s", typeMirror));
+
+            System.out.println(String.format("WARNING: no namespace defined for %s", typeMirror));
+            //processingEnv.getMessager().printMessage(Diagnostic.Kind.WARNING, String.format("WARNING: no namespace defined for %s", typeMirror));
         }
         return objectNS;
     }
