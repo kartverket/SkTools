@@ -198,6 +198,103 @@ class WSDocProcessorTest {
 
     }
 
+    /**
+     * Tester bruk av primitiver
+     */
+    @Test
+    void testPrimitives() {
+        ProjectHelper projectHelper = GradleProjectBuilder.builder('WsDocgenTest').build()
+        def outputPath = 'build/gen/wsdoc'
+        def sourcePath = 'src/main/java'
+        def resourcePath = 'src/main/resources'
+
+        def xslt;
+
+        //generer eksempel-kildekode
+        use(WsDocgenTestutilFilewriter) {
+            projectHelper.writeCustomFile('src/main/java/TestWSBean.java') {
+                """
+                 @javax.jws.WebService(
+                     name = "TestService",
+                     serviceName = "TestServiceWS",
+                     targetNamespace = "http://test.no/unit")
+                 public class TestWSBean {
+
+                     /** Returnerer PONG **/
+                     @javax.jws.WebMethod
+                     public long intToLong(int value) {
+                         return 0;
+                     }
+                 }
+                """
+            }
+
+            xslt = projectHelper.writeCustomFile('minimal.xsl') {
+                """
+                <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+
+                <xsl:output method="text" version="1.0" media-type="text/plain" omit-xml-declaration="yes" />
+
+                <xsl:template match="/services/service">
+                  <xsl:for-each select="methods/method/returns/parameter">
+                    <xsl:value-of select="type/@name"/>
+                  </xsl:for-each>
+                </xsl:template>
+
+                </xsl:stylesheet>
+                """
+            }
+
+        }
+
+        //setter opp testprosjekt
+        projectHelper.configureProject {
+            mkdir(outputPath)
+
+            apply plugin:'java'
+
+            task('testWSDocProcessor', type:JavaCompile.class) {
+
+                options.compilerArgs = [
+                        "-proc:only",
+                        "-processor", WSDocProcessor.class.getName(),
+
+                        "-Axslt=${xslt}", //xslt file
+                        "-AjavaDocLookupPath=../uniktNavn/for/test/index.html", //lookup path
+                ]
+
+                // specify output of generated code
+                destinationDir = file(outputPath)
+
+                // specify source files
+                source = sourceSets.main.java
+                include('**/*WSBean.java')
+
+                classpath = configurations.compile
+
+            }
+        } //end configure
+
+        //utfører task
+        projectHelper.executeTask('testWSDocProcessor')
+
+
+        //tester resultat
+        projectHelper.assertFileExists(outputPath + '/TestService.html') { File file ->
+
+
+            println "Generert html: \n" + file.getText()
+
+            //sjekker innhold
+            def lines = []
+            file.eachLine { lines += it}
+
+            assert lines.find { def line -> line.contains('long')} //forventer å finne denne i output
+
+        }
+
+    }
+
     public static GPathResult parseXML(File file) {
         XmlSlurper slurper = XmlTestUtils.defaultXmlSlurper()
         return slurper.parse(file)

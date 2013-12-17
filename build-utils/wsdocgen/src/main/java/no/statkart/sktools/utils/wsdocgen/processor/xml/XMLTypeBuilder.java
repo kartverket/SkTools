@@ -7,8 +7,11 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Types;
+import javax.tools.Diagnostic;
 import javax.xml.bind.annotation.XmlSchema;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.namespace.QName;
@@ -25,7 +28,7 @@ import static no.statkart.sktools.utils.wsdocgen.processor.util.WSUtils.*;
  * @since 1.3
  */
 class XMLTypeBuilder {
-    private static transient HashMap<Element, QName> typeCache = null;
+    private static transient HashMap<TypeMirror, QName> typeCache = null;
 
     private final ProcessingEnvironment processingEnv;
     private final org.w3c.dom.Document document;
@@ -53,8 +56,8 @@ class XMLTypeBuilder {
     }
 
     public org.w3c.dom.Node buildType(TypeMirror typeMirror) {
-        for (Map.Entry<Element, QName> entry : typeCache.entrySet()) {
-            if (entry.getKey().asType().equals(typeMirror)) {
+        for (Map.Entry<TypeMirror, QName> entry : typeCache.entrySet()) {
+            if (entry.getKey().equals(typeMirror)) {
                 final String name = entry.getValue().getLocalPart();
                 final String ns = entry.getValue().getNamespaceURI();
                 return buildTypeImpl(document, name, ns);
@@ -128,10 +131,6 @@ class XMLTypeBuilder {
      * For kjente typer returneres namespace for disse.
      */
     private String findObjectNamespace(Element element) {
-        if (typeCache.containsKey(element)) {
-            return typeCache.get(element).getNamespaceURI();
-        }
-
         return findObjectNamespace(element.asType());
     }
 
@@ -143,8 +142,8 @@ class XMLTypeBuilder {
     private String findObjectNamespace(TypeMirror typeMirror) {
         String objectNS = null;
         if (typeMirror != null) {
-            for (Map.Entry<Element, QName> entry : typeCache.entrySet()) {
-                if (entry.getKey().asType().equals(typeMirror)) {
+            for (Map.Entry<TypeMirror, QName> entry : typeCache.entrySet()) {
+                if (entry.getKey().equals(typeMirror)) {
                     return entry.getValue().getNamespaceURI();
                 }
             }
@@ -154,13 +153,13 @@ class XMLTypeBuilder {
             }
         }
         if (objectNS == null || objectNS.isEmpty()) {
-            System.err.println(String.format("WARNING: no namespace defined for %s", typeMirror));
+            processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, String.format("WARNING: no namespace defined for %s", typeMirror));
         }
         return objectNS;
     }
 
     private void initializeCommponTypes() {
-        typeCache = new HashMap<Element, QName>();
+        typeCache = new HashMap<TypeMirror, QName>();
         defineCachedType(String.class,                 new QName(W3C_XML_SCHEMA_NS_URI, "string"));
         defineCachedType(Character.class,              new QName(W3C_XML_SCHEMA_NS_URI, "string"));
         defineCachedType(char.class,                   new QName(W3C_XML_SCHEMA_NS_URI, "string"));
@@ -187,13 +186,41 @@ class XMLTypeBuilder {
     }
 
     private void defineCachedType(Class clazz, QName qName) {
-        if (!clazz.isPrimitive()) {
-            typeCache.put(elementFor(clazz), qName);
-        }
+        typeCache.put(elementFor(clazz), qName);
     }
 
-    private TypeElement elementFor(Class clazz) {
-        return processingEnv.getElementUtils().getTypeElement(clazz.getCanonicalName());
+    private TypeMirror elementFor(Class clazz) {
+        if (!clazz.isPrimitive()) {
+            final TypeElement typeElement = processingEnv.getElementUtils().getTypeElement(clazz.getCanonicalName());
+            return typeElement.asType();
+        } else {
+            TypeKind typeKind = null;
+            if (clazz == boolean.class) {
+                typeKind = TypeKind.BOOLEAN;
+            } else if (clazz == byte.class) {
+                typeKind = TypeKind.BYTE;
+            } else if (clazz == char.class) {
+                typeKind = TypeKind.CHAR;
+            } else if (clazz == double.class) {
+                typeKind = TypeKind.DOUBLE;
+            } else if (clazz == float.class) {
+                typeKind = TypeKind.FLOAT;
+            } else if (clazz == int.class) {
+                typeKind = TypeKind.INT;
+            } else if (clazz == long.class) {
+                typeKind = TypeKind.LONG;
+            } else if (clazz == short.class) {
+                typeKind = TypeKind.SHORT;
+            }
+
+            if (typeKind != null) {
+                PrimitiveType primitiveType = processingEnv.getTypeUtils().getPrimitiveType(typeKind);
+                return primitiveType;
+            }
+
+        }
+
+        throw new RuntimeException("Unhandled primitive type!");
     }
 
 
