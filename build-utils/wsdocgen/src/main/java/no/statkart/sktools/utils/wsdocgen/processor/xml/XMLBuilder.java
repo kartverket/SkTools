@@ -146,7 +146,7 @@ public class XMLBuilder {
             if (exceptionType instanceof DeclaredType) {
                 final Element exceptionElement = ((DeclaredType) exceptionType).asElement();
                 exception.setAttribute("name", WSUtils.findName(exceptionElement));
-                exception.setAttribute("description", processingEnv.getElementUtils().getDocComment(exceptionElement));
+                exception.setAttribute("description", resolveExceptionDocumentation(exceptionsDocumentation, element, exceptionType));
 
             } else {
                 processingEnv.getMessager().printMessage(Diagnostic.Kind.WARNING, String.format("Unknown exception type: %s", exceptionType));
@@ -156,6 +156,25 @@ public class XMLBuilder {
         }
 
         return exceptions;
+    }
+
+    private String resolveExceptionDocumentation(Map<String, String> exceptionsDocumentation, ExecutableElement element, TypeMirror exceptionType) {
+        String candidate = null;
+        for (Map.Entry<String, String> entry : exceptionsDocumentation.entrySet()) {
+            if (exceptionType.toString().equals(entry.getKey())) {
+                return entry.getValue(); //matcher fqn
+            }
+            if (exceptionType.toString().endsWith(entry.getKey())) {
+                candidate = entry.getKey();
+            }
+        }
+
+        if (candidate != null) {
+            return exceptionsDocumentation.get(candidate);
+        } else {
+            processingEnv.getMessager().printMessage(Diagnostic.Kind.WARNING, String.format("Error resolving exception '%s' for element '%s'", exceptionType.toString(), element.getSimpleName()));
+            return null;
+        }
     }
 
     org.w3c.dom.Node buildType(Document document, Element element) {

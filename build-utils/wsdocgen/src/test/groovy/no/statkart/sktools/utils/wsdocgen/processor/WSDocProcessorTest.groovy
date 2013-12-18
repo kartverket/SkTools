@@ -368,6 +368,160 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
                    </div>
                 </li>
               </xsl:for-each>
+            </ul>
+          </div>
+        </xsl:for-each>
+    </div>
+
+</body></html>
+</xsl:template>
+</xsl:stylesheet>
+                """
+            }
+
+        }
+
+        //setter opp testprosjekt
+        projectHelper.configureProject {
+            mkdir(outputPath)
+
+            apply plugin: 'java'
+
+            task('testWSDocProcessor', type: JavaCompile.class) {
+
+                options.compilerArgs = [
+                        "-proc:only",
+                        "-processor", WSDocProcessor.class.getName(),
+
+                        "-Axslt=${xslt}", //xslt file
+                ]
+
+                // specify output of generated code
+                destinationDir = file(outputPath)
+
+                // specify source files
+                source = sourceSets.main.java
+                include('**/*WSBean.java')
+
+                classpath = configurations.compile
+
+            }
+        } //end configure
+
+        //utfører task
+        projectHelper.executeTask('testWSDocProcessor')
+
+
+        //tester resultat
+        projectHelper.assertFileExists(outputPath + '/TestService.html') { File file ->
+
+            println "Generert html: \n" + file.getText()
+
+            //leser inn html dokumentasjon som xml - dette steget validerer derfor html-koden
+            GPathResult html = parseXML(file)
+
+            //sjekker innhold
+            Assert.assertEquals html.body.span[0].text(), 'Service description.\nSecond sentence.', "service description"
+
+            //sjekker dokumenterte metoder
+            Assert.assertEquals html.body.div[0].div[0].h4[0].text().trim(), 'intToLong', "overskrift"
+            Assert.assertEquals html.body.div[0].div[0].ul[0].li[0].span[1].text().trim(), 'the converted value', "dokumentasjon av retur"
+
+            Assert.assertEquals html.body.div[0].div.size(), 1, "forventet antall metoder for service"
+
+        }
+    }
+
+
+    /**
+     * Tester dokumentasjon av tagger
+     */
+    @Test
+    void testExceptionTaglets() {
+        ProjectHelper projectHelper = GradleProjectBuilder.builder('WsDocgenTest').build()
+        def outputPath = 'build/gen/wsdoc'
+        def sourcePath = 'src/main/java'
+        def resourcePath = 'src/main/resources'
+
+        def xslt;
+
+        //generer eksempel-kildekode
+        use(WsDocgenTestutilFilewriter) {
+            projectHelper.writeCustomFile('src/main/java/TestWSBean.java') {
+                """
+                package test1;
+
+                /**
+                 * Service description.
+                 * Second sentence.
+                 * @since 1.0 - inception
+                 * @author Leif Lislegård
+                 **/
+                 @javax.jws.WebService(
+                         name = "TestService",
+                         serviceName = "TestServiceWS",
+                         targetNamespace = "http://test.statkart.no/test1")
+                         /** jaja **/
+                 public class TestWSBean {
+
+                     /**
+                      * Intended for asserting a conversion.
+                      * @return the converted value
+                      * @throws Exception ved feil i konvertering
+                      * @since 1.0
+                      */
+                     public long intToLong(int value, int base) throws Exception {
+                         return 0;
+                     }
+
+                     /**
+                      * Intended for asserting a conversion.
+                      * @return the converted value as int
+                      * @throws Exception ved feil i konvertering
+                      * @throws RuntimeException dersom base-verdi ikke validerer
+                      * @since 1.0
+                      */
+                     public int longToInt(long value, int base) throws RuntimeException, Exception {
+                         return 0;
+                     }
+                 }
+                """
+            }
+
+            xslt = projectHelper.writeCustomFile('minimal.xsl') {
+                """
+<xsl:stylesheet version="2.0"
+xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+
+<xsl:output method="xml" version="1.0" indent="yes"
+  doctype-public="-//W3C//DTD XHTML 1.0 Strict//EN"
+  doctype-system="http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"
+  media-type="text/html"
+  omit-xml-declaration="no" />
+
+<xsl:template match="/services/service">
+<html><body>
+   description=<span><xsl:value-of select="@description"/></span>
+
+    <div>
+        <xsl:for-each select="methods/method">
+          <div>
+            <h4><xsl:value-of select="@name"/></h4>
+            <p><xsl:value-of select="@description"/></p>
+
+
+            <h5>Response</h5>
+            <ul>
+              <xsl:for-each select="returns/parameter">
+                <li>
+                   <span><xsl:value-of select="@name"/></span>
+                   <span><xsl:value-of select="@description"/></span>
+                   <div>
+                     <span><xsl:value-of select="type/@name"/></span>
+                     <span><xsl:value-of select="type"/></span>
+                   </div>
+                </li>
+              </xsl:for-each>
               <xsl:for-each select="exceptions/exception">
                 <li>
                    <span><xsl:value-of select="@name"/></span>
@@ -436,12 +590,20 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
             //sjekker dokumenterte metoder
             Assert.assertEquals html.body.div[0].div[0].h4[0].text().trim(), 'intToLong', "overskrift"
             Assert.assertEquals html.body.div[0].div[0].ul[0].li[0].span[1].text().trim(), 'the converted value', "dokumentasjon av retur"
+            Assert.assertEquals html.body.div[0].div[0].ul[0].li[1].span[0].text().trim(), 'Exception', "navn for exception"
+            Assert.assertEquals html.body.div[0].div[0].ul[0].li[1].span[1].text().trim(), 'ved feil i konvertering', "dokumentasjon for exception"
 
-            Assert.assertEquals html.body.div[0].div.size(), 1, "forventet antall metoder for service"
+            Assert.assertEquals html.body.div[0].div[1].h4[0].text().trim(), 'longToInt', "overskrift"
+            Assert.assertEquals html.body.div[0].div[1].ul[0].li[0].span[1].text().trim(), 'the converted value as int', "dokumentasjon av retur"
+            Assert.assertEquals html.body.div[0].div[1].ul[0].li[2].span[0].text().trim(), 'Exception', "navn for exception"
+            Assert.assertEquals html.body.div[0].div[1].ul[0].li[2].span[1].text().trim(), 'ved feil i konvertering', "dokumentasjon for exception"
+            Assert.assertEquals html.body.div[0].div[1].ul[0].li[1].span[0].text().trim(), 'RuntimeException', "navn for exception"
+            Assert.assertEquals html.body.div[0].div[1].ul[0].li[1].span[1].text().trim(), 'dersom base-verdi ikke validerer', "dokumentasjon for exception"
+
+            Assert.assertEquals html.body.div[0].div.size(), 2, "forventet antall metoder for service"
 
         }
     }
-
 
     /**
      * Tester dokumentasjon av tagger
