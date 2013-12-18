@@ -102,7 +102,8 @@ class Group implements Serializable {
 
     protected String lookupPath
 
-    protected File xsltFile
+    protected def serviceXsltPath
+    protected def indexXsltPath
 
 
     protected Group(WsDocGenConvention convention) {
@@ -149,7 +150,25 @@ class Group implements Serializable {
      * @since 1.3
      */
     Group xslt(Object path) {
-        xsltFile = project.file(path);
+        serviceXsltPath = path;
+        return this;
+    }
+
+    /**
+     * SKTOOLS-105
+     * @see #xslt(java.lang.Object)
+     * @since 1.3
+     */
+    Group serviceXslt(Object path) {
+        return xslt(path);
+    }
+
+    /**
+     * SKTOOLS-105
+     * @since 1.3
+     */
+    Group indexXslt(Object path) {
+        indexXsltPath = path;
         return this;
     }
 

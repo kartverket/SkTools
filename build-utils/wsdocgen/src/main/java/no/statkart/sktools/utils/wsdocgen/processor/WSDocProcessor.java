@@ -33,7 +33,7 @@ import java.util.Set;
  * <b>XML-structure for XSLT processing built by {@link XMLBuilder}: <b/><pre> {@code
 
 <services>
-  <service name="" portName="" namespace="" description="">
+  <service name="" portName="" namespace="" description="" href="relative url">
     <methods>
       <method name="" description="">
         <parameters>
@@ -65,13 +65,46 @@ import java.util.Set;
  */
 @SupportedAnnotationTypes(value= {"javax.jws.WebService"})
 @SupportedSourceVersion(SourceVersion.RELEASE_6)
-@SupportedOptions(value = {"xslt", "javaDocLookupPath"})
+@SupportedOptions(value = {
+        "xslt",
+        "indexXslt",  //SKTOOLS-105
+        "javaDocLookupPath",
+})
 public class WSDocProcessor extends AbstractProcessor {
+
+    private DocumentBuilder docBuilder;
+
+
+    private boolean generateIndex; //SKTOOLS-105
+    private String indexXsltFilePath; //SKTOOLS-105
+    private final static String indexFileNamePattern = "index.html"; //SKTOOLS-105
+    private XMLBuilder indexXmlBuilder; //SKTOOLS-105
 
 
     public WSDocProcessor() {
         int debug = 0;
  //       System.out.println(String.format("Constructing class %s", this.getClass().getSimpleName()));
+    }
+
+
+    @Override
+    public synchronized void init(ProcessingEnvironment processingEnv) {
+        super.init(processingEnv);
+
+        DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+        try {
+            docBuilder = docFactory.newDocumentBuilder();
+        } catch (ParserConfigurationException e) {
+            processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, String.format("Feil ved opprettelse av DOM: %s ", e.getMessage()));
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+
+        indexXsltFilePath = processingEnv.getOptions().get("indexXslt");
+        generateIndex = indexXsltFilePath != null;
+
+        if (generateIndex) {
+            indexXmlBuilder = new XMLBuilder(docBuilder.newDocument(), processingEnv);
+        }
     }
 
     @Override
@@ -81,19 +114,7 @@ public class WSDocProcessor extends AbstractProcessor {
             System.out.println(String.format("Processing class: %s ", element));
             //processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, String.format("Processing class: %s ", element));
 
-            DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder docBuilder;
-            try {
-                docBuilder = docFactory.newDocumentBuilder();
-            } catch (ParserConfigurationException e) {
-                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, String.format("Feil ved opprettelse av DOM: %s ", e.getMessage()));
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-                return false;
-            }
-
-            final Document document = docBuilder.newDocument();
-            final XMLBuilder xmlBuilder = new XMLBuilder(document, processingEnv);
-            xmlBuilder.appendService(element);
+            final XMLBuilder xmlBuilder = new XMLBuilder(docBuilder.newDocument(), processingEnv);
 
 
 //            final Filer filer = processingEnv.getFiler();
@@ -105,16 +126,47 @@ public class WSDocProcessor extends AbstractProcessor {
             FileObject outputFile = null;
 
             try {
-                outputFile = processingEnv.getFiler().createResource(StandardLocation.CLASS_OUTPUT, "", fileName);
-                writeToFile(document, outputFile);
-            } catch (IOException e) {
-                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, String.format("Error creating target-file %s", fileName));
+                xmlBuilder.appendService(element, fileName);
             } catch (RuntimeException e) {
                 processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, String.format("%s", e.getMessage()), element);
             }
 
 
+            try {
+                outputFile = processingEnv.getFiler().createResource(StandardLocation.CLASS_OUTPUT, "", fileName);
+            } catch (IOException e) {
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, String.format("Error creating target-file %s", fileName));
+            }
+
+
+            String xsltFilePath = processingEnv.getOptions().get("xslt");
+            if (xsltFilePath == null) {
+                throw new RuntimeException(String.format("No xslt file defined! Configure javac with argument -Axslt=<file>"));
+            }
+
+            writeToFile(xmlBuilder.getDocument(), outputFile, xsltFilePath);
+
+
+            //index fil: SKTOOLS-105
+            if (indexXmlBuilder != null) {
+                indexXmlBuilder.appendService(element, fileName);
+            }
+
             int debug = 0;
+
+        }
+
+        //index fil: SKTOOLS-105
+        if (roundEnv.processingOver() && generateIndex) {
+            final String fileName = String.format(indexFileNamePattern);
+            FileObject outputFile = null;
+
+            try {
+                outputFile = processingEnv.getFiler().createResource(StandardLocation.CLASS_OUTPUT, "", fileName);
+                writeToFile(indexXmlBuilder.getDocument(), outputFile, indexXsltFilePath);
+            } catch (IOException e) {
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, String.format("Error creating target-file %s", fileName));
+            }
 
         }
 
@@ -124,9 +176,7 @@ public class WSDocProcessor extends AbstractProcessor {
 
 
 
-    void writeToFile(Document document, FileObject outputFile) {
-
-        final String xsltFilePath = processingEnv.getOptions().get("xslt");
+    void writeToFile(Document document, FileObject outputFile, String xsltFilePath) {
         if (xsltFilePath != null) {
             final File xsltFile = new File(xsltFilePath);
             if (xsltFile.exists()) {
@@ -143,9 +193,8 @@ public class WSDocProcessor extends AbstractProcessor {
             } else {
                 throw new RuntimeException(String.format("Xslt file not found. Tried %s", xsltFilePath));
             }
-
         } else {
-            throw new RuntimeException(String.format("No xslt file defined! Configure javac with argument -Axslt=<file>"));
+            //todo: write raw xml to disk?
         }
 
     }

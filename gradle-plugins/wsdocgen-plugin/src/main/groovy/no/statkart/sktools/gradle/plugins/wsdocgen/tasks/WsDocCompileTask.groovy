@@ -19,13 +19,20 @@ class WsDocCompileTask extends JavaCompile {
     @Input
     Group docGroup;
 
-    @Input
-    File getXsltFile() {
-        if (getDocGroup().xsltFile) {
-            return getDocGroup().xsltFile
+    File getServiceXsltFile() {
+        if (getDocGroup().serviceXsltPath) {
+            return project.file(getDocGroup().serviceXsltPath)
         } else {
             logger.warn("WARNING: no xslt file specified - using template for TESTING purposes..")
             return generateTestFile(new File(getDestinationDir(), "Transform.xsl"))
+        }
+    }
+
+    File getIndexXsltFile() {
+        if (getDocGroup().indexXsltPath) {
+            return project.file(getDocGroup().indexXsltPath)
+        } else {
+            return null
         }
     }
 
@@ -76,7 +83,7 @@ class WsDocCompileTask extends JavaCompile {
     @Override
     protected void compile() {
 
-        final File xsl = getXsltFile()
+        final File xsl = getServiceXsltFile()
         if (!xsl.exists()) {
             throw new TaskExecutionException("xslt file not found: ${project.relativePath(xsl)}");
         }
@@ -87,6 +94,10 @@ class WsDocCompileTask extends JavaCompile {
 
         if (getDocGroup().lookupPath) {
             options.compilerArgs << "-AjavaDocLookupPath=${getDocGroup().lookupPath}" //lookup path
+        }
+
+        if (indexXsltFile) {
+            options.compilerArgs << "-AindexXslt=${indexXsltFile}" //SKTOOLS-105
         }
 
         getDocGroup().includes.each {

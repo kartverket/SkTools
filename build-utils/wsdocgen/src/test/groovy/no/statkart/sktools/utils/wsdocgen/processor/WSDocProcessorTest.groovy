@@ -748,6 +748,207 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
         }
     }
 
+
+    /**
+     * SKTOOLS-105
+     * Tester generering av index fil
+     */
+    @Test
+    void testSimpleIndex() {
+        ProjectHelper projectHelper = GradleProjectBuilder.builder('WsDocgenTest').build()
+        def outputPath = 'build/gen/wsdoc'
+        def sourcePath = 'src/main/java'
+        def resourcePath = 'src/main/resources'
+
+        def xslt;
+        def indexXslt;
+
+        //generer eksempel-kildekode
+        use(WsDocgenTestutilFilewriter) {
+            projectHelper.writeCustomFile('src/main/java/Service1WSBean.java') {
+                """
+                package test1;
+
+                /**
+                 * Ping test service.
+                 **/
+                 @javax.jws.WebService(
+                         name = "TestService1",
+                         serviceName = "TestServiceWS",
+                         targetNamespace = "http://test.statkart.no/test1")
+                 public class Service1WSBean {
+
+                     /** Returnerer PONG **/
+                     public String ping() {
+                         return "PONG";
+                     }
+                 }
+                """
+            }
+
+            projectHelper.writeCustomFile('src/main/java/Service2WSBean.java') {
+                """
+                package test2;
+
+                /**
+                 * Inception service.
+                 **/
+                 @javax.jws.WebService(
+                         name = "TestService2",
+                         serviceName = "TestServiceWS",
+                         targetNamespace = "http://test.statkart.no/test2")
+                 public class Service2WSBean {
+
+                     /**
+                      * Intended for asserting a conversion.
+                      */
+                     public long intToLong(int value, int base) throws Exception {
+                         return 0;
+                     }
+
+                     /**
+                      * Intended for asserting a conversion.
+                      */
+                     public int longToInt(long value, int base) throws RuntimeException, Exception {
+                         return 0;
+                     }
+                 }
+                """
+            }
+
+            xslt = projectHelper.writeCustomFile('minimal.xsl') {
+                """
+<xsl:stylesheet version="2.0"
+xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+
+<xsl:output method="xml" version="1.0" indent="yes"
+  doctype-public="-//W3C//DTD XHTML 1.0 Strict//EN"
+  doctype-system="http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"
+  media-type="text/html"
+  omit-xml-declaration="no" />
+
+<xsl:template match="/">
+  <html><body>
+  <xsl:apply-templates/>
+  </body></html>
+</xsl:template>
+
+<xsl:template match="services/service">
+   name=<span><xsl:value-of select="@name"/></span>
+   href=<span><xsl:value-of select="@href"/></span>
+   description=<span><xsl:value-of select="@description"/></span>
+</xsl:template>
+
+</xsl:stylesheet>
+                """
+            }
+
+
+            indexXslt = projectHelper.writeCustomFile('index.xsl') {
+                """
+<xsl:stylesheet version="2.0"
+xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+
+<xsl:output method="xml" version="1.0" indent="yes"
+  doctype-public="-//W3C//DTD XHTML 1.0 Strict//EN"
+  doctype-system="http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"
+  media-type="text/html"
+  omit-xml-declaration="no" />
+
+<xsl:template match="/">
+  <html><body>
+  <xsl:apply-templates/>
+  </body></html>
+</xsl:template>
+
+<xsl:template match="services/service">
+   Services: <br/>
+   <a href="{@href}">
+        name=<span><xsl:value-of select="@name"/></span>
+        href=<span><xsl:value-of select="@href"/></span>
+        description=<span><xsl:value-of select="@description"/></span>
+   </a>
+</xsl:template>
+
+</xsl:stylesheet>
+                """
+            }
+
+        }
+
+        //setter opp testprosjekt
+        projectHelper.configureProject {
+            mkdir(outputPath)
+
+            apply plugin: 'java'
+
+            task('testWSDocProcessor', type: JavaCompile.class) {
+
+                options.compilerArgs = [
+                        "-proc:only",
+                        "-processor", WSDocProcessor.class.getName(),
+
+                        "-Axslt=${xslt}", //xslt file
+                        "-AindexXslt=${indexXslt}", //xslt file for generating index
+
+                ]
+
+                // specify output of generated code
+                destinationDir = file(outputPath)
+
+                // specify source files
+                source = sourceSets.main.java
+                include('**/*WSBean.java')
+
+                classpath = configurations.compile
+
+            }
+        } //end configure
+
+        //utfører task
+        projectHelper.executeTask('testWSDocProcessor')
+
+
+        //tester resultat
+        projectHelper.assertFileExists(outputPath + "/index.html") { File file ->
+
+            println "Generert html: \n" + file.getText()
+
+            //leser inn html dokumentasjon som xml - dette steget validerer derfor html-koden
+            GPathResult html = parseXML(file)
+
+            //sjekker innhold
+            Assert.assertEquals html.body.a[0].@href.text(), "TestService1.html", "href service"
+            Assert.assertEquals html.body.a[0].span[0].text(), "TestServiceWS", "service name"
+            Assert.assertEquals html.body.a[0].span[1].text(), "TestService1.html", "service url"
+            Assert.assertEquals html.body.a[0].span[2].text(), "Ping test service.", "service description"
+
+
+            Assert.assertEquals html.body.a[1].@href.text(), "TestService2.html", "href service"
+            Assert.assertEquals html.body.a[1].span[0].text(), "TestServiceWS", "service name"
+            Assert.assertEquals html.body.a[1].span[1].text(), "TestService2.html", "service url"
+            Assert.assertEquals html.body.a[1].span[2].text(), "Inception service.", "service description"
+        }
+
+
+        (1..2).each { int idx ->
+            projectHelper.assertFileExists(outputPath + "/TestService${idx}.html") { File file ->
+
+                println "Generert html: \n" + file.getText()
+
+                //leser inn html dokumentasjon som xml - dette steget validerer derfor html-koden
+                GPathResult html = parseXML(file)
+
+                //sjekker innhold
+                Assert.assertEquals html.body.span[0].text(), "TestServiceWS", "service name"
+                Assert.assertEquals html.body.span[1].text(), "TestService${idx}.html", "service url"
+            }
+        }
+
+
+    }
+
+
     public static GPathResult parseXML(File file) {
         XmlSlurper slurper = XmlTestUtils.defaultXmlSlurper()
         return slurper.parse(file)

@@ -32,13 +32,15 @@ public class XMLBuilder {
         document.appendChild(services);
     }
 
-    public void appendService(Element element) {
-        services.appendChild(buildService(document, element));
+    public void appendService(Element element, String relativeUrl) {
+        services.appendChild(buildService(document, element, relativeUrl));
     }
 
+    public Document getDocument() {
+        return document;
+    }
 
-
-    org.w3c.dom.Element buildService(Document document, Element element) {
+    org.w3c.dom.Element buildService(Document document, Element element, String relativeUrl) {
         final org.w3c.dom.Element serviceElement = document.createElement("service");
         JavaDocUtils javaDocUtils = findComment(element);
 
@@ -48,6 +50,7 @@ public class XMLBuilder {
         serviceElement.setAttribute("portName", WSUtils.findWebServicePortTypeName(element));
         serviceElement.setAttribute("namespace", WSUtils.findTargetNamespace(element));
         serviceElement.setAttribute("description", javaDocUtils.getText());
+        serviceElement.setAttribute("href", relativeUrl);
 
         serviceElement.appendChild(buildMethods(document, element));
 
@@ -172,7 +175,7 @@ public class XMLBuilder {
         if (candidate != null) {
             return exceptionsDocumentation.get(candidate);
         } else {
-            processingEnv.getMessager().printMessage(Diagnostic.Kind.WARNING, String.format("Error resolving exception '%s' for element '%s'", exceptionType.toString(), element.getSimpleName()));
+            processingEnv.getMessager().printMessage(Diagnostic.Kind.WARNING, String.format("Error resolving exception documentation '%s' for element '%s'", exceptionType.toString(), element.getSimpleName()));
             return null;
         }
     }
