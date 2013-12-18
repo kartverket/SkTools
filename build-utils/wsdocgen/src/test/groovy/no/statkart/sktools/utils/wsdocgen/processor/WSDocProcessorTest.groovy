@@ -336,8 +336,7 @@ class WSDocProcessorTest {
 
             xslt = projectHelper.writeCustomFile('minimal.xsl') {
                 """
-<xsl:stylesheet version="2.0"
-xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+<xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
 <xsl:output method="xml" version="1.0" indent="yes"
   doctype-public="-//W3C//DTD XHTML 1.0 Strict//EN"
@@ -490,8 +489,7 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
             xslt = projectHelper.writeCustomFile('minimal.xsl') {
                 """
-<xsl:stylesheet version="2.0"
-xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+<xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
 <xsl:output method="xml" version="1.0" indent="yes"
   doctype-public="-//W3C//DTD XHTML 1.0 Strict//EN"
@@ -652,8 +650,7 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
             xslt = projectHelper.writeCustomFile('minimal.xsl') {
                 """
-<xsl:stylesheet version="2.0"
-xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+<xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
 <xsl:output method="xml" version="1.0" indent="yes"
   doctype-public="-//W3C//DTD XHTML 1.0 Strict//EN"
@@ -818,8 +815,7 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
             xslt = projectHelper.writeCustomFile('minimal.xsl') {
                 """
-<xsl:stylesheet version="2.0"
-xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+<xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
 <xsl:output method="xml" version="1.0" indent="yes"
   doctype-public="-//W3C//DTD XHTML 1.0 Strict//EN"
@@ -846,8 +842,7 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
             indexXslt = projectHelper.writeCustomFile('index.xsl') {
                 """
-<xsl:stylesheet version="2.0"
-xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+<xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
 <xsl:output method="xml" version="1.0" indent="yes"
   doctype-public="-//W3C//DTD XHTML 1.0 Strict//EN"
