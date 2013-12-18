@@ -5,6 +5,7 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskExecutionException
 import org.gradle.api.tasks.compile.CompileOptions
 import org.gradle.api.tasks.compile.JavaCompile
@@ -30,6 +31,7 @@ class WsDocCompileTask extends JavaCompile {
         }
     }
 
+    @Optional
     @InputFile //not up to date when change in file
     File getIndexXsltFile() {
         if (getDocGroup().indexXsltPath) {
