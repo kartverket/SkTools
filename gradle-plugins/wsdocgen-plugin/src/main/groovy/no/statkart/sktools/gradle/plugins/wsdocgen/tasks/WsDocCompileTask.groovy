@@ -4,6 +4,7 @@ import no.statkart.sktools.gradle.plugins.wsdocgen.Group
 import org.gradle.api.file.FileCollection
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.TaskExecutionException
 import org.gradle.api.tasks.compile.CompileOptions
 import org.gradle.api.tasks.compile.JavaCompile
@@ -19,6 +20,7 @@ class WsDocCompileTask extends JavaCompile {
     @Input
     Group docGroup;
 
+    @InputFile //not up to date when change in file
     File getServiceXsltFile() {
         if (getDocGroup().serviceXsltPath) {
             return project.file(getDocGroup().serviceXsltPath)
@@ -28,6 +30,7 @@ class WsDocCompileTask extends JavaCompile {
         }
     }
 
+    @InputFile //not up to date when change in file
     File getIndexXsltFile() {
         if (getDocGroup().indexXsltPath) {
             return project.file(getDocGroup().indexXsltPath)
