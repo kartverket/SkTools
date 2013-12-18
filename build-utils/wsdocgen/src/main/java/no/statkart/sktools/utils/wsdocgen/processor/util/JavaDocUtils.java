@@ -24,7 +24,8 @@ public class JavaDocUtils {
      *
      * </pre>
      */
-    private static final Pattern tagPattern = Pattern.compile("^\\s*@(\\S*)(\\s+(\\S*)(\\s+(.*))?)?");
+    private static final Pattern tagletPattern = Pattern.compile("^\\s*@(\\S*)(\\s+(\\S*)(\\s+(.*))?)?");
+    private static final Pattern inlineCodeTagletPattern = Pattern.compile("\\{@code (.*)\\}");
 
     private final Map<String, Map<String, String>> tags;
 
@@ -79,7 +80,7 @@ public class JavaDocUtils {
             while (st.hasMoreTokens()) {
                 String token = st.nextToken();
 
-                final Matcher tagMatcher = tagPattern.matcher(token);
+                final Matcher tagMatcher = tagletPattern.matcher(token);
                 if (tagMatcher.find()) {
 
                     String type = tagMatcher.group(1);
@@ -92,11 +93,11 @@ public class JavaDocUtils {
                     if (tagMatcher.group(2) != null && ("param".equals(type) || "throws".equals(type))) {
                         String name = tagMatcher.group(3);
                         String value = tagMatcher.group(4) != null ? tagMatcher.group(5) : null;
-                        typeMap.put(name, value != null ? value.trim() : null);
+                        typeMap.put(name, createDocString(value));
                     } else {
                         String name = "";
                         String value = tagMatcher.group(2);
-                        String duplicate = typeMap.put(name, value != null ? value.trim() : null);
+                        String duplicate = typeMap.put(name, createDocString(value));
                         if (duplicate != null) {
                             System.out.println(String.format("Warning: Duplicate tag found; type: %s",type)); //todo: logge dette til warning?
                         }
@@ -106,9 +107,18 @@ public class JavaDocUtils {
                     sb.append(token.trim()).append('\n');
                 }
             }
-            tags.put("", Collections.singletonMap("", sb.toString().trim()));
+            tags.put("", Collections.singletonMap("", createDocString(sb.toString())));
         }
         return tags;
+    }
+
+    private static String createDocString(String doc) {
+        String value = doc;
+        if (value != null) {
+            value = value.trim();
+            value = inlineCodeTagletPattern.matcher(value).replaceAll("<span style=\"white-space: pre;font-family: monospace;\">$1</span>"); //SKTOOLS-106
+        }
+        return value;
     }
 
 }

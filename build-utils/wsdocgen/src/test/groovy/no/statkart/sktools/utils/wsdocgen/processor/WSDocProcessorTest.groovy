@@ -939,8 +939,108 @@ class WSDocProcessorTest {
                 Assert.assertEquals html.body.span[1].text(), "TestService${idx}.html", "service url"
             }
         }
+    }
 
 
+    /**
+     * SKTOOLS-106
+     * Tester inline @code taglet
+     */
+    @Test
+    void testCodeTaglets() {
+        ProjectHelper projectHelper = GradleProjectBuilder.builder('WsDocgenTest').build()
+        def outputPath = 'build/gen/wsdoc'
+        def sourcePath = 'src/main/java'
+        def resourcePath = 'src/main/resources'
+
+        def xslt;
+
+        //generer eksempel-kildekode
+        use(WsDocgenTestutilFilewriter) {
+            projectHelper.writeCustomFile('src/main/java/TestWSBean.java') {
+                """
+                package test1;
+
+                /**
+                 * Service {@code taglet} description.
+                 *
+                 * @since 1.0 - inception
+                 * @author Leif Lislegård
+                 **/
+                 @javax.jws.WebService(
+                         name = "TestService",
+                         serviceName = "TestServiceWS",
+                         targetNamespace = "http://test.statkart.no/test1")
+                 public class TestWSBean {
+
+                 }
+                """
+            }
+
+            xslt = projectHelper.writeCustomFile('minimal.xsl') {
+                """
+<xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+
+<xsl:output method="xml" version="1.0" indent="yes"
+  doctype-public="-//W3C//DTD XHTML 1.0 Strict//EN"
+  doctype-system="http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"
+  media-type="text/html"
+  omit-xml-declaration="no" />
+
+<xsl:template match="/services/service">
+<html><body>
+   description=<span><xsl:value-of select="@description" disable-output-escaping="yes"/></span>
+</body></html>
+</xsl:template>
+</xsl:stylesheet>
+                """
+            }
+
+        }
+
+        //setter opp testprosjekt
+        projectHelper.configureProject {
+            mkdir(outputPath)
+
+            apply plugin: 'java'
+
+            task('testWSDocProcessor', type: JavaCompile.class) {
+
+                options.compilerArgs = [
+                        "-proc:only",
+                        "-processor", WSDocProcessor.class.getName(),
+
+                        "-Axslt=${xslt}", //xslt file
+                ]
+
+                // specify output of generated code
+                destinationDir = file(outputPath)
+
+                // specify source files
+                source = sourceSets.main.java
+                include('**/*WSBean.java')
+
+                classpath = configurations.compile
+
+            }
+        } //end configure
+
+        //utfører task
+        projectHelper.executeTask('testWSDocProcessor')
+
+
+        //tester resultat
+        projectHelper.assertFileExists(outputPath + '/TestService.html') { File file ->
+
+            println "Generert html: \n" + file.getText()
+
+            //leser inn html dokumentasjon som xml - dette steget validerer derfor html-koden
+            GPathResult html = parseXML(file)
+
+            //sjekker innhold
+            Assert.assertEquals html.body.span[0].text(), 'Service taglet description.', "service description"
+            Assert.assertEquals html.body.span[0].span[0].text(), 'taglet', "code enclosed taglet"
+        }
     }
 
 

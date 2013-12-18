@@ -85,14 +85,14 @@ div.metode {
                     <xsl:for-each select="methods/method">
                         <div>
                             <h4><xsl:value-of select="@name"/></h4>
-                            <p><xsl:value-of select="@description"/></p>
+                            <p><xsl:value-of select="@description" disable-output-escaping="yes"/></p>
 
                             <h5>Input</h5>
                             <ul>
                                 <xsl:for-each select="parameters/parameter">
                                     <li>
                                         <span><xsl:value-of select="@name"/></span>
-                                        <span><xsl:value-of select="@description"/></span>
+                                        <span><xsl:value-of select="@description" disable-output-escaping="yes"/></span>
                                         <div>
                                             <span><xsl:value-of select="type/@name"/></span>
                                             <span><xsl:value-of select="type/@namespace"/></span>
@@ -107,7 +107,7 @@ div.metode {
                                 <xsl:for-each select="returns/parameter">
                                     <li>
                                         <span><xsl:value-of select="@name"/></span>
-                                        <span><xsl:value-of select="@description"/></span>
+                                        <span><xsl:value-of select="@description" disable-output-escaping="yes"/></span>
                                         <div>
                                             <span><xsl:value-of select="type/@name"/></span>
                                             <span><xsl:value-of select="type/@namespace"/></span>
@@ -118,7 +118,7 @@ div.metode {
                                 <xsl:for-each select="exceptions/exception">
                                     <li>
                                         <span><xsl:value-of select="@name"/></span>
-                                        <span><xsl:value-of select="@description"/></span>
+                                        <span><xsl:value-of select="@description" disable-output-escaping="yes"/></span>
                                         <div>
                                             <span><xsl:value-of select="type/@name"/></span>
                                             <span><xsl:value-of select="type/@namespace"/></span>
