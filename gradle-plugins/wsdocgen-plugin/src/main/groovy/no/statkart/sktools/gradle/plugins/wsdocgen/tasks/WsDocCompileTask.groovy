@@ -27,7 +27,7 @@ class WsDocCompileTask extends JavaCompile {
             return project.file(getDocGroup().serviceXsltPath)
         } else {
             logger.warn("WARNING: no xslt file specified - using template for TESTING purposes..")
-            return generateTestFile(new File(getDestinationDir(), "Transform.xsl"))
+            return generateTestFile(new File(project.buildDir, "Transform.xsl")) //can't write to output dir because it gets wiped when not up to date...
         }
     }
 
