@@ -45,7 +45,7 @@ class XMLTypeBuilder {
 
     public org.w3c.dom.Node buildType(Element element) {
         if (element instanceof VariableElement || element instanceof TypeElement) {
-            final String name = WSUtils.findName(element);
+            final String name = WSUtils.findName(element, true);
             final String ns = findObjectNamespace(element);
             String docComment = processingEnv.getElementUtils().getDocComment(element);
             final JavaDocUtils javaDocUtils = JavaDocUtils.parse(docComment);

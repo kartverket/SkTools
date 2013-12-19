@@ -50,6 +50,9 @@ public class WSUtils {
         return namespace;
     }
 
+    /**
+     * @return navn, eller {@code null} dersom ikke navn funnet og {@code usingWebMethodAnnotation==false}
+     */
     public static String findName(ExecutableElement executableElement, boolean usingWebMethodAnnotation) {
         String name = null;
         if (usingWebMethodAnnotation) {
@@ -65,7 +68,7 @@ public class WSUtils {
         return name;
     }
 
-    public static String findName(Element element) {
+    public static String findName(Element element, boolean assignDefaultWhenNull) {
         String name = null;
 
         WebParam webParam = element.getAnnotation(WebParam.class);
@@ -78,9 +81,12 @@ public class WSUtils {
             name = webResult.name();
         }
 
-        if (name == null || name.isEmpty()) {
-            name = element.getSimpleName().toString();
+        if (assignDefaultWhenNull) {
+            if (name == null || name.isEmpty()) {
+                name = element.getSimpleName().toString();
+            }
         }
+
         return name;
     }
 

@@ -114,7 +114,7 @@ public class XMLBuilder {
         org.w3c.dom.Element parameters = document.createElement("parameters");
         for (VariableElement variableElement : element.getParameters()) {
             org.w3c.dom.Element parameter = document.createElement("parameter");
-            parameter.setAttribute("name", WSUtils.findName(variableElement));
+            parameter.setAttribute("name", WSUtils.findName(variableElement, true));
             parameter.setAttribute("description", paramsDocumentation.get(variableElement.getSimpleName().toString()));
             parameter.appendChild(buildType(document, variableElement));
             parameters.appendChild(parameter);
@@ -128,7 +128,7 @@ public class XMLBuilder {
 
         if (!TypeKind.VOID.equals(returnType.getKind())) {
             org.w3c.dom.Element parameter = document.createElement("parameter");
-            parameter.setAttribute("name", WSUtils.findName(element));
+            parameter.setAttribute("name", WSUtils.findName(element, false));
             if (parameter.getAttribute("name") == null) {
                 parameter.setAttribute("name", "return"); //weblogic defaulter til dette navnet?
             }
@@ -148,7 +148,7 @@ public class XMLBuilder {
             org.w3c.dom.Element exception = document.createElement("exception");
             if (exceptionType instanceof DeclaredType) {
                 final Element exceptionElement = ((DeclaredType) exceptionType).asElement();
-                exception.setAttribute("name", WSUtils.findName(exceptionElement));
+                exception.setAttribute("name", WSUtils.findName(exceptionElement, true));
                 exception.setAttribute("description", resolveExceptionDocumentation(exceptionsDocumentation, element, exceptionType));
 
             } else {
