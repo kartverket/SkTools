@@ -53,7 +53,7 @@ public class WSUtils {
     /**
      * @return navn, eller {@code null} dersom ikke navn funnet og {@code usingWebMethodAnnotation==false}
      */
-    public static String findName(ExecutableElement executableElement, boolean usingWebMethodAnnotation) {
+    public static String findMethodName(ExecutableElement executableElement, boolean usingWebMethodAnnotation) {
         String name = null;
         if (usingWebMethodAnnotation) {
             WebMethod annotation = executableElement.getAnnotation(WebMethod.class);

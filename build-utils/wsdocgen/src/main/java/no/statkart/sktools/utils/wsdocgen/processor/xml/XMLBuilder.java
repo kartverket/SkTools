@@ -100,7 +100,7 @@ public class XMLBuilder {
 
             JavaDocUtils javaDocUtils = findComment(executableElement);
 
-            method.setAttribute("name", WSUtils.findName(executableElement, usingWebMethodAnnotation));
+            method.setAttribute("name", WSUtils.findMethodName(executableElement, usingWebMethodAnnotation));
             method.setAttribute("description", javaDocUtils.getText());
 
             method.appendChild(buildParameters(document, executableElement, javaDocUtils.getParams()));
@@ -129,7 +129,7 @@ public class XMLBuilder {
         if (!TypeKind.VOID.equals(returnType.getKind())) {
             org.w3c.dom.Element parameter = document.createElement("parameter");
             parameter.setAttribute("name", WSUtils.findName(element, false));
-            if (parameter.getAttribute("name") == null) {
+            if ("".equals(parameter.getAttribute("name"))) {
                 parameter.setAttribute("name", "return"); //weblogic defaulter til dette navnet?
             }
             parameter.setAttribute("description", returnDocumentation);

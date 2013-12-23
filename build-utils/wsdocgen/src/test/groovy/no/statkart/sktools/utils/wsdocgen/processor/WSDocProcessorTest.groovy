@@ -1044,6 +1044,166 @@ class WSDocProcessorTest {
     }
 
 
+
+    /**
+     * SKTOOLS-107
+     * Regresjonstest av return tag navn
+     */
+    @Test
+    void testReturnName() {
+        ProjectHelper projectHelper = GradleProjectBuilder.builder('WsDocgenTest').build()
+        def outputPath = 'build/gen/wsdoc'
+        def sourcePath = 'src/main/java'
+        def resourcePath = 'src/main/resources'
+
+        def xslt;
+
+        //generer eksempel-kildekode
+        use(WsDocgenTestutilFilewriter) {
+            projectHelper.writeCustomFile('src/main/java/TestWSBean.java') {
+                """
+                package test1;
+
+                /**
+                 * Viser forskjellig angivelse av retur parametere
+                 **/
+                 @javax.jws.WebService(
+                         name = "TestService",
+                         serviceName = "TestServiceWS",
+                         targetNamespace = "http://test.statkart.no/test1")
+                 public class TestWSBean {
+
+                    /** @return ikke noe */
+                    public void noReturn() {
+                    }
+
+                    /** @return withouth annotation */
+                    public String ping1() {
+                      return "";
+                    }
+
+                    /** @return with empty annotation */
+                    @javax.jws.WebResult()
+                    public String ping2() {
+                      return "";
+                    }
+
+                    /** @return with annotation */
+                    @javax.jws.WebResult(name = "youPingResult")
+                    public String ping3() {
+                      return "";
+                    }
+
+                 }
+                """
+            }
+
+            xslt = projectHelper.writeCustomFile('minimal.xsl') {
+                """
+<xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+
+<xsl:output method="xml" version="1.0" indent="yes"
+  doctype-public="-//W3C//DTD XHTML 1.0 Strict//EN"
+  doctype-system="http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"
+  media-type="text/html"
+  omit-xml-declaration="no" />
+
+<xsl:template match="/services/service">
+<html><body>
+   description=<span><xsl:value-of select="@description"/></span>
+
+    <div>
+        <xsl:for-each select="methods/method">
+          <div>
+            <h4><xsl:value-of select="@name"/></h4>
+            <p><xsl:value-of select="@description"/></p>
+
+
+            <h5>Response</h5>
+            <ul>
+              <xsl:for-each select="returns/parameter">
+                <li>
+                   <span><xsl:value-of select="@name"/></span>
+                   <span><xsl:value-of select="@description"/></span>
+                   <div>
+                     <span><xsl:value-of select="type/@name"/></span>
+                     <span><xsl:value-of select="type"/></span>
+                   </div>
+                </li>
+              </xsl:for-each>
+            </ul>
+          </div>
+        </xsl:for-each>
+    </div>
+
+</body></html>
+</xsl:template>
+</xsl:stylesheet>
+                """
+            }
+
+        }
+
+        //setter opp testprosjekt
+        projectHelper.configureProject {
+            mkdir(outputPath)
+
+            apply plugin: 'java'
+
+            task('testWSDocProcessor', type: JavaCompile.class) {
+
+                options.compilerArgs = [
+                        "-proc:only",
+                        "-processor", WSDocProcessor.class.getName(),
+
+                        "-Axslt=${xslt}", //xslt file
+                ]
+
+                // specify output of generated code
+                destinationDir = file(outputPath)
+
+                // specify source files
+                source = sourceSets.main.java
+                include('**/*WSBean.java')
+
+                classpath = configurations.compile
+
+            }
+        } //end configure
+
+        //utfører task
+        projectHelper.executeTask('testWSDocProcessor')
+
+
+        //tester resultat
+        projectHelper.assertFileExists(outputPath + '/TestService.html') { File file ->
+
+            println "Generert html: \n" + file.getText()
+
+            //leser inn html dokumentasjon som xml - dette steget validerer derfor html-koden
+            GPathResult html = parseXML(file)
+
+            //sjekker innhold
+            Assert.assertEquals html.body.div[0].div[0].h4[0].text(), 'noReturn', "method name"
+            Assert.assertEquals html.body.div[0].div[0].ul[0].li[0].span[0].text(), '', "return tag element"
+            Assert.assertEquals html.body.div[0].div[0].ul[0].li[0].span[1].text(), '', "return description"
+
+            Assert.assertEquals html.body.div[0].div[1].h4[0].text(), 'ping1', "method name"
+            Assert.assertEquals html.body.div[0].div[1].ul[0].li[0].span[0].text(), 'return', "return tag element"
+            Assert.assertEquals html.body.div[0].div[1].ul[0].li[0].span[1].text(), 'withouth annotation', "return description"
+
+            Assert.assertEquals html.body.div[0].div[2].h4[0].text(), 'ping2', "method name"
+            Assert.assertEquals html.body.div[0].div[2].ul[0].li[0].span[0].text(), 'return', "return tag element"
+            Assert.assertEquals html.body.div[0].div[2].ul[0].li[0].span[1].text(), 'with empty annotation', "return description"
+
+            Assert.assertEquals html.body.div[0].div[3].h4[0].text(), 'ping3', "method name"
+            Assert.assertEquals html.body.div[0].div[3].ul[0].li[0].span[0].text(), 'youPingResult', "return tag element"
+            Assert.assertEquals html.body.div[0].div[3].ul[0].li[0].span[1].text(), 'with annotation', "return description"
+
+
+        }
+    }
+
     public static GPathResult parseXML(File file) {
         XmlSlurper slurper = XmlTestUtils.defaultXmlSlurper()
         return slurper.parse(file)
