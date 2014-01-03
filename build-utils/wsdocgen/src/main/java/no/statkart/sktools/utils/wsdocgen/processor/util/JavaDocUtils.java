@@ -25,7 +25,7 @@ public class JavaDocUtils {
      * </pre>
      */
     private static final Pattern tagletPattern = Pattern.compile("^\\s*@(\\S*)(\\s+(\\S*)(\\s+(.*))?)?");
-    private static final Pattern inlineCodeTagletPattern = Pattern.compile("\\{@code (.*)\\}");
+    private static final Pattern inlineCodeTagletPattern = Pattern.compile("\\{@(\\w+) (.*)\\}");
 
     private final Map<String, Map<String, String>> tags;
 
@@ -116,7 +116,7 @@ public class JavaDocUtils {
         String value = doc;
         if (value != null) {
             value = value.trim();
-            value = inlineCodeTagletPattern.matcher(value).replaceAll("<span style=\"white-space: pre;font-family: monospace;\">$1</span>"); //SKTOOLS-106
+            value = inlineCodeTagletPattern.matcher(value).replaceAll("<span class=\"javadoc_tag_$1\">$2</span>"); //SKTOOLS-108
         }
         return value;
     }

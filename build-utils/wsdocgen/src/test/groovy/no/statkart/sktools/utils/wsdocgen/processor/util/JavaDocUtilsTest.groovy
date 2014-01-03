@@ -19,7 +19,21 @@ class JavaDocUtilsTest {
                 'linje 4' + '\n' +
                 '')
 
-        Assert.assertEquals(parser.text, 'Dokumentasjon\nlinje 2\nlinje 4', "tekst");
+        Assert.assertEquals(parser.text, 'Dokumentasjon\nlinje 2\nlinje 4', "forventet tekst");
+    }
+
+    /**
+     * @since 1.3 - SKTOOLS-108
+     */
+    @Test
+    public void parseInlineDocletTag() {
+        final JavaDocUtils parser = JavaDocUtils.parse('Dokumentasjon' + '\n' +
+                'linje 2' + '\n' +
+                '{@secret tag}' + '\n' +
+                'linje 4' + '\n' +
+                '')
+
+        Assert.assertEquals(parser.text, 'Dokumentasjon\nlinje 2\n<span class="javadoc_tag_secret">tag</span>\nlinje 4', "forventet html-tekst");
     }
 
 
