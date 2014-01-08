@@ -989,9 +989,53 @@ class WSDocProcessorTest {
 
 <xsl:template match="/services/service">
 <html><body>
-   description=<p><xsl:value-of select="description" disable-output-escaping="yes"/></p>
+   description=<p><xsl:value-of select="description"/></p>
+   formatted description=<p><xsl:apply-templates select="description"/></p>
 </body></html>
 </xsl:template>
+
+<xsl:template match="description">
+  <xsl:comment>DESCRIPTION:</xsl:comment>
+  <xsl:for-each select="text()|*">
+    <xsl:choose>
+      <xsl:when test="name(.)">
+        <xsl:comment>escaped</xsl:comment>
+        <xsl:apply-templates select="." mode="escapedText"/>
+      </xsl:when>
+
+      <xsl:otherwise>
+        <xsl:comment>no escaped</xsl:comment>
+        <xsl:apply-templates select="." mode="#current" />
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:for-each>
+
+</xsl:template>
+
+<xsl:template match="span" mode="#all">
+  <xsl:element name="span">
+    <xsl:attribute name="class" select="@class" />
+
+    <xsl:choose>
+      <xsl:when test="@class='javadoc_tag_code'">
+        <xsl:attribute name="debug">span with escaped contents!</xsl:attribute>
+        <xsl:apply-templates mode="escapedText" />
+      </xsl:when>
+
+      <xsl:otherwise>
+        <xsl:attribute name="debug">normal span element</xsl:attribute>
+        <xsl:apply-templates mode="noEscapedText"/>
+      </xsl:otherwise>
+    </xsl:choose>
+
+  </xsl:element>
+</xsl:template>
+
+<xsl:template match="text()" mode="noEscapedText">
+    <xsl:value-of select="." disable-output-escaping="yes" />
+</xsl:template>
+
+
 </xsl:stylesheet>
                 """
             }
@@ -1038,8 +1082,8 @@ class WSDocProcessorTest {
             GPathResult html = parseXML(file)
 
             //sjekker innhold
-            Assert.assertEquals html.body.p[0].text(), 'Service taglet description.', "service description"
-            Assert.assertEquals html.body.p[0].span[0].text(), 'taglet', "code enclosed taglet"
+            Assert.assertEquals html.body.p[0].text().trim(), 'Service taglet description.', "service description"
+            Assert.assertEquals html.body.p[1].span[0].text().trim(), 'taglet', "code enclosed taglet"
         }
     }
 
@@ -1267,7 +1311,7 @@ class WSDocProcessorTest {
     <div>
     <xsl:comment>methods...</xsl:comment>
         <xsl:for-each select="methods">
-            <xsl:apply-templates name="method"/>
+            <xsl:apply-templates />
         </xsl:for-each>
     <xsl:comment>end methods...</xsl:comment>
     </div>
@@ -1293,22 +1337,12 @@ class WSDocProcessorTest {
       </div>
 </xsl:template>
 
-
-
-<xsl:template match="text()" mode="noEscapedText">
-    <xsl:value-of select="." disable-output-escaping="yes" />
-</xsl:template>
-
-<xsl:template match="text()" mode="escapedText">
-    <xsl:value-of select="." disable-output-escaping="no" />
-</xsl:template>
-
 <xsl:template match="description">
   <xsl:comment>DESCRIPTION:</xsl:comment>
   <xsl:for-each select="text()|*">
     <xsl:choose>
       <xsl:when test="name(.)">
-        <xsl:apply-templates select="."/>
+        <xsl:apply-templates select="." mode="escapedText"/>
       </xsl:when>
 
       <xsl:otherwise>
@@ -1320,20 +1354,27 @@ class WSDocProcessorTest {
 </xsl:template>
 
 
-<xsl:template match="span">
-  <span class="{@class}">
+<xsl:template match="span" mode="#all">
+  <xsl:element name="span">
+    <xsl:attribute name="class" select="@class" />
+
     <xsl:choose>
       <xsl:when test="@class='javadoc_tag_code'">
-        <xsl:comment>span with escaped contents!</xsl:comment>
-        <xsl:apply-templates select="." mode="escapedText" />
+        <xsl:attribute name="debug">span with escaped contents!</xsl:attribute>
+        <xsl:apply-templates mode="escapedText" />
       </xsl:when>
 
       <xsl:otherwise>
-        <xsl:comment>normal span element</xsl:comment>
-        <xsl:apply-templates select="." mode="noEscapedText"/>
+        <xsl:attribute name="debug">normal span element</xsl:attribute>
+        <xsl:apply-templates mode="noEscapedText"/>
       </xsl:otherwise>
     </xsl:choose>
-  </span>
+
+  </xsl:element>
+</xsl:template>
+
+<xsl:template match="text()" mode="noEscapedText">
+    <xsl:value-of select="." disable-output-escaping="yes" />
 </xsl:template>
 
 </xsl:stylesheet>
@@ -1396,7 +1437,7 @@ class WSDocProcessorTest {
             Assert.assertEquals html.body.div[1].div[0].p[0].ul[0].li[0].text().trim(), 'testlist', "forventet tekst for li"
 
             Assert.assertEquals html.body.div[1].div[0].ul[0].li[0].span[0].text(), 'return', "forventet tekst for retur"
-            Assert.assertEquals html.body.div[1].div[0].ul[0].li[0].p[0].text().trim().replaceAll("\\s+"," "), 'value typed as long <encoded>', "forventet dokumentasjon av retur" //groovy substituerer &gt; og andre entiteter...
+            Assert.assertEquals html.body.div[1].div[0].ul[0].li[0].p[0].text().trim().replaceAll("\\s+"," "), 'value typed as long<encoded>', "forventet dokumentasjon av retur" //groovy substituerer &gt; og andre entiteter...
             Assert.assertEquals html.body.div[1].div[0].ul[0].li[0].p[0].span[0].text().trim(), 'long', "forventet formatert dokumentasjon av retur"
             Assert.assertEquals html.body.div[1].div[0].ul[0].li[0].p[0].span[1].text().trim(), '<encoded>', "forventet formatert dokumentasjon av retur" //groovy substituerer &gt; og andre entiteter...
 

@@ -210,7 +210,11 @@ public class WSDocProcessor extends AbstractProcessor {
 
 
     void transform(Source in, Result out, Source transform) {
-        TransformerFactory factory = TransformerFactory.newInstance();
+//        TransformerFactory factory = TransformerFactory.newInstance();
+
+        /** {@link http://stackoverflow.com/questions/11314604/how-to-set-saxon-as-the-xslt-processor-in-java one of several ways of declaring wich impl to use}  */
+        TransformerFactory factory = TransformerFactory.newInstance("net.sf.saxon.TransformerFactoryImpl", this.getClass().getClassLoader());
+
         Transformer transformer;
         try {
             transformer = factory.newTransformer(transform);

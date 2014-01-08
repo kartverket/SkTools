@@ -135,4 +135,10 @@ div.metode {
 
     </xsl:template>
 
+
+    <xsl:template match="text()" mode="#all"><!-- will fail here if no XSLT 2.0 compliant transformer exists on classpath ... -->
+        <xsl:value-of select="." disable-output-escaping="yes" />
+    </xsl:template>
+
+
 </xsl:stylesheet>
