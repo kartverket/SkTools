@@ -150,19 +150,21 @@ class WsDocGenPlugin implements Plugin<Project> {
         Closure<Boolean> samlepomDependencyMatcher = {Dependency dependency -> dependency.getGroup() == 'no.statkart.sktools.gradle' && dependency.getName() == 'gradle-plugins'}
 
         List<FileCollection> candidateFileCollections = [project, project.getRootProject()].collect {
+            FileCollection resolvedFiles = project.files();
             Configuration buildConfiguration = it.getBuildscript().getConfigurations().getByName(ScriptHandler.CLASSPATH_CONFIGURATION);
 
             Dependency pluginDependency = buildConfiguration.dependencies.find (pluginDependencyMatcher);
             if (!pluginDependency.is(null)) {
-                return buildConfiguration.fileCollection(pluginDependency);
+                resolvedFiles = buildConfiguration.fileCollection(pluginDependency);
             } else {
                 //forsøker å finne 'samlepom' [SKIF-154]
                 Dependency samlepomDependency = buildConfiguration.dependencies.find (samlepomDependencyMatcher);
                 if (!samlepomDependency.is(null)) {
-                    return buildConfiguration.fileCollection(samlepomDependency);
+                    resolvedFiles = buildConfiguration.fileCollection(samlepomDependency);
                 }
             }
-            return [];
+//            println "resolved files: ${resolvedFiles.files}"
+            return resolvedFiles;
         }
 
         FileCollection candidate = candidateFileCollections.find { !it.isEmpty() }
