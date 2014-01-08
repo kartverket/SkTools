@@ -59,8 +59,8 @@ class WsDocCompileTask extends JavaCompile {
         logging.captureStandardError LogLevel.ERROR
 
         options.compilerArgs = [
-                "-proc:only",
-                "-processor", "no.statkart.sktools.utils.wsdocgen.processor.WSDocProcessor",
+                "-proc:only",  //only annotation processing is done, without any subsequent compilation.
+                "-processor", "no.statkart.sktools.utils.wsdocgen.processor.WSDocProcessor",  //Names of the annotation processors to run. This bypasses the default discovery process.
         ]
 
         final FileCollection processorClasspath = WsDocGenPlugin.findPluginClasspath(project)
@@ -109,6 +109,7 @@ class WsDocCompileTask extends JavaCompile {
             include(it)
         }
 
+        logger.debug("Classpath for generating WsDoc: ${getClasspath().files}")
         super.compile()
     }
 }
