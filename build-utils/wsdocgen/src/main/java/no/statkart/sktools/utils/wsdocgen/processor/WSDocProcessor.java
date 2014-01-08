@@ -1,7 +1,7 @@
 package no.statkart.sktools.utils.wsdocgen.processor;
 
 import no.statkart.sktools.utils.wsdocgen.processor.util.WSUtils;
-import no.statkart.sktools.utils.wsdocgen.processor.xml.XMLBuilder;
+import no.statkart.sktools.utils.wsdocgen.processor.xml.XMLBuilderFactory;
 import org.w3c.dom.Document;
 
 import javax.annotation.processing.*;
@@ -30,29 +30,37 @@ import java.util.Set;
  * Processor implemented in {@code Pluggabable Annotation Processing API} (JSR 269)
  *
  * <br/>
- * <b>XML-structure for XSLT processing built by {@link XMLBuilder}: <b/><pre> {@code
+ * <b>XML-structure for XSLT processing built by {@link XMLBuilderFactory}: <b/><pre> {@code
 
 <services>
   <service name="" portName="" namespace="" description="" href="relative url">
     <methods>
-      <method name="" description="">
+      <method name="">
+        <description>...</description>
+
         <parameters>
-          <parameter name="" description="">
+          <parameter name="">
+            <description>...</description>
             <type name="" namespace="" javadocPath="">description</type>
           </parameter>
         </parameters>
+
         <returns>
           <!-- empty list when void -->
-          <parameter name="" description="">
+          <parameter name="">
+            <description>...</description>
             <type name="" namespace="" javadocPath="">description</type>
           </parameter>
         </returns>
+
         <exceptions>
           <!-- might be empty -->
-          <exception name="" description="" >
+          <exception name="">
+            <description>...</description>
             <type name="" namespace="" javadocPath="">description</type>
           </exception>
         </exceptions>
+
       </method>
     </methods>
   </service>
@@ -78,8 +86,8 @@ public class WSDocProcessor extends AbstractProcessor {
     private boolean generateIndex; //SKTOOLS-105
     private String indexXsltFilePath; //SKTOOLS-105
     private final static String indexFileNamePattern = "index.html"; //SKTOOLS-105
-    private XMLBuilder indexXmlBuilder; //SKTOOLS-105
-
+    private XMLBuilderFactory indexXmlBuilderFactory; //SKTOOLS-105
+    private org.w3c.dom.Element indexServices;
 
     public WSDocProcessor() {
         int debug = 0;
@@ -103,7 +111,8 @@ public class WSDocProcessor extends AbstractProcessor {
         generateIndex = indexXsltFilePath != null;
 
         if (generateIndex) {
-            indexXmlBuilder = new XMLBuilder(docBuilder.newDocument(), processingEnv);
+            indexXmlBuilderFactory = new XMLBuilderFactory(docBuilder.newDocument(), processingEnv);
+            indexServices = indexXmlBuilderFactory.getServicesBuilder().createServices();
         }
     }
 
@@ -114,8 +123,8 @@ public class WSDocProcessor extends AbstractProcessor {
             System.out.println(String.format("Processing class: %s ", element));
             //processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, String.format("Processing class: %s ", element));
 
-            final XMLBuilder xmlBuilder = new XMLBuilder(docBuilder.newDocument(), processingEnv);
-
+            final XMLBuilderFactory xmlBuilder = new XMLBuilderFactory(docBuilder.newDocument(), processingEnv);
+            final org.w3c.dom.Element services = xmlBuilder.getServicesBuilder().createServices();
 
 //            final Filer filer = processingEnv.getFiler();
 //            final Elements elementUtils = processingEnv.getElementUtils();
@@ -126,7 +135,7 @@ public class WSDocProcessor extends AbstractProcessor {
             FileObject outputFile = null;
 
             try {
-                xmlBuilder.appendService(element, fileName);
+                xmlBuilder.getServiceBuilder().appendServiceTo(services, element, fileName);
             } catch (RuntimeException e) {
                 processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, String.format("%s", e.getMessage()), element);
             }
@@ -148,8 +157,8 @@ public class WSDocProcessor extends AbstractProcessor {
 
 
             //index fil: SKTOOLS-105
-            if (indexXmlBuilder != null) {
-                indexXmlBuilder.appendService(element, fileName);
+            if (indexServices != null) {
+                indexXmlBuilderFactory.getServiceBuilder().appendServiceTo(indexServices, element, fileName);
             }
 
             int debug = 0;
@@ -163,7 +172,7 @@ public class WSDocProcessor extends AbstractProcessor {
 
             try {
                 outputFile = processingEnv.getFiler().createResource(StandardLocation.CLASS_OUTPUT, "", fileName);
-                writeToFile(indexXmlBuilder.getDocument(), outputFile, indexXsltFilePath);
+                writeToFile(indexXmlBuilderFactory.getDocument(), outputFile, indexXsltFilePath);
             } catch (IOException e) {
                 processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, String.format("Error creating target-file %s", fileName));
             }

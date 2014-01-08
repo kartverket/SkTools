@@ -36,6 +36,21 @@ class JavaDocUtilsTest {
         Assert.assertEquals(parser.text, 'Dokumentasjon\nlinje 2\n<span class="javadoc_tag_secret">tag</span>\nlinje 4', "forventet html-tekst");
     }
 
+    /**
+     * @since 1.3 - SKTOOLS-108
+     */
+    @Test
+    public void parseInlineDocletTagMultiples() {
+        final JavaDocUtils parser = JavaDocUtils.parse('Dokumentasjon' + '\n' +
+                'linje 2' + '\n' +
+                '{@secret tag}' + '\n' +
+                '{@secret <tag>}' + '\n' +
+                'linje 5' + '\n' +
+                '')
+
+        Assert.assertEquals(parser.text, 'Dokumentasjon\nlinje 2\n<span class="javadoc_tag_secret">tag</span>\n<span class="javadoc_tag_secret"><tag></span>\nlinje 5', "forventet html-tekst");
+    }
+
 
 
     @Test

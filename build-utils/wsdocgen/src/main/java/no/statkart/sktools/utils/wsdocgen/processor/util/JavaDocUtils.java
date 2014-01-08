@@ -25,7 +25,7 @@ public class JavaDocUtils {
      * </pre>
      */
     private static final Pattern tagletPattern = Pattern.compile("^\\s*@(\\S*)(\\s+(\\S*)(\\s+(.*))?)?");
-    private static final Pattern inlineCodeTagletPattern = Pattern.compile("\\{@(\\w+) (.*)\\}");
+    private static final Pattern inlineTagletPattern = Pattern.compile("\\{@(\\w+) ([^\\}]*)\\}");
 
     private final Map<String, Map<String, String>> tags;
 
@@ -115,8 +115,19 @@ public class JavaDocUtils {
     private static String createDocString(String doc) {
         String value = doc;
         if (value != null) {
-            value = value.trim();
-            value = inlineCodeTagletPattern.matcher(value).replaceAll("<span class=\"javadoc_tag_$1\">$2</span>"); //SKTOOLS-108
+            final StringBuffer sb = new StringBuffer();
+            Matcher matcher = inlineTagletPattern.matcher(value.trim());
+            while (matcher.find()) {
+                final String tagletValue = matcher.group(2); //SKTOOLS-108
+                if (tagletValue != null) {
+                    matcher.appendReplacement(sb, "<span class=\"javadoc_tag_$1\">" + tagletValue + "</span>");   //SKTOOLS-108
+                } else {
+                    sb.append(matcher.group());
+                }
+            }
+            matcher.appendTail(sb);
+            value = sb.toString();
+
         }
         return value;
     }

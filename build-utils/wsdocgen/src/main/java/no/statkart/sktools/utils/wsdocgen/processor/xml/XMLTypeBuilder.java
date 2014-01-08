@@ -18,6 +18,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import no.statkart.sktools.utils.wsdocgen.processor.util.*;
+import org.w3c.dom.Node;
 
 import static javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI;
 
@@ -28,34 +29,51 @@ import static javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI;
 class XMLTypeBuilder {
     private static transient HashMap<TypeMirror, QName> typeCache = null;
 
+    private final XMLBuilderFactory factory;
     private final ProcessingEnvironment processingEnv;
     private final org.w3c.dom.Document document;
-    
 
 
 
-    public XMLTypeBuilder(Document document, ProcessingEnvironment processingEnv) {
-        this.document = document;
-        this.processingEnv = processingEnv;
+
+    XMLTypeBuilder(XMLBuilderFactory factory) {
+        this.factory = factory;
+        this.processingEnv = factory.getProcessingEnv();
+        this.document = factory.getDocument();
+
         if (typeCache == null) {
             initializeCommponTypes();
         }
     }
 
 
-    public org.w3c.dom.Node buildType(Element element) {
+
+    public org.w3c.dom.Element appendTypeTo(org.w3c.dom.Node parent, Element element) {
+        org.w3c.dom.Element typeNode = buildType(element);
+        parent.appendChild(typeNode);
+        return typeNode;
+    }
+
+    public org.w3c.dom.Element buildType(Element element) {
         if (element instanceof VariableElement || element instanceof TypeElement) {
             final String name = WSUtils.findName(element, true);
             final String ns = findObjectNamespace(element);
             String docComment = processingEnv.getElementUtils().getDocComment(element);
             final JavaDocUtils javaDocUtils = JavaDocUtils.parse(docComment);
-            return buildTypeImpl(document, name, ns, javaDocUtils.getText());
+            return buildTypeImpl(document, name, ns, javaDocUtils);
         } else {
             throw new RuntimeException(String.format("Unhandled element type: %s", element.getSimpleName()));
         }
     }
 
-    public org.w3c.dom.Node buildType(TypeMirror typeMirror) {
+
+    public org.w3c.dom.Element appendTypeTo(org.w3c.dom.Node parent, TypeMirror typeMirror) {
+        org.w3c.dom.Element typeNode = buildType(typeMirror);
+        parent.appendChild(typeNode);
+        return typeNode;
+    }
+
+    public org.w3c.dom.Element buildType(TypeMirror typeMirror) {
         for (Map.Entry<TypeMirror, QName> entry : typeCache.entrySet()) {
             if (entry.getKey().equals(typeMirror)) {
                 final String name = entry.getValue().getLocalPart();
@@ -78,12 +96,13 @@ class XMLTypeBuilder {
 
 
 
-    private org.w3c.dom.Node buildTypeImpl(Document document, String name, String ns, String description) {
+    private org.w3c.dom.Element buildTypeImpl(Document document, String name, String ns, JavaDocUtils javaDocUtils) {
         org.w3c.dom.Element type = document.createElement("type");
         type.setAttribute("name", name);
         type.setAttribute("namespace", ns);
         type.setAttribute("javadocPath", buildJavadocPath(processingEnv.getOptions().get("javaDocLookupPath"), ns, name));
-        type.setNodeValue(description);
+
+        type.appendChild(factory.getDescriptionBuilder().buildDescription(javaDocUtils));
         return type;
     }
 
@@ -185,7 +204,7 @@ class XMLTypeBuilder {
         defineCachedType(QName.class, new QName(W3C_XML_SCHEMA_NS_URI, "QName"));
         defineCachedType(java.util.Calendar.class, new QName(W3C_XML_SCHEMA_NS_URI, "dateTime"));
         defineCachedType(XMLGregorianCalendar.class, new QName(W3C_XML_SCHEMA_NS_URI, "dateTime"));
-        
+
     }
 
     private void defineCachedType(Class clazz, QName qName) {
