@@ -187,18 +187,14 @@
     <xsl:template match="type">
         <xsl:choose>
             <xsl:when test="@javadocPath != ''">
-                <xsl:apply-templates mode="href"/>
+                <a href="{@javadocPath}">
+                    <xsl:apply-templates select="." mode="plain"/>
+                </a>
             </xsl:when>
             <xsl:otherwise>
-                <xsl:apply-templates mode="plain"/>
+                <xsl:apply-templates select="." mode="plain"/>
             </xsl:otherwise>
         </xsl:choose>
-    </xsl:template>
-
-    <xsl:template match="type" mode="href">
-        <a href="{@javadocPath}">
-            <xsl:apply-templates mode="plain" select="." />
-        </a>
     </xsl:template>
 
     <xsl:template match="type" mode="plain">
