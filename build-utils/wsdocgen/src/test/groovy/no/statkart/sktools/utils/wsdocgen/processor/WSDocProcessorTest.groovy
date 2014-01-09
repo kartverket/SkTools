@@ -1342,7 +1342,7 @@ class WSDocProcessorTest {
   <xsl:for-each select="text()|*">
     <xsl:choose>
       <xsl:when test="name(.)">
-        <xsl:apply-templates select="." mode="escapedText"/>
+        <xsl:apply-templates select="." mode="#default"/>
       </xsl:when>
 
       <xsl:otherwise>
@@ -1361,7 +1361,7 @@ class WSDocProcessorTest {
     <xsl:choose>
       <xsl:when test="@class='javadoc_tag_code'">
         <xsl:attribute name="debug">span with escaped contents!</xsl:attribute>
-        <xsl:apply-templates mode="escapedText" />
+        <xsl:apply-templates mode="#default" />
       </xsl:when>
 
       <xsl:otherwise>

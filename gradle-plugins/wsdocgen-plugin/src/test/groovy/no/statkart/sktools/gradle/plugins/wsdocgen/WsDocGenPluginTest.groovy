@@ -12,6 +12,10 @@ import org.gradle.api.plugins.JavaPluginConvention
 /**
  * Test av {@link WsDocGenPlugin}
  *
+ * <p>
+ *     For testing av generering av dokumentasjon se {@link no.statkart.sktools.utils.wsdocgen.processor.WSDocProcessorTest}
+ * </p>
+ *
  * @author Leif Lislegård
  */
 class WsDocGenPluginTest {
