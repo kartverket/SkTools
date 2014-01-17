@@ -101,17 +101,21 @@ class XMLTypeBuilder {
         type.setAttribute("name", name);
         type.setAttribute("namespace", ns);
         type.setAttribute("javadocPath", buildJavadocPath(processingEnv.getOptions().get("javaDocLookupPath"), ns, name));
-
         type.appendChild(factory.getDescriptionBuilder().buildDescription(javaDocUtils));
         return type;
     }
 
 
     public static String buildJavadocPath(String basePath, String ns, String clazz) {
-        String javadocPath = basePath == null ? "VALUE_NOT_PARAMETRIZED" : basePath;
-        javadocPath += '?' + buildJavadocPath(ns, clazz);
-        return javadocPath;
-
+        //String javadocPath = basePath == null ? "VALUE_NOT_PARAMETRIZED" : basePath;
+        //NT 17.01.2014, tom streng vil trigge relativ url sti i browseren.
+        String javadocPath = (basePath == null) ? "" : basePath;
+        String remainingUrlPath = buildJavadocPath(ns, clazz);
+        final StringBuffer buffer=new StringBuffer(javadocPath);
+        if(remainingUrlPath!=null && remainingUrlPath.trim().length()>0)
+            buffer.append("?").append(remainingUrlPath);
+        //javadocPath += '?' + remainingUrlPath;
+        return buffer.toString();
     }
 
     /**
@@ -140,7 +144,7 @@ class XMLTypeBuilder {
                 throw new RuntimeException(e);
             }
         } else {
-            return null;
+            return "";
         }
     }
 
