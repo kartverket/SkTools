@@ -1,4 +1,5 @@
 include ':historikk-index1-db'
+include ':historikk-index2-db'
 
 rootProject.children.each { project -> configureProject(project)}
 

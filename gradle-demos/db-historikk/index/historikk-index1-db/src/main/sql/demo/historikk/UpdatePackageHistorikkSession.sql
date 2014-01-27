@@ -1,5 +1,5 @@
 -- AUTHID DEFINER fører til at funksjonene blir kjørt med rettigheter til historikk-db-bruker (brukeren som oppretter/eier denne)
-CREATE OR REPLACE PACKAGE "@historikk_index1_db_schema@".SNAPSHOT_TIME AUTHID DEFINER AS
+CREATE OR REPLACE PACKAGE "@historikk_index_db_schema@".SNAPSHOT_TIME AUTHID DEFINER AS
 
     FUNCTION Get_T_CURRENT RETURN TIMESTAMP;
 
@@ -19,7 +19,7 @@ CREATE OR REPLACE PACKAGE "@historikk_index1_db_schema@".SNAPSHOT_TIME AUTHID DE
 END SNAPSHOT_TIME;
 /
 
-CREATE OR REPLACE PACKAGE BODY "@historikk_index1_db_schema@".SNAPSHOT_TIME AS
+CREATE OR REPLACE PACKAGE BODY "@historikk_index_db_schema@".SNAPSHOT_TIME AS
 
     -- Betegner timestamp for gjeldende snapshot versjon av objektet. Kan betegnes som den versjonen som er 'levende'. Ref tEnd kolonne.
     t_Current CONSTANT SNAPSHOT_TRANS.v%TYPE := SNAPSHOT_TIME.To_T('9999-01-01 00:00:00.00');

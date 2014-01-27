@@ -1,4 +1,4 @@
-ALTER SESSION SET CURRENT_SCHEMA = "@historikk_index1_db_schema@";
+ALTER SESSION SET CURRENT_SCHEMA = "@historikk_index_db_schema@";
 
 PROMPT Creating Table KOMMUNE_H ...
 CREATE TABLE "KOMMUNE_H"

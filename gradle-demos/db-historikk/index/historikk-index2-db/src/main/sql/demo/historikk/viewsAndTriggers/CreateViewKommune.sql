@@ -1,4 +1,4 @@
-CREATE OR REPLACE FORCE VIEW "@historikk_index1_db_username@"."KOMMUNE"
+CREATE OR REPLACE FORCE VIEW "@historikk_index_db_username@"."KOMMUNE"
  (
    "ID",
    "KOMMUNENUMMER",
@@ -15,15 +15,15 @@ AS
     h."TVERSION",
     h."TBEGIN",
     h."TEND"
-  FROM "@historikk_index1_db_schema@"."KOMMUNE_H" h
+  FROM "@historikk_index_db_schema@"."KOMMUNE_H" h
   WHERE
      (h."TEND" > SNAPSHOT_TIME.Get_T() AND h."TBEGIN" <= SNAPSHOT_TIME.Get_T())
   OR (h."TEND" = SNAPSHOT_TIME.Get_T_CURRENT() AND h."TBEGIN" <= SNAPSHOT_TIME.Get_T())
 ;
 
 
-CREATE OR REPLACE TRIGGER "@historikk_index1_db_schema@"."T_H_KOMMUNE"
-INSTEAD OF INSERT OR UPDATE OR DELETE ON "@historikk_index1_db_username@"."KOMMUNE"
+CREATE OR REPLACE TRIGGER "@historikk_index_db_schema@"."T_H_KOMMUNE"
+INSTEAD OF INSERT OR UPDATE OR DELETE ON "@historikk_index_db_username@"."KOMMUNE"
 FOR EACH ROW
 DECLARE
   t_Trans TIMESTAMP(9) := HISTORIKK_TRANSACTION.Get_T_Trans();
@@ -34,7 +34,7 @@ BEGIN
     RAISE_APPLICATION_ERROR(-20100, 'Modifikasjon mot historikk-data fungerer kun med t satt til t_CURRENT');
   END IF;
   IF INSERTING THEN
-    INSERT INTO "@historikk_index1_db_schema@"."KOMMUNE_H" VALUES
+    INSERT INTO "@historikk_index_db_schema@"."KOMMUNE_H" VALUES
       (
         1,
         t_Trans,
@@ -45,7 +45,7 @@ BEGIN
       );
   ELSIF UPDATING THEN
     IF :old."TBEGIN" < t_Trans THEN
-      INSERT INTO "@historikk_index1_db_schema@"."KOMMUNE_H" VALUES
+      INSERT INTO "@historikk_index_db_schema@"."KOMMUNE_H" VALUES
         (
           :old."TVERSION",
           :old."TBEGIN",
@@ -54,7 +54,7 @@ BEGIN
           :old."KOMMUNENUMMER",
           :old."KOMMUNENAVN"
         );
-      UPDATE "@historikk_index1_db_schema@"."KOMMUNE_H" SET
+      UPDATE "@historikk_index_db_schema@"."KOMMUNE_H" SET
        --GBOK-1824: setter verdier for transaksjon en og kun kun en gang per transaksjon.
         "TVERSION"    = :old."TVERSION" + 1 ,
         "TBEGIN"      = t_Trans
@@ -65,7 +65,7 @@ BEGIN
       ;
     END IF;
 
-    UPDATE "@historikk_index1_db_schema@"."KOMMUNE_H" SET
+    UPDATE "@historikk_index_db_schema@"."KOMMUNE_H" SET
       "ID"            = :new."ID",
       "KOMMUNENUMMER" = :new."KOMMUNENUMMER",
       "KOMMUNENAVN"   = :new."KOMMUNENAVN"
@@ -77,7 +77,7 @@ BEGIN
 
   ELSIF DELETING THEN
     IF :old."TBEGIN" < t_Trans THEN
-      INSERT INTO "@historikk_index1_db_schema@"."KOMMUNE_H" VALUES
+      INSERT INTO "@historikk_index_db_schema@"."KOMMUNE_H" VALUES
         (
           :old."TVERSION",
           :old."TBEGIN",
@@ -88,7 +88,7 @@ BEGIN
         ) ;
     END IF;
 
-    DELETE FROM "@historikk_index1_db_schema@"."KOMMUNE_H"
+    DELETE FROM "@historikk_index_db_schema@"."KOMMUNE_H"
     WHERE
         "ID"     = :old."ID"
     AND "TEND"   = t_End
@@ -98,4 +98,4 @@ BEGIN
 END "T_H_KOMMUNE";
 /
 
-ALTER TRIGGER "@historikk_index1_db_schema@"."T_H_KOMMUNE" ENABLE;
+ALTER TRIGGER "@historikk_index_db_schema@"."T_H_KOMMUNE" ENABLE;

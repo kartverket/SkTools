@@ -4,6 +4,6 @@
 
 PROMPT Deleting datbase user @historikk_db_username@...
 
-DROP USER "@historikk_index1_db_username@"
+DROP USER "@historikk_index_db_username@"
  CASCADE
 ;
