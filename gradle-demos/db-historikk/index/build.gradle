@@ -1,0 +1,134 @@
+assert ['1.2'].find {gradle.gradleVersion >= it}
+
+description = "Performance for ulike index valg"
+defaultTasks "info", "tasks"
+
+
+task info() {
+   doLast {
+      println """\
+------------------------------------------------------------
+  Testing av ulike index implementasjoner for historikk-
+  database. Iplementasjon tilpasset Oracle 11g database.
+------------------------------------------------------------
+
+For å komme raskt i gang, se "Database Management tasks".
+
+Prosjektet er satt opp med standardverdier for kjøring mot lokal database.
+Dette kan endres via properties i gradle.properties
+
+Her er typisk bruk av demo:
+ * gradle dbSetUpUsers - setter opp tablespace og brukere
+ * gradle dbInit - oppretter skjema definisjoner
+ * gradle dbTestPerformance - tester performance
+ * gradle dbClean - rydder opp elementer lagt inn i denne demoen
+
+"""
+   }
+}
+
+task('dbClean', group:'Database Management', description: 'Sletter alle brukere og tablespace for denne demoen')
+
+task('dbSetUpUsers', group:'Database Management', description: 'Setter opp alle brukere og tablespace for denne demoen')
+task('dbInit', group:'Database Management', description: 'Setter opp fullt schema med grants')
+
+task('dbTestPerformance', group:'Database Performance', description: 'Tester ytelse for historikk-base')
+
+allprojects {
+    apply plugin: 'sktools-filterproperties-plugin'
+    propertyUtils.expandProjectProperties()
+
+    ext.antallKommuner = 5000L
+    ext.antallSted = 50000L
+}
+
+
+// n.a. for all purposes of this demo
+boolean isProductionDeployment() { false }
+
+
+// Optional configuration of library versions to use. (not production)
+// Values will be read from project.properties with naming convention "version.<key>"
+// Simply add version properties to your gradle-user.property file to use this feature.
+def libVersion(String name, String defaultValue) {
+    if (!isProductionDeployment()) {
+        gradle.startParameter.systemPropertiesArgs.get('libVersion.' + name, defaultValue) //development mode only
+    } else {
+        defaultValue
+    }
+}
+
+// build a map of the dependency artifacts to use. Allows centralized definition of the versions of artifacts to
+// use. In that respect it serves a role similar to <dependencyManagement> in Maven
+ext.libraries = [
+
+        // Database
+        ojdbc: "com.oracle:ojdbc6:${libVersion('oracle', '11.2.0.4.0')}@jar",
+        ojdbc_g: "com.oracle:ojdbc6_g:${libVersion('oracle', '11.2.0.4.0')}@jar",
+
+]
+
+// SKIF-239: Mulighet for valg av ojdbc driver
+libraries.jdbc = ORA_DEBUG ? libraries.ojdbc_g : libraries.ojdbc
+
+
+
+
+//hjelpefunksjon for eksekveringsrekkefølge dersom task blir kjørt
+Closure getDependsOnIfExecuted() {
+    return { def task, def dependent ->
+        gradle.taskGraph.whenReady { if (gradle.taskGraph.hasTask(dependent)) task.dependsOn(dependent) }
+        return task
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+buildscript {
+    if (rootProject.ext.has('sktools_versjon')) version = rootProject.ext.get('sktools_versjon')
+    assert version != Project.DEFAULT_VERSION // set via env variables
+
+    // Variables to grab from environment + defaults
+    ['COMPUTERNAME', 'MAVEN_REPO', 'JAVA_HOME'].each { val ->
+        if (!rootProject.ext.has(val) && System.getenv(val) != null) {
+            rootProject.ext.set(val, System.getenv(val))
+        }
+    }
+    ext.ORA_DEBUG = Boolean.valueOf("${rootProject.properties.get('ORA_DEBUG', System.getenv('ORA_DEBUG')) ?: 'false'}")
+    ext.MAVEN_REPO = rootProject.properties.get('MAVEN_REPO', System.getenv('MAVEN_REPO'))
+    if (ext.MAVEN_REPO == null) {
+        ext.MAVEN_REPO = 'http://nexus.statkart.no:8090/nexus/content/groups/public/'
+        logger.warn "warning: MAVEN_REPO not defined. Defaulting to ${MAVEN_REPO}"
+    }
+
+    repositories {
+        //bruker kun lokale filer her da dette er et demo prosjekt...
+        mavenLocal()
+        mavenRepo name: 'public', url: MAVEN_REPO
+    }
+
+    dependencies {
+        classpath "no.statkart.sktools.gradle:dbtools-plugin:${version}"
+        classpath "no.statkart.sktools.gradle:filterproperties-plugin:${version}"
+    }
+}
+
+allprojects {
+    setVersion(rootProject.version)
+
+    repositories {
+        mavenLocal()
+        mavenRepo name: 'public', url: "${rootProject.MAVEN_REPO}"
+    }
+}
