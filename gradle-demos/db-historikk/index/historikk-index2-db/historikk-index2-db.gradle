@@ -188,9 +188,12 @@ configureDatabasePlugin {
                 doFirst {
                     println "Selecting 2 random kommuner via id..."
                     def sql = buildSql()
+                    int processedCount
                     sql.eachRow("SELECT k.* FROM KOMMUNE k WHERE ID IN (?,?)", [1, antallKommuner-1]) {
                         println " > $it"
+                        processedCount++
                     }
+                    assert processedCount == 2
                 }
                 doFirst {
                     println "START ${name}..."
@@ -209,15 +212,14 @@ configureDatabasePlugin {
                     println "Selecting sted for random kommune via ID=${randomKommuneId}..."
                     def sql = buildSql()
                     int processedCount
-                    (1..antallSted).each() {
-                        sql.eachRow("SELECT s.* FROM KOMMUNE k " +
-                                "INNER JOIN KOMMUNERFORSTED kfs ON kfs.KOMMUNEID=k.ID " +
-                                "INNER JOIN STED s ON s.ID=kfs.STEDID " +
-                                "WHERE k.ID IN (?)", [randomKommuneId]) {
-                            processedCount++
-                        }
+                    sql.eachRow("SELECT s.* FROM KOMMUNE k " +
+                            "INNER JOIN KOMMUNERFORSTED kfs ON kfs.KOMMUNEID=k.ID " +
+                            "INNER JOIN STED s ON s.ID=kfs.STEDID " +
+                            "WHERE k.ID IN (?)", [randomKommuneId]) {
+                        processedCount++
                     }
                     println "Processed ${processedCount} rows."
+                    assert processedCount == antallSted / antallKommuner
                 }
                 doFirst {
                     println "START ${name}..."
