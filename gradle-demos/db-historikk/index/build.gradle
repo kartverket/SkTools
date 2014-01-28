@@ -9,7 +9,7 @@ task info() {
       println """\
 ------------------------------------------------------------
   Testing av ulike index implementasjoner for historikk-
-  database. Iplementasjon tilpasset Oracle 11g database.
+  database. Implementasjon tilpasset Oracle 11g database.
 ------------------------------------------------------------
 
 For å komme raskt i gang, se "Database Management tasks".
@@ -38,8 +38,13 @@ allprojects {
     apply plugin: 'sktools-filterproperties-plugin'
     propertyUtils.expandProjectProperties()
 
+//  Konfigurasjon av data som demo legger inn
+
     ext.antallKommuner = 5000L
     ext.antallSted = 50000L
+    ext.antallStedUpdated = 100L
+    ext.antallStedUpdates = 100L
+
 }
 
 

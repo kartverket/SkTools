@@ -102,6 +102,8 @@ configureDatabasePlugin {
             final org.apache.commons.lang.time.StopWatch stopWatch = new org.apache.commons.lang.time.StopWatch();
             final long antallKommuner = rootProject.antallKommuner;
             final long antallSted = rootProject.antallSted;
+            final long antallStedUpdated = rootProject.antallStedUpdated;
+            final long antallStedUpdates = rootProject.antallStedUpdates;
 
             Closure<groovy.sql.Sql> buildSql = {
                 groovy.sql.Sql sql = null
@@ -169,6 +171,36 @@ configureDatabasePlugin {
                     (1..antallSted).each() {
                         assert sql.executeUpdate("INSERT INTO KOMMUNERFORSTED (STEDID, KOMMUNEID) VALUES (?, ?)", [it, it%antallKommuner + 1])
                         if (it % 10000 == 0) { sql.commit() }
+                    }
+                }
+                doFirst {
+                    println "START ${name}..."
+                    stopWatch.reset(); stopWatch.start();
+                }
+                doLast {
+                    stopWatch.stop();
+                    println "END ${name}."
+                    println "Performance ${it.path}: time=${stopWatch}"
+                }
+            }
+
+
+            dependsOn task('UpdateSted') {
+                doFirst {
+                    println "Updating first ${antallStedUpdated} Sted..."
+                    String charset = (('A'..'Z')).join()
+                    def sql = buildSql()
+
+                    assert antallSted > 100+1 //forventer minimum antall sted
+
+                    //antall oppdateringer per objekt
+                    (1..antallStedUpdates).each() {
+                        //itererer over ids
+                        (1..antallStedUpdated).each() { long stedId ->
+                            String randomStedsnavn = 'UpdatedSted' + org.apache.commons.lang.RandomStringUtils.random(12, charset.toCharArray())
+                            assert sql.executeUpdate("UPDATE STED SET STEDSNAVN=? WHERE ID=?", [randomStedsnavn, stedId])
+                        }
+                        sql.commit()
                     }
                 }
                 doFirst {
