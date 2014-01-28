@@ -26,7 +26,6 @@ USING INDEX (
 		"TEND",
 		"TBEGIN"	
 	)
-	REVERSE
 )
 ENABLE
 ;
@@ -60,7 +59,6 @@ USING INDEX (
 		"TEND",
 		"TBEGIN"	
 	)
-	REVERSE
 )
 ENABLE
 ;
@@ -93,7 +91,6 @@ USING INDEX (
 		"TEND",
 		"TBEGIN"	
 	)
-	REVERSE
 )
 ENABLE
 ;
