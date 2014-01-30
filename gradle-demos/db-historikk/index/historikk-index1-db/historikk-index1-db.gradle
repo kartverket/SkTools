@@ -138,7 +138,6 @@ configureDatabasePlugin {
                     println "END ${name}."
                     println "Performance ${it.path}: time=${stopWatch}"
                 }
-
             }
 
             dependsOn task('InsertSted') {
@@ -184,6 +183,20 @@ configureDatabasePlugin {
                 }
             }
 
+            dependsOn task('ComputeStatistics') {
+                doLast {
+                    buildSql().execute("ANALYZE TABLE KOMMUNE_H COMPUTE STATISTICS")
+                    println "Updating statistics for KOMMUNE_H"
+                }
+                doLast {
+                    buildSql().execute("ANALYZE TABLE STED_H COMPUTE STATISTICS")
+                    println "Updating statistics for STED_H"
+                }
+                doLast {
+                    buildSql().execute("ANALYZE TABLE KOMMUNERFORSTED_H COMPUTE STATISTICS")
+                    println "Updating statistics for KOMMUNERFORSTED_H"
+                }
+            }
 
             dependsOn task('UpdateSted') {
                 doFirst {
@@ -211,6 +224,10 @@ configureDatabasePlugin {
                     stopWatch.stop();
                     println "END ${name}."
                     println "Performance ${it.path}: time=${stopWatch}"
+                }
+                doLast {
+                    buildSql().execute("ANALYZE TABLE STED_H COMPUTE STATISTICS")
+                    println "Updating statistics for STED_H"
                 }
             }
 
