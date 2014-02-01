@@ -110,7 +110,7 @@ configureDatabasePlugin {
                 try {
                     sql = groovy.sql.Sql.newInstance(toolset.url, toolset.credentials.username, toolset.credentials.password, toolset.driver)
                     sql.execute("ALTER SESSION SET CURRENT_SCHEMA = \"${toolset.getProperties().historikk_index_db_schema}\"".toString())
-                    println("using database connection: ${sql.connection.metaData.URL} [${sql.connection.metaData.userName}]")
+                    println("using database connection: ${sql.connection.metaData.URL} [${sql.connection.metaData.userName}, CURRENT_SCHEMA=${toolset.getProperties().historikk_index_db_schema}]")
                 } finally {
                     if (!sql) logger.error "Error connecting to database: ${toolset.url} [${toolset.credentials.username}]"
                 }
@@ -147,7 +147,7 @@ configureDatabasePlugin {
                     def sql = buildSql()
                     (1..antallSted).each() {
                         String randomStedsnavn = 'Sted' + org.apache.commons.lang.RandomStringUtils.random(12, charset.toCharArray())
-                        assert sql.executeUpdate("INSERT INTO STED (ID, STEDSNAVN, GRUPPE) VALUES (?, ?, ?)", [it, randomStedsnavn, it%10])
+                        assert sql.executeUpdate("INSERT INTO STED (ID, STEDSNAVN, GRUPPE) VALUES (?, ?, ?)", [it, randomStedsnavn, (it % 10) + 1]) //Sted for the 10 first Kommuner
                         if (it % 10000 == 0) { sql.commit() }
                     }
                 }
@@ -168,6 +168,7 @@ configureDatabasePlugin {
                     println "Generating ${antallSted} KommunerForSted..."
                     def sql = buildSql()
                     (1..antallSted).each() {
+                        antallStedUpdated
                         assert sql.executeUpdate("INSERT INTO KOMMUNERFORSTED (STEDID, KOMMUNEID) VALUES (?, ?)", [it, it%antallKommuner + 1])
                         if (it % 10000 == 0) { sql.commit() }
                     }
@@ -204,14 +205,19 @@ configureDatabasePlugin {
                     String charset = (('A'..'Z')).join()
                     def sql = buildSql()
 
-                    assert antallSted > 100+1 //forventer minimum antall sted
+                    assert antallSted > antallStedUpdated+1 //forventer minimum antall sted
+                    assert antallKommuner > 10 //oppdaterte sted tilknyttes kommuner 1..10
 
                     //antall oppdateringer per objekt
-                    (1..antallStedUpdates).each() {
+                    (1..antallStedUpdates).each() { long pass ->
                         //itererer over ids
                         (1..antallStedUpdated).each() { long stedId ->
                             String randomStedsnavn = 'UpdatedSted' + org.apache.commons.lang.RandomStringUtils.random(12, charset.toCharArray())
                             assert sql.executeUpdate("UPDATE STED SET STEDSNAVN=? WHERE ID=?", [randomStedsnavn, stedId])
+                            if (pass == 1) {
+                                long kommuneId = (stedId % 10) + 1
+                                assert sql.executeUpdate("UPDATE KOMMUNERFORSTED SET KOMMUNEID=? WHERE STEDID=?", [kommuneId, stedId]) //oppdaterte sted tilknyttes kommuner 1..10
+                            }
                         }
                         sql.commit()
                     }
@@ -255,29 +261,60 @@ configureDatabasePlugin {
             }
 
             dependsOn task('PerformanceSelectStedForKommuneOnKommune') {
-                doFirst {
-                    int randomKommuneId = antallKommuner * Math.random()
-                    println "Selecting sted for random kommune via ID=${randomKommuneId}..."
-                    def sql = buildSql()
-                    int processedCount
-                    sql.eachRow("SELECT /*+ ORDERED */ s.* FROM KOMMUNE k " +
-                            "INNER JOIN KOMMUNERFORSTED kfs ON kfs.KOMMUNEID=k.ID " +
-                            "INNER JOIN STED s ON s.ID=kfs.STEDID " +
-                            "WHERE k.ID IN (?)", [randomKommuneId]) {
-                        processedCount++
+                final long firstHiglyUpdatedKommuner = 10L
+                final String sqlSelectStedForKommuneOnKommune = "SELECT /*+ ORDERED */ s.* FROM KOMMUNE k " +
+                        "INNER JOIN KOMMUNERFORSTED kfs ON kfs.KOMMUNEID=k.ID " +
+                        "INNER JOIN STED s ON s.ID=kfs.STEDID " +
+                        "WHERE k.ID IN (?)"
+
+                dependsOn task('PerformanceSelectStedForKommuneOnKommuneHighCardinality') {
+                    description = 'Joined SELECT on data with high historic cardinality'
+                    doFirst {
+                        int randomKommuneId = firstHiglyUpdatedKommuner * Math.random() + 1
+                        println "Selecting sted for random kommune via ID=${randomKommuneId}..."
+                        def sql = buildSql()
+                        int processedCount
+                        sql.eachRow(sqlSelectStedForKommuneOnKommune, [randomKommuneId]) {
+                            processedCount++
+                        }
+                        println "Processed ${processedCount} rows."
+                        assert processedCount >= antallSted / antallKommuner
                     }
-                    println "Processed ${processedCount} rows."
-                    assert processedCount == antallSted / antallKommuner
+                    doFirst {
+                        println "START ${name}..."
+                        stopWatch.reset(); stopWatch.start();
+                    }
+                    doLast {
+                        stopWatch.stop();
+                        println "END ${name}."
+                        println "Performance ${it.path}: time=${stopWatch}"
+                    }
                 }
-                doFirst {
-                    println "START ${name}..."
-                    stopWatch.reset(); stopWatch.start();
+
+                dependsOn task('PerformanceSelectStedForKommuneOnKommuneLowCardinality') {
+                    description = 'Joined SELECT on data with low historic cardinality'
+                    doFirst {
+                        int randomKommuneId = ((antallKommuner - firstHiglyUpdatedKommuner) * Math.random()) + firstHiglyUpdatedKommuner + 1
+                        println "Selecting sted for random kommune via ID=${randomKommuneId}..."
+                        def sql = buildSql()
+                        int processedCount
+                        sql.eachRow(sqlSelectStedForKommuneOnKommune, [randomKommuneId]) {
+                            processedCount++
+                        }
+                        println "Processed ${processedCount} rows."
+//                        assert processedCount == 0
+                    }
+                    doFirst {
+                        println "START ${name}..."
+                        stopWatch.reset(); stopWatch.start();
+                    }
+                    doLast {
+                        stopWatch.stop();
+                        println "END ${name}."
+                        println "Performance ${it.path}: time=${stopWatch}"
+                    }
                 }
-                doLast {
-                    stopWatch.stop();
-                    println "END ${name}."
-                    println "Performance ${it.path}: time=${stopWatch}"
-                }
+
             }
 
 
