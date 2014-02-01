@@ -24,8 +24,9 @@ USING INDEX (
 	(
 		"ID",
 		"TEND",
-		"TBEGIN"	
+		"TBEGIN"
 	)
+  VISIBLE
 )
 ENABLE
 ;
@@ -57,8 +58,9 @@ USING INDEX (
 		"STEDID",
 		"KOMMUNEID",
 		"TEND",
-		"TBEGIN"	
+		"TBEGIN"
 	)
+  VISIBLE
 )
 ENABLE
 ;
@@ -89,8 +91,9 @@ USING INDEX (
 	(
 		"ID",
 		"TEND",
-		"TBEGIN"	
+		"TBEGIN"
 	)
+  VISIBLE
 )
 ENABLE
 ;
