@@ -1,6 +1,8 @@
 -- AUTHID DEFINER fører til at funksjonene blir kjørt med rettigheter til historikk-db-bruker (brukeren som oppretter/eier denne)
 CREATE OR REPLACE PACKAGE "@historikk_index_db_schema@".SNAPSHOT_TIME AUTHID DEFINER AS
 
+    FUNCTION Get_T_LIVE RETURN TIMESTAMP DETERMINISTIC;
+    FUNCTION Get_T_END RETURN TIMESTAMP DETERMINISTIC;
 
 
     -- Finner gjeldende timestamp (default er T_CURRENT )
@@ -20,11 +22,23 @@ CREATE OR REPLACE PACKAGE BODY "@historikk_index_db_schema@".SNAPSHOT_TIME AS
     -- Betegner timestamp for gjeldende snapshot versjon av objektet. Kan betegnes som den versjonen som er 'levende'.
     t_Live CONSTANT SNAPSHOT_TRANS.v%TYPE := SNAPSHOT_TIME.To_T('9999-01-01 00:00:00.00');
 
+    -- Betegner timestamp for gjeldende snapshot versjon av objektet. Kan betegnes som den versjonen som er 'levende'. Ref tEnd kolonne.
+    t_Infinity CONSTANT SNAPSHOT_TRANS.v%TYPE := SNAPSHOT_TIME.To_T('9999-12-12 23:59:59.59');
+
     -- initialiserer t slik at man får oppdaterte data i views som default
     t SNAPSHOT_TRANS.v%TYPE := t_Live;
 
 
 
+    FUNCTION Get_T_LIVE RETURN TIMESTAMP DETERMINISTIC IS
+    BEGIN
+      RETURN t_Live;
+    END Get_T_LIVE;
+
+    FUNCTION Get_T_END RETURN TIMESTAMP DETERMINISTIC IS
+    BEGIN
+      RETURN t_Infinity;
+    END Get_T_END;
 
 
 
