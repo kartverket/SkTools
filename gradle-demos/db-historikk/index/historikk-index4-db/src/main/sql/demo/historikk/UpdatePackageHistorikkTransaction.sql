@@ -38,7 +38,7 @@ CREATE OR REPLACE PACKAGE BODY "@historikk_index_db_schema@".HISTORIKK_TRANSACTI
     LOOP
       BEGIN
         EXECUTE IMMEDIATE 'SELECT max(tBegin) FROM ' || i.TABLE_NAME INTO max_t_Begin;   -- todo: substituere tEnd og tBegin med implemententerte navn for løsning
-        EXECUTE IMMEDIATE 'SELECT max(tEnd) FROM ' || i.TABLE_NAME || ' INTO max_t_End;  -- GBOK-2791: null verdier for tEnd ignoreres for aggregerte funksjoner
+        EXECUTE IMMEDIATE 'SELECT max(tEnd) FROM ' || i.TABLE_NAME INTO max_t_End;  -- GBOK-2791: null verdier for tEnd ignoreres for aggregerte funksjoner
 
         IF (greatestT IS NOT NULL) THEN
             greatestT := greatest(nvl(max_t_End, greatestT), nvl(max_t_Begin, greatestT), greatestT);
