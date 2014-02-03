@@ -20,8 +20,8 @@ CREATE OR REPLACE PACKAGE BODY "@historikk_index_db_schema@".HISTORIKK_TRANSACTI
 
   t_Trans SNAPSHOT_TRANS.v%TYPE;
   
-  --todo: make transaction scoped variable like t_Trans
-  userInfo VARCHAR(255 CHAR);
+
+
 
   minimum_unit_of_time CONSTANT INTERVAL DAY(0) TO SECOND(9) := INTERVAL '0.000000001' SECOND; --denne må samsvare med granualitet til SNAPSHOT_TRANS.v
 
