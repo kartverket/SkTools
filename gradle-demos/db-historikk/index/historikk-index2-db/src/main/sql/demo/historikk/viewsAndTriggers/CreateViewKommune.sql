@@ -17,8 +17,9 @@ AS
     h."TEND"
   FROM "@historikk_index_db_schema@"."KOMMUNE_H" h
   WHERE
-     (h."TEND" > SNAPSHOT_TIME.Get_T() AND h."TBEGIN" <= SNAPSHOT_TIME.Get_T())
-  OR (h."TEND" = SNAPSHOT_TIME.Get_T_CURRENT() AND h."TBEGIN" <= SNAPSHOT_TIME.Get_T())
+     (h."TBEGIN" <= SNAPSHOT_TIME.Get_T())
+    AND
+     (nvl(h."TEND", TIMESTAMP'9999-12-12 23:59:59.59') > SNAPSHOT_TIME.Get_T())
   ORDER BY
     h."ID",
     h."TEND" DESC,
@@ -31,18 +32,17 @@ INSTEAD OF INSERT OR UPDATE OR DELETE ON "@historikk_index_db_username@"."KOMMUN
 FOR EACH ROW
 DECLARE
   t_Trans TIMESTAMP(9) := HISTORIKK_TRANSACTION.Get_T_Trans();
-  t_End TIMESTAMP(9) := SNAPSHOT_TIME.Get_T_CURRENT();
   LOGISK_FEIL EXCEPTION;
 BEGIN
-  IF snapshot_time.GeT_T() <> t_End THEN
-    RAISE_APPLICATION_ERROR(-20100, 'Modifikasjon mot historikk-data fungerer kun med t satt til t_CURRENT');
+  IF snapshot_time.GeT_T() < SNAPSHOT_TIME.To_T('9999-01-01 00:00:00.00') THEN
+    RAISE_APPLICATION_ERROR(-20100, 'Modifikasjon mot historikk-data fungerer kun med t > ''9999-01-01 00:00:00.00''');
   END IF;
   IF INSERTING THEN
     INSERT INTO "@historikk_index_db_schema@"."KOMMUNE_H" VALUES
       (
         1,
         t_Trans,
-        t_End,
+        null,
         :new."ID",
         :new."KOMMUNENUMMER",
         :new."KOMMUNENAVN"
@@ -64,7 +64,7 @@ BEGIN
         "TBEGIN"      = t_Trans
       WHERE
           "ID"        = :old."ID"
-      AND "TEND"      = t_End
+      AND "TEND"      = null
       AND "TBEGIN"    = :old."TBEGIN"
       ;
     END IF;
@@ -75,7 +75,7 @@ BEGIN
       "KOMMUNENAVN"   = :new."KOMMUNENAVN"
     WHERE
         "ID"          = :old."ID"
-    AND "TEND"        = t_End
+    AND "TEND"        = null
     AND "TBEGIN"      = t_Trans
     ;
 
@@ -95,7 +95,7 @@ BEGIN
     DELETE FROM "@historikk_index_db_schema@"."KOMMUNE_H"
     WHERE
         "ID"     = :old."ID"
-    AND "TEND"   = t_End
+    AND "TEND"   = null
     AND "TBEGIN" = :old."TBEGIN"
     ;
   END IF;

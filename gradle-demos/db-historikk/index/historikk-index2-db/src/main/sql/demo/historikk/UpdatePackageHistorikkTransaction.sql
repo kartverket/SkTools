@@ -2,7 +2,7 @@
 CREATE OR REPLACE PACKAGE "@historikk_index_db_schema@".HISTORIKK_TRANSACTION AUTHID DEFINER AS
 
   -- Konverterer timestamp ifra fast streng-representasjon
-  FUNCTION To_T(timestampAsString IN VARCHAR2) RETURN TIMESTAMP;
+  FUNCTION To_T(timestampAsString IN VARCHAR2) RETURN TIMESTAMP DETERMINISTIC;
 
   -- Definerer timestamp for transaksjon. Denne blir benyttet ved kreering av endringsinnslag ved oppdateringer (insert, update og delete)
   -- localtimestamp_on_missing == TRUE setter LOCALTIMESTAMP som transaksjonsverdi
@@ -38,8 +38,7 @@ CREATE OR REPLACE PACKAGE BODY "@historikk_index_db_schema@".HISTORIKK_TRANSACTI
     LOOP
       BEGIN
         EXECUTE IMMEDIATE 'SELECT max(tBegin) FROM ' || i.TABLE_NAME INTO max_t_Begin;   -- todo: substituere tEnd og tBegin med implemententerte navn for løsning
-        EXECUTE IMMEDIATE 'SELECT max(tEnd) FROM ' || i.TABLE_NAME || ' WHERE tEnd != :t_Current' INTO max_t_End
-          USING SNAPSHOT_TIME.Get_T_CURRENT();
+        EXECUTE IMMEDIATE 'SELECT max(tEnd) FROM ' || i.TABLE_NAME || ' INTO max_t_End;  -- GBOK-2791: null verdier for tEnd ignoreres for aggregerte funksjoner
 
         IF (greatestT IS NOT NULL) THEN
             greatestT := greatest(nvl(max_t_End, greatestT), nvl(max_t_Begin, greatestT), greatestT);
@@ -63,7 +62,7 @@ CREATE OR REPLACE PACKAGE BODY "@historikk_index_db_schema@".HISTORIKK_TRANSACTI
 
   -- package impl
 
-  FUNCTION To_T(timestampAsString IN VARCHAR2) RETURN TIMESTAMP IS
+  FUNCTION To_T(timestampAsString IN VARCHAR2) RETURN TIMESTAMP DETERMINISTIC IS
   BEGIN
     RETURN to_timestamp(timestampAsString, 'YYYY-MM-DD HH24:MI:SS.FF');
   END To_T;

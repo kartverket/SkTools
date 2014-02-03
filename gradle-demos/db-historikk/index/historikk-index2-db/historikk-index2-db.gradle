@@ -6,7 +6,7 @@ def dependsOnIfExecuted = rootProject.getDependsOnIfExecuted()
 def HISTORIKK_COLUM_NAMES = [TVERSION: 'TVERSION', TBEGIN: 'TBEGIN', TEND: 'TEND']
 
 description = '''
-  GBOK-2696: tester forbedret index med null verdi for 'levende/current' tEnd.
+  GBOK-2791: tester forbedret index med null verdi for 'levende/current' tEnd.
 '''
 
 
