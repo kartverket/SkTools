@@ -24,9 +24,9 @@ USING INDEX (
 	(
 		"ID",
 		"TEND",
-		"TBEGIN"	
+		"TBEGIN"
 	)
-	REVERSE
+  VISIBLE
 )
 ENABLE
 ;
@@ -58,9 +58,9 @@ USING INDEX (
 		"STEDID",
 		"KOMMUNEID",
 		"TEND",
-		"TBEGIN"	
+		"TBEGIN"
 	)
-	REVERSE
+  VISIBLE
 )
 ENABLE
 ;
@@ -91,9 +91,9 @@ USING INDEX (
 	(
 		"ID",
 		"TEND",
-		"TBEGIN"	
+		"TBEGIN"
 	)
-	REVERSE
+  VISIBLE
 )
 ENABLE
 ;

@@ -15,10 +15,14 @@ AS
     h."TVERSION",
     h."TBEGIN",
     h."TEND"
-FROM "@historikk_index_db_schema@"."STED_H" h
-WHERE
+  FROM "@historikk_index_db_schema@"."STED_H" h
+  WHERE
      (h."TEND" > SNAPSHOT_TIME.Get_T() AND h."TBEGIN" <= SNAPSHOT_TIME.Get_T())
   OR (h."TEND" = SNAPSHOT_TIME.Get_T_CURRENT() AND h."TBEGIN" <= SNAPSHOT_TIME.Get_T())
+  ORDER BY
+    h."ID",
+    h."TEND" DESC,
+    h."TBEGIN" DESC
 ;
 
 CREATE OR REPLACE TRIGGER "@historikk_index_db_schema@"."T_H_STED"

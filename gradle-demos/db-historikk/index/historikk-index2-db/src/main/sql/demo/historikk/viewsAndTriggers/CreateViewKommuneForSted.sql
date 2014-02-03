@@ -17,6 +17,11 @@ AS
   WHERE
      (h."TEND" > SNAPSHOT_TIME.Get_T() AND h."TBEGIN" <= SNAPSHOT_TIME.Get_T())
   OR (h."TEND" = SNAPSHOT_TIME.Get_T_CURRENT() AND h."TBEGIN" <= SNAPSHOT_TIME.Get_T())
+  ORDER BY
+    h."STEDID",
+    h."KOMMUNEID",
+    h."TEND" DESC,
+    h."TBEGIN" DESC
   ;
 
 
