@@ -12,9 +12,6 @@ CREATE OR REPLACE PACKAGE "@historikk_index_db_schema@".SNAPSHOT_TIME AUTHID DEF
     -- Konverterer timestamp ifra fast streng-representasjon
     FUNCTION To_T(timestampAsString IN VARCHAR2) RETURN TIMESTAMP;
 
-    -- Bestemmer om gjeldende timestamp er imellom t_Begin (inklusiv) og t_End (eller t_End er T_CURRENT. Returnerer 1 for true, 0 for false
-    -- DEPRICATED
-    FUNCTION T_Between(t_Begin IN SNAPSHOT_TRANS.v%TYPE, t_End IN SNAPSHOT_TRANS.v%TYPE) RETURN NUMBER;
 
 END SNAPSHOT_TIME;
 /
@@ -24,7 +21,7 @@ CREATE OR REPLACE PACKAGE BODY "@historikk_index_db_schema@".SNAPSHOT_TIME AS
     -- Betegner timestamp for gjeldende snapshot versjon av objektet. Kan betegnes som den versjonen som er 'levende'. Ref tEnd kolonne.
     t_Current CONSTANT SNAPSHOT_TRANS.v%TYPE := SNAPSHOT_TIME.To_T('9999-01-01 00:00:00.00');
 
-    -- initialiserer t slik at man får oppdaterte data i views som standard (se T_Between())
+    -- initialiserer t slik at man får oppdaterte data i views som default
     t SNAPSHOT_TRANS.v%TYPE := t_Current;
 
 
@@ -49,19 +46,6 @@ CREATE OR REPLACE PACKAGE BODY "@historikk_index_db_schema@".SNAPSHOT_TIME AS
     BEGIN
       RETURN to_timestamp(timestampAsString, 'YYYY-MM-DD HH24:MI:SS.FF');
     END To_T;
-
-    -- DEPRICATED
-    FUNCTION T_Between(t_Begin IN SNAPSHOT_TRANS.v%TYPE, t_End IN SNAPSHOT_TRANS.v%TYPE) RETURN NUMBER IS
-    retVal NUMBER;
-    BEGIN
-      IF (t_Begin<=t AND (t<t_End OR t_End=t_Current))
-      THEN
-          retVal := 1;
-      ELSE
-          retVal := 0;
-      END IF;
-      RETURN retVal;
-    END T_Between;
 
 
 
