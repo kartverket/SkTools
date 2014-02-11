@@ -1,0 +1,385 @@
+apply plugin: 'sktools-dbtools-plugin'
+
+//hjelpefunksjon for eksekveringsrekkefølge dersom task blir kjørt
+def dependsOnIfExecuted = rootProject.getDependsOnIfExecuted()
+
+def HISTORIKK_COLUM_NAMES = [TVERSION: 'TVERSION', TBEGIN: 'TBEGIN', TEND: 'TEND']
+
+description = '''
+  GBOK-2791: tester forbedret index med NOT null (t_LIVE) verdi for 'levende/current' tEnd.
+'''
+
+
+configureDatabasePlugin {
+    useDrivers libraries.ojdbc
+
+    project.ext.tns = "${historikk_index4_db_sid}_${historikk_index4_db_hostname}"
+
+
+    /**
+     * Toolset for DBA med script for:
+     *
+     *  - Vedlikehold av grants for brukere på systemnivå
+     *  - Opprettelse/sletting av tablespace
+     *  - Opprettelse/sletting av brukere
+     */
+    toolset(name: 'system', type: 'oracle', prefix: 'system') {
+
+        task('CreateUsers') {
+            dependsOn sqlTask('CreateHistorikkUser', sqlFile: 'src/main/sql/demo/system/user/CreateHistorikkUser.sql') {
+//                dependsOnIfExecuted it, tasks['CreateHistorikkTablespace']  //forventer at tablespace eksisterer
+                dependsOnIfExecuted it, sqlTask('DropHistorikkUser', sqlFile: 'src/main/sql/demo/system/user/DropHistorikkUser.sql', failOnError: false)
+            }
+        }
+
+        task('GrantUsers') {
+            dependsOn sqlTask('GrantHistorikkUser', sqlFile: 'src/main/sql/demo/system/grant/GrantHistorikkUser.sql') {
+                dependsOnIfExecuted it, tasks['CreateHistorikkUser']
+            }
+        }
+
+
+        properties += [
+                historikk_index_db_username: historikk_index4_db_username,
+                historikk_index_db_password: historikk_index4_db_password,
+                historikk_index_db_sid: historikk_index4_db_sid,
+                historikk_index_db_tablespace: historikk_index4_db_tablespace,
+                historikk_index_db_tablespace_index: historikk_index4_db_tablespace_index,
+        ]
+
+        if (System.properties.containsKey('db.oradata')) { properties.put('db_oradata', System.getProperty('db.oradata')) }
+
+        credentials.username = historikk_index4_db_system_username
+        credentials.password = historikk_index4_db_system_password
+        url = "jdbc:oracle:thin:@${historikk_index4_db_hostname}:${historikk_index4_db_port}:${historikk_index4_db_sid}"
+        driver = 'oracle.jdbc.OracleDriver'
+    }
+
+
+    /**
+     * Toolset for SA-bruker med script for:
+     *
+     *  - Vedlikehold av grants for brukere på skjema-nivå
+     *  - Opprettelse og vedlikehold av skjema (inkludert patching)
+     *
+     *  - Mekanikk for migrering til og fra historikk skjema
+     */
+    toolset(name: 'historikk', type: 'oracle', prefix: 'historikk') {
+
+        task('UpdatePackages') {
+            dependsOn sqlTask('UpdatePackageHistorikkSession', sqlFile: file('src/main/sql/demo/historikk/UpdatePackageHistorikkSession.sql')) {
+                dependsOn sqlTask('UpdatePackageHistorikkTransaction', sqlFile: file('src/main/sql/demo/historikk/UpdatePackageHistorikkTransaction.sql')) {
+                    dependsOn sqlTask('CreateTemporaryTables', sqlFile: file('src/main/sql/demo/historikk/CreateTemporaryTables.sql'), failOnError: false) //feiler ikke dersom tabell allerede finnes fra før
+                }
+            }
+        }
+
+        sqlTask('CreateHistorikkSchema', sqlFile: 'src/main/sql/demo/historikk/schema/CreatehistorikkSchema.sql') {
+            dependsOn taskSequence('PurgeHistorikkSchema') {
+                dependsOn sqlTask('PurgeHistorikkViews', sqlFile: 'src/main/sql/demo/historikk/schema/PurgeHistorikkViews.sql')
+                dependsOn sqlTask('PurgeHistorikkTables', sqlFile: 'src/main/sql/demo/historikk/schema/PurgeHistorikkTables.sql')
+                dependsOn sqlTask('PurgeHistorikkPackages', sqlFile: 'src/main/sql/demo/historikk/schema/PurgeHistorikkPackages.sql')
+            }
+        }
+
+
+        task('GrantUsers') {
+        }
+
+        task('RevokeUsers') {
+        }
+
+        taskSequence('CreateViewsAndTriggers') {
+            dependsOn dbToolSets['historikk'].tasks['UpdatePackages']
+            dependsOn sqlTask('CreateViewKommune', sqlFile: 'src/main/sql/demo/historikk/viewsAndTriggers/CreateViewKommune.sql')
+            dependsOn sqlTask('CreateViewSted', sqlFile: 'src/main/sql/demo/historikk/viewsAndTriggers/CreateViewSted.sql')
+            dependsOn sqlTask('CreateViewKommuneForSted', sqlFile: 'src/main/sql/demo/historikk/viewsAndTriggers/CreateViewKommuneForSted.sql')
+
+        }
+
+        sqlTask('CreateIndexesHistorikk', sqlFile: 'src/main/sql/demo/historikk/index/CreateIndexesHistorikk.sql')
+
+        taskSequence('TestPerformance') {
+            final org.apache.commons.lang.time.StopWatch stopWatch = new org.apache.commons.lang.time.StopWatch();
+            final long antallKommuner = rootProject.antallKommuner;
+            final long antallSted = rootProject.antallSted;
+            final long antallStedUpdated = rootProject.antallStedUpdated;
+            final long antallStedUpdates = rootProject.antallStedUpdates;
+
+            Closure<groovy.sql.Sql> buildSql = {
+                groovy.sql.Sql sql = null
+                try {
+                    sql = groovy.sql.Sql.newInstance(toolset.url, toolset.credentials.username, toolset.credentials.password, toolset.driver)
+                    sql.execute("ALTER SESSION SET CURRENT_SCHEMA = \"${toolset.getProperties().historikk_index_db_schema}\"".toString())
+                    println("using database connection: ${sql.connection.metaData.URL} [${sql.connection.metaData.userName}, CURRENT_SCHEMA=${toolset.getProperties().historikk_index_db_schema}]")
+                } finally {
+                    if (!sql) logger.error "Error connecting to database: ${toolset.url} [${toolset.credentials.username}]"
+                }
+                return sql
+            }
+
+            dependsOn task('InsertKommuner') {
+                doFirst {
+                    println "Generating ${antallKommuner} Kommuner..."
+                    String charset = (('a'..'z') + ('A'..'Z') + ('0'..'9')).join()
+                    def sql = buildSql()
+                    (1..antallKommuner).each() {
+                        String randomKommuneNavn = org.apache.commons.lang.RandomStringUtils.random(32, charset.toCharArray())
+
+                        assert sql.executeUpdate("INSERT INTO KOMMUNE (ID, KOMMUNENUMMER, KOMMUNENAVN) VALUES (?, ?, ?)", [it, "000${it}" as String, randomKommuneNavn])
+                        if (it % 10000 == 0) { sql.commit() }
+                    }
+                }
+                doFirst {
+                    println "START ${name}..."
+                    stopWatch.reset(); stopWatch.start();
+                }
+                doLast {
+                    stopWatch.stop();
+                    println "END ${name}."
+                    println "Performance ${it.path}: time=${stopWatch}"
+                }
+
+            }
+
+            dependsOn task('InsertSted') {
+                doFirst {
+                    println "Generating ${antallSted} Sted..."
+                    String charset = (('A'..'Z')).join()
+                    def sql = buildSql()
+                    (1..antallSted).each() {
+                        String randomStedsnavn = 'Sted' + org.apache.commons.lang.RandomStringUtils.random(12, charset.toCharArray())
+                        assert sql.executeUpdate("INSERT INTO STED (ID, STEDSNAVN, GRUPPE) VALUES (?, ?, ?)", [it, randomStedsnavn, it%10])
+                        if (it % 10000 == 0) { sql.commit() }
+                    }
+                }
+                doFirst {
+                    println "START ${name}..."
+                    stopWatch.reset(); stopWatch.start();
+                }
+                doLast {
+                    stopWatch.stop();
+                    println "END ${name}."
+                    println "Performance ${it.path}: time=${stopWatch}"
+                }
+            }
+
+
+            dependsOn task('InsertKommunerForSted') {
+                doFirst {
+                    println "Generating ${antallSted} KommunerForSted..."
+                    def sql = buildSql()
+                    (1..antallSted).each() {
+                        assert sql.executeUpdate("INSERT INTO KOMMUNERFORSTED (STEDID, KOMMUNEID) VALUES (?, ?)", [it, it%antallKommuner + 1])
+                        if (it % 10000 == 0) { sql.commit() }
+                    }
+                }
+                doFirst {
+                    println "START ${name}..."
+                    stopWatch.reset(); stopWatch.start();
+                }
+                doLast {
+                    stopWatch.stop();
+                    println "END ${name}."
+                    println "Performance ${it.path}: time=${stopWatch}"
+                }
+            }
+
+            dependsOn task('ComputeStatistics') {
+                doLast {
+                    buildSql().execute("ANALYZE TABLE KOMMUNE_H COMPUTE STATISTICS")
+                    println "Updating statistics for KOMMUNE_H"
+                }
+                doLast {
+                    buildSql().execute("ANALYZE TABLE STED_H COMPUTE STATISTICS")
+                    println "Updating statistics for STED_H"
+                }
+                doLast {
+                    buildSql().execute("ANALYZE TABLE KOMMUNERFORSTED_H COMPUTE STATISTICS")
+                    println "Updating statistics for KOMMUNERFORSTED_H"
+                }
+            }
+
+            dependsOn task('UpdateSted') {
+                doFirst {
+                    println "Updating first ${antallStedUpdated} Sted..."
+                    String charset = (('A'..'Z')).join()
+                    def sql = buildSql()
+
+                    assert antallSted > antallStedUpdated+1 //forventer minimum antall sted
+                    assert antallKommuner > 10 //oppdaterte sted tilknyttes kommuner 1..10
+
+                    //antall oppdateringer per objekt
+                    (1..antallStedUpdates).each() { long pass ->
+                        //itererer over ids
+                        (1..antallStedUpdated).each() { long stedId ->
+                            String randomStedsnavn = 'UpdatedSted' + org.apache.commons.lang.RandomStringUtils.random(12, charset.toCharArray())
+                            assert sql.executeUpdate("UPDATE STED SET STEDSNAVN=? WHERE ID=?", [randomStedsnavn, stedId])
+                            if (pass == 1) {
+                                long kommuneId = (stedId % 10) + 1
+                                assert sql.executeUpdate("UPDATE KOMMUNERFORSTED SET KOMMUNEID=? WHERE STEDID=?", [kommuneId, stedId]) //oppdaterte sted tilknyttes kommuner 1..10
+                            }
+                        }
+                        sql.commit()
+                    }
+                }
+                doFirst {
+                    println "START ${name}..."
+                    stopWatch.reset(); stopWatch.start();
+                }
+                doLast {
+                    stopWatch.stop();
+                    println "END ${name}."
+                    println "Performance ${it.path}: time=${stopWatch}"
+                }
+                doLast {
+                    buildSql().execute("ANALYZE TABLE STED_H COMPUTE STATISTICS")
+                    println "Updating statistics for STED_H"
+                }
+            }
+
+            dependsOn task('PerformanceSelectKommuner') {
+                doFirst {
+                    println "Selecting 2 random kommuner via id..."
+                    def sql = buildSql()
+                    int processedCount
+                    sql.eachRow("SELECT /*+ ORDERED */ k.* FROM KOMMUNE k WHERE ID IN (?,?)", [1, antallKommuner-1]) {
+                        println " > $it"
+                        processedCount++
+                    }
+                    assert processedCount == 2
+                }
+                doFirst {
+                    println "START ${name}..."
+                    stopWatch.reset(); stopWatch.start();
+                }
+                doLast {
+                    stopWatch.stop();
+                    println "END ${name}."
+                    println "Performance ${it.path}: time=${stopWatch}"
+                }
+            }
+
+
+            dependsOn task('PerformanceSelectStedForKommuneOnKommune') {
+                final long firstHiglyUpdatedKommuner = 10L
+                final String sqlSelectStedForKommuneOnKommune = "SELECT /*+ ORDERED */ s.* FROM KOMMUNE k " +
+                        "INNER JOIN KOMMUNERFORSTED kfs ON kfs.KOMMUNEID=k.ID " +
+                        "INNER JOIN STED s ON s.ID=kfs.STEDID " +
+                        "WHERE k.ID IN (?)"
+
+                dependsOn task('PerformanceSelectStedForKommuneOnKommuneHighCardinality') {
+                    description = 'Joined SELECT on data with high historic cardinality'
+                    doFirst {
+                        int randomKommuneId = firstHiglyUpdatedKommuner * Math.random() + 1
+                        println "Selecting sted for random kommune via ID=${randomKommuneId}..."
+                        def sql = buildSql()
+                        int processedCount
+                        sql.eachRow(sqlSelectStedForKommuneOnKommune, [randomKommuneId]) {
+                            processedCount++
+                        }
+                        println "Processed ${processedCount} rows."
+                        assert processedCount >= antallSted / antallKommuner
+                    }
+                    doFirst {
+                        println "START ${name}..."
+                        stopWatch.reset(); stopWatch.start();
+                    }
+                    doLast {
+                        stopWatch.stop();
+                        println "END ${name}."
+                        println "Performance ${it.path}: time=${stopWatch}"
+                    }
+                }
+
+                dependsOn task('PerformanceSelectStedForKommuneOnKommuneLowCardinality') {
+                    description = 'Joined SELECT on data with low historic cardinality'
+                    doFirst {
+                        int randomKommuneId = ((antallKommuner - firstHiglyUpdatedKommuner) * Math.random()) + firstHiglyUpdatedKommuner + 1
+                        println "Selecting sted for random kommune via ID=${randomKommuneId}..."
+                        def sql = buildSql()
+                        int processedCount
+                        sql.eachRow(sqlSelectStedForKommuneOnKommune, [randomKommuneId]) {
+                            processedCount++
+                        }
+                        println "Processed ${processedCount} rows."
+//                        assert processedCount == 0
+                    }
+                    doFirst {
+                        println "START ${name}..."
+                        stopWatch.reset(); stopWatch.start();
+                    }
+                    doLast {
+                        stopWatch.stop();
+                        println "END ${name}."
+                        println "Performance ${it.path}: time=${stopWatch}"
+                    }
+                }
+
+            }
+
+
+        }
+
+        properties += [
+                historikk_index_db_username: historikk_index4_db_username,
+                historikk_index_db_schema: historikk_index4_db_schema,
+                historikk_index_db_tablespace: historikk_index4_db_tablespace,
+                historikk_index_db_tablespace_index: historikk_index4_db_tablespace_index,
+        ]
+
+
+
+
+        credentials.username = historikk_index4_db_system_username
+        credentials.password = historikk_index4_db_system_password
+        url = "jdbc:oracle:thin:@${historikk_index4_db_hostname}:${historikk_index4_db_port}:${historikk_index4_db_sid}"
+        driver = 'oracle.jdbc.OracleDriver'
+    }
+
+    task('dbSetUpHistorikkUser', group: 'Database', description: 'Oppretter tablespace og bruker for Historikk data') {
+//        dependsOn dbToolSets['system'].tasks['CreateHistorikkTablespace']
+        dependsOn dbToolSets['system'].tasks['CreateUsers']
+        dependsOn dbToolSets['system'].tasks['GrantUsers']
+    }
+
+    taskSequence('dbTearDownHistorikkUser', group: 'Database', description: 'Sletter tablespace og bruker for Historikk data') {
+        dependsOn dbToolSets['system'].tasks['DropHistorikkUser']
+    }
+
+    taskSequence('dbCreateHistorikkSchema') {
+        dependsOn dbToolSets['historikk'].tasks['CreateHistorikkSchema']
+        dependsOn dbToolSets['historikk'].tasks['UpdatePackages']
+        dependsOn dbToolSets['historikk'].tasks['CreateViewsAndTriggers']
+        dependsOn dbToolSets['historikk'].tasks['CreateIndexesHistorikk']
+    }
+
+    task('dbGrantUsers', description: 'Grants for brukere') {
+        dependsOn dbToolSets['system'].tasks['GrantUsers']
+        dependsOn dbToolSets['historikk'].tasks['GrantUsers']
+    }
+
+
+
+    //global tasks...
+
+    task('dbClean') {
+        dependsOn 'dbTearDownHistorikkUser'
+    }
+
+    task('dbSetUpUsers') {
+        dependsOn 'dbSetUpHistorikkUser'
+    }
+
+    taskSequence('dbInit') {
+        dependsOn 'dbCreateHistorikkSchema'
+        dependsOn 'dbGrantUsers'
+    }
+
+    task('dbTestPerformance') {
+        dependsOn dbToolSets['historikk'].tasks['TestPerformance']
+    }
+
+}
+
+
