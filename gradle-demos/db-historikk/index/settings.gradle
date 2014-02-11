@@ -2,6 +2,7 @@ include ':historikk-index1-db' /* Referanse-oppsett: Inneholder mekanikk impleme
 include ':historikk-index3-db' /* GBOK-2696: Perfomance: Forbedrede indexer uten REVERSE */
 include ':historikk-index2-db' /* GBOK-GBOK-2791: refaktorering av views - null value for tEnd */
 include ':historikk-index4-db' /* GBOK-GBOK-2791: refaktorering av views - referanse demo med not null verdier for tEnd */
+include ':historikk-index5-db' /* GBOK-GBOK-2791, GBOK-2696: tester bruk av hints i view */
 
 rootProject.children.each { project -> configureProject(project)}
 

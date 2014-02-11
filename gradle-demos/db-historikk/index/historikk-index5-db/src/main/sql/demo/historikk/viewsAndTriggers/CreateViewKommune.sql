@@ -8,7 +8,7 @@ CREATE OR REPLACE FORCE VIEW "@historikk_index_db_username@"."KOMMUNE"
    "TEND"
  )
 AS
-  SELECT
+  SELECT /*+ INDEX_DESC(h) */
     h."ID",
     h."KOMMUNENUMMER",
     h."KOMMUNENAVN",
@@ -18,10 +18,6 @@ AS
   FROM "@historikk_index_db_schema@"."KOMMUNE_H" h
   WHERE
      (h."TBEGIN" <= SNAPSHOT_TIME.Get_T() AND h."TEND" > SNAPSHOT_TIME.Get_T())
-  ORDER BY
-    h."ID",
-    h."TEND" DESC,
-    h."TBEGIN" DESC
 ;
 
 

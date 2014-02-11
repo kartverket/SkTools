@@ -6,14 +6,14 @@ def dependsOnIfExecuted = rootProject.getDependsOnIfExecuted()
 def HISTORIKK_COLUM_NAMES = [TVERSION: 'TVERSION', TBEGIN: 'TBEGIN', TEND: 'TEND']
 
 description = '''
-  GBOK-2791: tester forbedret index med NOT null (t_LIVE) verdi for 'levende/current' tEnd.
+  GBOK-GBOK-2791, GBOK-2696: tester bruk av hints i view
 '''
 
 
 configureDatabasePlugin {
     useDrivers libraries.ojdbc
 
-    project.ext.tns = "${historikk_index4_db_sid}_${historikk_index4_db_hostname}"
+    project.ext.tns = "${historikk_index5_db_sid}_${historikk_index5_db_hostname}"
 
 
     /**
@@ -40,18 +40,18 @@ configureDatabasePlugin {
 
 
         properties += [
-                historikk_index_db_username: historikk_index4_db_username,
-                historikk_index_db_password: historikk_index4_db_password,
-                historikk_index_db_sid: historikk_index4_db_sid,
-                historikk_index_db_tablespace: historikk_index4_db_tablespace,
-                historikk_index_db_tablespace_index: historikk_index4_db_tablespace_index,
+                historikk_index_db_username: historikk_index5_db_username,
+                historikk_index_db_password: historikk_index5_db_password,
+                historikk_index_db_sid: historikk_index5_db_sid,
+                historikk_index_db_tablespace: historikk_index5_db_tablespace,
+                historikk_index_db_tablespace_index: historikk_index5_db_tablespace_index,
         ]
 
         if (System.properties.containsKey('db.oradata')) { properties.put('db_oradata', System.getProperty('db.oradata')) }
 
-        credentials.username = historikk_index4_db_system_username
-        credentials.password = historikk_index4_db_system_password
-        url = "jdbc:oracle:thin:@${historikk_index4_db_hostname}:${historikk_index4_db_port}:${historikk_index4_db_sid}"
+        credentials.username = historikk_index5_db_system_username
+        credentials.password = historikk_index5_db_system_password
+        url = "jdbc:oracle:thin:@${historikk_index5_db_hostname}:${historikk_index5_db_port}:${historikk_index5_db_sid}"
         driver = 'oracle.jdbc.OracleDriver'
     }
 
@@ -322,18 +322,18 @@ configureDatabasePlugin {
         }
 
         properties += [
-                historikk_index_db_username: historikk_index4_db_username,
-                historikk_index_db_schema: historikk_index4_db_schema,
-                historikk_index_db_tablespace: historikk_index4_db_tablespace,
-                historikk_index_db_tablespace_index: historikk_index4_db_tablespace_index,
+                historikk_index_db_username: historikk_index5_db_username,
+                historikk_index_db_schema: historikk_index5_db_schema,
+                historikk_index_db_tablespace: historikk_index5_db_tablespace,
+                historikk_index_db_tablespace_index: historikk_index5_db_tablespace_index,
         ]
 
 
 
 
-        credentials.username = historikk_index4_db_system_username
-        credentials.password = historikk_index4_db_system_password
-        url = "jdbc:oracle:thin:@${historikk_index4_db_hostname}:${historikk_index4_db_port}:${historikk_index4_db_sid}"
+        credentials.username = historikk_index5_db_system_username
+        credentials.password = historikk_index5_db_system_password
+        url = "jdbc:oracle:thin:@${historikk_index5_db_hostname}:${historikk_index5_db_port}:${historikk_index5_db_sid}"
         driver = 'oracle.jdbc.OracleDriver'
     }
 
