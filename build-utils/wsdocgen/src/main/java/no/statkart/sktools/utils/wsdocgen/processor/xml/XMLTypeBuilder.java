@@ -208,7 +208,7 @@ class XMLTypeBuilder {
         defineCachedType(QName.class, new QName(W3C_XML_SCHEMA_NS_URI, "QName"));
         defineCachedType(java.util.Calendar.class, new QName(W3C_XML_SCHEMA_NS_URI, "dateTime"));
         defineCachedType(XMLGregorianCalendar.class, new QName(W3C_XML_SCHEMA_NS_URI, "dateTime"));
-
+        defineCachedType(byte[].class,                 new QName(W3C_XML_SCHEMA_NS_URI, "base64Binary"));
     }
 
     private void defineCachedType(Class clazz, QName qName) {
@@ -216,10 +216,7 @@ class XMLTypeBuilder {
     }
 
     private TypeMirror elementFor(Class clazz) {
-        if (!clazz.isPrimitive()) {
-            final TypeElement typeElement = processingEnv.getElementUtils().getTypeElement(clazz.getCanonicalName());
-            return typeElement.asType();
-        } else {
+        if (clazz.isPrimitive()) {
             TypeKind typeKind = null;
             if (clazz == boolean.class) {
                 typeKind = TypeKind.BOOLEAN;
@@ -243,7 +240,12 @@ class XMLTypeBuilder {
                 PrimitiveType primitiveType = processingEnv.getTypeUtils().getPrimitiveType(typeKind);
                 return primitiveType;
             }
-
+        } else if (clazz.isArray()) {
+            TypeMirror componentType = elementFor(clazz.getComponentType());
+            return processingEnv.getTypeUtils().getArrayType(componentType);
+        } else {
+            final TypeElement typeElement = processingEnv.getElementUtils().getTypeElement(clazz.getCanonicalName());
+            return typeElement.asType();
         }
 
         throw new RuntimeException("Unhandled primitive type!");

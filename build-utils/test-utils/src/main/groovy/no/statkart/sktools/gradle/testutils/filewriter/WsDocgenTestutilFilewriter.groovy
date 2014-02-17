@@ -50,6 +50,12 @@ class WsDocgenTestutilFilewriter extends AbstractTestutilFilewriter {
 
                          }
 
+                         /** Returnerer noen bytes **/
+                         @javax.jws.WebMethod
+                         public byte[] binary() {
+                             return new byte[]{(byte) 1, (byte) 2};
+                         }
+
                          /** Eksponeres ikke */
                          @javax.jws.WebMethod( exclude = true)
                          public void secret() {
