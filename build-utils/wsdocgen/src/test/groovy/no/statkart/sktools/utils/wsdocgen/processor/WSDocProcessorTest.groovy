@@ -83,9 +83,10 @@ class WSDocProcessorTest {
             Assert.assertEquals(html.body.span[2].text(), 'http://test.statkart.no/test1', "service namespace")
 
             //sjekker dokumenterte metoder
-            Assert.assertEquals html.body.div[0].ul.li.size(), 2, "forventet antall metoder"
-            Assert.assertEquals html.body.div[0].ul.li[0].a.text(), 'noPing', "forventet metodenavn"
-            Assert.assertEquals html.body.div[0].ul.li[1].a.text(), 'ping', "forventet metodenavn"
+            Assert.assertEquals html.body.div[0].ul.li.size(), 3, "forventet antall metoder"
+            Assert.assertEquals html.body.div[0].ul.li[0].a.text(), 'binary', "forventet metodenavn"
+            Assert.assertEquals html.body.div[0].ul.li[1].a.text(), 'noPing', "forventet metodenavn"
+            Assert.assertEquals html.body.div[0].ul.li[2].a.text(), 'ping', "forventet metodenavn"
 
 
             Assert.assertEquals html.body.div[1].div[0].p[0].text().trim(), 'Returnerer PONG', "forventet dokumentasjon"
@@ -94,7 +95,10 @@ class WSDocProcessorTest {
             Assert.assertEquals html.body.div[1].div[1].p[0].text().trim(), 'Returnerer ikke noe', "forventet dokumentasjon"
             Assert.assertEquals html.body.div[1].div[1].h4[0].text().trim(), 'noPing', "forventet overskrift"
 
-            Assert.assertEquals html.body.div[1].div.size(), 2, "forventet antall metoder for service"
+            Assert.assertEquals html.body.div[1].div[2].p[0].text().trim(), 'Returnerer noen bytes', "forventet dokumentasjon"
+            Assert.assertEquals html.body.div[1].div[2].h4[0].text().trim(), 'binary', "forventet overskrift"
+
+            Assert.assertEquals html.body.div[1].div.size(), 3, "forventet antall metoder for service"
         }
 
     }
