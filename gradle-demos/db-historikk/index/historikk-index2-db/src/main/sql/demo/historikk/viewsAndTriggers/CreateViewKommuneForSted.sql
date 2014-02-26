@@ -17,7 +17,7 @@ AS
   WHERE
      (h."TBEGIN" <= SNAPSHOT_TIME.Get_T())
     AND
-     (nvl(h."TEND", TIMESTAMP'9999-12-12 23:59:59.59') > SNAPSHOT_TIME.Get_T())
+     (nvl(h."TEND", TIMESTAMP'9999-12-31 00:00:00.00') > SNAPSHOT_TIME.Get_T())
    ORDER BY
     h."STEDID",
     h."KOMMUNEID",

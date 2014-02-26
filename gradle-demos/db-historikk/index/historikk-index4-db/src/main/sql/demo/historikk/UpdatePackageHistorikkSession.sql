@@ -23,7 +23,7 @@ CREATE OR REPLACE PACKAGE BODY "@historikk_index_db_schema@".SNAPSHOT_TIME AS
     t_Live CONSTANT SNAPSHOT_TRANS.v%TYPE := SNAPSHOT_TIME.To_T('9999-01-01 00:00:00.00');
 
     -- Betegner timestamp for gjeldende snapshot versjon av objektet. Kan betegnes som den versjonen som er 'levende'. Ref tEnd kolonne.
-    t_Infinity CONSTANT SNAPSHOT_TRANS.v%TYPE := SNAPSHOT_TIME.To_T('9999-12-12 23:59:59.59');
+    t_Infinity CONSTANT SNAPSHOT_TRANS.v%TYPE := SNAPSHOT_TIME.To_T('9999-12-31 00:00:00.00');
 
     -- initialiserer t slik at man får oppdaterte data i views som default
     t SNAPSHOT_TRANS.v%TYPE := t_Live;
