@@ -312,12 +312,29 @@ afterEvaluate {
         languageLevel = '1.6'
 
         ipr {
-            //adding Perforce as default vcs by tinkering with the output *.ipr file before it's written out
+            //Perforce as default vcs by tinkering with the output *.ipr file before it's written out
             withXml {
-                def node = it.asNode()
-                def component = node.appendNode('component', ['name': 'VcsDirectoryMappings'])
+                def component = it.asNode().appendNode('component', ['name': 'VcsDirectoryMappings'])
                 component.appendNode('mapping', ['directory': '', 'vcs': 'Perforce'])
             }
+
+            //file encodings for project
+            withXml {
+                def encoding = it.asNode().component.find { it.@name == 'Encoding' }
+                if (encoding) {
+                    encoding.@useUTFGuessing = false
+                    encoding.@native2AsciiForPropertiesFiles = true
+                    encoding.@defaultCharsetForPropertiesFiles = 'ISO-8859-1'
+                    if (!encoding.file) {
+                        encoding.appendNode('file')
+                    }
+                    encoding.file.@url = 'PROJECT'
+                    encoding.file.@charset = 'windows-1252'
+                } else {
+                    logger.warn('Not able to configure file encodings for IntelliJ')
+                }
+            }
+
         }
     }
 
