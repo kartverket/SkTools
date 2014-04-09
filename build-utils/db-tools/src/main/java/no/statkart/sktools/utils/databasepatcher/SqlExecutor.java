@@ -260,6 +260,11 @@ public class SqlExecutor {
 
     static boolean isWarning(SQLException e) {
         String msg = e.getMessage();
+        //ORA-02443: Cannot drop constraint - nonexistent constraint
+        //ORA-02275: such a referential constraint already exists in the table
+        //ORA-00955: name is already being used by existing object
+        //ORA-01418: specified index does not exist
+        //ORA-00942: table or view does not exist
         return msg.contains("02443") || msg.contains("02275") || msg.contains("00955") || msg.contains("01418") || msg.contains("00942");
     }
 
