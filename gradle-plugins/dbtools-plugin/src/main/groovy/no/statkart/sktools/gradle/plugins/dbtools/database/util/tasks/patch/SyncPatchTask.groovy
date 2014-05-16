@@ -35,7 +35,7 @@ class SyncPatchTask extends PatchTask {
         super.validate();
 
         if (patchTypes == null || patchTypes.isEmpty()) {
-            throw new Exception("patchTypes må angis!")
+            throw new Exception("no patchTypes specified!")
         }
         !patchTypes.isEmpty()
     }

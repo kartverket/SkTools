@@ -80,8 +80,6 @@ class PatchConfiguration {
      */
     public PatchTask syncPatchTask(Map params, String name, Closure closure = null) {
         SyncPatchTask task = configurePatchTask(params, name, 'syncPatch', SyncPatchTask.class, closure)
-        //benytter default verdier definert av plugin..
-//        task.conventionMapping.with { map 'patchTypes', { ['INDEX'] } }
         return task
     }
 
