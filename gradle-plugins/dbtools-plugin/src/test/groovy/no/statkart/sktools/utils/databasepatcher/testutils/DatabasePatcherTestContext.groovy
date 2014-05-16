@@ -44,7 +44,7 @@ class DatabasePatcherTestContext<T extends DatabasePatcherTestContext> extends D
 
 CREATE TABLE TEST_TABLE (
    ID INTEGER NOT NULL,
-   NAVN VARCHAR(32) NOT NULL
+   NAVN VARCHAR(128) NOT NULL
 );
 """
 
