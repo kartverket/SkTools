@@ -394,28 +394,27 @@ public class DatabasePatcher {
                  break; //skal kun eksekvere patcher til og med currentPatchInfo
              }
 
-             if (p.patchtype == PatchtypeKode.ALWAYS) {
-                 // ALWAYS patch. Utføres alltid.
-                 executePatchBlock(con, p, entry.getValue(), false);
-                 executedPatchesCount = executedPatchesCount; //oppdateres ikke antall eksekverte patchblokker da denne er såpass spesiell
-             } else {
-                 if (newPatch) {
-                     // Ny patch. Utføres alltid.
-                     executePatchBlock(con, p, entry.getValue(), newPatch);
-                     executedPatchesCount++;
-                     if (singleStepPatches) {
-                         break;
-                     }
-                 } else if (synchToPatchlevel) {
-                     // Dersom synchToPatchlevel
-                     if (p.patchtype.isContaintedBy(patchtypes)) { //filtrerer på type
-                         // Patch har allerede blitt utført, men skal utføres på nytt hvis indexer ikke er i sync
-                         if (!currentPatchInfo.indexesInSyncWithPatch) {
-                             executePatchBlock(con, p, entry.getValue(), newPatch);
-                             executedPatchesCount++; //telles med når currentPatchInfo.indexesInSyncWithPatch == false
-                         }
+             if (newPatch) {
+                 // Ny patch. Utføres alltid.
+                 executePatchBlock(con, p, entry.getValue(), newPatch);
+                 executedPatchesCount++;
+                 if (singleStepPatches) { //stepper også igjenom ALWAYS patcher
+                     break;
+                 }
+
+             } else if (synchToPatchlevel) {
+                 // Dersom synchToPatchlevel
+                 if (p.patchtype.isContaintedBy(patchtypes)) { //filtrerer på type
+                     // Patch har allerede blitt utført, men skal utføres på nytt hvis indexer ikke er i sync
+                     if (!currentPatchInfo.indexesInSyncWithPatch) {
+                         executePatchBlock(con, p, entry.getValue(), newPatch);
+                         executedPatchesCount++; //telles med når currentPatchInfo.indexesInSyncWithPatch == false
                      }
                  }
+             } else if (p.patchtype == PatchtypeKode.ALWAYS) {
+                 // ALWAYS patch. Utføres alltid.
+                 executePatchBlock(con, p, entry.getValue(), newPatch);
+                 executedPatchesCount = executedPatchesCount; //oppdateres ikke antall eksekverte patchblokker da denne er såpass spesiell
              }
          }
 

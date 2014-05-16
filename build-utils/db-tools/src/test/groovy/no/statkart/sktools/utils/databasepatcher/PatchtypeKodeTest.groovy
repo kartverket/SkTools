@@ -44,7 +44,6 @@ class PatchtypeKodeTest {
 
 
         //spesialtilfeller
-        Assert.assertTrue(PatchtypeKode.ALWAYS.isContaintedBy(types), 'Forventer subtype av INDEX')
         Assert.assertTrue(PatchtypeKode.ALL.isContaintedBy(types), 'Forventer subtype av INDEX')
 
     }

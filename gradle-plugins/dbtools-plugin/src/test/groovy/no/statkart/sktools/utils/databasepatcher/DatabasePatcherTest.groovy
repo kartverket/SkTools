@@ -404,14 +404,14 @@ ${testContext.PATCH_03}
 INSERT INTO TEST_TABLE (ID, NAVN) VALUES (1, 'GENERATED INDEX patch: ' || TO_CHAR(CURRENT_TIMESTAMP, 'MI:SS:FF'));
 """
 
-        File patchFile = testContext.createTempFile("""-- patchefil uten patch#2
+        File patchFile = testContext.createTempFile("""-- patchefil
 -- PATCH DB.MIN.VERSION="<any>"
 ${testContext.PATCH_01}
 ${PATCH2}
 ${testContext.PATCH_03}
 """);
 
-        DatabasePatcher databasePatcher = testContext.setUpDatabasePatcher();
+        final DatabasePatcher databasePatcher = testContext.setUpDatabasePatcher();
 
         //STEG: Patcher opp basen med patchFile
         databasePatcher.patch(patchFile.toString());
@@ -439,6 +439,81 @@ ${testContext.PATCH_03}
             Assert.assertEquals(row.patchNo, 3, "patchNo")
             Assert.assertEquals(row.indexesInSyncWithPatch, 1, "indexesInSyncWithPatch")
         }
+    }
+
+
+    /**
+     * SKTOOLS-114: PatchInfo skal oppdateres for ALWAYS når disse er nye
+     */
+    @Test
+    public void testAlwaysPatchblokkPatchingUpdatedPatchInfo() {
+        final DatabasePatcherTestContext testContext = buildDatabasePatcherTestFixture()
+
+        final def PATCH2 = """
+-- PATCH DATA DB.VERSION="1.0" PATCH.NO="2" "Inserting random rows"
+INSERT INTO TEST_TABLE (ID, NAVN) VALUES (2, 'GENERATED ALWAYS patch: ' || TO_CHAR(CURRENT_TIMESTAMP, 'MI:SS:FF'));
+"""
+        final def PATCH3 = """
+-- PATCH ALWAYS DB.VERSION="1.0" PATCH.NO="3" "Inserting random rows"
+INSERT INTO TEST_TABLE (ID, NAVN) VALUES (3, 'GENERATED ALWAYS patch: ' || TO_CHAR(CURRENT_TIMESTAMP, 'MI:SS:FF'));
+"""
+
+        File patchFile1 = testContext.createTempFile("""-- patchefil frem til patch#2
+-- PATCH DB.MIN.VERSION="<any>"
+${testContext.PATCH_01}
+${PATCH2}
+""");
+
+        File patchFile2 = testContext.createTempFile("""-- patchefil frem til patch#3
+-- PATCH DB.MIN.VERSION="<any>"
+${testContext.PATCH_01}
+${PATCH2}
+${PATCH3}
+""");
+
+        final DatabasePatcher databasePatcher = testContext.setUpDatabasePatcher();
+
+        //STEG: Patcher opp basen med patchFile1
+        databasePatcher.patch(patchFile1.toString());
+        sql.firstRow('''select count(*) from TEST_TABLE''').with { def row ->
+            Assert.assertEquals(row[0], 1, 'Forventet antall rader')
+        }
+
+        sql.firstRow('select * from PATCHINFO').with { def row ->
+            Assert.assertNotNull(row, 'Forventer rad')
+            Assert.assertEquals(row.dbVersion, '1.0', "Patchversjon/dbVersion")
+            Assert.assertEquals(row.patchNo, 2, "patchNo")
+            Assert.assertEquals(row.indexesInSyncWithPatch, 1, "indexesInSyncWithPatch")
+        }
+
+
+        //STEG: Patcher opp basen med patchFile2
+        databasePatcher.patch(patchFile2.toString());
+        sql.firstRow('''select count(*) from TEST_TABLE''').with { def row ->
+            Assert.assertEquals(row[0], 2, 'Forventet antall rader')
+        }
+
+        sql.firstRow('select * from PATCHINFO').with { def row ->
+            Assert.assertNotNull(row, 'Forventer rad')
+            Assert.assertEquals(row.dbVersion, '1.0', "Patchversjon/dbVersion")
+            Assert.assertEquals(row.patchNo, 3, "patchNo")
+            Assert.assertEquals(row.indexesInSyncWithPatch, 1, "indexesInSyncWithPatch")
+        }
+
+
+        //STEG: RE-Patcher basen med patchFile2
+        databasePatcher.patch(patchFile2.toString());
+        sql.firstRow('''select count(*) from TEST_TABLE''').with { def row ->
+            Assert.assertEquals(row[0], 3, 'Forventet antall rader')
+        }
+
+        sql.firstRow('select * from PATCHINFO').with { def row ->
+            Assert.assertNotNull(row, 'Forventer rad')
+            Assert.assertEquals(row.dbVersion, '1.0', "Patchversjon/dbVersion")
+            Assert.assertEquals(row.patchNo, 3, "patchNo")
+            Assert.assertEquals(row.indexesInSyncWithPatch, 1, "indexesInSyncWithPatch")
+        }
+
     }
 
 

@@ -63,7 +63,7 @@ public class PatchtypeKode {
      * @return {@code true} dersom koden er et subsett av samlingen av koder.
      */
     public boolean isContaintedBy(Collection<PatchtypeKode> patchtypes) {
-        if (this == ALL || this == ALWAYS || this == SCHEMA ) {
+        if (this == ALL) {
             return true;
         } else {
             for (PatchtypeKode patchtypeKode : patchtypes) {
