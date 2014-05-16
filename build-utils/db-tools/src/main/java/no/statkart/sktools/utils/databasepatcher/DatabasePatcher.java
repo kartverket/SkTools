@@ -378,7 +378,7 @@ public class DatabasePatcher {
          }
 
          if( singleStepPatches ) {
-            logger.info("Kjøre patcher i singlestep mode slik at kun en ny patch blir utført per kall");
+            logger.info("Kjøre patcher i singlestep mode. Kun en patch blir tillagt per eksekvering...");
          }
 
          int executedPatchesCount = 0;
@@ -389,12 +389,16 @@ public class DatabasePatcher {
              // Bestemmer om databasen allerede er patchet med denne patch og om indexer er i sync.
              boolean newPatch = currentPatchInfo.patchVersion.compareTo(p) < 0;
 
-             //hopper ut når synchToPatchlevel
-             if (synchToPatchlevel && newPatch) {
-                 break; //skal kun eksekvere patcher til og med currentPatchInfo
-             }
+             if (newPatch || synchToPatchlevel) {
 
-             if (newPatch) {
+                 if (synchToPatchlevel) {  //SKTOOLS-112: uavhengig av currentPatchInfo.indexesInSyncWithPatch
+                     if (newPatch) {
+                         break; //only old patches in this mode..
+                     } else if (!p.patchtype.isContaintedBy(patchtypes)) {
+                         continue; //only specified patch types in this mode..
+                     }
+                 }
+
                  // Ny patch. Utføres alltid.
                  executePatchBlock(con, p, entry.getValue(), newPatch);
                  executedPatchesCount++;
@@ -402,15 +406,6 @@ public class DatabasePatcher {
                      break;
                  }
 
-             } else if (synchToPatchlevel) {
-                 // Dersom synchToPatchlevel
-                 if (p.patchtype.isContaintedBy(patchtypes)) { //filtrerer på type
-                     // Patch har allerede blitt utført, men skal utføres på nytt hvis indexer ikke er i sync
-                     if (!currentPatchInfo.indexesInSyncWithPatch) {
-                         executePatchBlock(con, p, entry.getValue(), newPatch);
-                         executedPatchesCount++; //telles med når currentPatchInfo.indexesInSyncWithPatch == false
-                     }
-                 }
              } else if (p.patchtype == PatchtypeKode.ALWAYS) {
                  // ALWAYS patch. Utføres alltid.
                  executePatchBlock(con, p, entry.getValue(), newPatch);
