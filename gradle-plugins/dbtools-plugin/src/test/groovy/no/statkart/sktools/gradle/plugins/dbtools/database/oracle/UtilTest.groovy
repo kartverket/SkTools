@@ -44,6 +44,6 @@ class UtilTest {
 
         assertFilterIncludeOrExcludeValue(': (two)', ': \\(two\\)', 'tekst med kolon med spesialtegn');
 
-        assertFilterIncludeOrExcludeValue("TABLE:\"IN('REPCHECK', 'REPCHECK')\" ", "TABLE:\\\"IN\\(\'REPCHECK\', \'REPCHECK\'\\)\" ", 'case for SKTOOLS-113');
+        assertFilterIncludeOrExcludeValue("TABLE:\"IN('REPCHECK', 'REPCHECK')\" ", "TABLE:\\\"IN\\(\\\'REPCHECK\\\', \\\'REPCHECK\\\'\\)\\\" ", 'case for SKTOOLS-113');
     }
 }
