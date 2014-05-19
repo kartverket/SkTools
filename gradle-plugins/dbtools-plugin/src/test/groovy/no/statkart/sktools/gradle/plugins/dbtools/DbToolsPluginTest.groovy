@@ -62,7 +62,7 @@ class DbToolsPluginTest {
         Assert.assertEquals(testCase.convention.dbToolSets.coolDb.credentials.username, 'brukernavn')
         Assert.assertEquals(testCase.convention.dbToolSets.coolDb.credentials.password, 'passord')
         Assert.assertEquals(testCase.convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].username, 'brukernavn')
-        Assert.assertEquals(testCase.convention.dbToolSets.coolDb.tasks.'PleaseAuthenticateMe'.password, 'passord')
+        Assert.assertEquals(testCase.convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].password, 'passord')
 
 
         //setter credentials på toolsetet
@@ -77,8 +77,8 @@ class DbToolsPluginTest {
         Assert.assertEquals(testCase.convention.dbToolSets.coolDb.credentials.username, 'brukernavn2', "Forventet oppdatert brukernavn")
         Assert.assertEquals(testCase.convention.dbToolSets.coolDb.credentials.password, 'passord2', "Forventet oppdatert passord")
         //sjekker at task leser credentials ifra toolset
-        Assert.assertEquals(testCase.convention.dbToolSets.coolDb.tasks.'PleaseAuthenticateMe'.username, 'brukernavn2')
-        Assert.assertEquals(testCase.convention.dbToolSets.coolDb.tasks.'PleaseAuthenticateMe'.password, 'passord2')
+        Assert.assertEquals(testCase.convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].username, 'brukernavn2')
+        Assert.assertEquals(testCase.convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].password, 'passord2')
 
 
         //setter passord på task
@@ -90,8 +90,8 @@ class DbToolsPluginTest {
         Assert.assertEquals(testCase.convention.dbToolSets.coolDb.credentials.username, 'brukernavn2', "Forventet samme brukernavn")
         Assert.assertEquals(testCase.convention.dbToolSets.coolDb.credentials.password, 'passord2', "Forventet samme passord")
         //sjekker at credentials blir bruk som en anatomisk enhet
-        Assert.assertEquals(testCase.convention.dbToolSets.coolDb.tasks.'PleaseAuthenticateMe'.username, null) //fungerer kun når Console ikke finnes
-        Assert.assertEquals(testCase.convention.dbToolSets.coolDb.tasks.'PleaseAuthenticateMe'.password, 'passord3')
+        Assert.assertEquals(testCase.convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].username, null) //fungerer kun når Console ikke finnes
+        Assert.assertEquals(testCase.convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].password, 'passord3')
 
 
 
@@ -101,18 +101,18 @@ class DbToolsPluginTest {
         Assert.assertEquals(testCase.convention.dbToolSets.coolDb.credentials.username, 'brukernavn2', "Forventet samme brukernavn")
         Assert.assertEquals(testCase.convention.dbToolSets.coolDb.credentials.password, 'passord2', "Forventet samme passord")
         //sjekker at credentials blir hentet ifra toolsetet igjen
-        Assert.assertEquals(testCase.convention.dbToolSets.coolDb.tasks.'PleaseAuthenticateMe'.username, 'brukernavn2', "Forventet conventional verdi")
-        Assert.assertEquals(testCase.convention.dbToolSets.coolDb.tasks.'PleaseAuthenticateMe'.password, 'passord2',  "Forventet conventional verdi")
+        Assert.assertEquals(testCase.convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].username, 'brukernavn2', "Forventet conventional verdi")
+        Assert.assertEquals(testCase.convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].password, 'passord2',  "Forventet conventional verdi")
 
 
         //setter credentials  på task
         testCase.project.tasks.'coolDbPleaseAuthenticateMe'.username = 'brukernavn4'
         testCase.project.tasks.'coolDbPleaseAuthenticateMe'.password = 'passord4'
 
-        Assert.assertEquals(testCase.convention.dbToolSets.coolDb.tasks.'PleaseAuthenticateMe'.credentials.username, 'brukernavn4', "Forventet oppdatert brukernavn")
-        Assert.assertEquals(testCase.convention.dbToolSets.coolDb.tasks.'PleaseAuthenticateMe'.credentials.password, 'passord4', "Forventet  oppdatert passord")
-        Assert.assertEquals(testCase.convention.dbToolSets.coolDb.tasks.'PleaseAuthenticateMe'.username, 'brukernavn4', "Forventet oppdatert verdi")
-        Assert.assertEquals(testCase.convention.dbToolSets.coolDb.tasks.'PleaseAuthenticateMe'.password, 'passord4',  "Forventet oppdatert verdi")
+        Assert.assertEquals(testCase.convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].credentials.username, 'brukernavn4', "Forventet oppdatert brukernavn")
+        Assert.assertEquals(testCase.convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].credentials.password, 'passord4', "Forventet  oppdatert passord")
+        Assert.assertEquals(testCase.convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].username, 'brukernavn4', "Forventet oppdatert verdi")
+        Assert.assertEquals(testCase.convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].password, 'passord4',  "Forventet oppdatert verdi")
 
 
     }
