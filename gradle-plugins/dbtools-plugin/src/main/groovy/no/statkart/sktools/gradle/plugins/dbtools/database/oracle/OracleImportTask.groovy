@@ -78,10 +78,10 @@ class OracleImportTask extends ConventionTask {
         ]
 
         if (getExclude() != null && !getExclude().isEmpty()) {
-            command += "EXCLUDE=${getExclude().join(',')}"
+            command += "EXCLUDE=${getExclude().collect { Util.filterIncludeOrExcludeValue(it) }.join(',')}"
         }
         if (getInclude() != null && !getInclude().isEmpty()) {
-            command += "INCLUDE=${getInclude().join(',')}"
+            command += "INCLUDE=${getInclude().collect { Util.filterIncludeOrExcludeValue(it) }.join(',')}"
         }
         if (getParallel() != null) {
             command += "PARALLEL=${getParallel()}"
