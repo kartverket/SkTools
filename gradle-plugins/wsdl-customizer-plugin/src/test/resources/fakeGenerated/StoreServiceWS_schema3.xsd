@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema elementFormDefault="qualified" version="1.0" targetNamespace="http://statkart.no/sktools/wsapi/v1/domain/basistyper" xmlns:tns="http://statkart.no/sktools/wsapi/v1/domain/basistyper" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:complexType name="SkToolsBubbleObjectId">
+    <xs:sequence>
+      <xs:element name="value" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="SkToolsObjectWithVersionId">
+    <xs:complexContent>
+      <xs:extension base="tns:SkToolsBubbleObjectId">
+        <xs:sequence/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="SkToolsObjectWithHistoryId">
+    <xs:complexContent>
+      <xs:extension base="tns:SkToolsObjectWithVersionId">
+        <xs:sequence/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="SkToolsContext">
+    <xs:sequence>
+      <xs:element name="apiVersion" type="xs:string"/>
+      <xs:element name="clientIdentification" type="xs:string"/>
+      <xs:element name="locale" type="xs:string"/>
+      <xs:element name="snapshotVersion" type="tns:Timestamp"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="Timestamp">
+    <xs:sequence>
+      <xs:element name="timestamp" type="xs:dateTime"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="SkToolsBubbleObject">
+    <xs:sequence>
+      <xs:element name="id" type="tns:SkToolsBubbleObjectId"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="LocalizedString">
+    <xs:sequence>
+      <xs:element name="entry" nillable="true" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="key" type="xs:string" nillable="true"/>
+            <xs:element name="value" type="xs:string"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="SkToolsObjectWithVersion">
+    <xs:complexContent>
+      <xs:extension base="tns:SkToolsBubbleObject">
+        <xs:sequence>
+          <xs:element name="oppdateringsdato" type="tns:Timestamp" nillable="true"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="SkToolsObjectWithHistory">
+    <xs:complexContent>
+      <xs:extension base="tns:SkToolsObjectWithVersion">
+        <xs:sequence>
+          <xs:element name="sluttdato" type="tns:Timestamp" nillable="true"/>
+          <xs:element name="oppdateringsBruker" type="xs:string" nillable="true"/>
+          <xs:element name="incrementalVersion" type="xs:long"/>
+          <xs:element name="versjon" type="xs:long"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="LocalDate">
+    <xs:sequence>
+      <xs:element name="date" type="xs:date"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="EntityComponentWithHistory">
+    <xs:complexContent>
+      <xs:extension base="tns:EntityComponent">
+        <xs:sequence>
+          <xs:element name="oppdateringsdato" type="tns:Timestamp" nillable="true"/>
+          <xs:element name="sluttdato" type="tns:Timestamp" nillable="true"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="EntityComponent">
+    <xs:sequence>
+      <xs:element name="id" type="xs:long" nillable="true"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="InverseRelation">
+    <xs:sequence>
+      <xs:element name="materialised" type="xs:boolean"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="LocalTime">
+    <xs:sequence>
+      <xs:element name="time" type="xs:time"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="LocalDateTime">
+    <xs:sequence>
+      <xs:element name="dateTime" type="xs:dateTime"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="SkToolsBubbleObjectIdList">
+    <xs:sequence>
+      <xs:element name="item" type="tns:SkToolsBubbleObjectId" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="SkToolsBubbleObjectList">
+    <xs:sequence>
+      <xs:element name="item" type="tns:SkToolsBubbleObject" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="SkToolsBubbleObjectIdToSnapshotBubbleIdsMap">
+    <xs:sequence>
+      <xs:element name="entry" nillable="true" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="key" type="tns:SkToolsBubbleObjectId" nillable="true"/>
+            <xs:element name="value" type="tns:SnapshotVersionToSkToolsBubbleObjectIdMap"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="SnapshotVersionToSkToolsBubbleObjectIdMap">
+    <xs:sequence>
+      <xs:element name="entry" nillable="true" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="key" type="tns:Timestamp"/>
+            <xs:element name="value" type="tns:SkToolsBubbleObjectId"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+</xs:schema>
+

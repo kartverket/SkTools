@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema elementFormDefault="qualified" version="1.0" targetNamespace="http://statkart.no/sktools/wsapi/v1/domain/register/person" xmlns:ns1="http://statkart.no/sktools/wsapi/v1/domain/basistyper" xmlns:tns="http://statkart.no/sktools/wsapi/v1/domain/register/person" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:import namespace="http://statkart.no/sktools/wsapi/v1/domain/basistyper" schemaLocation="StoreServiceWS_schema3.xsd"/>
+
+  <xs:complexType name="PersonId">
+    <xs:complexContent>
+      <xs:extension base="ns1:SkToolsObjectWithHistoryId">
+        <xs:sequence/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="Person">
+    <xs:complexContent>
+      <xs:extension base="ns1:SkToolsObjectWithHistory">
+        <xs:sequence>
+          <xs:element name="identifikasjonsnummer" type="xs:string"/>
+          <xs:element name="navn" type="xs:string"/>
+          <xs:element name="historisk" type="xs:boolean"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="PersonIdInverseRelation">
+    <xs:complexContent>
+      <xs:extension base="ns1:InverseRelation">
+        <xs:sequence>
+          <xs:element name="cachedValue" type="tns:PersonId" nillable="true"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="PersonIdListInverseRelation">
+    <xs:complexContent>
+      <xs:extension base="ns1:InverseRelation">
+        <xs:sequence>
+          <xs:element name="cachedValue" type="tns:PersonIdList" nillable="true"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="PersonIdList">
+    <xs:sequence>
+      <xs:element name="item" type="tns:PersonId" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:schema>
+
