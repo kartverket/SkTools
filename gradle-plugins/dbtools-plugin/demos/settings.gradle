@@ -4,6 +4,7 @@ include ':encoding'
 include ':properties'
 include ':patch'
 include ':patch:multimodule'
+include ':exhaustion'
 
 rootProject.name = 'dbtools-plugin-demos'
 
@@ -15,11 +16,12 @@ gradle.projectsLoaded { Gradle g ->
     if (g.parent == null) {
         if (!startParameter.taskNames.isEmpty()) {
             g.rootProject.buildscript {
+                StartParameter sp = gradle.startParameter.newBuild()
+                sp.taskNames = ['install']
+                sp.projectDir = g.rootProject.file('../../..') //install på rotprosjektet da en har dependency til db-tools
+
                 println 'Asserting project is up to date. Running build on root-project:'
-                g.rootProject.exec() {
-                    commandLine 'gradle.bat', 'install'
-                    workingDir '../../..' //install på rotprosjektet da en har dependency til db-tools
-                }
+                GradleLauncher.newInstance(sp).run().rethrowFailure();
             }
         }
     }

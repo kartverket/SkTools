@@ -1,0 +1,39 @@
+apply plugin: 'sktools-dbtools-plugin'
+
+description = 'Testing SKTOOLS-59: connection exhaustion'
+
+def libraries = [
+        drivers: ["com.oracle:ojdbc6:11.2.0.3.0@jar"]
+]
+
+
+//see DbtoolsConvention#ConfigureDatabasePlugin
+configureDatabasePlugin {
+
+    //mandatory, required values
+    project.ext.set 'oracle_db_host', System.getProperty('db_host', 'localhost')
+    project.ext.set 'oracle_db_port', System.getProperty('db_port', '1521')
+    project.ext.set 'oracle_db_sid', System.getProperty('db_sid', 'DEV1')
+
+
+    useDrivers libraries.drivers
+
+    toolset( name:'main', type:'oracle', prefix:'') {
+
+        task('aWholeBunchOfConnections') {
+            dependsOn (1..100).collect() {
+                sqlTask("ping$it", sqlFile: 'src/main/sql/ping.sql')
+            }
+        }
+
+
+
+        url = "jdbc:oracle:thin:@${project.ext.oracle_db_host}:${project.ext.oracle_db_port}:${project.ext.oracle_db_sid}"
+
+        properties = [
+                username: 'SYSTEM',
+                password: System.getProperty('db_password', 'MATRIKKELADM'),
+        ]
+    }
+
+}

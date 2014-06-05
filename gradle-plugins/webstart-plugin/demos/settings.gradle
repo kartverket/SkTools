@@ -31,11 +31,12 @@ gradle.projectsLoaded { Gradle g ->
     if (g.parent == null) {
         if (!startParameter.taskNames.isEmpty()) {
             g.rootProject.buildscript {
-                println 'Asserting project is up to date. Running build on plugin-project:'
-                g.rootProject.exec() {
-                    commandLine 'gradle.bat', 'install'
-                    workingDir '..'
-                }
+                StartParameter sp = gradle.startParameter.newBuild()
+                sp.taskNames = ['install']
+                sp.projectDir = g.rootProject.file('..')
+
+                println 'Asserting project is up to date. Running build on root-project:'
+                GradleLauncher.newInstance(sp).run().rethrowFailure();
             }
         }
     }
