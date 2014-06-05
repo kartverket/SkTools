@@ -4,7 +4,7 @@ include ':encoding'
 include ':properties'
 include ':patch'
 include ':patch:multimodule'
-//include ':exhaustion'
+include ':exhaustion'
 
 rootProject.name = 'dbtools-plugin-demos'
 

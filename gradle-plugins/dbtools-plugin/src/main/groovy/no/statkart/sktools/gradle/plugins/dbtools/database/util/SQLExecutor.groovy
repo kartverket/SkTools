@@ -37,6 +37,8 @@ class SQLExecutor {
             logger.debug("Calling executeStatements() with parameters \n\t " + [username:specs.username, password:specs.password, driver:specs.driver, url:specs.url])
         }
 
+        waitForConnectionRate(15)
+
         def sql = Sql.newInstance(specs.url, specs.username, specs.password, specs.driver)
         println("connected to database: ${sql.connection.metaData.URL} [${sql.connection.metaData.userName}]")
 
@@ -69,8 +71,34 @@ class SQLExecutor {
             }
         }
 
+        sql.close() //SKTOOLS-59: release connection to database
+
     }
 
+
+    private final LinkedHashSet<Long> INVOCATIONS = new LinkedHashSet<Long>();
+    /**
+     * SKTOOLS-59: optional limitation of number of connections per second
+     * @param rateLimit
+     */
+    private void waitForConnectionRate(int rateLimit) {
+
+        boolean messageLogged = false;
+
+        while (INVOCATIONS.size() >= rateLimit) {
+            if (!messageLogged) {
+                logger.debug "slowing down due to RATE_LIMIT=${rateLimit}..." //SKTOOLS-59
+                messageLogged = true;
+            }
+
+            Thread.sleep(10)
+            INVOCATIONS.removeAll(INVOCATIONS.findAll {it < System.currentTimeMillis() - 1000}) //removing previous invocations
+        }
+
+
+        INVOCATIONS.add(System.currentTimeMillis());
+
+    }
 
 }
 
