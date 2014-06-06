@@ -51,14 +51,16 @@ class FilterPropertiesPluginTest {
         propertyUtils.expandProjectProperties()
 
         //feilen kom her..
-        project.plugins.withType(org.gradle.api.publish.maven.plugins.MavenPublishPlugin.class) {
-            project.publishing {
-                repositories {
-                    maven {
-                        url 'http://no.domain'
-                        credentials {
-                            username = 'dummy'
-                            password = 'password'
+        if (gradle.version >= '1.6') {
+            project.plugins.withType(org.gradle.api.publish.maven.plugins.MavenPublishPlugin.class) {
+                project.publishing {
+                    repositories {
+                        maven {
+                            url 'http://no.domain'
+                            credentials {
+                                username = 'dummy'
+                                password = 'password'
+                            }
                         }
                     }
                 }
