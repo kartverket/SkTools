@@ -33,6 +33,42 @@ class FilterPropertiesPluginTest {
     }
 
     /**
+     * SKTOOLS-70
+     */
+    @Test
+    void testInteroperabilityWithMavenPublish() {
+        //forks a new project in a temp folder
+        Project project = ProjectBuilder.builder().build()
+
+        project.apply plugin: 'maven-publish'
+        project.apply plugin: 'sktools-filterproperties-plugin'
+
+        assert project.convention.plugins.filterProperties != null
+        Assert.assertTrue(project.convention.plugins.filterProperties instanceof FilterPropertiesConvention)
+
+        no.statkart.sktools.gradle.plugins.filterproperties.extention.PropertyUtils propertyUtils = new no.statkart.sktools.gradle.plugins.filterproperties.extention.PropertyUtils(project)
+
+        propertyUtils.expandProjectProperties()
+
+        //feilen kom her..
+        project.plugins.withType(org.gradle.api.publish.maven.plugins.MavenPublishPlugin.class) {
+            project.publishing {
+                repositories {
+                    maven {
+                        url 'http://no.domain'
+                        credentials {
+                            username = 'dummy'
+                            password = 'password'
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+
+
+    /**
      * Tester og demonstrerer angivelse av konfigurasjon
      */
     @Test

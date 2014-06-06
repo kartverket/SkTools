@@ -103,7 +103,7 @@ public class PropertyUtils {
 
         //plukker ut interessange properties
         HashMap<String, String> props = new HashMap<String, String>();
-        for (Map.Entry<String, ?> entry : project.getProperties().entrySet()) {
+        for (Map.Entry<String, ?> entry : project.getExtensions().getExtraProperties().getProperties().entrySet()) { //SKTOOLS-70: ta ikke med properties ifra prosjektets vedhengsobjekter (extensions)
             Object value = entry.getValue();
             if (value instanceof CharSequence) {
                 matcher = (matcher == null) ? SUBSTITUTION_PATTERN.matcher((CharSequence) value) : matcher.reset((CharSequence) value);
@@ -179,7 +179,7 @@ public class PropertyUtils {
                         } else if (!isSame && props.containsKey(propertyName)) {
                             replacement = props.get(propertyName).toString();
                         } else if (project.hasProperty(propertyName)) {
-                            replacement = project.getProperties().get(propertyName).toString();
+                            replacement = project.getExtensions().getExtraProperties().get(propertyName).toString(); //SKTOOLS-70: ta ikke med properties ifra prosjektets vedhengsobjekter (extensions)
                         } else {
                             unresolvedProperties.put(entry.getKey(), value);
                             expandedValue = null;
