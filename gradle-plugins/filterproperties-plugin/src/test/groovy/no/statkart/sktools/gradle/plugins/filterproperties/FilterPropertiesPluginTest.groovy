@@ -40,6 +40,8 @@ class FilterPropertiesPluginTest {
         //forks a new project in a temp folder
         Project project = ProjectBuilder.builder().build()
 
+        if (gradle.version < '1.6') { return; } //incubating feature in gradle 1.6
+
         project.apply plugin: 'maven-publish'
         project.apply plugin: 'sktools-filterproperties-plugin'
 
@@ -51,16 +53,14 @@ class FilterPropertiesPluginTest {
         propertyUtils.expandProjectProperties()
 
         //feilen kom her..
-        if (gradle.version >= '1.6') {
-            project.plugins.withType(org.gradle.api.publish.maven.plugins.MavenPublishPlugin.class) {
-                project.publishing {
-                    repositories {
-                        maven {
-                            url 'http://no.domain'
-                            credentials {
-                                username = 'dummy'
-                                password = 'password'
-                            }
+        project.plugins.withType(org.gradle.api.publish.maven.plugins.MavenPublishPlugin.class) {
+            project.publishing {
+                repositories {
+                    maven {
+                        url 'http://no.domain'
+                        credentials {
+                            username = 'dummy'
+                            password = 'password'
                         }
                     }
                 }
