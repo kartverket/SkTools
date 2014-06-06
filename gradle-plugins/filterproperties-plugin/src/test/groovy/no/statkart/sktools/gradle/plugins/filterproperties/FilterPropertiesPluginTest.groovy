@@ -40,7 +40,10 @@ class FilterPropertiesPluginTest {
         //forks a new project in a temp folder
         Project project = ProjectBuilder.builder().build()
 
-        if (gradle.version < '1.6') { return; } //incubating feature in gradle 1.6
+        if (project.gradle.gradleVersion < '1.6') {
+            println "Skipping test for gradle ${project.gradle.gradleVersion}"
+            return; //incubating feature in gradle 1.6
+        }
 
         project.apply plugin: 'maven-publish'
         project.apply plugin: 'sktools-filterproperties-plugin'
