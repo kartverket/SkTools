@@ -59,9 +59,6 @@ class ClientConfiguration {
         this.name = name
 
         jarDependencies = project.files()
-
-        // Dette er hardkodet i template.jnlp. Prosjekter bør ikke overstyre denne verdien, selv om de kan.
-        manifestAttributes.put("Permissions", "all-permissions");
     }
 
     String getName() {
