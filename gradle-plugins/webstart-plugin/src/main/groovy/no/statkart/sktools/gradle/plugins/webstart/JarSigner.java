@@ -35,6 +35,7 @@ public class JarSigner extends ConventionTask {
     private File certificateFile;
     private String password;
     private String alias;
+    private String digestAlg = "SHA1"; // Dette ser ut til å være det tryggeste når det kommer til jar-filer som allerede er signert
 
     private Map<String, String> manifestAttributes = new LinkedHashMap<String, String>();
 
@@ -167,6 +168,7 @@ public class JarSigner extends ConventionTask {
                 execSpec.args(
                         "-keystore", getCertificateFile().getAbsolutePath(),
                         "-storepass", getPassword(),
+                        "-digestalg", getDigestAlg(),
                         jarFile.getName(),    //file to sign in same dir - see ...setDir(File)
                         getAlias()
                 );
@@ -218,6 +220,15 @@ public class JarSigner extends ConventionTask {
 
     public void setAlias(String alias) {
         this.alias = alias;
+    }
+
+    @Input
+    public String getDigestAlg() {
+        return digestAlg;
+    }
+
+    public void setDigestAlg(String digestAlg) {
+        this.digestAlg = digestAlg;
     }
 
     @Input
