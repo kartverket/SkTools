@@ -72,6 +72,30 @@ class FilterPropertiesPluginTest {
 
     }
 
+    /**
+     * SKTOOLS-70
+     * Asserts that a child project reads parent properties when property is not found (gradle feature)
+     */
+    @Test
+    void testParentProjectProperties() {
+        ProjectHelper rootProjectHelper = FilterPropertiesProjectBuilder.builder().applyJavaPlugin().applyFilterPropertiesPlugin().build()
+        ProjectHelper child1ProjectHelper = FilterPropertiesProjectBuilder.builder().withParent(rootProjectHelper).build()
+
+        rootProjectHelper.setProjectProperties(testProperty: "TestValue");
+        Assert.assertEquals(child1ProjectHelper.project.property("testProperty"), "TestValue")
+
+        rootProjectHelper.setProjectProperties(filteredProperty: "filtered\${testProperty}");
+        Assert.assertEquals(child1ProjectHelper.project.property("filteredProperty"), "filtered\${testProperty}")
+
+        //ekspanderer properties..
+        child1ProjectHelper.configureProject {
+            propertyUtils.expandProjectProperties()
+        }
+
+        Assert.assertEquals(child1ProjectHelper.project.property("filteredProperty"), "filteredTestValue")
+    }
+
+
 
     /**
      * Tester og demonstrerer angivelse av konfigurasjon
