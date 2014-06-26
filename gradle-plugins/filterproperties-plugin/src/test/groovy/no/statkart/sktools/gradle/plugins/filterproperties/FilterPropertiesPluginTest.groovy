@@ -95,6 +95,29 @@ class FilterPropertiesPluginTest {
         Assert.assertEquals(child1ProjectHelper.project.property("filteredProperty"), "filteredTestValue")
     }
 
+    /**
+     * SKTOOLS-70
+     * Asserts that a child project can filter in properties only found on parent
+     */
+    @Test
+    void testFilterFromParent() {
+        ProjectHelper rootProjectHelper = FilterPropertiesProjectBuilder.builder().applyJavaPlugin().applyFilterPropertiesPlugin().build()
+        ProjectHelper child1ProjectHelper = FilterPropertiesProjectBuilder.builder().withParent(rootProjectHelper).applyFilterPropertiesPlugin().build()
+
+        rootProjectHelper.setProjectProperties(testProperty: "TestValue");
+        Assert.assertEquals(child1ProjectHelper.project.property("testProperty"), "TestValue")
+
+        child1ProjectHelper.setProjectProperties(filteredProperty: "filtered\${testProperty}");
+        Assert.assertEquals(child1ProjectHelper.project.property("filteredProperty"), "filtered\${testProperty}")
+
+        //ekspanderer properties..
+        child1ProjectHelper.configureProject {
+            propertyUtils.expandProjectProperties()
+        }
+
+        Assert.assertEquals(child1ProjectHelper.project.property("filteredProperty"), "filteredTestValue")
+    }
+
 
 
     /**
