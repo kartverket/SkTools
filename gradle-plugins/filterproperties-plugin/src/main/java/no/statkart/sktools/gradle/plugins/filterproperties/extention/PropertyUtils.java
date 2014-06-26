@@ -179,7 +179,7 @@ public class PropertyUtils {
                         } else if (!isSame && props.containsKey(propertyName)) {
                             replacement = props.get(propertyName).toString();
                         } else if (project.hasProperty(propertyName)) {
-                            replacement = project.getExtensions().getExtraProperties().get(propertyName).toString(); //SKTOOLS-70: ta ikke med properties ifra prosjektets vedhengsobjekter (extensions)
+                            replacement = project.property(propertyName).toString(); //SKTOOLS-70: ta ikke med properties ifra prosjektets vedhengsobjekter (extensions)
                         } else {
                             unresolvedProperties.put(entry.getKey(), value);
                             expandedValue = null;
