@@ -81,6 +81,7 @@ class WebstartPlugin implements Plugin<Project> {
         webstartTask.setJnlpConfigurations(clientConfiguration.jnlpConfigurations)
         webstartTask.conventionMapping.libDir = { clientConfiguration.libDir }
         webstartTask.jarResources jarSigner
+        webstartTask.mainJar clientConfiguration.mainDependency
         webstartTask.conventionMapping.map('digest', new Callable<String>() {
             @Override
             String call() throws Exception {

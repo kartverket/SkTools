@@ -1,6 +1,7 @@
 package no.statkart.sktools.gradle.plugins.webstart
 
 import org.gradle.api.XmlProvider
+import org.gradle.testfixtures.ProjectBuilder
 import org.testng.Assert
 import org.testng.annotations.Test
 import no.statkart.sktools.gradle.testutils.ProjectHelper
@@ -113,9 +114,21 @@ class WebstartTaskTest {
         ProjectHelper projectHelper = WebstartProjectBuilder.builder().withName('root').build()
         projectHelper.setProjectProperties(version: 101)
 
-        final Project project = projectHelper.project;
+        Project depProject = ProjectBuilder.builder().withName('dep').withParent(projectHelper.project).build()
+        depProject.apply(plugin: 'java')
+        depProject.jar.manifest.attributes 'Implementation-Version': '0.1'
+        Project mainProject = ProjectBuilder.builder().withName('main').withParent(projectHelper.project).build()
+        mainProject.apply(plugin: 'java')
+        mainProject.jar.manifest.attributes 'Implementation-Version': '0.1'
 
-        project.task('webstart', type: WebstartTask) {
+        final Project webstartProject = projectHelper.project;
+
+        mainProject.jar.execute()
+        depProject.jar.execute()
+
+        webstartProject.task('webstart', type: WebstartTask) {
+            jarResources webstartProject.files(mainProject.jar, depProject.jar)
+            mainJar webstartProject.files(mainProject.jar)
             jnlp {
                 jnlpFilename = 'client1.jnlp'
 
@@ -150,7 +163,7 @@ class WebstartTaskTest {
             }
         }
 
-        project.tasks.webstart.execute()
+        webstartProject.tasks.webstart.execute()
 
 
         projectHelper.assertFileExists('build/webstart/client1.jnlp') {
@@ -178,8 +191,16 @@ class WebstartTaskTest {
             Assert.assertEquals(jnlp.resources[0].property[2].@name.text(), 'withXml')
             Assert.assertEquals(jnlp.resources[0].property[2].@value.text(), 'oh,yeah')
 
-            Assert.assertEquals(jnlp.resources[1].children().size(), 0) //tom resources
+            Assert.assertEquals(jnlp.resources[0].jar[0].@href.text(), 'lib/main.jar')
+            Assert.assertEquals(jnlp.resources[0].jar[0].@size.text(), '280')
+            Assert.assertEquals(jnlp.resources[0].jar[0].@version.text(), '0.1')
+            Assert.assertEquals(jnlp.resources[0].jar[0].@main.text(), 'true')
+            Assert.assertEquals(jnlp.resources[0].jar[1].@href.text(), 'lib/dep.jar')
+            Assert.assertEquals(jnlp.resources[0].jar[1].@size.text(), '280')
+            Assert.assertEquals(jnlp.resources[0].jar[1].@version.text(), '0.1')
+            Assert.assertEquals(jnlp.resources[0].jar[1].@main.text(), '')
 
+            Assert.assertEquals(jnlp.resources[1].children().size(), 0) //tom resources
         }
     }
 

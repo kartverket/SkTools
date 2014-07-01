@@ -1,6 +1,7 @@
 package no.statkart.sktools.gradle.plugins.webstart
 
 import no.statkart.sktools.gradle.plugins.webstart.util.ArtifactMatcher
+import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.logging.Logger
@@ -22,6 +23,7 @@ class WebstartTask extends ConventionTask {
 
     private List<JnlpConfiguration> jnlpConfigurations = new ArrayList<JnlpConfiguration>();
     private final ConfigurableFileCollection jarResources;
+    private final ConfigurableFileCollection mainJar;
 
     private File destinationDir;
 
@@ -31,6 +33,7 @@ class WebstartTask extends ConventionTask {
 
     WebstartTask() {
         jarResources = project.files()
+        mainJar = project.files()
     }
 
     public void jnlp(Closure config) {
@@ -46,6 +49,15 @@ class WebstartTask extends ConventionTask {
 
     void jarResources(Object... files) {
         jarResources.from(files)
+    }
+
+    @InputFiles
+    FileCollection getMainJar() {
+        return mainJar
+    }
+
+    void mainJar(Object... files) {
+        mainJar.from(files)
     }
 
     @Input
@@ -132,7 +144,32 @@ class WebstartTask extends ConventionTask {
             }
         }
 
-        jarResources.files.each {File file ->
+        Set<File> mainJarFiles = mainJar.files // Disse er potensielt usignert, og kan derfor ikke brukes direkte
+        Set<File> allJarFiles = jarResources.files // Dette er de jar-filene som skal brukes, både main og de andre
+        Set<File> nonMainJarFiles // Dette er alle jar-filer som ikke skal merkes som main
+
+        if (mainJarFiles.size() > 1) {
+            throw new GradleException('There can only be one main jar. ' + mainJarFiles)
+        } else if (mainJarFiles.size() > 0) {
+            File unsignedFile = mainJarFiles.iterator().next()
+
+            File mainJarFile = allJarFiles.find { it.name == unsignedFile.name }
+            nonMainJarFiles = allJarFiles - mainJarFiles
+
+            ArtifactMatcher artifactMatcher = new ArtifactMatcher(mainJarFile)
+
+            String jarPath = getLibDir() + '/' + artifactMatcher.name + '.' + artifactMatcher.type
+
+            Node jarNode = resourcesNode.appendNode('jar', [href: jarPath, version: artifactMatcher.version + digest, main: 'true'])
+            long size = mainJarFile.length()   //0 if for some reasons the file cant be found
+            if (size > 0L) {
+                jarNode.attributes().put('size', size)
+            }
+        } else {
+            nonMainJarFiles = allJarFiles
+        }
+
+        nonMainJarFiles.each {File file ->
             ArtifactMatcher artifactMatcher = new ArtifactMatcher(file)
 
             String jarPath = getLibDir() + '/' + artifactMatcher.name + '.' + artifactMatcher.type

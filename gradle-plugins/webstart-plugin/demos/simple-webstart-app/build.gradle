@@ -3,13 +3,18 @@ apply plugin: 'sktools-webstart-plugin'
 description = 'Demonstrates how to make a simple webstart war module.'
 
 configurations {
-    client1
+    client1Main {
+        transitive = false
+    }
+    client1 {
+        extendsFrom client1Main
+    }
     client
 }
 
 dependencies {
     client1 'dom4j:dom4j:1.4@jar'
-    client1 project(path: ':echo-client')
+    client1Main project(path: ':echo-client')
     client1 'commons-lang:commons-lang:2.6@jar'
     client1 (['weblogic:wlfullclient_java5:10.3.5', 'weblogic:wlcipher:10.3.5', 'weblogic:cryptojfips:10.3.5'])
     client project(path: ':echo-client')
@@ -17,6 +22,7 @@ dependencies {
 
 webstart {
     client1 {
+        mainDependency configurations.client1Main
         jarDependencies configurations.client1
         sign rootProject.file('kodesignering.jks'), 'statenskartverk', 'SagZ45_p1'
         jnlp {

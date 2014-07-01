@@ -43,6 +43,7 @@ class ClientConfiguration {
     private Map<String, String> manifestAttributes = new LinkedHashMap<String, String>();
     private List<JnlpConfiguration> jnlpConfigurations = new ArrayList<JnlpConfiguration>();
     private ConfigurableFileCollection jarDependencies
+    private ConfigurableFileCollection mainDependency
 
     /**
      * Angir relativ URL til jar-filer i forholdt til jnlp-filene.
@@ -59,6 +60,7 @@ class ClientConfiguration {
         this.name = name
 
         jarDependencies = project.files()
+        mainDependency = project.files()
     }
 
     String getName() {
@@ -87,6 +89,10 @@ class ClientConfiguration {
         jarDependencies.from(files)
     }
 
+    public void mainDependency(Object... files) {
+        mainDependency.from(files)
+    }
+
     SigningConfiguration getSigningConfiguration() {
         return signingConfiguration
     }
@@ -101,6 +107,10 @@ class ClientConfiguration {
 
     FileCollection getJarDependencies() {
         return jarDependencies
+    }
+
+    FileCollection getMainDependency() {
+        return mainDependency
     }
 }
 
