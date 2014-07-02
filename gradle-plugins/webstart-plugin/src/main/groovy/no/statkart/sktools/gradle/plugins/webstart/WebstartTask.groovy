@@ -154,7 +154,7 @@ class WebstartTask extends ConventionTask {
             File unsignedFile = mainJarFiles.iterator().next()
 
             File mainJarFile = allJarFiles.find { it.name == unsignedFile.name }
-            nonMainJarFiles = allJarFiles - mainJarFiles
+            nonMainJarFiles = allJarFiles - mainJarFile
 
             ArtifactMatcher artifactMatcher = new ArtifactMatcher(mainJarFile)
 
