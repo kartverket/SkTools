@@ -66,7 +66,7 @@ class OracleExportTask extends ConventionTask {
 
         def sout = new StringBuffer()
         def serr = new StringBuffer()
-        List<String> command = ['expdp.exe',
+        List<String> command = ['expdp',
                 "USERID=${getUsername()}/${getPassword()}@${getTns()}",
                 "DIRECTORY=${getDirectory()}",
                 "SCHEMAS=${getSchemas().join(',')}",

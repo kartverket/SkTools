@@ -66,7 +66,7 @@ class OracleImportTask extends ConventionTask {
 
         def sout = new StringBuffer()
         def serr = new StringBuffer()
-        List<String> command = ['impdp.exe',
+        List<String> command = ['impdp',
                 "${getUsername()}/${getPassword()}@${getTns()}",
                 "DIRECTORY=${getDirectory()}",
                 "SCHEMAS=${getSchemas().join(',')}",

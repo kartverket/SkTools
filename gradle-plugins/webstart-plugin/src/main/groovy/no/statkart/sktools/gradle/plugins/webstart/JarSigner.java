@@ -150,7 +150,7 @@ public class JarSigner extends ConventionTask {
 
                     execSpec.setWorkingDir(jarFile.getParent());
                     execSpec.setIgnoreExitValue(false);
-                    execSpec.setExecutable("jar.exe");
+                    execSpec.setExecutable("jar");
                     execSpec.args("ufm", jarFile.getName(), manifestAddendum.getAbsolutePath());
                 }
             });
@@ -164,7 +164,7 @@ public class JarSigner extends ConventionTask {
 
                 execSpec.setWorkingDir(jarFile.getParentFile());
                 execSpec.setIgnoreExitValue(false);
-                execSpec.setExecutable("jarsigner.exe");
+                execSpec.setExecutable("jarsigner");
                 execSpec.args(
                         "-keystore", getCertificateFile().getAbsolutePath(),
                         "-storepass", getPassword(),
