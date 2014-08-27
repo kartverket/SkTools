@@ -1,7 +1,5 @@
 package no.statkart.sktools.gradle.plugins.webstart
 
-import no.statkart.sktools.gradle.plugins.webstart.util.ArtifactMatcher
-import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.logging.Logger
@@ -110,7 +108,6 @@ class WebstartTask extends ConventionTask {
      */
     public void createJnlp(JnlpConfiguration jnlp) {
         Node jnlpNode = new XmlParser().parse(getClass().getResourceAsStream('template.jnlp'))
-        String digest = getDigest() != null ? ('-' + getDigest()) : ''
 
         jnlpNode.attributes().put('href', jnlp.jnlpFilename)
         jnlpNode.attributes().put('version', jnlp.version)
@@ -126,64 +123,17 @@ class WebstartTask extends ConventionTask {
             informationNode.remove(informationNode.homepage[0]) //homepage must have an href if set
         }
 
-        Node resourcesNode = new Node(jnlpNode, 'resources')
-
-        jnlp.resources.runtimes?.each { JavaRuntimeConfiguration javaRuntime ->
-            Node javaNode = resourcesNode.appendNode('j2se', [version: javaRuntime.version])
-            if (javaRuntime.href != null) {
-                javaNode.attributes().put('href', javaRuntime.href)
-            }
-            if (javaRuntime.xms != null) {
-                javaNode.attributes().put('initial-heap-size', javaRuntime.xms)
-            }
-            if (javaRuntime.xmx != null) {
-                javaNode.attributes().put('max-heap-size', javaRuntime.xmx)
-            }
-            if (javaRuntime.vmArgs != null) {
-                javaNode.attributes().put('java-vm-args', javaRuntime.vmArgs)
-            }
+        jnlp.resources.each { ResourcesConfiguration resources ->
+            jnlpNode.append(JnlpSyntaxUtil.createResourcesElement(resources))
         }
 
-        Set<File> mainJarFiles = mainJar.files // Disse er potensielt usignert, og kan derfor ikke brukes direkte
-        Set<File> allJarFiles = jarResources.files // Dette er de jar-filene som skal brukes, både main og de andre
-        Set<File> nonMainJarFiles // Dette er alle jar-filer som ikke skal merkes som main
-
-        if (mainJarFiles.size() > 1) {
-            throw new GradleException('There can only be one main jar. ' + mainJarFiles)
-        } else if (mainJarFiles.size() > 0) {
-            File unsignedFile = mainJarFiles.iterator().next()
-
-            File mainJarFile = allJarFiles.find { it.name == unsignedFile.name }
-            nonMainJarFiles = allJarFiles - mainJarFile
-
-            ArtifactMatcher artifactMatcher = new ArtifactMatcher(mainJarFile)
-
-            String jarPath = getLibDir() + '/' + artifactMatcher.name + '.' + artifactMatcher.type
-
-            Node jarNode = resourcesNode.appendNode('jar', [href: jarPath, version: artifactMatcher.version + digest, main: 'true'])
-            long size = mainJarFile.length()   //0 if for some reasons the file cant be found
-            if (size > 0L) {
-                jarNode.attributes().put('size', size)
-            }
-        } else {
-            nonMainJarFiles = allJarFiles
+        if (jnlp.resources.isEmpty()) {
+            jnlpNode.append(JnlpSyntaxUtil.createResourcesElement(null))
         }
 
-        nonMainJarFiles.each {File file ->
-            ArtifactMatcher artifactMatcher = new ArtifactMatcher(file)
+        //adds all jars for dependencies to very first <resources> element in jnlp
+        JnlpSyntaxUtil.appendJarElementForAllDependencies(jnlpNode.resources[0], mainJar.files, jarResources.files, getLibDir(), getDigest() != null ? ('-' + getDigest()) : '')
 
-            String jarPath = getLibDir() + '/' + artifactMatcher.name + '.' + artifactMatcher.type
-
-            Node jarNode = resourcesNode.appendNode('jar', [href: jarPath, version: artifactMatcher.version + digest])
-            long size = file.length()   //0 if for some reasons the file cant be found
-            if (size > 0L) {
-                jarNode.attributes().put('size', size)
-            }
-        }
-
-        jnlp.resources.systemProperties?.each { key, value ->
-            resourcesNode.appendNode('property', [name: key, value: value])
-        }
 
         if (jnlp.hasApplication()) {
             jnlpNode.appendNode('application-desc', ['main-class': jnlp.application.mainClass])

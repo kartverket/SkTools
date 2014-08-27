@@ -1,6 +1,7 @@
 package no.statkart.sktools.gradle.plugins.webstart
 
 import no.statkart.sktools.gradle.plugins.webstart.util.FileHashIdent
+import org.apache.commons.lang.builder.EqualsBuilder
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.NamedDomainObjectFactory
 import org.gradle.api.Project
@@ -158,14 +159,13 @@ class JnlpConfiguration implements Serializable {
     String version = null; //optional
     protected ApplicationConfiguration application = null;  //might be null
 
-    protected ResourcesConfiguration resources;
+    protected final List<ResourcesConfiguration> resources = new ArrayList<ResourcesConfiguration>();
 
     private transient Closure withXml;
 
     JnlpConfiguration(Project project) {
         this.project = project
         jnlpFilename = project.name + '.jnlp'
-        resources = new ResourcesConfiguration(this)
     }
 
     Project getProject() {
@@ -229,12 +229,20 @@ class JnlpConfiguration implements Serializable {
         return application;
     }
 
-    public ResourcesConfiguration resources(Closure config) {
-        return resources.configure(config)
+    /**
+     * Adds a group of resources
+     */
+    public ResourcesConfiguration resources(Closure config = null) {
+        ResourcesConfiguration resourcesConfiguration = new ResourcesConfiguration(this)
+        resources.add(resourcesConfiguration);
+        if (config != null) {
+            resourcesConfiguration.configure(config)
+        }
+        return resourcesConfiguration;
     }
 
-    public ResourcesConfiguration getResources() {
-        return resources
+    protected List<ResourcesConfiguration> getResources() {
+        return resources;
     }
 
     public void withXml(Closure closure) {
@@ -256,21 +264,8 @@ class JnlpConfiguration implements Serializable {
     }
 
     boolean equals(o) {
-        if (this.is(o)) return true
-        if (getClass() != o.class) return false
+        return EqualsBuilder.reflectionEquals(this, o);
 
-        JnlpConfiguration that = (JnlpConfiguration) o
-
-        if (application != that.application) return false
-        if (description != that.description) return false
-        if (homepage != that.homepage) return false
-        if (jnlpFilename != that.jnlpFilename) return false
-        if (resources != that.resources) return false
-        if (title != that.title) return false
-        if (vendor != that.vendor) return false
-        if (version != that.version) return false
-
-        return true
     }
 
     int hashCode() {
@@ -311,14 +306,7 @@ class ApplicationConfiguration implements Serializable {
     }
 
     boolean equals(o) {
-        if (this.is(o)) return true
-        if (getClass() != o.class) return false
-
-        ApplicationConfiguration that = (ApplicationConfiguration) o
-
-        if (mainClass != that.mainClass) return false
-
-        return true
+        return EqualsBuilder.reflectionEquals(this, o);
     }
 
     int hashCode() {
@@ -387,15 +375,7 @@ class ResourcesConfiguration implements Serializable {
     }
 
     boolean equals(o) {
-        if (this.is(o)) return true
-        if (getClass() != o.class) return false
-
-        ResourcesConfiguration that = (ResourcesConfiguration) o
-
-        if (runtimes != that.runtimes) return false
-        if (systemProperties != that.systemProperties) return false
-
-        return true
+        return EqualsBuilder.reflectionEquals(this, o);
     }
 
     int hashCode() {
@@ -463,18 +443,7 @@ class JavaRuntimeConfiguration implements Serializable {
     }
 
     boolean equals(o) {
-        if (this.is(o)) return true
-        if (getClass() != o.class) return false
-
-        JavaRuntimeConfiguration that = (JavaRuntimeConfiguration) o
-
-        if (href != that.href) return false
-        if (version != that.version) return false
-        if (vmArgs != that.vmArgs) return false
-        if (xms != that.xms) return false
-        if (xmx != that.xmx) return false
-
-        return true
+        return EqualsBuilder.reflectionEquals(this, o);
     }
 
     int hashCode() {

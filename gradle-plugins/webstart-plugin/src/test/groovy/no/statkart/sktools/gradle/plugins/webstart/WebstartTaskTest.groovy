@@ -84,23 +84,28 @@ class WebstartTaskTest {
         Assert.assertEquals(configurations[0].application.mainClass, 'some.pkg.MyApplicationLauncher')
         Assert.assertEquals(configurations[1].application.mainClass, 'AnotherLauncher')
 
-        Assert.assertEquals(configurations[0].resources.runtimes.size(), 1)
-        configurations[0].resources.runtimes.each {
-            Assert.assertEquals(it.version, '1.5+')
-            Assert.assertEquals(it.href, "http://java.sun.com/products/autodl/j2se")
-            Assert.assertEquals(it.xms, null)
-            Assert.assertEquals(it.xmx, "128m")
-            Assert.assertEquals(it.vmArgs, null)
+        configurations[0].resources.runtimes.flatten().with { ArrayList<JavaRuntimeConfiguration> runtimesConfiguration0 ->
+            Assert.assertEquals(runtimesConfiguration0.size(), 1)
+            runtimesConfiguration0.each {
+                Assert.assertEquals(it.version, '1.5+')
+                Assert.assertEquals(it.href, "http://java.sun.com/products/autodl/j2se")
+                Assert.assertEquals(it.xms, null)
+                Assert.assertEquals(it.xmx, "128m")
+                Assert.assertEquals(it.vmArgs, null)
+            }
         }
-        Assert.assertEquals(configurations[1].resources.runtimes.size(), 2)
-        configurations[1].resources.runtimes.each {
-            Assert.assertEquals(it.version, '1.6+')
-            Assert.assertEquals(it.href, "http://some.download/location")
-            Assert.assertEquals(it.xms, "128m")
-            Assert.assertEquals(it.xmx, "256m")
+
+        configurations[1].resources.runtimes.flatten().with { ArrayList<JavaRuntimeConfiguration> runtimesConfiguration1 ->
+            Assert.assertEquals(runtimesConfiguration1.size(), 2)
+            runtimesConfiguration1.each {
+                Assert.assertEquals(it.version, '1.6+')
+                Assert.assertEquals(it.href, "http://some.download/location")
+                Assert.assertEquals(it.xms, "128m")
+                Assert.assertEquals(it.xmx, "256m")
+            }
+            Assert.assertEquals(runtimesConfiguration1[0].vmArgs, null)
+            Assert.assertEquals(runtimesConfiguration1[1].vmArgs, "someargs")
         }
-        Assert.assertEquals(configurations[1].resources.runtimes[0].vmArgs, null)
-        Assert.assertEquals(configurations[1].resources.runtimes[1].vmArgs, "someargs")
     }
     
     /**
@@ -201,6 +206,55 @@ class WebstartTaskTest {
             Assert.assertEquals(jnlp.resources[0].jar[1].@main.text(), '')
 
             Assert.assertEquals(jnlp.resources[1].children().size(), 0) //tom resources
+        }
+    }
+
+    /**
+     * Demonsrerer angivelse av flere resources-elementer i jnlp
+     */
+    @Test
+    void testMultipleResourceElements() {
+        //forks a new project in a temp folder
+        ProjectHelper projectHelper = WebstartProjectBuilder.builder().withName('root').applyWebstartPlugin().build()
+
+        projectHelper.configureProject {
+            webstart {
+                client {
+                    jarDependencies files(projectHelper.gradleJars[1])
+                    jnlp {
+                        jnlpFilename 'client1.jnlp'
+                        resources {
+                            systemProperties prop1: 'test', prop2: 'test2', 'jnlp.versionEnabled': true
+                        }
+                        resources {
+                            systemProperties prop3: 'test3'
+                        }
+                    }
+                }
+            }
+        }
+
+        projectHelper.initializeProject()
+
+        projectHelper.executeTask('genClientJnlp')
+
+        //sjekker at filer er blitt opprettet
+        projectHelper.assertFileExists('build/webstart/client1.jnlp') {
+            def jnlp = new XmlSlurper().parseText(it.text)
+
+            Assert.assertEquals(jnlp.resources[0].property[0].@name.text(), 'prop1', 'property1')
+            Assert.assertEquals(jnlp.resources[0].property[0].@value.text(), 'test', 'property1')
+
+            Assert.assertEquals(jnlp.resources[0].property[1].@name.text(), 'prop2', 'property2')
+            Assert.assertEquals(jnlp.resources[0].property[1].@value.text(), 'test2', 'property2')
+
+            Assert.assertEquals(jnlp.resources[0].property[2].@name.text(), 'jnlp.versionEnabled', 'property3')
+            Assert.assertEquals(jnlp.resources[0].property[2].@value.text(), 'true', 'property3')
+
+            Assert.assertEquals(jnlp.resources[1].property[0].@name.text(), 'prop3', 'property4')
+            Assert.assertEquals(jnlp.resources[1].property[0].@value.text(), 'test3', 'property4')
+
+
         }
     }
 
