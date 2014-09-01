@@ -8,7 +8,6 @@ include ':build-utils:xjc-plugins'
 
 include ':gradle-plugins'
 include ':gradle-plugins:dbtools-plugin'
-include ':gradle-plugins:filterproperties-plugin'
 include ':gradle-plugins:ideaextensions-plugin'
 include ':gradle-plugins:provided-plugin'
 include ':gradle-plugins:weblogic-plugin'
@@ -19,6 +18,9 @@ include ':gradle-plugins:webstart-plugin'
 include ':gradle-plugins:wsdl-customizer-plugin'
 include ':gradle-plugins:wsdocgen-plugin'
 include ':gradle-plugins:xjc-plugin'
+
+include ':gradle-plugins:properties-plugin'
+include ':gradle-plugins:filter-resources-plugin'
 
 
 
