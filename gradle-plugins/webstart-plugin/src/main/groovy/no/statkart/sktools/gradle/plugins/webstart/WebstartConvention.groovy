@@ -161,7 +161,7 @@ class JnlpConfiguration implements Serializable {
     String version = null; //optional
     protected ApplicationConfiguration application = null;  //might be null
 
-    protected final List<ResourcesConfiguration> resources = new ArrayList<ResourcesConfiguration>();
+    protected final List<ResourcesConfiguration> resourcesList = new ArrayList<ResourcesConfiguration>();
 
     private transient Closure withXml;
 
@@ -236,7 +236,7 @@ class JnlpConfiguration implements Serializable {
      */
     public ResourcesConfiguration resources(Closure config = null) {
         ResourcesConfiguration resourcesConfiguration = new ResourcesConfiguration(this)
-        resources.add(resourcesConfiguration);
+        resourcesList.add(resourcesConfiguration);
         if (config != null) {
             resourcesConfiguration.configure(config)
         }
@@ -244,7 +244,7 @@ class JnlpConfiguration implements Serializable {
     }
 
     protected List<ResourcesConfiguration> getResources() {
-        return resources;
+        return resourcesList;
     }
 
     public void withXml(Closure closure) {
