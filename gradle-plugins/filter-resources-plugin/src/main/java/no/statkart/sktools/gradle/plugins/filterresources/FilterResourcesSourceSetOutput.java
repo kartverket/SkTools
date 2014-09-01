@@ -1,4 +1,4 @@
-package no.statkart.sktools.gradle.plugins.filterproperties;
+package no.statkart.sktools.gradle.plugins.filterresources;
 
 import java.io.File;
 

@@ -1,6 +1,7 @@
-package no.statkart.sktools.gradle.plugins.filterproperties;
+package no.statkart.sktools.gradle.plugins.filterresources.impl;
 
 import groovy.lang.Closure;
+import no.statkart.sktools.gradle.plugins.filterresources.FilterResourcesSourceSet;
 import org.apache.commons.lang.StringUtils;
 import org.gradle.api.file.SourceDirectorySet;
 import org.gradle.api.internal.file.DefaultSourceDirectorySet;
@@ -8,8 +9,6 @@ import org.gradle.api.internal.file.FileResolver;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.util.ConfigureUtil;
 import org.gradle.util.GUtil;
-
-import java.io.File;
 
 /**
  * @since 1.1

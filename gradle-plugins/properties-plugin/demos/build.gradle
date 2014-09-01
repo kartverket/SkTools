@@ -1,4 +1,4 @@
-group = 'no.statkart.sktools.gradle.plugins.filterproperties-plugin.demos'
+group = 'no.statkart.sktools.gradle.plugins.properties-plugin.demos'
 
 allprojects {
     defaultTasks 'clean', 'runDemo'
@@ -29,8 +29,7 @@ buildscript {
     }
 
     dependencies {
-        classpath "no.statkart.sktools.gradle:filterproperties-plugin:${version}"
-        classpath "no.statkart.sktools.gradle:ideaextensions-plugin:${version}"
+        classpath "no.statkart.sktools.gradle:properties-plugin:${version}"
     }
 
 }

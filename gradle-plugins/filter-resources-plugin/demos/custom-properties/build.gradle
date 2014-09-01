@@ -1,9 +1,9 @@
-apply plugin: 'sktools-filterproperties-plugin'
+apply plugin: 'sktools-filter-resources-plugin'
 apply plugin: 'java'
 
 
 
-filterProperties {
+filterResources {
     properties testValue: 'myValue',
             'otherProperty': 'value'
 

@@ -1,7 +1,7 @@
 include ':foldergeneration'
 
 
-rootProject.name = 'ideaextentions-demo'
+rootProject.name = 'ideaextensions-demo'
 
 
 

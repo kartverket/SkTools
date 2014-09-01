@@ -1,6 +1,6 @@
 include ':build-user-demo'
 
-rootProject.name = 'filter-resources-demos'
+rootProject.name = 'properties-demos'
 
 
 

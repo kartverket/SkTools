@@ -1,5 +1,6 @@
-package no.statkart.sktools.gradle.plugins.filterproperties;
+package no.statkart.sktools.gradle.plugins.filterresources.impl;
 
+import no.statkart.sktools.gradle.plugins.filterresources.FilterResourcesSourceSetOutput;
 import org.gradle.api.internal.file.CompositeFileCollection;
 import org.gradle.api.internal.file.FileResolver;
 import org.gradle.api.internal.file.collections.DefaultConfigurableFileCollection;
@@ -10,7 +11,7 @@ import java.io.File;
 import java.util.concurrent.Callable;
 
 /**
- * Plugin extention for {@link org.gradle.api.tasks.SourceSetOutput}
+ * Plugin extension for {@link org.gradle.api.tasks.SourceSetOutput}
  * @author Leif Lislegård
  */
 public class DefaultFilterResourcesSourceSetOutput extends CompositeFileCollection implements FilterResourcesSourceSetOutput {

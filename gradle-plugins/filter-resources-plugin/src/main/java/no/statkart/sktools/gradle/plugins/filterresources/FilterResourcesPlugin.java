@@ -1,5 +1,7 @@
 package no.statkart.sktools.gradle.plugins.filterresources;
 
+import no.statkart.sktools.gradle.plugins.filterresources.impl.DefaultFilterResourcesSourceSet;
+import no.statkart.sktools.gradle.plugins.filterresources.impl.DefaultFilterResourcesSourceSetOutput;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -13,7 +15,6 @@ import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.SourceSet;
-import no.statkart.sktools.gradle.plugins.filterproperties.*;
 
 import java.util.Collections;
 import java.util.HashMap;

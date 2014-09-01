@@ -1,9 +1,9 @@
-package no.statkart.sktools.gradle.plugins.filterproperties
+package no.statkart.sktools.gradle.plugins.properties
 
 import org.testng.annotations.Test
 import no.statkart.sktools.gradle.testutils.ProjectHelper
 import no.statkart.sktools.gradle.testutils.builder.PropertiesProjectBuilder
-import no.statkart.sktools.gradle.plugins.filterproperties.extention.PropertyUtils
+import no.statkart.sktools.gradle.plugins.properties.extension.PropertyUtils
 import org.testng.Assert
 import org.gradle.api.Project
 
@@ -142,7 +142,7 @@ class PropertyUtilsTest {
      * Tester at extension fungerer
      */
     @Test
-    void testExtention() {
+    void testExtension() {
         Project project = PropertiesProjectBuilder.builder().applyPropertiesPlugin().build().project;
 
         Object extensionObject = project.getExtensions().getByName('propertyUtils')

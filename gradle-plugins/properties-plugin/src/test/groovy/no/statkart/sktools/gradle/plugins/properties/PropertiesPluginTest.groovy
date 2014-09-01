@@ -1,6 +1,6 @@
 package no.statkart.sktools.gradle.plugins.properties
 
-import no.statkart.sktools.gradle.plugins.filterproperties.extention.PropertyUtils
+import no.statkart.sktools.gradle.plugins.properties.extension.PropertyUtils
 import no.statkart.sktools.gradle.testutils.ProjectHelper
 import no.statkart.sktools.gradle.testutils.builder.PropertiesProjectBuilder
 import org.gradle.api.Project

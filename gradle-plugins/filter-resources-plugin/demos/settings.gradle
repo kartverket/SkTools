@@ -3,7 +3,7 @@ include ':custom-properties'
 include ':build-user-demo'
 include ':idea-integration'
 
-rootProject.name = 'filterproperties-demos'
+rootProject.name = 'filter-resources-demos'
 
 
 
@@ -16,7 +16,7 @@ gradle.projectsLoaded { Gradle g ->
             g.rootProject.buildscript {
                 StartParameter sp = gradle.startParameter.newBuild()
                 sp.taskNames = ['install']
-                sp.projectDir = g.rootProject.file('..')
+                sp.projectDir = g.rootProject.file('../..')
 
                 println 'Asserting project is up to date. Running build on root-project:'
                 GradleLauncher.newInstance(sp).run().rethrowFailure();

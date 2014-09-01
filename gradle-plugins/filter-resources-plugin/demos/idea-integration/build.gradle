@@ -1,4 +1,4 @@
-apply plugin: 'sktools-filterproperties-plugin'
+apply plugin: 'sktools-filter-resources-plugin'
 apply plugin: 'sktools-ideaextensions-plugin'
 apply plugin: 'java'
 

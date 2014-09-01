@@ -1,4 +1,4 @@
-package no.statkart.sktools.gradle.plugins.filterproperties.extention;
+package no.statkart.sktools.gradle.plugins.properties.extension;
 
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
@@ -17,7 +17,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Extention for enkel håndtering av properties i prosjekter. Denne kan utvide Gradle sin DSL.
+ * Extension for enkel håndtering av properties i prosjekter. Denne kan utvide Gradle sin DSL.
  *
  * @author Leif Lislegård
  * @since 1.2
