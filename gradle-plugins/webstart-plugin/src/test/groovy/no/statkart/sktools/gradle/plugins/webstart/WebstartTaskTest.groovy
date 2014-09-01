@@ -173,7 +173,7 @@ class WebstartTaskTest {
 
         projectHelper.assertFileExists('build/webstart/client1.jnlp') {
             def jnlp = new XmlSlurper().parseText(it.text)
-            Assert.assertEquals(jnlp.@spec.text(), '1.5+')
+            Assert.assertEquals(jnlp.@spec.text(), '1.6+')
             Assert.assertEquals(jnlp.information[0].title.text(), 'title1')
             Assert.assertEquals(jnlp.information[0].vendor.text(), 'testvendor')
             Assert.assertEquals(jnlp.information[0].description.text(), 'some description.')
@@ -278,7 +278,6 @@ class WebstartTaskTest {
                             javaFxRuntime version: "1.1+", href: 'href1'
                             javaFxRuntime(version: "1.1+") {
                                 href 'href1'
-                                version = 'gggg'
                             }
                         }
                     }
