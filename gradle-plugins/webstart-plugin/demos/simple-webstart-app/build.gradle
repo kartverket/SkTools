@@ -71,7 +71,7 @@ webstart {
             title 'Demo - passing properties'
             description 'Demonstrates how to pass on properties to the application'
             resources {
-                runtime {   //means any rt with version 1.6 or greater
+                javaRuntime {   //means any rt with version 1.6 or greater
                     version '1.6+'
                     xms '128m'
                     xmx '256m'

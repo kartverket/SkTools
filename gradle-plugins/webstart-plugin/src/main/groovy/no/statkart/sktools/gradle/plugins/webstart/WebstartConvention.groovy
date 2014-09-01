@@ -2,11 +2,13 @@ package no.statkart.sktools.gradle.plugins.webstart
 
 import no.statkart.sktools.gradle.plugins.webstart.util.FileHashIdent
 import org.apache.commons.lang.builder.EqualsBuilder
+import org.apache.commons.lang.builder.HashCodeBuilder
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.NamedDomainObjectFactory
 import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
+import org.gradle.util.ConfigureUtil
 
 /**
  * Extension for webstart plugin.
@@ -269,16 +271,7 @@ class JnlpConfiguration implements Serializable {
     }
 
     int hashCode() {
-        int result
-        result = (jnlpFilename != null ? jnlpFilename.hashCode() : 0)
-        result = 31 * result + (title != null ? title.hashCode() : 0)
-        result = 31 * result + (vendor != null ? vendor.hashCode() : 0)
-        result = 31 * result + (description != null ? description.hashCode() : 0)
-        result = 31 * result + (homepage != null ? homepage.hashCode() : 0)
-        result = 31 * result + (version != null ? version.hashCode() : 0)
-        result = 31 * result + (application != null ? application.hashCode() : 0)
-        result = 31 * result + (resources != null ? resources.hashCode() : 0)
-        return result
+        return HashCodeBuilder.reflectionHashCode(this);
     }
 }
 
@@ -310,7 +303,7 @@ class ApplicationConfiguration implements Serializable {
     }
 
     int hashCode() {
-        return (mainClass != null ? mainClass.hashCode() : 0)
+        return HashCodeBuilder.reflectionHashCode(this);
     }
 }
 
@@ -346,22 +339,46 @@ class ResourcesConfiguration implements Serializable {
      * Defaults <code>href</code> to official sun binaries as well as <code>xmx</code> to 128m
      */
     public ResourcesConfiguration javaRuntime(String version, String xms = null, String xmx = '128m', String href = 'http://java.sun.com/products/autodl/j2se') {
-        runtime().version(version).href(href).xms(xms).xmx(xmx);
+        javaRuntime().version(version).href(href).xms(xms).xmx(xmx);
         return this;
     }
 
     /**
-     * Adds a runtime declaration.
+     * Adds a java runtime declaration.
      * <p>
      * A jnlp file can list several runtimes the distribution can run on. The list should list the runtimes in preferred order with the most desired runtime first.
      */
-    public JavaRuntimeConfiguration runtime(Closure config = null) {
+    public JavaRuntimeConfiguration javaRuntime(Closure config = null) {
+        return javaRuntime([:], config)
+    }
+    public JavaRuntimeConfiguration javaRuntime(Map properties, Closure config = null) {
         JavaRuntimeConfiguration javaRuntime = new JavaRuntimeConfiguration(this)
         runtimes.add(javaRuntime);
+        if (properties != null) {
+            ConfigureUtil.configureByMap(properties, javaRuntime)
+        }
         if (config != null) {
-            javaRuntime.configure(config)
+            ConfigureUtil.configure(config, javaRuntime, false)
         }
         return javaRuntime;
+    }
+
+    /**
+     * Adds a java-fx runtime declaration.
+     */
+    public JavaFxRuntimeConfiguration javaFxRuntime(Closure config = null) {
+        return javaFxRuntime([:], config)
+    }
+    public JavaFxRuntimeConfiguration javaFxRuntime(Map properties, Closure config = null) {
+        JavaFxRuntimeConfiguration runtimeConfiguration = new JavaFxRuntimeConfiguration(this)
+        runtimes.add(runtimeConfiguration);
+        if (properties != null) {
+            ConfigureUtil.configureByMap(properties, runtimeConfiguration)
+        }
+        if (config != null) {
+            ConfigureUtil.configure(config, runtimeConfiguration, false)
+        }
+        return runtimeConfiguration;
     }
 
     /**
@@ -379,20 +396,58 @@ class ResourcesConfiguration implements Serializable {
     }
 
     int hashCode() {
-        int result
-        result = systemProperties.hashCode()
-        result = 31 * result + runtimes.hashCode()
-        return result
+        return HashCodeBuilder.reflectionHashCode(this);
+    }
+}
+
+abstract class RuntimeConfiguration {
+    private final static long serialVersionUID = 1L;
+    def final transient ResourcesConfiguration resources;
+
+    RuntimeConfiguration(ResourcesConfiguration resources) {
+        this.resources = resources
     }
 }
 
 /**
- * Represents the {@code <java> or <j2se>} elements in a jnlp file
+ * Represents the {@code <jfx:javafx-runtime>} elements in a jnlp file
  */
-class JavaRuntimeConfiguration implements Serializable {
+class JavaFxRuntimeConfiguration extends RuntimeConfiguration implements Serializable {
     private final static long serialVersionUID = 1L;
-    protected final transient ResourcesConfiguration resources;
+    String version;
+    String href = null;   //optional
 
+
+
+    def JavaFxRuntimeConfiguration(ResourcesConfiguration resources) {
+        super(resources)
+    }
+
+    public JavaFxRuntimeConfiguration version(String value) {
+        version = value;
+        return this;
+    }
+
+    public JavaFxRuntimeConfiguration href(String value) {
+        href = value;
+        return this;
+    }
+
+
+    boolean equals(o) {
+        return EqualsBuilder.reflectionEquals(this, o);
+    }
+
+    int hashCode() {
+        return HashCodeBuilder.reflectionHashCode(this);
+    }
+}
+
+/**
+ * Represents the {@code <j2se>} elements in a jnlp file
+ */
+class JavaRuntimeConfiguration extends RuntimeConfiguration implements Serializable {
+    private final static long serialVersionUID = 1L;
     String version;
     String href = null;   //optional
     /** initial-heap-size   */
@@ -402,10 +457,10 @@ class JavaRuntimeConfiguration implements Serializable {
     String vmArgs = null; //optional
 
 
-    protected JavaRuntimeConfiguration(ResourcesConfiguration resources) {
-        this.resources = resources;
-    }
 
+    JavaRuntimeConfiguration(ResourcesConfiguration resources) {
+        super(resources)
+    }
 
     public JavaRuntimeConfiguration version(String value) {
         version = value;
@@ -432,27 +487,11 @@ class JavaRuntimeConfiguration implements Serializable {
         return this;
     }
 
-    /**
-     * Config clause for a runtime declaration.
-     */
-    protected JavaRuntimeConfiguration configure(Closure closure) {
-        closure.setDelegate(this);
-        closure.resolveStrategy = Closure.DELEGATE_FIRST;
-        closure.call();
-        return this;
-    }
-
     boolean equals(o) {
         return EqualsBuilder.reflectionEquals(this, o);
     }
 
     int hashCode() {
-        int result
-        result = (version != null ? version.hashCode() : 0)
-        result = 31 * result + (href != null ? href.hashCode() : 0)
-        result = 31 * result + (xms != null ? xms.hashCode() : 0)
-        result = 31 * result + (xmx != null ? xmx.hashCode() : 0)
-        result = 31 * result + (vmArgs != null ? vmArgs.hashCode() : 0)
-        return result
+        return HashCodeBuilder.reflectionHashCode(this);
     }
 }

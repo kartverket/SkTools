@@ -108,6 +108,7 @@ class WebstartTask extends ConventionTask {
      */
     public void createJnlp(JnlpConfiguration jnlp) {
         Node jnlpNode = new XmlParser().parse(getClass().getResourceAsStream('template.jnlp'))
+        jnlpNode.attributes().put('xmlns:jfx', 'http://javafx.com')
 
         jnlpNode.attributes().put('href', jnlp.jnlpFilename)
         jnlpNode.attributes().put('version', jnlp.version)
@@ -128,6 +129,7 @@ class WebstartTask extends ConventionTask {
         }
 
         if (jnlp.resources.isEmpty()) {
+            logger.info "Adding empty resources element to jnlp ..."
             jnlpNode.append(JnlpSyntaxUtil.createResourcesElement(null))
         }
 

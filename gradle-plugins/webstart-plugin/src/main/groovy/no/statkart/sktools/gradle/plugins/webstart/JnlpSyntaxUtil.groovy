@@ -45,8 +45,8 @@ class JnlpSyntaxUtil {
         Node resourcesNode = new Node(null, 'resources')
 
         if (resources != null) {
-            resources.runtimes.each { JavaRuntimeConfiguration javaRuntime ->
-                resourcesNode.append(createJavaRuntimeElement(javaRuntime))
+            resources.runtimes.each { RuntimeConfiguration runtimeConfiguration ->
+                resourcesNode.append(createRuntimeElement(runtimeConfiguration))
             }
 
             resources.systemProperties?.each { key, value ->
@@ -57,19 +57,37 @@ class JnlpSyntaxUtil {
         return resourcesNode
     }
 
-    static def Node createJavaRuntimeElement(JavaRuntimeConfiguration javaRuntime) {
-        Node javaNode = new Node(null, 'j2se', [version: javaRuntime.version])
-        if (javaRuntime.href != null) {
-            javaNode.attributes().put('href', javaRuntime.href)
+    static def Node createRuntimeElement(RuntimeConfiguration runtimeConfiguration) {
+        if (runtimeConfiguration instanceof JavaRuntimeConfiguration) {
+            return createJavaRuntimeElement(runtimeConfiguration)
+        } else if (runtimeConfiguration instanceof JavaFxRuntimeConfiguration) {
+            return createJavaFxRuntimeElement(runtimeConfiguration)
+        } else {
+            throw new GradleException("Configuration class not supported! ${runtimeConfiguration.class}")
         }
-        if (javaRuntime.xms != null) {
-            javaNode.attributes().put('initial-heap-size', javaRuntime.xms)
+    }
+
+    static def Node createJavaFxRuntimeElement(JavaFxRuntimeConfiguration configuration) {
+        Node javaNode = new Node(null, 'jfx:javafx-runtime', [version: configuration.version])
+        if (configuration.href != null) {
+            javaNode.attributes().put('href', configuration.href)
         }
-        if (javaRuntime.xmx != null) {
-            javaNode.attributes().put('max-heap-size', javaRuntime.xmx)
+        return javaNode
+    }
+
+    static def Node createJavaRuntimeElement(JavaRuntimeConfiguration configuration) {
+        Node javaNode = new Node(null, 'j2se', [version: configuration.version])
+        if (configuration.href != null) {
+            javaNode.attributes().put('href', configuration.href)
         }
-        if (javaRuntime.vmArgs != null) {
-            javaNode.attributes().put('java-vm-args', javaRuntime.vmArgs)
+        if (configuration.xms != null) {
+            javaNode.attributes().put('initial-heap-size', configuration.xms)
+        }
+        if (configuration.xmx != null) {
+            javaNode.attributes().put('max-heap-size', configuration.xmx)
+        }
+        if (configuration.vmArgs != null) {
+            javaNode.attributes().put('java-vm-args', configuration.vmArgs)
         }
         return javaNode
     }

@@ -46,7 +46,7 @@ class WebstartTaskTest {
                         application.mainClass 'AnotherLauncher'
                         resources {
                             javaRuntime '1.6+', '128m', '256m', 'http://some.download/location' //shortcut notation
-                            runtime {   //same as above but only with vmArgs set.
+                            javaRuntime {   //same as above but only with vmArgs set.
                                 version '1.6+'
                                 href 'http://some.download/location'
                                 xms '128m'
@@ -142,14 +142,14 @@ class WebstartTaskTest {
                 description('some description.')
                 homepage('ftp://example.net')
                 resources {
-                    runtime {
+                    javaRuntime {
                         version('1.5.0')
                         href('downloadLink')
                         xms('1024m')
                         xmx('2g')
                         vmArgs('-kewlargs')
                     }
-                    runtime {
+                    javaRuntime {
                         version('1.6+')
                     }
                     systemProperties('jnlp.versionEnabled': false)
@@ -220,7 +220,6 @@ class WebstartTaskTest {
         projectHelper.configureProject {
             webstart {
                 client {
-                    jarDependencies files(projectHelper.gradleJars[1])
                     jnlp {
                         jnlpFilename 'client1.jnlp'
                         resources {
@@ -255,6 +254,50 @@ class WebstartTaskTest {
             Assert.assertEquals(jnlp.resources[1].property[0].@value.text(), 'test3', 'property4')
 
 
+        }
+    }
+
+    /**
+     * Demonstrerer angivelse av java-fx runtime [SKTOOLS-120]
+     */
+    @Test
+    void testJavaFx() {
+        //forks a new project in a temp folder
+        ProjectHelper projectHelper = WebstartProjectBuilder.builder().withName('root').applyWebstartPlugin().build()
+
+        projectHelper.configureProject {
+            webstart {
+                client {
+                    jnlp {
+                        jnlpFilename 'client1.jnlp'
+                        resources {
+                            javaFxRuntime {
+                                version "1.1+"
+                                href 'href1'
+                            }
+                            javaFxRuntime version: "1.1+", href: 'href1'
+                            javaFxRuntime(version: "1.1+") {
+                                href 'href1'
+                                version = 'gggg'
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        projectHelper.initializeProject()
+        projectHelper.executeTask('genClientJnlp')
+
+        //sjekker at filer er blitt opprettet
+        projectHelper.assertFileExists('build/webstart/client1.jnlp') {
+            def jnlp = new XmlSlurper().parseText(it.text)
+
+
+            jnlp.resources.'javafx-runtime'.each {
+                Assert.assertEquals(it.@version.text(), '1.1+', 'Java FX version')
+                Assert.assertEquals(it.@href.text(), 'href1', 'Java FX href download url')
+            }
         }
     }
 
