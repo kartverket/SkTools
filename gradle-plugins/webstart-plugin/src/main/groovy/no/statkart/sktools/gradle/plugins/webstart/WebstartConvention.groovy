@@ -404,7 +404,10 @@ abstract class RuntimeConfiguration {
     private final static long serialVersionUID = 1L;
     def final transient ResourcesConfiguration resources;
 
-    RuntimeConfiguration(ResourcesConfiguration resources) {
+    /**
+     * {@code resources = null} denotes default constructor needed for serializing/de-serializing in gradle task up-to-date checks
+     */
+    def RuntimeConfiguration(ResourcesConfiguration resources = null) {
         this.resources = resources
     }
 }
@@ -418,8 +421,7 @@ class JavaFxRuntimeConfiguration extends RuntimeConfiguration implements Seriali
     String href = null;   //optional
 
 
-
-    def JavaFxRuntimeConfiguration(ResourcesConfiguration resources) {
+    JavaFxRuntimeConfiguration(ResourcesConfiguration resources = null) {
         super(resources)
     }
 
@@ -457,8 +459,7 @@ class JavaRuntimeConfiguration extends RuntimeConfiguration implements Serializa
     String vmArgs = null; //optional
 
 
-
-    JavaRuntimeConfiguration(ResourcesConfiguration resources) {
+    JavaRuntimeConfiguration(ResourcesConfiguration resources = null) {
         super(resources)
     }
 
