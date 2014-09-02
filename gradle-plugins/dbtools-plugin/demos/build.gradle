@@ -48,3 +48,7 @@ project.idea.module {
     //legger til denne for innkobling av dokumentasjon i Intellij osv
     scopes.PROVIDED.plus += buildscript.configurations.classpath
 }
+
+tasks.clean.doFirst {
+    logger.info "Cleaning project ${project.projectDir}"
+}

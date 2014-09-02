@@ -54,5 +54,8 @@ allprojects {
     setVersion(rootProject.version)
 }
 
-
 apply(from:'deploy-ear.gradle')
+
+tasks.clean.doFirst {
+    logger.info "Cleaning project ${project.projectDir}"
+}

@@ -55,3 +55,6 @@ buildscript {
 allprojects {
     setVersion(rootProject.version)
 }
+task clean<<{
+    logger.info "Cleaning project ${project.projectDir}"
+}

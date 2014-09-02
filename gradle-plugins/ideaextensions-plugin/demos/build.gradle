@@ -42,3 +42,6 @@ buildscript {
 allprojects {
     setVersion(rootProject.version)
 }
+tasks.clean.doFirst {
+    logger.info "Cleaning project ${project.projectDir}"
+}
