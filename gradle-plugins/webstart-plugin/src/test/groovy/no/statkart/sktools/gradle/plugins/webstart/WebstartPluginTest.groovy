@@ -91,6 +91,7 @@ class WebstartPluginTest {
 
         File webstartHelperJar = projectHelper.project.file('webstartHelper.jar')
         assert webstartHelperJar.createNewFile()
+
         projectHelper.configureProject {
             configurations {
                 webstartJars
@@ -103,6 +104,7 @@ class WebstartPluginTest {
 
             webstart {
                 client {
+                    mainJar 'wsClientRuntime'
                     jarDependencies configurations.webstartJars
                     jnlp {
                         description 'Client1 description'
@@ -173,6 +175,7 @@ class WebstartPluginTest {
 
             webstart {
                 client1 {
+                    mainJar 'wsClientRuntime'
                     jarDependencies configurations.webstartJars
                     jnlp {
                         jnlpFilename 'client1.jnlp'
@@ -181,6 +184,7 @@ class WebstartPluginTest {
                     }
                 }
                 client2 {
+                    mainJar 'wsClientRuntime'
                     jarDependencies configurations.webstartJars
                     jnlp {
                         jnlpFilename 'client2.jnlp'
@@ -239,6 +243,7 @@ class WebstartPluginTest {
 
             webstart {
                 client1 {
+                    mainJar 'wsClientRuntime'
                     jarDependencies configurations.clientRuntime1
                     jnlp {
                         description 'Client1 description'
@@ -246,6 +251,7 @@ class WebstartPluginTest {
                     }
                 }
                 client2 {
+                    mainJar 'wsClientRuntime'
                     jarDependencies configurations.clientRuntime2
                     jnlp {
                         description 'Client2 description'
