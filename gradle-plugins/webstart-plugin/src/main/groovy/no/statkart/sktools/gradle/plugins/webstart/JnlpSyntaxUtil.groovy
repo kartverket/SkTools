@@ -24,18 +24,19 @@ class JnlpSyntaxUtil {
 
             Node jarNode = new Node(resourcesNode, 'jar', [href: jarPath, version: artifactMatcher.version + digest])
 
+            long size = file.length()   //0 if for some reason the file can not be found
+            if (size > 0L) {
+                jarNode.attributes().put('size', size)
+            }
+
             if (mainJarFiles.contains(file)) {
                 if (mainJarFound) {
-                    throw new GradleException('There can only be one main jar. ' + mainJarFiles)
+                    throw new GradleException('There can only be one main jar; was: ' + mainJarFiles)  //SKTOOLS-118
                 }
                 mainJarFound = true
                 jarNode.attributes().put('main', true)
             }
 
-            long size = file.length()   //0 if for some reason the file can not be found
-            if (size > 0L) {
-                jarNode.attributes().put('size', size)
-            }
         }
 
         return resourcesNode
