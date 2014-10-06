@@ -17,6 +17,7 @@ dependencies {
 webstart {
     unsigned {
         libDir 'unsigned'
+        mainJar 'echo-client'
         jarDependencies configurations.webstartlibs
         jnlp {
             jnlpFilename 'echo-client.jnlp'
@@ -30,6 +31,7 @@ webstart {
     signed {
         sign rootProject.file('kodesignering.jks'), 'statenskartverk', 'SagZ45_p1'
         libDir 'signed'
+        mainJar 'echo-client'
         jarDependencies configurations.webstartlibs
         jnlp {
             jnlpFilename 'echo-client-signed.jnlp'

@@ -3,18 +3,13 @@ apply plugin: 'sktools-webstart-plugin'
 description = 'Demonstrates how to make a simple webstart war module.'
 
 configurations {
-    client1Main {
-        transitive = false
-    }
-    client1 {
-        extendsFrom client1Main
-    }
+    client1
     client
 }
 
 dependencies {
     client1 'dom4j:dom4j:1.4@jar'
-    client1Main project(path: ':echo-client')
+    client1 project(path: ':echo-client')
     client1 'commons-lang:commons-lang:2.6@jar'
     client1 (['weblogic:wlfullclient_java5:10.3.5', 'weblogic:wlcipher:10.3.5', 'weblogic:cryptojfips:10.3.5'])
     client project(path: ':echo-client')
@@ -22,7 +17,7 @@ dependencies {
 
 webstart {
     client1 {
-        mainDependency configurations.client1Main
+        mainJar 'echo-client' //main jar [SKTOOLS-118]
         jarDependencies configurations.client1
         sign rootProject.file('kodesignering.jks'), 'statenskartverk', 'SagZ45_p1'
         jnlp {
@@ -31,11 +26,12 @@ webstart {
             description 'Demonstrates signing of jars'
             application.mainClass 'WebstartTester'
             resources {
-                javaRuntime '1.6+', '64m', '64m'    //means any rt with version 1.6 or greater
+                javaRuntime '1.6+', '64m', '64m'    //any runtime with version 1.6 or higher
             }
         }
     }
     client2 {
+        mainJar 'echo-client' //main jar [SKTOOLS-118]
         jarDependencies configurations.client
         jnlp {
             jnlpFilename 'client1-unsigned.jnlp'
@@ -43,13 +39,14 @@ webstart {
             description 'Demonstrates signing of jars'
             application.mainClass 'WebstartTester'
             resources {
-                javaRuntime '1.6+', '64m', '64m'    //means any rt with version 1.6 or greater
+                javaRuntime '1.6+', '64m', '64m'    //any runtime with version 1.6 or higher
             }
         }
     }
     client3 {
+        mainJar 'echo-client' //main jar [SKTOOLS-118]
         jarDependencies configurations.client
-        sign rootProject.file('kodesignering.jks'), 'statenskartverk', 'SagZ45_p1'
+//        sign rootProject.file('kodesignering.jks'), 'statenskartverk', 'SagZ45_p1'
         jnlp {
             jnlpFilename 'runtimes-demo.jnlp'
             title 'Demo - multiple runtimes'
@@ -58,20 +55,21 @@ webstart {
             resources {
                 javaRuntime '1.5.0_14', '128m', '256m'
                 javaRuntime '1.5.0_15 1.6.0_20', '128m', '256m'   //means the newest rt found among one in this list
-                javaRuntime '1.6+', '64m', '64m'    //means any rt with version 1.6 or greater
+                javaRuntime '1.6+', '64m', '64m'    //any runtime with version 1.6 or higher
 
             }
         }
     }
     client4 {
+        mainJar 'echo-client' //main jar [SKTOOLS-118]
         jarDependencies configurations.client
-        sign rootProject.file('kodesignering.jks'), 'statenskartverk', 'SagZ45_p1'
+//        sign rootProject.file('kodesignering.jks'), 'statenskartverk', 'SagZ45_p1'
         jnlp {
             jnlpFilename 'properties.jnlp'
             title 'Demo - passing properties'
             description 'Demonstrates how to pass on properties to the application'
             resources {
-                javaRuntime {   //means any rt with version 1.6 or greater
+                javaRuntime {   //any runtime with version 1.6 or higher
                     version '1.6+'
                     xms '128m'
                     xmx '256m'

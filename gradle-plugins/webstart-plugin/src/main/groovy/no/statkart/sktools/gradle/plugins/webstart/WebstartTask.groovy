@@ -134,7 +134,7 @@ class WebstartTask extends ConventionTask {
         }
 
         //adds all jars for dependencies to very first <resources> element in jnlp
-        JnlpSyntaxUtil.appendJarElementForAllDependencies(jnlpNode.resources[0], mainJar.files, jarResources.files, getLibDir(), getDigest() != null ? ('-' + getDigest()) : '')
+        JnlpSyntaxUtil.appendJarElementForAllDependencies(jnlpNode.resources[0], getMainJar().files, getJarResources().files, getLibDir(), getDigest() != null ? ('-' + getDigest()) : '')
 
 
         if (jnlp.hasApplication()) {

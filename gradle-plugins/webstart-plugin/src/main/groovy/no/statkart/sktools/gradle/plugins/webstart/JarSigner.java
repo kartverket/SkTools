@@ -3,10 +3,9 @@ package no.statkart.sktools.gradle.plugins.webstart;
 import groovy.lang.Closure;
 import no.statkart.sktools.gradle.plugins.webstart.util.FileHashIdent;
 import org.apache.commons.io.FileUtils;
-import org.apache.tools.ant.Project;
-import org.apache.tools.ant.taskdefs.ExecTask;
-import org.codehaus.groovy.runtime.MethodClosure;
 import org.gradle.api.GradleException;
+import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.internal.ConventionTask;
 import org.gradle.api.tasks.*;
 import org.gradle.process.ExecSpec;
@@ -37,9 +36,10 @@ public class JarSigner extends ConventionTask {
     private String alias;
     private String digestAlg = "SHA1"; // Dette ser ut til å være det tryggeste når det kommer til jar-filer som allerede er signert
 
-    private Map<String, String> manifestAttributes = new LinkedHashMap<String, String>();
+    private final Map<String, String> manifestAttributes = new LinkedHashMap<String, String>();
 
-    private Object jarFilesToSign;
+    private final ConfigurableFileCollection jarFilesToSign = getProject().files();
+    private final ConfigurableFileCollection signedJarFiles = getProject().files();
 
     public Map<FileHashIdent, Map<String, FileHashIdent>> getSignedArtifactsForCertificates() {
         if (signedArtifactsForCertificates == null) {
@@ -87,7 +87,7 @@ public class JarSigner extends ConventionTask {
                 }
             }
 
-            Set<File> filesToSign = getProject().files(getJarFilesToSign()).getFiles();
+            Set<File> filesToSign = getJarFilesToSign().getFiles();
             for (File unsignedJar : filesToSign) {
                 FileHashIdent jarFileIdent = new FileHashIdent(unsignedJar);
 
@@ -135,8 +135,10 @@ public class JarSigner extends ConventionTask {
                 }
             }
         } else {
-            logger.info("signing not turned on");
+            logger.warn("Signing of resources disabled - no certificate!");
         }
+
+        signedJarFiles.from(collectSignedJars());
     }
 
     private void signJar(final File jarFile, final File manifestAddendum) {
@@ -236,12 +238,13 @@ public class JarSigner extends ConventionTask {
         return manifestAttributes;
     }
 
-    public void setManifestAttributes(Map<String, String> manifestAttributes) {
-        this.manifestAttributes = manifestAttributes;
+    public void setManifestAttributes(Map<String, String> attributes) {
+        manifestAttributes.clear();
+        attributes.putAll(attributes);
     }
 
-    public void manifestAttributes(Map<String, String> attibutes) {
-        manifestAttributes.putAll(attibutes);
+    public void manifestAttributes(Map<String, String> attributes) {
+        manifestAttributes.putAll(attributes);
     }
 
     public void manifestAttribute(String name, String value) {
@@ -285,16 +288,24 @@ public class JarSigner extends ConventionTask {
 
     @InputFiles
     @SkipWhenEmpty
-    public Object getJarFilesToSign() {
+    public FileCollection getJarFilesToSign() {
         return jarFilesToSign;
     }
 
-    public void setJarFilesToSign(Object jarFilesToSign) {
-        this.jarFilesToSign = jarFilesToSign;
+    public void setJarFilesToSign(Object... jarFiles) {
+        jarFilesToSign.from(jarFiles);
     }
 
     @OutputFiles
-    public Collection<File> getSignedJars() {
+    public FileCollection getJarFiles() {
+        if (certificateFile != null) { //dersom signering
+            return signedJarFiles;
+        } else {
+            return jarFilesToSign;
+        }
+    }
+
+    private Collection<File> collectSignedJars() {
         try {
             Set<File> unsignedFiles = getProject().files(jarFilesToSign).getFiles();
 
@@ -317,4 +328,5 @@ public class JarSigner extends ConventionTask {
             throw new GradleException("Error calculating (un)signed output files from " + JarSigner.class.getName(), e);
         }
     }
+
 }

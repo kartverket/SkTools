@@ -78,10 +78,17 @@ class WebstartPlugin implements Plugin<Project> {
             webstartTask = project.tasks.add(makeTaskName(WEBSTART_TASK_PREFIX, clientConfiguration.name, WEBSTART_TASK_POSTFIX), WebstartTask.class) //todo: remove backward compability with Gradle 1.5
         }
 
-        webstartTask.setJnlpConfigurations(clientConfiguration.jnlpConfigurations)
-        webstartTask.conventionMapping.libDir = { clientConfiguration.libDir }
         webstartTask.jarResources jarSigner
-        webstartTask.mainJar clientConfiguration.mainDependency
+        webstartTask.setJnlpConfigurations(clientConfiguration.jnlpConfigurations)
+
+        //late bindings since configuration is applied later...
+        webstartTask.conventionMapping.libDir = { clientConfiguration.libDir }
+        webstartTask.conventionMapping.map('mainJar', new Callable<Object>() {
+            @Override
+            Object call() throws Exception {
+                return jarSigner.jarFiles.filter(clientConfiguration.mainJarFilter)
+            }
+        })
         webstartTask.conventionMapping.map('digest', new Callable<String>() {
             @Override
             String call() throws Exception {

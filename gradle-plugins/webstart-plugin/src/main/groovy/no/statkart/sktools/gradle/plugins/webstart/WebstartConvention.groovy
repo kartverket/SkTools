@@ -46,7 +46,10 @@ class ClientConfiguration {
     private Map<String, String> manifestAttributes = new LinkedHashMap<String, String>();
     private List<JnlpConfiguration> jnlpConfigurations = new ArrayList<JnlpConfiguration>();
     private ConfigurableFileCollection jarDependencies
-    private ConfigurableFileCollection mainDependency
+    private Closure mainJar = {
+        project.logger.debug "Treating ${it.name} as main jar in ${name}..." //default så betraktes alle filer som main jars i #jarDependencies...
+        true
+    }
 
     /**
      * Angir relativ URL til jar-filer i forholdt til jnlp-filene.
@@ -63,7 +66,6 @@ class ClientConfiguration {
         this.name = name
 
         jarDependencies = project.files()
-        mainDependency = project.files()
     }
 
     String getName() {
@@ -92,8 +94,14 @@ class ClientConfiguration {
         jarDependencies.from(files)
     }
 
-    public void mainDependency(Object... files) {
-        mainDependency.from(files)
+    public void mainJar(Closure filter) {
+        mainJar = filter
+    }
+
+    public void mainJar(String fileNameSubstring) {
+        mainJar = {
+            it.name.contains(fileNameSubstring)
+        }
     }
 
     SigningConfiguration getSigningConfiguration() {
@@ -112,8 +120,8 @@ class ClientConfiguration {
         return jarDependencies
     }
 
-    FileCollection getMainDependency() {
-        return mainDependency
+    Closure getMainJarFilter() {
+        return mainJar
     }
 }
 

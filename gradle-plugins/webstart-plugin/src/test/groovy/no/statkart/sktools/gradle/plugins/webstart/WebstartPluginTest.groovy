@@ -105,7 +105,7 @@ class WebstartPluginTest {
                 client {
                     jarDependencies configurations.webstartJars
                     jnlp {
-                        description 'Description client1'
+                        description 'Client1 description'
                         title 'Client1 title'
                         resources {
                             systemProperties pop1: 'test', prop2: 'test2', 'jnlp.versionEnabled': true
@@ -176,7 +176,7 @@ class WebstartPluginTest {
                     jarDependencies configurations.webstartJars
                     jnlp {
                         jnlpFilename 'client1.jnlp'
-                        description 'Description client1'
+                        description 'Client1 description'
                         title 'Client1 title'
                     }
                 }
@@ -184,7 +184,7 @@ class WebstartPluginTest {
                     jarDependencies configurations.webstartJars
                     jnlp {
                         jnlpFilename 'client2.jnlp'
-                        description 'Description client2'
+                        description 'Client2 description'
                         title 'Client2 title'
                     }
                 }
@@ -210,6 +210,128 @@ class WebstartPluginTest {
 
         Set<String> entryNames2 = new HashSet<String>(entryNames)
         Assert.assertEquals(entryNames2.size(), entryNames.size())
+    }
+
+
+    /**
+     * SKTOOLS-118: main jar
+     */
+    @Test
+    void jarFilesDefaultsAsMainJars() {
+        final ProjectHelper projectHelper = WebstartProjectBuilder.builder().withName('root').applyWebstartPlugin().build()
+
+        final File wsClientRuntimeJar = projectHelper.project.file('../wsClientRuntime-1.0.jar')
+        wsClientRuntimeJar.createNewFile()
+
+        final File wsClientExtrasJar = projectHelper.project.file('../wsClientExtras-1.0.jar')
+        wsClientExtrasJar.createNewFile()
+
+        projectHelper.configureProject {
+            configurations {
+                clientRuntime1
+                clientRuntime2
+            }
+
+            dependencies {
+                clientRuntime1 files('../wsClientRuntime-1.0.jar')
+                clientRuntime2 files('../wsClientRuntime-1.0.jar', '../wsClientExtras-1.0.jar')
+            }
+
+            webstart {
+                client1 {
+                    jarDependencies configurations.clientRuntime1
+                    jnlp {
+                        description 'Client1 description'
+                        title 'Client1 title'
+                    }
+                }
+                client2 {
+                    jarDependencies configurations.clientRuntime2
+                    jnlp {
+                        description 'Client2 description'
+                        title 'Client2 title'
+                    }
+                }
+            }
+
+        }
+
+        projectHelper.initializeProject()
+
+        //verifying client1 with single jar
+        projectHelper.project.with {
+            Assert.assertEquals(tasks['genClient1Jnlp'].mainJar.files.size(), 1, 'mainJar')
+            Assert.assertEquals(tasks['genClient1Jnlp'].mainJar.asPath, files(wsClientRuntimeJar).asPath, 'mainJar')
+            Assert.assertEquals(tasks['genClient1Jnlp'].jarResources.asPath, files(wsClientRuntimeJar).asPath, 'jarResources')
+        }
+
+        //verifying client2 with multiple jars
+        projectHelper.project.with {
+            Assert.assertEquals(tasks['genClient2Jnlp'].mainJar.files.size(), 2, 'mainJar') //SKTOOLS-118: default behaviour to treat all as main jars (although this might lead to an exeption at runtime...)
+            Assert.assertEquals(tasks['genClient2Jnlp'].mainJar.asPath, files(wsClientRuntimeJar, wsClientExtrasJar).asPath, 'mainJar')
+            Assert.assertEquals(tasks['genClient2Jnlp'].jarResources.asPath, files(wsClientRuntimeJar, wsClientExtrasJar).asPath, 'jarResources')
+        }
+    }
+
+
+    /**
+     * SKTOOLS-118: main jar
+     */
+    @Test
+    void canSpecifyMainJar() {
+        final ProjectHelper projectHelper = WebstartProjectBuilder.builder().withName('root').applyWebstartPlugin().build()
+
+        final File wsClientRuntimeJar = projectHelper.project.file('../wsClientRuntime-1.0.jar')
+        wsClientRuntimeJar.createNewFile()
+
+        final File wsClientExtrasJar = projectHelper.project.file('../wsClientExtras-1.0.jar')
+        wsClientExtrasJar.createNewFile()
+
+        projectHelper.configureProject {
+            configurations {
+                clientRuntime
+            }
+
+            dependencies {
+                clientRuntime files('../wsClientRuntime-1.0.jar', '../wsClientExtras-1.0.jar')
+            }
+
+            webstart {
+                client1 {
+                    mainJar 'wsClientRuntime' //SKTOOLS-118: shorthand filter notation
+                    jarDependencies configurations.clientRuntime
+                    jnlp {
+                        description 'Client1 description'
+                        title 'Client1 title'
+                    }
+                }
+                client2 {
+                    mainJar {
+                        it.name.contains('wsClientRuntime') //SKTOOLS-118: filter notation as closure
+                    }
+                    jarDependencies configurations.clientRuntime
+                    jnlp {
+                        description 'Client2 description'
+                        title 'Client2 title'
+                    }
+                }
+            }
+
+        }
+
+        projectHelper.initializeProject()
+
+        ['genClient1Jnlp', 'genClient2Jnlp'].reverseEach { def genJnlpTaskName ->
+
+            //clients with multiple jars should have only one main jar specified
+            projectHelper.project.with {
+                Assert.assertEquals(tasks[genJnlpTaskName].mainJar.files.size(), 1, "${genJnlpTaskName}.mainJar")
+                Assert.assertEquals(tasks[genJnlpTaskName].mainJar.asPath, files(wsClientRuntimeJar).asPath, "${genJnlpTaskName}.mainJar")
+                Assert.assertEquals(tasks[genJnlpTaskName].jarResources.asPath, files(wsClientRuntimeJar, wsClientExtrasJar).asPath, "${genJnlpTaskName}.jarResources")
+            }
+
+        }
+
     }
 
 
