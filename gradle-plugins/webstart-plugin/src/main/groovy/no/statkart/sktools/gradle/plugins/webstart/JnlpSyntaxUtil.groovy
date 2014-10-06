@@ -31,7 +31,7 @@ class JnlpSyntaxUtil {
 
             if (mainJarFiles.contains(file)) {
                 if (mainJarFound) {
-                    throw new GradleException('There can only be one main jar; was: ' + mainJarFiles)  //SKTOOLS-118
+                    throw new GradleException('SKTOOLS-118: There can only be one main jar; was: ' + mainJarFiles)
                 }
                 mainJarFound = true
                 jarNode.attributes().put('main', true)
