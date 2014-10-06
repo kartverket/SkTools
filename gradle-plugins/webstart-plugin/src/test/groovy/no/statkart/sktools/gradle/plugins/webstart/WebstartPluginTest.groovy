@@ -243,7 +243,7 @@ class WebstartPluginTest {
 
             webstart {
                 client1 {
-                    mainJar 'wsClientRuntime'
+//                    mainJar 'wsClientRuntime' //no declaration here - testing default behaviour
                     jarDependencies configurations.clientRuntime1
                     jnlp {
                         description 'Client1 description'
@@ -251,7 +251,7 @@ class WebstartPluginTest {
                     }
                 }
                 client2 {
-                    mainJar 'wsClientRuntime'
+//                    mainJar 'wsClientRuntime' //no declaration here - testing default behaviour
                     jarDependencies configurations.clientRuntime2
                     jnlp {
                         description 'Client2 description'
