@@ -165,7 +165,7 @@ class WebstartTaskTest {
                     }
 
                     application {
-                        mainClass('my.Launcher')
+                        mainClass 'my.Launcher'
                     }
 
                     withXml { XmlProvider xmlProvider ->
@@ -337,5 +337,20 @@ class WebstartTaskTest {
             }
         }
     }
+
+    /**
+     * Standard setting
+     */
+    @Test
+    void jnlpHasAllPermissions() {
+        ProjectHelper projectHelper = jnlpFileFromFullConfiguration()
+        projectHelper.assertFileExists('build/webstart/client1.jnlp') {
+            def jnlp = new XmlSlurper().parseText(it.text)
+
+            Assert.assertTrue(jnlp.security[0].childNodes().size() > 0)
+            Assert.assertTrue(jnlp.security[0].childNodes()[0].name == 'all-permissions')
+        }
+    }
+
 
 }
