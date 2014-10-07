@@ -201,11 +201,12 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
 
         try {
             createSchema2Task.execute()
-            assert false
+            Assert.fail 'forventer exception'
         } catch (TaskExecutionException tee) {
             def cause = tee.cause
-            assert cause.message.contains('authorization')
-            assert cause instanceof java.sql.SQLInvalidAuthorizationSpecException
+            Assert.assertTrue cause.message.contains('authorization')
+            Assert.assertTrue cause instanceof java.sql.SQLInvalidAuthorizationSpecException ||
+                    cause.cause instanceof java.sql.SQLInvalidAuthorizationSpecException
         }
 
     }
