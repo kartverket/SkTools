@@ -9,6 +9,7 @@ import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.util.ConfigureUtil
+import org.gradle.util.DeprecationLogger
 
 /**
  * Extension for webstart plugin.
@@ -72,12 +73,29 @@ class ClientConfiguration {
         return name
     }
 
+    public void sign(Map properties = [], Closure config = null) {
+        signingConfiguration = new SigningConfiguration(project)
+
+        ConfigureUtil.configureByMap(properties, signingConfiguration)
+        ConfigureUtil.configure(config, signingConfiguration)
+    }
+
+
+    @Deprecated
     public void sign(File keystore, String alias, String password) {
-        signingConfiguration = new SigningConfiguration(keystore, alias, password)
+        DeprecationLogger.nagUserOfDeprecated("sign", "Use map or closure as arg to configure signing")
+        signingConfiguration = new SigningConfiguration(project)
+        signingConfiguration.keystore = keystore
+        signingConfiguration.alias = alias
+        signingConfiguration.password = password
     }
 
     public void manifestAttribute(String name, String value) {
         manifestAttributes.put(name, value);
+    }
+
+    public void manifestAttributes(Map attributes) {
+        manifestAttributes.putAll(attributes);
     }
 
     public void jnlp(Closure config) {
@@ -126,36 +144,53 @@ class ClientConfiguration {
 }
 
 class SigningConfiguration {
-    private final File keystore
-    private final String alias
-    private final String password
-    private final String digestAlgorithm
+    protected final transient Project project;
 
-    SigningConfiguration(File keystore, String alias, String password) {
-        this.keystore = keystore
-        this.alias = alias
-        this.password = password
+    protected File keystore
+    protected String alias
+    protected String password
+    protected String digestAlgorithm
+
+    protected SigningConfiguration(Project project) {
+        this.project = project
     }
 
     File getKeystore() {
         return keystore
     }
 
+    void setKeystore(def keystore) {
+        this.keystore = project.file(keystore)
+    }
+
     String getAlias() {
         return alias
+    }
+
+    void setAlias(String alias) {
+        this.alias = alias
     }
 
     String getPassword() {
         return password
     }
 
-    public String getDigest() throws Exception {
-        return FileHashIdent.createChecksum(keystore, alias);
+    void setPassword(String password) {
+        this.password = password
     }
 
     String getDigestAlgorithm() {
         return digestAlgorithm
     }
+
+    void setDigestAlgorithm(String digestAlgorithm) {
+        this.digestAlgorithm = digestAlgorithm
+    }
+
+    public String createDigest() throws Exception {
+        return FileHashIdent.createChecksum(keystore, alias);
+    }
+
 }
 
 class JnlpConfiguration implements Serializable {

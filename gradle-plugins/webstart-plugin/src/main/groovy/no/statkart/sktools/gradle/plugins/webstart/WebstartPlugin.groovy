@@ -62,9 +62,11 @@ class WebstartPlugin implements Plugin<Project> {
 
         jarSigner.jarFilesToSign = clientConfiguration.jarDependencies
         jarSigner.conventionMapping.certificateFile = { clientConfiguration?.signingConfiguration?.keystore }
+        jarSigner.conventionMapping.digestAlgorithm = { clientConfiguration?.signingConfiguration?.digestAlgorithm }
         jarSigner.conventionMapping.alias = { clientConfiguration?.signingConfiguration?.alias }
         jarSigner.conventionMapping.password = { clientConfiguration?.signingConfiguration?.password }
-        jarSigner.manifestAttributes = clientConfiguration.manifestAttributes
+        jarSigner.conventionMapping.digestAlgorithm = { clientConfiguration?.signingConfiguration?.digestAlgorithm }
+        jarSigner.conventionMapping.manifestAttributes = { clientConfiguration.manifestAttributes }
 
         return jarSigner
     }
@@ -92,7 +94,7 @@ class WebstartPlugin implements Plugin<Project> {
         webstartTask.conventionMapping.map('digest', new Callable<String>() {
             @Override
             String call() throws Exception {
-                return clientConfiguration.signingConfiguration?.digest
+                return clientConfiguration.signingConfiguration?.createDigest()
             }
         })
         return webstartTask
@@ -102,7 +104,7 @@ class WebstartPlugin implements Plugin<Project> {
         War war = project.tasks.getByName(WarPlugin.WAR_TASK_NAME) as War
 
         war.from { clientConfiguration.warJnlps ? webstartTask : [] }
-        war.with(jnlpCopySpec(project, { clientConfiguration.libDir }, jarSigner, { clientConfiguration.signingConfiguration?.digest }))
+        war.with(jnlpCopySpec(project, { clientConfiguration.libDir }, jarSigner, { clientConfiguration.signingConfiguration?.createDigest() }))
     }
 
     private static String makeTaskName(String verb, String client, String postfix) {

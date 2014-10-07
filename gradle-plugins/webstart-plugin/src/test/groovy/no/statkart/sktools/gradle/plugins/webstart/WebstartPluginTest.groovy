@@ -341,4 +341,44 @@ class WebstartPluginTest {
     }
 
 
+    /**
+     * Skal kunne spesifisere ekstra manifest informasjon som legges på før signering.
+     */
+    @Test
+    void canSpecifyExtraManifestAttributes() {
+        final ProjectHelper projectHelper = WebstartProjectBuilder.builder().withName('root').applyWebstartPlugin().build()
+
+        projectHelper.configureProject {
+            apply: 'java'
+
+            webstart {
+                client1 {
+                    jarDependencies configurations.runtime
+                    manifestAttributes codebase: 'https://*', dummy: 'testValue'
+                    jnlp {
+                        description 'Client1 description'
+                        title 'Client1 title'
+                    }
+                }
+                client2 {
+                    jarDependencies configurations.runtime
+                    jnlp {
+                        description 'Client2 description'
+                        title 'Client2 title'
+                    }
+                }
+            }
+
+        }
+
+
+        projectHelper.initializeProject()
+
+        final JarSigner signTask = projectHelper.project.tasks['signClient1'] as JarSigner
+        Assert.assertNotNull(signTask.getManifestAttributes())
+        Assert.assertEquals(signTask.getManifestAttributes().size(), 2)
+        Assert.assertEquals(signTask.getManifestAttributes(), [codebase: 'https://*', dummy: 'testValue'])
+
+    }
+
 }

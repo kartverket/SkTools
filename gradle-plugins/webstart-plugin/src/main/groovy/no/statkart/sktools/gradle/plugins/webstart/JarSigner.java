@@ -9,8 +9,6 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.internal.ConventionTask;
 import org.gradle.api.tasks.*;
 import org.gradle.process.ExecSpec;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.*;
@@ -22,7 +20,6 @@ import java.util.*;
  * @author Tor Egil R. Strand
  */
 public class JarSigner extends ConventionTask {
-    private static Logger logger = LoggerFactory.getLogger(JarSigner.class);
     private File cacheDir;
     /**
      * Holder cache over alle signerte filer, et map per sertifikat.
@@ -34,7 +31,7 @@ public class JarSigner extends ConventionTask {
     private File certificateFile;
     private String password;
     private String alias;
-    private String digestAlg = "SHA1"; // Dette ser ut til å være det tryggeste når det kommer til jar-filer som allerede er signert
+    private String digestAlgorithm;
 
     private final Map<String, String> manifestAttributes = new LinkedHashMap<String, String>();
 
@@ -73,13 +70,13 @@ public class JarSigner extends ConventionTask {
                 getSignedArtifactsForCertificates().put(certificateFileIdent, signedArtifacts);
             }
 
-            File manifestAddendum = null;
-            if (!manifestAttributes.isEmpty()) {
+            File manifestAddendum = null; //temp-file for additional manifest attributes (this is passed on to the jar tool)
+            if (!getManifestAttributes().isEmpty()) {
                 manifestAddendum = new File(getTemporaryDir(), "addendum.mf");
 
                 PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(manifestAddendum, false), "UTF-8"));
                 try {
-                    for (Map.Entry<String, String> entry : manifestAttributes.entrySet()) {
+                    for (Map.Entry<String, String> entry : getManifestAttributes().entrySet()) {
                         writer.format("%s: %s\n", entry.getKey(), entry.getValue());
                     }
                 } finally {
@@ -98,7 +95,7 @@ public class JarSigner extends ConventionTask {
                 if (cachedFileIdent != null) {
                     if (cachedFileIdent.equals(jarFileIdent)) {
                         signedJarFile = cachedFileIdent.getFile();
-                        logger.info("...using cached jar " + signedJarFile.getAbsolutePath());
+                        getLogger().info("...using cached jar " + signedJarFile.getAbsolutePath());
                     }
                 }
 
@@ -127,7 +124,7 @@ public class JarSigner extends ConventionTask {
 
                     //updating cache...
                     if (cachedFileIdent != null) {
-                        logger.debug("updating cache-entry for " + unsignedJar);
+                        getLogger().debug("updating cache-entry for " + unsignedJar);
                     }
                     cachedFileIdent = new FileHashIdent(signedJarFile, jarFileIdent.hash());
                     cachedFileIdent.writeChecksumToFile();
@@ -135,7 +132,7 @@ public class JarSigner extends ConventionTask {
                 }
             }
         } else {
-            logger.warn("Signing of resources disabled - no certificate!");
+            getLogger().warn("Signing of resources disabled - no certificate!");
         }
 
         signedJarFiles.from(collectSignedJars());
@@ -144,7 +141,7 @@ public class JarSigner extends ConventionTask {
     private void signJar(final File jarFile, final File manifestAddendum) {
 
         if (manifestAddendum != null) {
-            logger.info(String.format("Updating manifest for %s ...", jarFile.getPath()));
+            getLogger().info(String.format("Updating manifest for %s ...", jarFile.getPath()));
 
             getProject().exec(new Closure(this) {
                 public void doCall() {
@@ -153,12 +150,14 @@ public class JarSigner extends ConventionTask {
                     execSpec.setWorkingDir(jarFile.getParent());
                     execSpec.setIgnoreExitValue(false);
                     execSpec.setExecutable("jar");
-                    execSpec.args("ufm", jarFile.getName(), manifestAddendum.getAbsolutePath());
+                    execSpec.args("ufm", jarFile.getName(), manifestAddendum.getAbsolutePath());   //updating existing archive, specify archive file name, include manifest information from specified manifest file
                 }
             });
+        } else {
+            getLogger().debug("No additional manifest attributes specified. Using original manifest...");
         }
 
-        logger.info(String.format("Signing file %s ...", jarFile.getPath()));
+        getLogger().lifecycle(String.format("Signing file %s ...", getProject().relativePath(jarFile)));
 
         getProject().exec(new Closure(this) {
             public void doCall() {
@@ -170,12 +169,15 @@ public class JarSigner extends ConventionTask {
                 execSpec.args(
                         "-keystore", getCertificateFile().getAbsolutePath(),
                         "-storepass", getPassword(),
-                        "-digestalg", getDigestAlg(),
                         jarFile.getName(),    //file to sign in same dir - see ...setDir(File)
                         getAlias()
                 );
 
-                if (logger.isInfoEnabled()) {
+                if (getDigestAlgorithm() != null) {
+                    execSpec.args("-digestalg", getDigestAlgorithm());
+                }
+
+                if (getLogger().isInfoEnabled()) {
                     execSpec.args("-verbose");
                 }
             }
@@ -225,12 +227,13 @@ public class JarSigner extends ConventionTask {
     }
 
     @Input
-    public String getDigestAlg() {
-        return digestAlg;
+    @Optional
+    public String getDigestAlgorithm() {
+        return digestAlgorithm;
     }
 
-    public void setDigestAlg(String digestAlg) {
-        this.digestAlg = digestAlg;
+    public void setDigestAlgorithm(String digestAlgorithm) {
+        this.digestAlgorithm = digestAlgorithm;
     }
 
     @Input
@@ -240,7 +243,7 @@ public class JarSigner extends ConventionTask {
 
     public void setManifestAttributes(Map<String, String> attributes) {
         manifestAttributes.clear();
-        attributes.putAll(attributes);
+        manifestAttributes.putAll(attributes);
     }
 
     public void manifestAttributes(Map<String, String> attributes) {
@@ -253,14 +256,14 @@ public class JarSigner extends ConventionTask {
 
     void initCache() throws IOException {
         signedArtifactsForCertificates = new HashMap<FileHashIdent, Map<String, FileHashIdent>>();
-        logger.info("Initializing cache...");
+        getLogger().info("Initializing cache...");
 
         if (getCacheDir().exists()) {
             for (File certDirectory : cacheDir.listFiles()) {
                 if (certDirectory.isDirectory()) {
                     FileHashIdent certFileIdent = new FileHashIdent(certDirectory, certDirectory.getName());
 
-                    logger.debug(String.format("Found cache-dir for certificate with hash = %s", certDirectory.getName()));
+                    getLogger().debug(String.format("Found cache-dir for certificate with hash = %s", certDirectory.getName()));
 
                     Map<String, FileHashIdent> signedArtifacts = signedArtifactsForCertificates.get(certFileIdent);
                     if (signedArtifacts == null) {
@@ -274,16 +277,16 @@ public class JarSigner extends ConventionTask {
                             if (signedArtifactFileIdent != null) {
                                 String unsignedFileName = signedArtifactFileIdent.getFile().getName();
                                 signedArtifacts.put(unsignedFileName, signedArtifactFileIdent);
-                                logger.debug(String.format("   found cached file %s", signedArtifactFileIdent.getFile().getAbsolutePath()));
+                                getLogger().debug(String.format("   found cached file %s", signedArtifactFileIdent.getFile().getAbsolutePath()));
                             }
                         }
                     }
                 }
             }
         } else {
-            logger.info("  Cachedir does not exist!");
+            getLogger().info("  Cachedir does not exist!");
         }
-        logger.info("...cache initialized!");
+        getLogger().info("...cache initialized!");
     }
 
     @InputFiles
