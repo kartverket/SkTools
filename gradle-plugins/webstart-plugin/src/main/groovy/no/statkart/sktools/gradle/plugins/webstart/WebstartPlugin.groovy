@@ -54,7 +54,8 @@ class WebstartPlugin implements Plugin<Project> {
     private static JarSigner configureJarSigner(Project project, ClientConfiguration clientConfiguration) {
 
         final JarSigner jarSigner;
-        if (project.getGradle().getGradleVersion().compareTo("1.5") > 0 ) {
+        final int gradleSubersion = Integer.parseInt(project.getGradle().getGradleVersion().split("\\.")[1]);
+        if (gradleSubersion > 5 ) {
             jarSigner = project.tasks.replace(makeTaskName(SIGN_TASK_PREFIX, clientConfiguration.name, null), JarSigner.class)  //todo: endre bruk av replace() til create()
         } else {
             jarSigner = project.tasks.add(makeTaskName(SIGN_TASK_PREFIX, clientConfiguration.name, null), JarSigner.class) //todo: remove backward compability with Gradle 1.5

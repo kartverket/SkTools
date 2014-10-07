@@ -109,7 +109,8 @@ public class FilterResourcesPlugin implements Plugin<ProjectInternal> {
 
                 //oppretter copy task for filtrering...
                 final ProcessResources filterResourcesTask;
-                if (project.getGradle().getGradleVersion().compareTo("1.5") > 0 ) {
+                final int gradleSubersion = Integer.parseInt(project.getGradle().getGradleVersion().split("\\.")[1]);
+                if (gradleSubersion > 5 ) {
                     filterResourcesTask = project.getTasks().replace(filterResourcesTaskName, ProcessResources.class); //todo: endre bruk av replace() til create()
                 } else {
                     filterResourcesTask = project.getTasks().add(filterResourcesTaskName, ProcessResources.class); //todo: remove backward compability with Gradle 1.5

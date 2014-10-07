@@ -139,7 +139,8 @@ class XjcPlugin implements Plugin<ProjectInternal> {
 
                     private Task createCompileXjcTaskForSchema(XjcSchema xjcSchema, Task xjcTask, File buildOutputDir) {
                         final AbstractCompile compile;
-                        if (project.getGradle().getGradleVersion().compareTo("1.5") > 0 ) {
+                        final int gradleSubersion = Integer.parseInt(project.getGradle().getGradleVersion().split("\\.")[1]);
+                        if (gradleSubersion > 5 ) {
                             compile = (AbstractCompile) project.tasks.replace(xjcSchema.getCompileXjcSchemaTaskName(), XjcCompileTaskImpl.class)  //todo: endre bruk av replace() til create()
                         } else {
                             compile = (AbstractCompile) project.tasks.add(xjcSchema.getCompileXjcSchemaTaskName(), XjcCompileTaskImpl.class) //todo: remove backward compability with Gradle 1.5

@@ -111,7 +111,8 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
         }
 
         final WeblogicWarTask war;
-        if (project.getGradle().getGradleVersion().compareTo("1.5") > 0 ) {
+        final int gradleSubersion = Integer.parseInt(project.getGradle().getGradleVersion().split("\\.")[1]);
+        if (gradleSubersion > 5 ) {
             war = project.getTasks().replace(WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME, WeblogicWarTask.class);  //todo: endre bruk av replace() til create()
         } else {
             war = project.getTasks().add(WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME, WeblogicWarTask.class); //todo: remove backward compability with Gradle 1.5

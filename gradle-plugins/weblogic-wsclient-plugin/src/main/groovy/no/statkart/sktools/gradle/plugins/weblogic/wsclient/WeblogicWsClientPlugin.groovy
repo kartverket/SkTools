@@ -138,7 +138,8 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
         final Project project = wsClientConvention.project
 
         final AbstractCompile compile;
-        if (project.getGradle().getGradleVersion().compareTo("1.5") > 0 ) {
+        final int gradleSubersion = Integer.parseInt(project.getGradle().getGradleVersion().split("\\.")[1]);
+        if (gradleSubersion > 5 ) {
             compile = (AbstractCompile) project.tasks.replace(WeblogicWsClientPlugin.GEN_CLIENT_TASK_NAME, WeblogicWsClientCompileTaskImpl.class)  //todo: endre bruk av replace() til create()
         } else {
             compile = (AbstractCompile) project.tasks.add(WeblogicWsClientPlugin.GEN_CLIENT_TASK_NAME, WeblogicWsClientCompileTaskImpl.class)  //todo: remove backward compability with Gradle 1.5
