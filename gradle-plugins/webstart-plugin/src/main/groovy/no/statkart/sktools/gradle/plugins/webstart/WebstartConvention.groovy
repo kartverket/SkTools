@@ -83,7 +83,7 @@ class ClientConfiguration {
 
     @Deprecated
     public void sign(File keystore, String alias, String password) {
-        DeprecationLogger.nagUserOfDeprecated("sign", "Use map or closure as arg to configure signing")
+        DeprecationLogger.nagUserOfReplacedMethod("sign", "Use map or closure as arg to configure signing")
         signingConfiguration = new SigningConfiguration(project)
         signingConfiguration.keystore = keystore
         signingConfiguration.alias = alias
