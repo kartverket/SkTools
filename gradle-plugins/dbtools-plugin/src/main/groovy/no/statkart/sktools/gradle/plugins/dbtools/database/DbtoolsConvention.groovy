@@ -40,10 +40,9 @@ configureDatabasePlugin {
  *
  */
 public class DbtoolsConvention {
-    public final Project project;
+    protected final transient Project project;
 
     protected final List<Dependency> jdbcDependencies = new ArrayList<Dependency>(4);
-
     public final Map<String, ? extends AbstractDatabaseConvention> dbToolSets = new HashMap<String, AbstractDatabaseConvention>()
 
     DbtoolsConvention(Project project) {

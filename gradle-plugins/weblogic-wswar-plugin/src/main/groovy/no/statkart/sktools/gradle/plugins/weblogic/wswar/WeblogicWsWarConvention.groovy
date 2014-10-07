@@ -16,9 +16,7 @@ import org.gradle.util.ConfigureUtil
  * @deprecated since 1.2 - da denne er blitt overflødig
  */
 class WeblogicWsWarConvention {
-
-    final protected Project project
-
+    protected final transient Project project
 
     WeblogicWsWarConvention(JavaPluginConvention javaConvention) {
         this.project = javaConvention.project;

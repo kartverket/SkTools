@@ -16,8 +16,9 @@ import org.apache.commons.lang.builder.EqualsBuilder
  */
 class WsDocGenConvention implements Serializable {
     private final static long serialVersionUID = 1L;
-    final static protected transient String GEN_TASK_NAME_PATTERN = "gen%s%sWsDoc"
-    final transient Project project
+    protected final transient Project project
+
+    public final static String GEN_TASK_NAME_PATTERN = "gen%s%sWsDoc"
 
     protected final List<Group> groups = new ArrayList<Group>()
 
@@ -84,8 +85,9 @@ class WsDocGenConvention implements Serializable {
  */
 class Group implements Serializable {
     private final static long serialVersionUID = 1L;
-    final transient Project project
-    final transient WsDocGenConvention convention
+
+    protected final transient Project project
+    protected final transient WsDocGenConvention convention
 
     /**
      * Navn for gruppe - blir automatisk tildelt dersom ikke spesifisert

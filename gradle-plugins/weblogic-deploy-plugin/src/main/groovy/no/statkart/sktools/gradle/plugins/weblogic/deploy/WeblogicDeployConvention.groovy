@@ -15,7 +15,7 @@ import org.apache.commons.lang.StringUtils
  * @since 1.2
  */
 class WeblogicDeployConvention {
-    final private Project project
+    protected final transient Project project
 
     protected WeblogicDeployConvention(Project project) {
         this.project = project
@@ -49,8 +49,8 @@ class WeblogicDeployConvention {
  * @since 1.2
  */
 class WeblogicDeployConfiguration {
-    final private Project project
-    final private WeblogicDeployConvention convention
+    protected final transient Project project
+    protected final WeblogicDeployConvention convention
 
     protected String protocol
     protected String host

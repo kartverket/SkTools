@@ -16,7 +16,7 @@ import org.gradle.util.ConfigureUtil
  * @author Tor Egil R. Strand
  */
 class WebstartConvention {
-    private final Project project
+    protected final transient Project project
     private final NamedDomainObjectContainer<ClientConfiguration> clientContainer
 
     WebstartConvention(Project project) {
@@ -39,7 +39,7 @@ class WebstartConvention {
 }
 
 class ClientConfiguration {
-    private final Project project;
+    protected final transient Project project;
     private final String name;
 
     private SigningConfiguration signingConfiguration
@@ -129,6 +129,7 @@ class SigningConfiguration {
     private final File keystore
     private final String alias
     private final String password
+    private final String digestAlgorithm
 
     SigningConfiguration(File keystore, String alias, String password) {
         this.keystore = keystore
@@ -151,12 +152,16 @@ class SigningConfiguration {
     public String getDigest() throws Exception {
         return FileHashIdent.createChecksum(keystore, alias);
     }
+
+    String getDigestAlgorithm() {
+        return digestAlgorithm
+    }
 }
 
 class JnlpConfiguration implements Serializable {
     private final static long serialVersionUID = 1L;
 
-    private transient Project project
+    protected final transient Project project
 
     String jnlpFilename;
 
