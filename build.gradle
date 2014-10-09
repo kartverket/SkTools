@@ -6,7 +6,7 @@ allprojects {
     group = 'no.statkart.sktools'
 
     // version kan settes via properties (feks kommandolinje -Psktools_versjon=xxx )
-    project.version = (ext.has('sktools_versjon')) ? sktools_versjon : version
+    project.version = sktools_versjon
 
     // valgfri build katalog - kan benyttes for kompilering for flere samtidige Gradle versjoner..
     buildDir = gradle.startParameter.systemPropertiesArgs.get('buildDirName', Project.DEFAULT_BUILD_DIR_NAME)

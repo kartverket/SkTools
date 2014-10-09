@@ -178,6 +178,7 @@ class Assert {
             dir = project.projectDir
             tasks = taskNames
             startParameter.systemPropertiesArgs = [noMavenBootstrap: 'true']
+            startParameter.projectProperties = [sktools_versjon:"${project.version}"]
             prep.reverseEach { Closure beforeAsserts -> doFirst { beforeAsserts.setDelegate(this); beforeAsserts.run()}}
             doLast { check.setDelegate(this); check.run() }
             doFirst {
