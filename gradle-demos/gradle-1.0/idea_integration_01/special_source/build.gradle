@@ -139,14 +139,19 @@ task printSourceSets() << {
 
 
 /******************************************************************************************************************** **
- * Hjelpemetode for forking av gradle eksekveringer
- * Kun relevant for testing...
+ * Helper method for forking gradle builds programmatically. Using gradle Tooling API
+ * (Only relevant for testing)
  ******************************************************************************************************************** */
-void forkGradle(List tasks, Map props = [:]) {
-    StartParameter sp = gradle.startParameter.newInstance()
-    sp.taskNames = tasks.collect {"${project.path}:${it}".toString()}
-    sp.projectProperties << props
-    GradleLauncher.newInstance(sp).run().rethrowFailure();
+void forkGradle(List<String> tasks, Map props = [:]) {
+    org.gradle.tooling.ProjectConnection connection = org.gradle.tooling.GradleConnector.newConnector().forProjectDirectory(project.projectDir).connect();
+    try {
+        org.gradle.tooling.BuildLauncher build = connection.newBuild()
+                .forTasks(tasks.collect { "${project.path}:${it}".toString() } as String[])
+                .withArguments(props.collect { "-P${it.key}=${it.value}" } << ['-DnoMavenBootstrap=true'] as String[])
+                .run();
+    } finally {
+        connection.close();
+    }
 }
 
 
