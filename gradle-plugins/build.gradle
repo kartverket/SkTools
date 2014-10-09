@@ -69,13 +69,12 @@ task('testDemos') {
 
         gradle.projectsEvaluated {
 
-            // Vi må installere alle artefakter før noe kan kjøres på demoene, inkludert clean
+            // Vi må installere alle artefakter før demoer kjøres
             cleanDemoTask.dependsOn rootProject.getTasksByName('install', true)
 
             //kjøring av tester før kjøring av demos
             if (project.gradle.startParameter.taskNames.contains('test')) {
-                //adding depends on makes the demos run last
-                runDemoTask.dependsOn project.getTasksByName('test', true)
+                runDemoTask.dependsOn project.subprojects.collectAll { it.getTasksByName('test', true) }
             }
 
         }
