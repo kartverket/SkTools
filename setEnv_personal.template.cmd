@@ -12,7 +12,7 @@ set GRADLE_HOME=C:\bin\gradle\gradle-1.5
 set GRADLE_HOME=C:\bin\gradle\gradle-1.6
 
 @rem bestemmer versjon av prosjektet [optional - må benyttes på ikke numeriske kodebrancher ala trunk]
-@rem set ORG_GRADLE_PROJECT_sktools_versjon=1.2-SNAPSHOT
+@rem set ORG_GRADLE_PROJECT_sktools_versjon=1.3-SNAPSHOT
 
 
 @rem *******************************************************************************************************************
