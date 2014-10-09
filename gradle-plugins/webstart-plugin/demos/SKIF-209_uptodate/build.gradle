@@ -52,74 +52,113 @@ task runDemo(dependsOn:'clean') {
 
     doLast {
 
-        println "Tømmer cache katalog"
-        project.rootProject.delete('.cache')
+        Assert.that('release', 'war').describedAs('releaseAssemblesClient').prep {
+            println "Tømmer cache katalog..."
+            project.rootProject.delete('.cache')
 
-        cleanExtraResources.execute()
+            println "Sletter genererte filer"
+            project.project(':echo-client').delete('src/main/SKIF-209')
 
-        println "Tester generering av client"
-        forkGradle([
-                'release',
-                tasks['war'],
-                tasks['assertEchoClientClasses'],
-        ]) //'release' version without SNAPSHOT
+        }.leadsTo(project).withState {
 
-        createExtraResources.execute()
-
-        println "Tester generering av client"
-        forkGradle([
-                'release',
-                tasks['war'],
-                tasks['assertEchoClientClasses'],
-                tasks['assertAddedEchoClientClasses'],
-        ]) //'release' version without SNAPSHOT
-    }
-}
-
-task createExtraResources() << {
-    println "Oppretter genererte filer"
-    File file = project.project(':echo-client').file('src/main/SKIF-209/addedResource.txt')
-    file.parentFile.mkdirs()
-    file.createNewFile()
-}
-
-task cleanExtraResources() << {
-    println "Sletter genererte filer"
-    project.project(':echo-client').delete('src/main/SKIF-209')
-}
+            //'release' version without SNAPSHOT
+            assertEchoClientClasses()
+        }
 
 
+        Assert.that('release', 'war').describedAs('releaseAssemblesUpdatedClient').prep {
+            println "Legger til genererte filer..."
+            File file = project.project(':echo-client').file('src/main/SKIF-209/addedResource.txt')
+            file.parentFile.mkdirs()
+            file.createNewFile()
 
-task assertEchoClientClasses() << {
-    FileTree warTree = project.zipTree(war.archivePath)
+        }.leadsTo(project).withState {
 
-    ['signed/echo-client*.jar', 'unsigned/echo-client*.jar'].each { String pattern ->
-        def archive = warTree.matching { include pattern }.singleFile
-        assert archive.exists() //forventer at jar fil er opprettet
+            //'release' version without SNAPSHOT
+            assertEchoClientClasses()
+            assertAddedEchoClientClasses()
+        }
 
-        assert !project.zipTree(archive).matching {include '**/*.class'}.files.isEmpty()
-    }
-}
-
-task assertAddedEchoClientClasses() << {
-    FileTree warTree = project.zipTree(war.archivePath)
-
-    ['signed/echo-client*.jar', 'unsigned/echo-client*.jar'].each { String pattern ->
-        def archive = warTree.matching { include pattern }.singleFile
-        assert archive.exists() //forventer at jar fil er opprettet
-
-        assert project.zipTree(archive).matching {include 'addedResource.txt'}.files.size() == 1
     }
 }
 
 
-/******************************************************************************************************************** **
- * Hjelpemetode for forking av gradle eksekveringer
- * Kun relevant for testing...
- ******************************************************************************************************************** */
-void forkGradle(List tasks, Map props = [:]) {
-    StartParameter sp = gradle.startParameter.newInstance()
-    sp.taskNames = tasks.collect { it instanceof Task ? it.path : it.toString() }
-    sp.projectProperties << props
-    GradleLauncher.newInstance(sp).run().rethrowFailure();
+
+
+
+class Assert {
+    def taskName
+    String[] taskNames
+    Project project
+    List<Closure> prep = []
+
+    static def previousTask = null
+
+    static Assert that(String... taskNames) {
+        Assert instance = new Assert(); instance.taskNames = taskNames; return instance
+    }
+
+    Assert describedAs(String taskName) {
+        this.taskName = taskName; this
+    }
+
+    Assert prep(Closure prepProjectBeforeAsserts) {
+        prep << [prepProjectBeforeAsserts]; this
+    }
+
+    Assert leadsTo(Project project = project) {
+        this.project = project; this
+    }
+
+    Assert withState(Closure check) {
+        def task = project.task(taskName, type: GradleBuild) {
+            dir = project.projectDir
+            tasks = taskNames
+            startParameter.systemPropertiesArgs = [noMavenBootstrap: 'true']
+            prep.reverseEach { Closure beforeAsserts -> doFirst { beforeAsserts.setDelegate(this); beforeAsserts.run()}}
+            doLast { check.setDelegate(this); check.run() }
+            doFirst {
+                println('--------------------------------------------------------------------------------');
+                println "Testing use case: ${taskName} tasks=${taskNames}\n\n\n"
+            }
+            doLast {
+                println "\n  ...end of test case: ${taskName}"
+                println('--------------------------------------------------------------------------------\n\n');
+            }
+            outputs.upToDateWhen { false } //always run this...
+        }
+        project.tasks['runDemo'].dependsOn task
+
+        if (previousTask) task.dependsOn previousTask //ordered execution of asserts...
+        previousTask = task
+        this
+    }
+
+    //convenience methods and asserts....
+
+    void assertEchoClientClasses() {
+        FileTree warTree = project.zipTree(war.archivePath)
+
+        ['signed/echo-client*.jar', 'unsigned/echo-client*.jar'].each { String pattern ->
+            def archive = warTree.matching { include pattern }.singleFile
+            assert archive.exists() //forventer at jar fil er opprettet
+
+            assert !project.zipTree(archive).matching {include '**/*.class'}.files.isEmpty()
+        }
+    }
+
+    void assertAddedEchoClientClasses() {
+        FileTree warTree = project.zipTree(war.archivePath)
+
+        ['signed/echo-client*.jar', 'unsigned/echo-client*.jar'].each { String pattern ->
+            def archive = warTree.matching { include pattern }.singleFile
+            assert archive.exists() //forventer at jar fil er opprettet
+
+            assert project.zipTree(archive).matching {include 'addedResource.txt'}.files.size() == 1
+        }
+    }
+
+
 }
+
+

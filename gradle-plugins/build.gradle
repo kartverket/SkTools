@@ -15,8 +15,6 @@ dependencies {
 
 
 
-tasks.test.dependsOn('testDemos')
-
 //closure som collecter alle demo-prosjekter som evt måtte finnes
 groovy.lang.Closure findDemoDirs = { project ->
     return project.childProjects.values().collectMany { Project childProject ->
@@ -26,56 +24,69 @@ groovy.lang.Closure findDemoDirs = { project ->
     }
 }
 
+
 //task som eksekverer alle demo-prosjekter som evt måtte finnes
-task('testDemos', dependsOn:'cleanDemos') {
+task('testDemos') {
+    project.tasks['test'].dependsOn it //part of test
+    
+    
+    int demoCount
+    findDemoDirs(project).each { values ->
+        demoCount++
 
-
-    //kjøring av tester før kjøring av demos
-    if (project.gradle.startParameter.taskNames.contains('test')) {
-        //adding depends on makes the demos run last
-        project.childProjects.values().each { Project childProject ->
-            dependsOn("${childProject.path}:test")
+        def cleanDemoTask = project.task("cleanDemo$demoCount", type: GradleBuild) {
+            dir = values[0]
+            tasks = ['clean']
+            startParameter.projectProperties = [sktools_versjon: "${values[1].version}", MAVEN_REPO: MAVEN_REPO]
+            startParameter.systemPropertiesArgs = [noMavenBootstrap: 'true']
+            doFirst {
+                println('################################################################################');
+                println '## cleaning demo in ' + project.relativePath(dir)
+            }
+            doLast {
+                println "\n  ...end of demo ${name}"
+                println('################################################################################\n\n');
+            }
+            outputs.upToDateWhen { false } //always run this...
         }
+
+        def runDemoTask = project.task("runDemo$demoCount", type: GradleBuild, dependsOn:cleanDemoTask) {
+            dir = values[0]
+            tasks = ['runDemo']
+
+            startParameter.projectProperties = [sktools_versjon: "${values[1].version}", MAVEN_REPO: MAVEN_REPO]
+            startParameter.systemPropertiesArgs = [noMavenBootstrap: 'true']
+            doFirst {
+                println('################################################################################');
+                println '## executing demo in ' + project.relativePath(dir)
+            }
+            doLast {
+                println "\n  ...end of demo ${name}"
+                println('################################################################################\n\n');
+            }
+            outputs.upToDateWhen { false } //always run this...
+        }
+
+        gradle.projectsEvaluated {
+
+            // Vi må installere alle artefakter før noe kan kjøres på demoene, inkludert clean
+            cleanDemoTask.dependsOn rootProject.getTasksByName('install', true)
+
+            //kjøring av tester før kjøring av demos
+            if (project.gradle.startParameter.taskNames.contains('test')) {
+                //adding depends on makes the demos run last
+                runDemoTask.dependsOn project.getTasksByName('test', true)
+            }
+
+        }
+
+        dependsOn runDemoTask
     }
-
-
+    
     doLast {
-        println 'Running demos..'
-        int i=0
-        findDemoDirs(project).each { values ->
-            i++
-            println '..executing demo in ' + project.relativePath(values[0])
-            StartParameter sp = new StartParameter()
-            sp.setCurrentDir(values[0])
-//                sp.setTaskNames(['clean', 'runDemo'])
-            sp.setTaskNames(['runDemo'])
-            sp.projectProperties.put('sktools_versjon', values[1].version)
-            sp.projectProperties.put('MAVEN_REPO', MAVEN_REPO)
-            GradleLauncher.newInstance(sp).run().rethrowFailure();
-        }
-        println "\n${i} demos executed!"
+        println "\n...${demoCount} demos executed!"
     }
 }
 
-//task som cleaner demo-prosjekter som evt måtte finnes
-task('cleanDemos') { Task me ->
 
-    // Vi må installere alle artefakter før noe kan kjøres på demoene, inkludert clean
-    gradle.projectsEvaluated {
-        me.dependsOn rootProject.getTasksByName('install', true)
-    }
-
-
-    doLast {
-        println 'Cleaning demos..'
-        findDemoDirs(project).each { values ->
-            println '..cleaning demo ' + project.relativePath(values[0])
-            StartParameter sp = new StartParameter()
-            sp.setCurrentDir(values[0])
-            sp.setTaskNames(['clean'])
-            sp.projectProperties.put('sktools_versjon', values[1].version)
-            GradleLauncher.newInstance(sp).run().rethrowFailure();
-        }
-    }
-}
 

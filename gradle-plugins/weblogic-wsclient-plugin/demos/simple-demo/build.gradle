@@ -38,59 +38,107 @@ afterEvaluate {
  * Diverse tasker som tester og demonstrerer implementasjonen
  ******************************************************************************************************************** */
 
-task runDemo() << {
+task runDemo() {
 
     //SKTOOLS-56: viser tempdir konfigurasjon
     println "Java tempdir for gradle prosjekt: ${System.getProperty('java.io.tmpdir')}"
     println "genWeblogicWsClient.temporaryDir: ${genWeblogicWsClient.temporaryDir}"
 
-    println 'Tester kodegenerering...'
-    forkGradle(['genWeblogicWsClient', 'assertGenWeblogicWsClient'])
-
-    println 'Tester bygging av weblogic artifakt...'
-    forkGradle(['clean', 'build', 'assertBuild'])
-
-    println 'Tester bygging av main artifakt...'
-    forkGradle(['clean', 'assemble', 'assertBuild'])
-
-    println 'Tester generering via gen-integrasjon...'
-    forkGradle(['clean', 'gen', 'assertGeneratedWeblogicResources', 'assertGeneratedWeblogicClasses'])
-
-}
-
-
-task assertGeneratedWeblogicResources() << {
-    assert file('gen/main/wsclient/META-INF/wsdls/TestServiceWS_v1.wsdl').exists()
-}
-
-task assertGeneratedWeblogicClasses() << {
-    assert file('gen/main/wsclient/no/statkart/test/service1/TestServiceWSV1.java').exists()
-}
-
-
-task assertGenWeblogicWsClient() {
-    dependsOn assertGeneratedWeblogicResources
-    dependsOn assertGeneratedWeblogicClasses
-}
-
-
-task assertBuild() {
-    dependsOn assertGenWeblogicWsClient
-    doLast {
-        assert file("build/libs/${project.name}-${project.version}.jar").exists()
+    Assert.that('clean', 'genWeblogicWsClient').describedAs('weblogicWsClientGeneratesResources').leadsTo(project).withState {
+        assertGenWeblogicWsClient()
     }
+
+    Assert.that('clean', 'build').describedAs('buildCreatesArtifactContainingGeneratedWsClient').leadsTo(project).withState {
+        assertGenWeblogicWsClient()
+        assertLibs()
+    }
+
+    Assert.that('clean', 'assemble').describedAs('assembleCreatesArtifactContainingGeneratedWsClient').leadsTo(project).withState {
+        assertGenWeblogicWsClient()
+        assertLibs()
+    }
+
+
+    Assert.that('clean', 'gen').describedAs('genLeadsToWeblogicWsClientGeneratesResources').leadsTo(project).withState {
+        assertGeneratedWeblogicResources()
+        assertGeneratedWeblogicClasses()
+    }
+
 }
 
 
 
 
-/******************************************************************************************************************** **
- * Hjelpemetode for forking av gradle eksekveringer
- * Kun relevant for testing...
- ******************************************************************************************************************** */
-void forkGradle(List tasks, Map props = [:]) {
-    StartParameter sp = gradle.startParameter.newInstance()
-    sp.taskNames = tasks.collect {"${project.path}:${it}".toString()}
-    sp.projectProperties << props
-    GradleLauncher.newInstance(sp).run().rethrowFailure();
+
+
+class Assert {
+    def taskName
+    String[] taskNames
+    Project project
+    List<Closure> prep = []
+
+    static def previousTask = null
+
+    static Assert that(String... taskNames) {
+        Assert instance = new Assert(); instance.taskNames = taskNames; return instance
+    }
+
+    Assert describedAs(String taskName) {
+        this.taskName = taskName; this
+    }
+
+    Assert prep(Closure prepProjectBeforeAsserts) {
+        prep << [prepProjectBeforeAsserts]; this
+    }
+
+    Assert leadsTo(Project project = project) {
+        this.project = project; this
+    }
+
+    Assert withState(Closure check) {
+        def task = project.task(taskName, type: GradleBuild) {
+            dir = project.projectDir
+            tasks = taskNames
+            startParameter.systemPropertiesArgs = [noMavenBootstrap: 'true']
+            prep.reverseEach { Closure beforeAsserts -> doFirst { beforeAsserts.setDelegate(this); beforeAsserts.run()}}
+            doLast { check.setDelegate(this); check.run() }
+            doFirst {
+                println('--------------------------------------------------------------------------------');
+                println "Testing use case: ${taskName} tasks=${taskNames}\n\n\n"
+            }
+            doLast {
+                println "\n  ...end of test case: ${taskName}"
+                println('--------------------------------------------------------------------------------\n\n');
+            }
+            outputs.upToDateWhen { false } //always run this...
+        }
+        project.tasks['runDemo'].dependsOn task
+
+        if (previousTask) task.dependsOn previousTask //ordered execution of asserts...
+        previousTask = task
+        this
+    }
+
+    //convenience methods and asserts....
+
+    void assertLibs() {
+        assert project.file("build/libs/${project.name}-${project.version}.jar").exists()
+    }
+
+    void assertGenWeblogicWsClient() {
+        assertGeneratedWeblogicResources()
+        assertGeneratedWeblogicClasses()
+    }
+
+    void assertGeneratedWeblogicResources() {
+        assert project.file('gen/main/wsclient/META-INF/wsdls/TestServiceWS_v1.wsdl').exists()
+    }
+
+    void assertGeneratedWeblogicClasses() {
+        assert project.file('gen/main/wsclient/no/statkart/test/service1/TestServiceWSV1.java').exists()
+    }
+
+
+
+
 }

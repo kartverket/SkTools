@@ -1,6 +1,3 @@
-import groovy.sql.Sql
-import java.sql.SQLException
-
 apply plugin: 'sktools-dbtools-plugin'
 
 
@@ -55,10 +52,6 @@ configureDatabasePlugin {
 
         sqlTask('ImportEmpty', sqlString:'PROMPT Pseudo task for import')
 
-        sqlTask('tearDownDatabase', sqlString: "SHUTDOWN;", failOnError:false).doFirst {
-            println "Tar ned database ${url}" //får noen ganger EOFException her..
-        }
-
         properties = [:]
 
     }
@@ -72,11 +65,217 @@ configureDatabasePlugin {
 }
 
 
-task startUpDatabase(description: 'Forker database i subprosess') {
 
-    //forking the groovy way until GRADLE-1254
-    doFirst {
-        def cmd = ['java', '-cp', configurations.hsqldb.asPath, 'org.hsqldb.Server',
+
+/******************************************************************************************************************** **
+ * Diverse tasker som tester og demonstrerer implementasjonen
+ ******************************************************************************************************************** */
+
+task runDemo() {
+
+
+    Assert.that('clean').describedAs('startUpEmptyHsqlInstances').leadsTo(project).withState {
+        tearDownDatabase()
+        startUpDatabase()
+        assertNoPatchTable()
+    }
+
+    // 'Tester patchComponent1...'
+    Assert.that('patchLatest').describedAs('patchCopmonent1RunsComponent1Patches').prep {
+        assertNoTestTable()
+
+    }.leadsTo(project).withState {
+        sqlSA().eachRow("select count(*) from PATCHINFO where dbVersion='1.0' and patchNo=4 AND component='null'") {
+            assert it[0] == 1 // row# PATCHINFO
+        }
+        sqlSA().eachRow("select count(*) from TEST_TABLE where ID=1") {
+            assert it[0] == 1 // row# TEST_TABLE
+        }
+    }
+
+
+    Assert.that('patchComponent2Latest').describedAs('patchCopmonent2RunsComponent2Patches').prep {
+        assertNoTestTable2()
+
+    }.leadsTo(project).withState {
+
+        //_assertComponent2Patchnummer4
+        def sql = sqlSA()
+        sql.eachRow("select count(*) from PATCHINFO where dbVersion='0.2' and patchNo=4 AND component='Component2'") {
+            if (it[0] >= 1) {
+                assert true
+            } else {
+                listPatchInfoTableForComponent(sql, 'Component2') //print debug info
+                listPatchInfoTableForComponent(sql) //print debug info
+                assert false //forventet a finne versjon for komponent
+            }
+        }
+
+        //_assertPatchComponent2
+        sqlSA().eachRow("select count(*) from TEST_TABLE2 where ID=1") {
+            assert it[0] == 1
+        }
+    }
+
+    /**
+     * Illustrerer mekanikk for setting av patch# etter import (eksperimentell)
+     * - PS: vanligvis så følger patchinfo data med importerte data
+     */
+    Assert.that('dbImportEmpty').describedAs('definePatchversionCreatesPatchinfo').leadsTo(project).withState {
+        def sql = sqlSA()
+        sql.eachRow("select count(*) from PATCHINFO where dbVersion='2.2' and patchNo=34 AND component='Empty'") {
+            if (it[0] >= 1) {
+                assert true
+            } else {
+                listPatchInfoTableForComponent(sql, 'Empty') //print debug info
+                listPatchInfoTableForComponent(sql) //print debug info
+                assert false //forventet a finne versjon for komponent
+            }
+        }
+    }
+
+
+    Assert.that(dbToolSets['sa'].patch['Empty'].tasks['AssertPatchVersion'].name).describedAs('assertPatchVersionForComponentEmpty').leadsTo(project).withState {
+        //eksperimentell assert for byggesystem
+    }
+
+
+    Assert.that('clean').describedAs('teardown').leadsTo(project).withState {
+        println 'Shutting down running HSQLDB instance...'
+        tearDownDatabase()
+    }
+
+}
+
+
+
+class Assert {
+    def taskName
+    String[] taskNames
+    Project project
+    List<Closure> prep = []
+
+    static def previousTask = null
+
+    static Assert that(String... taskNames) {
+        Assert instance = new Assert(); instance.taskNames = taskNames; return instance
+    }
+
+    Assert describedAs(String taskName) {
+        this.taskName = taskName; this
+    }
+
+    Assert prep(Closure prepProjectBeforeAsserts) {
+        prep << [prepProjectBeforeAsserts]; this
+    }
+
+    Assert leadsTo(Project project = project) {
+        this.project = project; this
+    }
+
+    Assert withState(Closure check) {
+        def task = project.task(taskName, type: GradleBuild) {
+            dir = project.projectDir
+            tasks = taskNames
+            startParameter.systemPropertiesArgs = [noMavenBootstrap: 'true']
+            prep.reverseEach { Closure beforeAsserts -> doFirst { beforeAsserts.setDelegate(this); beforeAsserts.run()}}
+            doLast { check.setDelegate(this); check.run() }
+            doFirst {
+                println('--------------------------------------------------------------------------------');
+                println "Testing use case: ${taskName} tasks=${taskNames}\n\n\n"
+            }
+            doLast {
+                println "\n  ...end of test case: ${taskName}"
+                println('--------------------------------------------------------------------------------\n\n');
+            }
+            outputs.upToDateWhen { false } //always run this...
+        }
+        project.tasks['runDemo'].dependsOn task
+
+        if (previousTask) task.dependsOn previousTask //ordered execution of asserts...
+        previousTask = task
+        this
+    }
+
+    //convenience methods and asserts....
+
+
+    /**
+     * Verifies that {@code TEST_TABLE2} does not exists
+     */
+    void assertNoTestTable2() {
+        try {
+            sqlSA().eachRow("select count(*) from TEST_TABLE2") { }
+            assert false //forventer at tabell ikke finnes
+        } catch (java.sql.SQLException e) {
+            assert true
+        }
+    }
+
+
+    /**
+     * Verifies that {@code TEST_TABLE} does not exists
+     */
+    void assertNoTestTable() {
+        try {
+            sqlSA().eachRow("select count(*) from TEST_TABLE") { }
+            assert false //forventer tabell ikke finnes
+        } catch (java.sql.SQLException e) {
+            assert true
+        }
+    }
+
+    /**
+     * Verifies that {@code PATCHINFO} does not exists
+     */
+    void assertNoPatchTable() {
+        try {
+            sqlSA().eachRow("select count(*) from PATCHINFO") { }
+            assert false //forventer at tabell ikke finnes
+        } catch (java.sql.SQLException e) {
+            assert true
+        }
+    }
+
+
+    groovy.sql.Sql sqlSA() {
+        def convention = project.convention.plugins['db'].dbToolSets['sa']
+        groovy.sql.Sql.newInstance(convention.url, convention.credentials.username, convention.credentials.password, convention.driver)
+    }
+
+
+    void listPatchInfoTableForComponent(def sql, def component = null) {
+        try {
+            def sqlString = "select * from PATCHINFO"
+            if (component != null)  sqlString += " where component='${component}'"
+            println "Utskrift av PATCHINFO component=${component}:\n\n"
+
+            if (sql.rows(sqlString).isEmpty()) {
+                println "\t<empty>"
+            } else {
+                sql.eachRow(sqlString) {
+                    println it
+                }
+            }
+
+        } catch (java.sql.SQLException e) {
+            assert false
+        }
+    }
+
+
+    void tearDownDatabase() {
+        println "Tar ned database ${project.convention.plugins.db.dbToolSets['sa'].url}"
+        try {
+            sqlSA().execute('SHUTDOWN;')
+        } catch (java.sql.SQLException e) {
+            assert true //får noen ganger EOFException her..
+        }
+    }
+
+    void startUpDatabase() { //Forker database i subprosess
+        //forking the groovy way until GRADLE-1254
+        def cmd = ['java', '-cp', project.configurations.hsqldb.asPath, 'org.hsqldb.Server',
                 '-database.0', 'mem:test', '-dbname.0', "testPatching${project.version}" //definisjon for database med navn "test"
         ]
 
@@ -86,163 +285,10 @@ task startUpDatabase(description: 'Forker database i subprosess') {
         process.in.close()
         process.out.close()
         process.err.close()
-    }
 
-    doLast {
 //        System.console().readLine('pause for debug..')
     }
+
 }
 
 
-
-/******************************************************************************************************************** **
- * Diverse tasker som tester og demonstrerer implementasjonen
- ******************************************************************************************************************** */
-
-task runDemo(dependsOn:[clean]) {
-    description = 'Kjører en enkel demo for å teste funksjonaliteten'
-
-
-
-    doLast {
-        println 'Forsøker å ta ned evt allerede kjørende database-instans. (forventer feilmelding)'
-        forkGradle(['startUpDatabase', 'tearDownDatabase'])
-
-        forkGradle(['startUpDatabase'])
-        forkGradle(['_assertNoPatchTable'])
-
-        println 'Tester patchComponent1...'
-
-        forkGradle(['_assertNoTestTable'])
-        forkGradle(['patchLatest', '_assertComponent1Patchnummer4', '_assertPatchComponent1'])
-
-
-        forkGradle(['_assertNoTestTable2'])
-        forkGradle(['patchComponent2Latest', '_assertComponent2Patchnummer4', '_assertPatchComponent2'])
-
-
-        //illustrerer mekanikk for setting etter import
-        forkGradle(['dbImportEmpty'])
-        forkGradle(['_assertPatchVersionEmpty'])
-
-        forkGradle(['tearDownDatabase']) //avslutter prosess for databasen sammen med demo
-    }
-}
-
-// --
-
-task _assertPatchVersionEmpty() {
-    dependsOn dbToolSets['sa'].patch['Empty'].tasks['AssertPatchVersion']
-}
-
-
-
-// --
-
-task _assertComponent2Patchnummer4() << {
-    def sql = getSql()
-    sql.eachRow("select count(*) from PATCHINFO where dbVersion='0.2' and patchNo=4 AND component='Component2'") {
-        if (it[0] >= 1) {
-            assert true
-        } else {
-            listPatchInfoTableForComponent(sql, 'Component2') //print debug info
-            listPatchInfoTableForComponent(sql) //print debug info
-            assert false //forventet a finne versjon for komponent
-        }
-    }
-}
-
-
-task _assertPatchComponent2() << {
-    def sql = getSql()
-    sql.eachRow("select count(*) from TEST_TABLE2 where ID=1") {
-        assert it[0] == 1
-    }
-}
-
-task _assertNoTestTable2() << {
-    def sql = getSql()
-    try {
-        sql.eachRow("select count(*) from TEST_TABLE2") { }
-        assert false //forventer ikke at tabell finnes
-    } catch (SQLException e) {
-        assert true
-    }
-}
-
-
-// --
-
-task _assertComponent1Patchnummer4() << {
-    def sql = getSql()
-    sql.eachRow("select count(*) from PATCHINFO where dbVersion='1.0' and patchNo=4 AND component='null'") {
-        assert it[0] == 1
-    }
-}
-
-
-task _assertPatchComponent1() << {
-    def sql = getSql()
-    sql.eachRow("select count(*) from TEST_TABLE where ID=1") {
-        assert it[0] == 1
-    }
-}
-
-task _assertNoTestTable() << {
-    def sql = getSql()
-    try {
-        sql.eachRow("select count(*) from TEST_TABLE") { }
-        assert false //forventer ikke at tabell finnes
-    } catch (SQLException e) {
-        assert true
-    }
-}
-
-
-//--
-
-task _assertNoPatchTable() << {
-    def sql = getSql()
-    try {
-        sql.eachRow("select count(*) from PATCHINFO") { }
-        assert false //forventer ikke at tabell finnes
-    } catch (SQLException e) {
-        assert true
-    }
-}
-
-private def getSql() {
-    def convention = project.convention.plugins['db'].dbToolSets['sa']
-    def sql = Sql.newInstance(convention.url, convention.credentials.username, convention.credentials.password, convention.driver)
-    sql
-}
-
-private void listPatchInfoTableForComponent(def sql, def component = null) {
-    try {
-        def sqlString = "select * from PATCHINFO"
-        if (component != null)  sqlString += " where component='${component}'"
-        println "Utskrift av PATCHINFO component=${component}:\n\n"
-
-        if (sql.rows(sqlString).isEmpty()) {
-            println "\t<empty>"
-        } else {
-            sql.eachRow(sqlString) {
-                println it
-            }
-        }
-
-    } catch (SQLException e) {
-        assert false
-    }
-}
-
-/******************************************************************************************************************** **
- * Hjelpemetode for forking av gradle eksekveringer
- * Kun relevant for testing...
- ******************************************************************************************************************** */
-void forkGradle(Map props = [:], List tasks) {
-    StartParameter sp = gradle.startParameter.newInstance()
-    sp.taskNames = tasks.collect {"${project.path}:${it}".toString()}
-    sp.projectProperties << props
-    GradleLauncher.newInstance(sp).run().rethrowFailure();
-}

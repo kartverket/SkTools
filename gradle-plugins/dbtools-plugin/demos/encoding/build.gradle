@@ -13,8 +13,9 @@ configureDatabasePlugin {
 
     useDrivers 'org.hsqldb:hsqldb:2.2.8'
 
-    toolset( name:'assertutf8', type:'hsqldb', prefix:'') {
+    toolset(name: 'UTF8', type: 'hsqldb', prefix: '') {
 
+        sqlTask('insertData', sqlFile: 'sql/insertData.sql', encoding: 'UTF-8')
         sqlTask('createTable', sqlString: '''
             CREATE TABLE TABLE1 (
                 ID INTEGER NOT NULL,
@@ -22,9 +23,8 @@ configureDatabasePlugin {
                 PRIMARY KEY (ID)
             )
         ''')
-        sqlTask('insertData', sqlFile: 'sql/insertData.sql', encoding: 'UTF-8')
 
-        properties = [CUSTOM:norskeTegn]
+        properties = [CUSTOM: norskeTegn]
 
         url = "jdbc:hsqldb:mem:testbase"
 
@@ -34,40 +34,76 @@ configureDatabasePlugin {
 
 }
 
-
 /******************************************************************************************************************** **
  * Diverse tasker som tester og demonstrerer implementasjonen
  ******************************************************************************************************************** */
 
-task runDemo(dependsOn:['clean']) {
+task runDemo(dependsOn: ['clean']) {
     description = 'Kjører en enkel demo for å teste funksjonaliteten'
 
-    doLast {
+    Assert.that('createTable', 'insertData').describedAs('spesialtegnPersisteresRiktig').leadsTo(project).withState {
 
-        forkGradle(['createTable', 'insertData'])
-//        forkGradle(['createTable', 'insertData'], 'sql.file.encoding':'UTF-8')
-
-        println 'Verifiserer riktig encodede data i basen...'
-
-        def convention = project.convention.plugins['db'].dbToolSets['assertutf8']
+        println 'Verifiserer data med riktig tegnsett i databasen...'
+        def convention = project.convention.plugins.db.dbToolSets['UTF8']
         def sql = groovy.sql.Sql.newInstance(convention.url, convention.credentials.username, convention.credentials.password, convention.driver)
         sql.eachRow("select ID, TEXT from TABLE1") {
-            println "..asserting row ${it[0]}"
+            println "..asserting row ${it[0]}, text=${it[1]}"
 //            println it[1].bytes.collect {"$it"}
-            assert it[1] == norskeTegn  // comparing strings
+            assert norskeTegn.equals(it[1])  // comparing strings
         }
-
     }
+
 }
 
 
-/******************************************************************************************************************** **
- * Hjelpemetode for forking av gradle eksekveringer
- * Kun relevant for testing...
- ******************************************************************************************************************** */
-void forkGradle(Map props = [:], List tasks) {
-    StartParameter sp = gradle.startParameter.newInstance()
-    sp.taskNames = tasks.collect {"${project.path}:${it}".toString()}
-    sp.systemPropertiesArgs << props
-    GradleLauncher.newInstance(sp).run().rethrowFailure();
+class Assert {
+    def taskName
+    String[] taskNames
+    Project project
+    List<Closure> prep = []
+
+    static def previousTask = null
+
+    static Assert that(String... taskNames) {
+        Assert instance = new Assert(); instance.taskNames = taskNames; return instance
+    }
+
+    Assert describedAs(String taskName) {
+        this.taskName = taskName; this
+    }
+
+    Assert prep(Closure prepProjectBeforeAsserts) {
+        prep << [prepProjectBeforeAsserts]; this
+    }
+
+    Assert leadsTo(Project project = project) {
+        this.project = project; this
+    }
+
+    Assert withState(Closure check) {
+        def task = project.task(taskName, type: GradleBuild) {
+            dir = project.projectDir
+            tasks = taskNames
+            startParameter.systemPropertiesArgs = [noMavenBootstrap: 'true']
+            prep.reverseEach { Closure beforeAsserts -> doFirst { beforeAsserts.setDelegate(this); beforeAsserts.run()}}
+            doLast { check.setDelegate(this); check.run() }
+            doFirst {
+                println('--------------------------------------------------------------------------------');
+                println "Testing use case: ${taskName} tasks=${taskNames}\n\n\n"
+            }
+            doLast {
+                println "\n  ...end of test case: ${taskName}"
+                println('--------------------------------------------------------------------------------\n\n');
+            }
+            outputs.upToDateWhen { false } //always run this...
+        }
+        project.tasks['runDemo'].dependsOn task
+
+        if (previousTask) task.dependsOn previousTask //ordered execution of asserts...
+        previousTask = task
+        this
+    }
+
+    //convenience methods and asserts....
+
 }

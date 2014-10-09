@@ -10,17 +10,19 @@ rootProject.name = 'filter-resources-demos'
 
 //automatisk re-compile og install av siste versjon av plugin til lokal maven (spesifikt for demo-prosjekt)
 gradle.projectsLoaded { Gradle g ->
-    //dersom ikke nested bygg..
-    if (g.parent == null) {
-        if (!startParameter.taskNames.isEmpty()) {
-            g.rootProject.buildscript {
-                StartParameter sp = gradle.startParameter.newBuild()
-                sp.taskNames = ['install']
-                sp.projectDir = g.rootProject.file('../..')
+    final File projectDir = g.rootProject.file('../..')
 
-                println 'Asserting project is up to date. Running build on root-project:'
-                GradleLauncher.newInstance(sp).run().rethrowFailure();
-            }
+    //dersom ikke nested bygg..
+    if (g.startParameter.systemPropertiesArgs['noMavenBootstrap']) {
+        logger.info "Skipping maven install doe to -DnoMavenBootstrap=${g.startParameter.systemPropertiesArgs['noMavenBootstrap']}"
+    } else {
+        logger.quiet 'Asserting project is up to date. Running build on root-project:'
+
+        org.gradle.tooling.ProjectConnection connection = org.gradle.tooling.GradleConnector.newConnector().forProjectDirectory(projectDir).connect()
+        try {
+            connection.newBuild().forTasks('install').run()
+        } finally {
+            connection.close()
         }
     }
 }

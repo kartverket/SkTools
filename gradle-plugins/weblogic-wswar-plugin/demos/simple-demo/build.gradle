@@ -28,7 +28,6 @@ warWeblogic {
 
 task('gen').description = "Genererte ressurser for alle sourceSets"
 
-
 //integrasjon med plugin
 afterEvaluate {
     if (project.plugins.hasPlugin('sktools-weblogic-wswar-plugin')) {
@@ -37,7 +36,6 @@ afterEvaluate {
         }
     }
 }
-
 
 /******************************************************************************************************************** **
  * Diverse tasker som tester og demonstrerer implementasjonen
@@ -52,79 +50,129 @@ project.task('listSourceFiles') {
     }
 }
 
-task runDemo(dependsOn:'clean') {
-    description = 'Kjører en enkel demo for å teste funksjonaliteten'
+task runDemo() {
+    description = 'Kjører en enkel demo for å verifisere funksjonalitet'
 
-    doLast {
-        println "Tester generering av main"
-        forkGradle(['clean', 'compileJava', 'assertCompileJava'])
+    Assert.that('clean', 'compileJava').describedAs('compileJavaGeneratesCompiledCode').prep { clean() }.leadsTo(project).withState {
+        assertCompileJava()
+    }
 
-        println "Tester genWeblogic genererer"
-        forkGradle(['clean', 'genWeblogic', 'assertGenWeblogic', 'assertCompileWeblogicJava'])
+    Assert.that('genWeblogic').describedAs('genWeblogicGeneratesCompiledCode').prep { clean() }.leadsTo(project).withState {
+        assertGenWeblogic()
+        assertCompileWeblogicJava()
+    }
 
-        println "Tester 'gen'-task integrasjon"
-        clean()
-        forkGradle(['gen', 'assertGenWeblogic', 'assertCompileWeblogicJava'])
 
-        println "Tester arkiv"
-        clean()
-        forkGradle(['warWeblogic', 'assertWarWeblogic', 'assertGenWeblogic', 'assertCompileWeblogicJava', 'assertNoWebXmlInSourceSetOutputs'])
+    Assert.that('gen').describedAs('genGeneratesWeblogicCode').prep { clean() }.leadsTo(project).withState {
+        assertGenWeblogic()
+        assertCompileWeblogicJava()
+    }
+
+    Assert.that('warWeblogic').describedAs('archiveContainsGeneratedCode').prep { clean() }.leadsTo(project).withState {
+        assertWarWeblogic()
+        assertGenWeblogic()
+        assertNoWebXmlInSourceSetOutputs()
+    }
+
+}
+
+class Assert {
+    def taskName
+    String[] taskNames
+    Project project
+    List<Closure> prep = []
+
+    static def previousTask = null
+
+    static Assert that(String... taskNames) {
+        Assert instance = new Assert(); instance.taskNames = taskNames; return instance
+    }
+
+    Assert describedAs(String taskName) {
+        this.taskName = taskName; this
+    }
+
+    Assert prep(Closure prepProjectBeforeAsserts) {
+        prep << [prepProjectBeforeAsserts]; this
+    }
+
+    Assert leadsTo(Project project = project) {
+        this.project = project; this
+    }
+
+    Assert withState(Closure check) {
+        def task = project.task(taskName, type: GradleBuild) {
+            dir = project.projectDir
+            tasks = taskNames
+            startParameter.systemPropertiesArgs = [noMavenBootstrap: 'true']
+            prep.reverseEach { Closure beforeAsserts -> doFirst { beforeAsserts.setDelegate(this); beforeAsserts.run()}}
+            doLast { check.setDelegate(this); check.run() }
+            doFirst {
+                println('--------------------------------------------------------------------------------');
+                println "Testing use case: ${taskName} tasks=${taskNames}\n\n\n"
+            }
+            doLast {
+                println "\n  ...end of test case: ${taskName}"
+                println('--------------------------------------------------------------------------------\n\n');
+            }
+            outputs.upToDateWhen { false } //always run this...
+        }
+        project.tasks['runDemo'].dependsOn task
+
+        if (previousTask) task.dependsOn previousTask //ordered execution of asserts...
+        previousTask = task
+        this
+    }
+
+    //convenience methods and asserts....
+
+    void clean() {
+        project.delete('build/classes', 'build/weblogic') //har problemer med clean av lib katalogen...
+    }
+
+    void assertWarWeblogic() {
+        def war = project.file("build/libs/${project.name}-weblogic-${project.version}.war")
+        assert war.exists() //forventer at war fil er opprettet
+
+        assert !project.zipTree(war).matching { include 'WEB-INF/classes/WebConfig.class' }.files.isEmpty()
+        assert project.zipTree(war).matching { exclude 'WEB-INF/'; include '**/WebConfig.*' }.files.isEmpty()
+
+        assert !project.zipTree(war).matching { include 'WEB-INF/classes/exceptiondemo01/ExceptionService1WSBean.class' }.files.isEmpty()
+        assert project.zipTree(war).matching { exclude 'WEB-INF/'; include '**/ExceptionService1WSBean.*' }.files.isEmpty()
+
+        assert project.zipTree(war).matching { include '**/ServiceFaultInfo.*' }.files.isEmpty() //forventer ikke noen filer ifra main sourceset
+        assert project.zipTree(war).matching { include '**/ServiceFaultInfo.*' }.files.isEmpty() //forventer ikke noen filer ifra main sourceset
+
+        assert !project.zipTree(war).matching { include 'WEB-INF/web.xml' }.files.isEmpty() //forventer at web.xml kommer med i arkiv
+
+        def webXml = project.zipTree(war).matching { include 'WEB-INF/web.xml' }.singleFile
+        assert webXml.text.contains('<display-name>dummy</display-name>') //forventer denne versjonen av web.xml (ikke generert fil)
 
     }
-}
 
-void clean() {
-    project.delete('build/classes', 'build/weblogic') //har problemer med clean av lib katalogen...
-}
 
-task assertWarWeblogic() << {
-    def war = project.file("build/libs/${project.name}-weblogic-${project.version}.war")
-    assert war.exists() //forventer at war fil er opprettet
+    void assertNoWebXmlInSourceSetOutputs() {
+        assert project.sourceSets.main.output.asFileTree.matching { include '**/web.xml' }.files.isEmpty()
+        assert project.sourceSets.weblogic.output.asFileTree.matching { include '**/web.xml' }.files.isEmpty()
+    }
 
-    assert !project.zipTree(war).matching {include 'WEB-INF/classes/WebConfig.class'}.files.isEmpty()
-    assert project.zipTree(war).matching {exclude 'WEB-INF/'; include '**/WebConfig.*'}.files.isEmpty()
+    void assertGenWeblogic() {
+        assert !project.sourceSets.weblogic.output.asFileTree.matching { include 'exceptiondemo01/ExceptionService1WSBean.class' }.files.isEmpty()
+        assert !project.sourceSets.weblogic.output.asFileTree.matching { include 'exceptiondemo01/ExceptionService2WSBean.class' }.files.isEmpty()
+    }
 
-    assert !project.zipTree(war).matching {include 'WEB-INF/classes/exceptiondemo01/ExceptionService1WSBean.class'}.files.isEmpty()
-    assert project.zipTree(war).matching {exclude 'WEB-INF/'; include '**/ExceptionService1WSBean.*'}.files.isEmpty()
+    void assertCompileWeblogicJava() {
+        assert !project.sourceSets.weblogic.output.asFileTree.matching { include 'WebConfig.class' }.files.isEmpty()
+    }
 
-    assert project.zipTree(war).matching {include '**/ServiceFaultInfo.*'}.files.isEmpty() //forventer ikke noen filer ifra main sourceset
-    assert project.zipTree(war).matching {include '**/ServiceFaultInfo.*'}.files.isEmpty() //forventer ikke noen filer ifra main sourceset
-
-    assert !project.zipTree(war).matching {include 'WEB-INF/web.xml'}.files.isEmpty() //forventer at web.xml kommer med i arkiv
-
-    def webXml = project.zipTree(war).matching {include 'WEB-INF/web.xml'}.singleFile
-    assert webXml.text.contains('<display-name>dummy</display-name>') //forventer denne versjonen av web.xml (ikke generert fil)
+    void assertCompileJava() {
+        assert project.sourceSets.main.output.asFileTree.find { it.name == 'ServiceException.class' }
+        assert project.sourceSets.main.output.asFileTree.find { it.name == 'ServiceFaultInfo.class' }
+    }
 
 }
 
 
-task assertNoWebXmlInSourceSetOutputs() << {
-    assert project.sourceSets.main.output.asFileTree.matching { include '**/web.xml' }.files.isEmpty()
-    assert project.sourceSets.weblogic.output.asFileTree.matching { include '**/web.xml' }.files.isEmpty()
-}
-
-task assertGenWeblogic() << {
-    assert !project.sourceSets.weblogic.output.asFileTree.matching { include 'exceptiondemo01/ExceptionService1WSBean.class' }.files.isEmpty()
-    assert !project.sourceSets.weblogic.output.asFileTree.matching { include 'exceptiondemo01/ExceptionService2WSBean.class' }.files.isEmpty()
-}
-
-task assertCompileWeblogicJava() << {
-    assert !project.sourceSets.weblogic.output.asFileTree.matching { include 'WebConfig.class' }.files.isEmpty()
-}
-
-task assertCompileJava() << {
-    assert project.sourceSets.main.output.asFileTree.find {it.name == 'ServiceException.class'}
-    assert project.sourceSets.main.output.asFileTree.find {it.name == 'ServiceFaultInfo.class'}
-}
 
 
-/******************************************************************************************************************** **
- * Hjelpemetode for forking av gradle eksekveringer
- * Kun relevant for testing...
- ******************************************************************************************************************** */
-void forkGradle(List tasks, Map props = [:]) {
-    StartParameter sp = gradle.startParameter.newInstance()
-    sp.taskNames = tasks.collect {"${project.path}:${it}".toString()}
-    sp.projectProperties << props
-    GradleLauncher.newInstance(sp).run().rethrowFailure();
-}
+

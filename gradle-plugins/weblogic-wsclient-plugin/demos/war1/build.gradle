@@ -22,6 +22,6 @@ buildscript {
     }
 
     dependencies {
-        classpath "no.statkart.sktools.gradle:weblogic-wswar-plugin:1.2-SNAPSHOT"
+        classpath "no.statkart.sktools.gradle:weblogic-wswar-plugin:${version}"
     }
 }
