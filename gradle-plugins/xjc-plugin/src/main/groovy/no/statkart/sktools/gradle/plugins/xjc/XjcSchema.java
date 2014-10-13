@@ -21,7 +21,7 @@ public class XjcSchema extends DefaultSourceDirectorySet {
     private final SourceDirectorySet javaSource;
 
     public XjcSchema(SourceSet sourceSet, FileResolver fileResolver, String name) {
-        super(name, String.format("%s%s XJC Schemas", sourceSet.getName(), name), fileResolver);
+        super(name, String.format("%s XJC Schemas", name), fileResolver);
         this.sourceSet = sourceSet;
         this.config = new XjcConfig(this);
         this.javaSource = new DefaultSourceDirectorySet(getName(), getDisplayName() + " Source", fileResolver);
