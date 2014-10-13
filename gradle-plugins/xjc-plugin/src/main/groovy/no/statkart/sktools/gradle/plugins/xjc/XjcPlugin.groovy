@@ -25,7 +25,7 @@ import org.gradle.api.internal.ConventionMapping
  * Genererer JAXB java klasser basert på <code>*.xsd<code> filer. <br />
  * Pluginen baserer seg på {@code JavaBasePlugin} og integrerer seg med deklarerte {@link SourceSet}s.
  *
- * For hvert sourceSet plugges det inn muglihet for ekstra konfiguasjon. Se {@link XjcSourceSetExtention }
+ * For hvert sourceSet plugges det inn muglihet for ekstra konfiguasjon. Se {@link XjcSourceSetExtension }
  *
  * Se dokumentasjon for <i>xjc-plugins</i> modul for bruk av utvidelser.
  * <ul>
@@ -64,10 +64,10 @@ class XjcPlugin implements Plugin<ProjectInternal> {
 
         javaConvention.getSourceSets().all(new Action<SourceSet>() {
             public void execute(final SourceSet sourceSet) {
-                XjcSourceSetExtention xjcSourceSet = new XjcSourceSetExtention(sourceSet, project.getFileResolver());
+                final XjcSchemaContainer xjcSchemaContainer = new XjcSchemaContainer(sourceSet, project.getFileResolver());
 
                 //hekter inn utvidelser på source settet
-                ((HasConvention) sourceSet).getConvention().getPlugins().put(CONVENTION_NAME, xjcSourceSet); // SKIF-195
+                ((HasConvention) sourceSet).getConvention().getPlugins().put(CONVENTION_NAME, new XjcSourceSetExtension(xjcSchemaContainer));
 
                 //hekter inn generert resultat og legger dette compile classpath
                 ConfigurableFileCollection xjcOutputClasspath = project.files()
@@ -76,12 +76,12 @@ class XjcPlugin implements Plugin<ProjectInternal> {
 
                 final String buildPath = project.relativePath(project.getBuildDir())
 
-                xjcSourceSet.getXjc().all(new Action<XjcSchema>() {
-                    void execute(XjcSchema xjcSchema) {
+                xjcSchemaContainer.all(new Action<XjcSourceDirectorySet>() {
+                    void execute(XjcSourceDirectorySet xjcSchema) {
                         //setter ingen default plassering av kildefiler for sourceSet - dette må eksplisitt deklareres i konfigurasjon
 
-                        File buildOutputDir = project.file("${buildPath}/classes/${xjcSchema.getName()}")
-                        File genOutputDir = project.file(xjcSchema.getGeneratedSourcesDir())
+                        final File genOutputDir = project.file(String.format("gen/%s/xjc/%s", sourceSet.getName(), xjcSchema.getName()))
+                        final File buildOutputDir = project.file("${buildPath}/classes/${xjcSchema.getName()}")
 
                         //legger til output til classpath
                         xjcOutputClasspath.from(buildOutputDir)
@@ -109,8 +109,9 @@ class XjcPlugin implements Plugin<ProjectInternal> {
                     }
 
 
-                    private XjcTask createXjcTaskForSourceSet(XjcSchema xjcSchema, File genOutputDir) {
-                        XjcTask task = (XjcTask) project.task(type: XjcTask.class, xjcSchema.getGenerateXjcSchemaTaskName());
+                    private XjcTask createXjcTaskForSourceSet(XjcSourceDirectorySet xjcSchema, File genOutputDir) {
+                        final String taskName = xjcSchemaContainer.getGenerateXjcSchemaTaskName(xjcSchema);
+                        XjcTask task = (XjcTask) project.task(type: XjcTask.class, taskName);
                         task.getConventionMapping().with {
                             map("source", new Callable() {
                                 public Object call() {
@@ -137,13 +138,14 @@ class XjcPlugin implements Plugin<ProjectInternal> {
                         return task
                     }
 
-                    private Task createCompileXjcTaskForSchema(XjcSchema xjcSchema, Task xjcTask, File buildOutputDir) {
+                    private Task createCompileXjcTaskForSchema(XjcSourceDirectorySet xjcSchema, Task xjcTask, File buildOutputDir) {
                         final AbstractCompile compile;
+                        final String taskName = xjcSchemaContainer.getCompileXjcSchemaTaskName(xjcSchema);
                         final int gradleSubersion = Integer.parseInt(project.getGradle().getGradleVersion().split("\\.")[1]);
                         if (gradleSubersion > 5 ) {
-                            compile = (AbstractCompile) project.tasks.replace(xjcSchema.getCompileXjcSchemaTaskName(), XjcCompileTaskImpl.class)  //todo: endre bruk av replace() til create()
+                            compile = (AbstractCompile) project.tasks.replace(taskName, XjcCompileTaskImpl.class)  //todo: endre bruk av replace() til create()
                         } else {
-                            compile = (AbstractCompile) project.tasks.add(xjcSchema.getCompileXjcSchemaTaskName(), XjcCompileTaskImpl.class) //todo: remove backward compability with Gradle 1.5
+                            compile = (AbstractCompile) project.tasks.add(taskName, XjcCompileTaskImpl.class) //todo: remove backward compability with Gradle 1.5
                         }
 
                         javaBasePlugin.configureForSourceSet(sourceSet, compile);

@@ -16,44 +16,44 @@ import org.gradle.util.ConfigureUtil;
  * @since 1.2
  * @author Leif Lislegård
  */
-public class XjcSchemaContainer extends AbstractList<XjcSchema> {
-    private final List<XjcSchema> store = new ArrayList<XjcSchema>();
+public class XjcSchemaContainer extends AbstractList<XjcSourceDirectorySet> {
+    private final List<XjcSourceDirectorySet> store = new ArrayList<XjcSourceDirectorySet>();
     private final SourceSet sourceSet;
     private final FileResolver fileResolver;
 
-    private final List<Action<XjcSchema>> configActions = new ArrayList<Action<XjcSchema>>();
+    private final List<Action<XjcSourceDirectorySet>> configActions = new ArrayList<Action<XjcSourceDirectorySet>>();
 
     XjcSchemaContainer(SourceSet sourceSet, FileResolver fileResolver) {
         this.sourceSet = sourceSet;
         this.fileResolver = fileResolver;
     }
 
-    protected XjcSchema create(String name) throws InvalidUserDataException {
+    protected XjcSourceDirectorySet create(String name) throws InvalidUserDataException {
         String schemaName = sourceSet.getName() + StringUtils.capitalize(name);
-        return new XjcSchema(sourceSet, fileResolver, schemaName);
+        return new XjcSourceDirectorySet(schemaName, fileResolver);
     }
 
-    protected XjcSchema create(String name, Closure configureClosure) throws InvalidUserDataException {
-        XjcSchema xjcSchema = create(name);
+    protected XjcSourceDirectorySet create(String name, Closure configureClosure) throws InvalidUserDataException {
+        XjcSourceDirectorySet xjcSchema = create(name);
         ConfigureUtil.configure(configureClosure, xjcSchema);
         return xjcSchema;
     }
 
 
-    public boolean add(XjcSchema xjcSchema) {
-        for (Action<XjcSchema> action : configActions) {
+    public boolean add(XjcSourceDirectorySet xjcSchema) {
+        for (Action<XjcSourceDirectorySet> action : configActions) {
             action.execute(xjcSchema);
         }
         return store.add(xjcSchema);
     }
 
     //besørger optional lik struktur som for konfigurering
-    public List<XjcSchema> getSchemas() {
+    public List<XjcSourceDirectorySet> getSchemas() {
         return this;
     }
 
     //call back funksjon for dynamisk konfigurasjon
-    void all(Action<XjcSchema> action) {
+    void all(Action<XjcSourceDirectorySet> action) {
         configActions.add(action);
         if (size() > 0) {
             throw new RuntimeException("State not yet implemented!");
@@ -63,9 +63,9 @@ public class XjcSchemaContainer extends AbstractList<XjcSchema> {
     XjcSchemaContainer configure(final Closure configureClosure) {
         ConfigureUtil.configure(configureClosure, new GroovyObjectSupport() {
 
-            public XjcSchema schema(Closure configureClosure) {
+            public XjcSourceDirectorySet schema(Closure configureClosure) {
                 String schemaName = String.format("%sSchema", size());
-                XjcSchema schema = create(schemaName, configureClosure);
+                XjcSourceDirectorySet schema = create(schemaName, configureClosure);
                 add(schema);
                 return schema;
             }
@@ -75,10 +75,23 @@ public class XjcSchemaContainer extends AbstractList<XjcSchema> {
         return this;
     }
 
-    // List implementation spesific methods ...
+    public String getCompileXjcSchemaTaskName(XjcSourceDirectorySet schema) {
+        return sourceSet.getTaskName("compile", schema.getName());
+    }
+
+    public String getGenerateXjcSchemaTaskName(XjcSourceDirectorySet schema) {
+        return sourceSet.getTaskName("gen", schema.getName());
+    }
+
+    public String getGeneratedSourcesDir(XjcSourceDirectorySet schema) {
+        return String.format("gen/%s/xjc/%s", sourceSet.getName(), schema.getName());
+    }
+
+
+    // List implementation specific methods ...
 
     @Override
-    public XjcSchema get(int index) {
+    public XjcSourceDirectorySet get(int index) {
         return store.get(index);
     }
 

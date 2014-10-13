@@ -6,7 +6,7 @@ import org.apache.commons.lang.builder.EqualsBuilder
  * Konfigurasjon for en xjc eksekvering.
  * <br />
  *
- * Dersom en ønsker å legge ved kildekode for custom implementasjon så benyttes {@link XjcSchema#getJava() }
+ * Dersom en ønsker å legge ved kildekode for custom implementasjon så benyttes {@link XjcSourceDirectorySet#getJava() }
  *
  * @author Leif Lislegård
  */
@@ -23,19 +23,19 @@ class XjcConfig implements Serializable {
     static final String GRUNNBOK_DOC = 'grunnbok_doc';
 
 
-    protected transient final XjcSchema source;
+    protected transient final XjcSourceDirectorySet source;
 
     protected Collection<String> includes;
     protected def xjcOptions = [][] as HashMap
 
 
-    XjcConfig(XjcSchema schema) {
+    XjcConfig(XjcSourceDirectorySet schema) {
         this.source = schema
     }
 
 
 
-    XjcSchema includes(String... patterns) {
+    XjcSourceDirectorySet includes(String... patterns) {
         if (includes == null) {
             includes = new ArrayList<String>();
         }
@@ -114,7 +114,7 @@ class XjcConfig implements Serializable {
     }
 
 
-    XjcSchema configure(Closure closure) {
+    XjcSourceDirectorySet configure(Closure closure) {
         closure.setDelegate(this)
         closure.resolveStrategy = Closure.DELEGATE_FIRST
         closure()

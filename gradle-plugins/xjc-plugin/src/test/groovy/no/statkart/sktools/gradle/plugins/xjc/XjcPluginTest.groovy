@@ -63,9 +63,9 @@ class XjcPluginTest {
         XjcSchemaContainer xjc = projectHelper.project.sourceSets.main.xjc
 
         //asserts the results
-        projectHelper.assertTaskExecutedNotSkipped(xjc[0].generateXjcSchemaTaskName)
-        projectHelper.assertTaskExecutedNotSkipped(xjc[0].compileXjcSchemaTaskName)
-        projectHelper.assertFileExists("${xjc[0].getGeneratedSourcesDir()}/no/statkart/sktools/test/SimpleType.java")
+        projectHelper.assertTaskExecutedNotSkipped(xjc.getGenerateXjcSchemaTaskName(xjc[0]))
+        projectHelper.assertTaskExecutedNotSkipped(xjc.getCompileXjcSchemaTaskName(xjc[0]))
+        projectHelper.assertFileExists("${xjc.getGeneratedSourcesDir(xjc[0])}/no/statkart/sktools/test/SimpleType.java")
 
     }
 
@@ -103,12 +103,12 @@ class XjcPluginTest {
         XjcSchemaContainer xjc = projectHelper.project.sourceSets.main.xjc
 
         //executes the gen task
-        projectHelper.executeTask(xjc[0].generateXjcSchemaTaskName)
+        projectHelper.executeTask(xjc.getGenerateXjcSchemaTaskName(xjc[0]))
 
         //asserts the results
-        projectHelper.assertTaskExecutedNotSkipped(xjc[0].generateXjcSchemaTaskName)
+        projectHelper.assertTaskExecutedNotSkipped(xjc.getGenerateXjcSchemaTaskName(xjc[0]))
 
-        projectHelper.assertFileExists("${xjc[0].getGeneratedSourcesDir()}/no/statkart/sktools/test/DocumentedSimpleType.java") { File file ->
+        projectHelper.assertFileExists("${xjc.getGeneratedSourcesDir(xjc[0])}/no/statkart/sktools/test/DocumentedSimpleType.java") { File file ->
             assert file.text.contains("Ekstra dokumentasjon for typen.")
         }
 
@@ -154,9 +154,9 @@ class XjcPluginTest {
         projectHelper.executeTask('classes')
 
         //asserts the results
-        projectHelper.assertTaskExecutedNotSkipped(xjc[0].generateXjcSchemaTaskName)
-        projectHelper.assertFileExists(xjc[0].getGeneratedSourcesDir())
-        projectHelper.assertFileExists("${xjc[0].getGeneratedSourcesDir()}/no/statkart/sktools/test/StringList.java") { File file ->
+        projectHelper.assertTaskExecutedNotSkipped(xjc.getGenerateXjcSchemaTaskName(xjc[0]))
+        projectHelper.assertFileExists(xjc.getGeneratedSourcesDir(xjc[0]))
+        projectHelper.assertFileExists("${xjc.getGeneratedSourcesDir(xjc[0])}/no/statkart/sktools/test/StringList.java") { File file ->
 
             assert file.text.contains('import some_adapter.Fqn;')
             assert file.text.contains('extends Fqn')
@@ -224,8 +224,8 @@ class XjcPluginTest {
 
 
         //tester targetDir
-        sourceSets.main.xjc.each { XjcSchema schema ->
-            def compileTask = project.tasks[schema.getCompileXjcSchemaTaskName()]
+        sourceSets.main.xjc.each { XjcSourceDirectorySet schema ->
+            def compileTask = project.tasks[project.sourceSets.main.xjc.getCompileXjcSchemaTaskName(schema)]
             assert sourceSets.main.output.dirs.contains(compileTask.destinationDir)
         }
 
