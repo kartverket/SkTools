@@ -60,7 +60,7 @@ task('testDemos') {
 
         [cleanDemoTask, runDemoTask].each { def task ->
             task.dir = values[0]
-            task.startParameter.projectProperties = [sktools_versjon: "${values[1].version}", MAVEN_REPO: MAVEN_REPO]
+            task.startParameter.projectProperties = [sktools_versjon: "${values[1].version}", MAVEN_REPO: MAVEN_REPO, WEBLOGIC_HOME: WEBLOGIC_HOME]
             task.startParameter.systemPropertiesArgs = [noMavenBootstrap: 'true'];
             task.outputs.upToDateWhen { false } //always run this...
         }
