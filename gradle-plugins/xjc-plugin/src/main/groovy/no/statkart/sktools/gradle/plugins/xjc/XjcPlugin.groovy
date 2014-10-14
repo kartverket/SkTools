@@ -89,13 +89,15 @@ class XjcPlugin implements Plugin<ProjectInternal> {
                                 project.getConfigurations().getByName(sourceSet.getCompileConfigurationName()),
                         )
 
-                        project.tasks[sourceSet.getCompileJavaTaskName()].dependsOn(compileTask);
+                        sourceSet.compiledBy(compileTask); //SKTOOLS-48
+
+                        project.tasks[sourceSet.getCompileJavaTaskName()].dependsOn(compileTask); //javaCompile depends on this to be compiled
 
                         //legger til output til classpath
                         xjcOutputClasspath.from(buildOutputDir)
 
                         //legger til output katalog til sourceset
-                        sourceSet.output.dir(buildOutputDir, builtBy: compileTask.name)
+                        sourceSet.output.dir(buildOutputDir, builtBy: compileTask)
 
                         //legger til generert kildekode slik at de kan bli plukket opp av dokumentajonsverktøy, kildekode distribusjon mm
                         sourceSet.getAllJava().srcDir(genOutputDir);
@@ -153,6 +155,8 @@ class XjcPlugin implements Plugin<ProjectInternal> {
                         compile.setSource(xjcTask);
                         compile.source(xjcSchema.getJava());  //for evt ListAdapter implementasjon osv
                         compile.setDestinationDir(buildOutputDir);
+
+                        compile.doFirst { project.delete(getDestinationDir()) } //SKTOOLS-48
 
                         return compile;
                     }
