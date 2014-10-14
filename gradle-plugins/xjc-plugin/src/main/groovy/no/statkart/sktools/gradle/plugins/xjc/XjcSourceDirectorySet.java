@@ -4,6 +4,7 @@ import groovy.lang.Closure;
 import org.gradle.api.file.SourceDirectorySet;
 import org.gradle.api.internal.file.DefaultSourceDirectorySet;
 import org.gradle.api.internal.file.FileResolver;
+import org.gradle.api.tasks.SourceSet;
 import org.gradle.util.ConfigureUtil;
 
 /**
@@ -18,9 +19,9 @@ public class XjcSourceDirectorySet extends DefaultSourceDirectorySet {
     //optional java source for custom implementations
     private final SourceDirectorySet javaSource;
 
-    XjcSourceDirectorySet(String name, FileResolver fileResolver) {
+    XjcSourceDirectorySet(String name, SourceSet sourceSet, FileResolver fileResolver) {
         super(name, String.format("%s XJC Schemas", name), fileResolver);
-        this.config = new XjcConfig(this);
+        this.config = new XjcConfig(this, sourceSet);
         this.javaSource = new DefaultSourceDirectorySet(getName(), getDisplayName() + " Source", fileResolver);
     }
 

@@ -30,7 +30,7 @@ public class XjcSchemaContainer extends AbstractList<XjcSourceDirectorySet> {
 
     protected XjcSourceDirectorySet create(String name) throws InvalidUserDataException {
         String schemaName = sourceSet.getName() + StringUtils.capitalize(name);
-        return new XjcSourceDirectorySet(schemaName, fileResolver);
+        return new XjcSourceDirectorySet(schemaName, sourceSet, fileResolver);
     }
 
     protected XjcSourceDirectorySet create(String name, Closure configureClosure) throws InvalidUserDataException {
@@ -73,18 +73,6 @@ public class XjcSchemaContainer extends AbstractList<XjcSourceDirectorySet> {
         });
 
         return this;
-    }
-
-    public String getCompileXjcSchemaTaskName(XjcSourceDirectorySet schema) {
-        return sourceSet.getTaskName("compile", schema.getName());
-    }
-
-    public String getGenerateXjcSchemaTaskName(XjcSourceDirectorySet schema) {
-        return sourceSet.getTaskName("gen", schema.getName());
-    }
-
-    public String getGeneratedSourcesDir(XjcSourceDirectorySet schema) {
-        return String.format("gen/%s/xjc/%s", sourceSet.getName(), schema.getName());
     }
 
 

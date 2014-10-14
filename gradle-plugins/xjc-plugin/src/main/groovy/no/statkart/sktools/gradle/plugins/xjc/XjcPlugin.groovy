@@ -74,20 +74,28 @@ class XjcPlugin implements Plugin<ProjectInternal> {
                 sourceSet.setCompileClasspath( sourceSet.getCompileClasspath().plus(xjcOutputClasspath) )
 
 
-                final String buildPath = project.relativePath(project.getBuildDir())
-
                 xjcSchemaContainer.all(new Action<XjcSourceDirectorySet>() {
                     void execute(XjcSourceDirectorySet xjcSchema) {
                         //setter ingen default plassering av kildefiler for sourceSet - dette må eksplisitt deklareres i konfigurasjon
 
-                        final File genOutputDir = project.file(String.format("gen/%s/xjc/%s", sourceSet.getName(), xjcSchema.getName()))
-                        final File buildOutputDir = project.file("${buildPath}/classes/${xjcSchema.getName()}")
+                        final File genOutputDir = project.file(xjcSchema.config.genOutputPath)
+                        final File buildOutputDir = project.file("${project.getBuildDir()}/classes/${xjcSchema.getName()}")
+
+                        Task xjcTask = createXjcTaskForSourceSet(xjcSchema, genOutputDir).dependsOn(
+                                configuration,
+                        );
+
+                        Task compileTask = createCompileXjcTaskForSchema(xjcSchema, xjcTask, buildOutputDir).dependsOn(
+                                project.getConfigurations().getByName(sourceSet.getCompileConfigurationName()),
+                        )
+
+                        project.tasks[sourceSet.getCompileJavaTaskName()].dependsOn(compileTask);
 
                         //legger til output til classpath
                         xjcOutputClasspath.from(buildOutputDir)
 
                         //legger til output katalog til sourceset
-                        sourceSet.output.dir(buildOutputDir)
+                        sourceSet.output.dir(buildOutputDir, builtBy: compileTask.name)
 
                         //legger til generert kildekode slik at de kan bli plukket opp av dokumentajonsverktøy, kildekode distribusjon mm
                         sourceSet.getAllJava().srcDir(genOutputDir);
@@ -95,22 +103,13 @@ class XjcPlugin implements Plugin<ProjectInternal> {
                         sourceSet.getAllSource().srcDirs(xjcSchema);
 
 
-                        Task xjcTask = createXjcTaskForSourceSet(xjcSchema, genOutputDir).dependsOn(
-                                configuration,
-                        );
-
-                        Task compileTask = createCompileXjcTaskForSchema(xjcSchema, xjcTask, buildOutputDir).dependsOn(
-                                xjcTask,
-                                project.getConfigurations().getByName(sourceSet.getCompileConfigurationName()),
-                        )
-
-                        project.tasks[sourceSet.getCompileJavaTaskName()].dependsOn(compileTask);
+                        project.tasks.clean.delete(genOutputDir) //SKTOOLS-10: clean sletter genererte filer
 
                     }
 
 
                     private XjcTask createXjcTaskForSourceSet(XjcSourceDirectorySet xjcSchema, File genOutputDir) {
-                        final String taskName = xjcSchemaContainer.getGenerateXjcSchemaTaskName(xjcSchema);
+                        final String taskName = xjcSchema.config.genTaskName;
                         XjcTask task = (XjcTask) project.task(type: XjcTask.class, taskName);
                         task.getConventionMapping().with {
                             map("source", new Callable() {
@@ -140,7 +139,7 @@ class XjcPlugin implements Plugin<ProjectInternal> {
 
                     private Task createCompileXjcTaskForSchema(XjcSourceDirectorySet xjcSchema, Task xjcTask, File buildOutputDir) {
                         final AbstractCompile compile;
-                        final String taskName = xjcSchemaContainer.getCompileXjcSchemaTaskName(xjcSchema);
+                        final String taskName = xjcSchema.config.compileTaskName;
                         final int gradleSubersion = Integer.parseInt(project.getGradle().getGradleVersion().split("\\.")[1]);
                         if (gradleSubersion > 5 ) {
                             compile = (AbstractCompile) project.tasks.replace(taskName, XjcCompileTaskImpl.class)  //todo: endre bruk av replace() til create()

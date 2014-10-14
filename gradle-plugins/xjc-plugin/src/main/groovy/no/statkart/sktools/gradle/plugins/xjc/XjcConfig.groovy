@@ -1,6 +1,7 @@
 package no.statkart.sktools.gradle.plugins.xjc
 
 import org.apache.commons.lang.builder.EqualsBuilder
+import org.gradle.api.tasks.SourceSet
 
 /**
  * Konfigurasjon for en xjc eksekvering.
@@ -23,14 +24,21 @@ class XjcConfig implements Serializable {
     static final String GRUNNBOK_DOC = 'grunnbok_doc';
 
 
+    public String genOutputPath //SKTOOLS-10: mulighet for konfigurering av path
+    public transient String genTaskName, compileTaskName  //SKTOOLS-10: mulighet for konfigurering av navn
+
     protected transient final XjcSourceDirectorySet source;
 
     protected Collection<String> includes;
     protected def xjcOptions = [][] as HashMap
 
 
-    XjcConfig(XjcSourceDirectorySet schema) {
+    XjcConfig(XjcSourceDirectorySet schema, SourceSet sourceSet) {
         this.source = schema
+        this.genOutputPath = String.format("gen/%s/xjc/%s", sourceSet.getName(), schema.getName())
+
+        this.genTaskName = sourceSet.getTaskName("gen", schema.getName()); //SKTOOLS-10: mulighet for konfigurering av navn
+        this.compileTaskName = sourceSet.getTaskName("compile", schema.getName()); //SKTOOLS-10: mulighet for konfigurering av navn
     }
 
 

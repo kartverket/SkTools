@@ -57,15 +57,17 @@ class XjcPluginTest {
         }
 
 
+        projectHelper.initializeProject()
+
         //executes the gen task
         projectHelper.executeTask('compileJava')
 
-        XjcSchemaContainer xjc = projectHelper.project.sourceSets.main.xjc
-
         //asserts the results
-        projectHelper.assertTaskExecutedNotSkipped(xjc.getGenerateXjcSchemaTaskName(xjc[0]))
-        projectHelper.assertTaskExecutedNotSkipped(xjc.getCompileXjcSchemaTaskName(xjc[0]))
-        projectHelper.assertFileExists("${xjc.getGeneratedSourcesDir(xjc[0])}/no/statkart/sktools/test/SimpleType.java")
+        projectHelper.project.sourceSets.main.xjc[0].with { XjcSourceDirectorySet schema ->
+            projectHelper.assertTaskExecutedNotSkipped(schema.config.genTaskName)
+            projectHelper.assertTaskExecutedNotSkipped(schema.config.compileTaskName)
+            projectHelper.assertFileExists("${schema.config.genOutputPath}/no/statkart/sktools/test/SimpleType.java")
+        }
 
     }
 
@@ -100,16 +102,17 @@ class XjcPluginTest {
         }
 
 
-        XjcSchemaContainer xjc = projectHelper.project.sourceSets.main.xjc
+        projectHelper.initializeProject()
 
-        //executes the gen task
-        projectHelper.executeTask(xjc.getGenerateXjcSchemaTaskName(xjc[0]))
+        projectHelper.project.sourceSets.main.xjc[0].with { XjcSourceDirectorySet schema ->
+            //executes the gen task
+            projectHelper.executeTask(schema.config.genTaskName)
 
-        //asserts the results
-        projectHelper.assertTaskExecutedNotSkipped(xjc.getGenerateXjcSchemaTaskName(xjc[0]))
-
-        projectHelper.assertFileExists("${xjc.getGeneratedSourcesDir(xjc[0])}/no/statkart/sktools/test/DocumentedSimpleType.java") { File file ->
-            assert file.text.contains("Ekstra dokumentasjon for typen.")
+            //asserts the results
+            projectHelper.assertTaskExecutedNotSkipped(schema.config.genTaskName)
+            projectHelper.assertFileExists("${schema.config.genOutputPath}/no/statkart/sktools/test/DocumentedSimpleType.java") { File file ->
+                assert file.text.contains("Ekstra dokumentasjon for typen.")
+            }
         }
 
     }
@@ -148,19 +151,21 @@ class XjcPluginTest {
         }
 
 
-        XjcSchemaContainer xjc = projectHelper.project.sourceSets.main.xjc
+        projectHelper.initializeProject()
 
         //executes builds the main source
         projectHelper.executeTask('classes')
 
         //asserts the results
-        projectHelper.assertTaskExecutedNotSkipped(xjc.getGenerateXjcSchemaTaskName(xjc[0]))
-        projectHelper.assertFileExists(xjc.getGeneratedSourcesDir(xjc[0]))
-        projectHelper.assertFileExists("${xjc.getGeneratedSourcesDir(xjc[0])}/no/statkart/sktools/test/StringList.java") { File file ->
+        projectHelper.project.sourceSets.main.xjc[0].with { XjcSourceDirectorySet schema ->
+            projectHelper.assertTaskExecutedNotSkipped(schema.config.genTaskName)
 
-            assert file.text.contains('import some_adapter.Fqn;')
-            assert file.text.contains('extends Fqn')
+            projectHelper.assertFileExists(schema.config.genOutputPath)
+            projectHelper.assertFileExists("${schema.config.genOutputPath}/no/statkart/sktools/test/StringList.java") { File file ->
+                assert file.text.contains('import some_adapter.Fqn;')
+                assert file.text.contains('extends Fqn')
 
+            }
         }
 
     }
@@ -225,7 +230,7 @@ class XjcPluginTest {
 
         //tester targetDir
         sourceSets.main.xjc.each { XjcSourceDirectorySet schema ->
-            def compileTask = project.tasks[project.sourceSets.main.xjc.getCompileXjcSchemaTaskName(schema)]
+            def compileTask = project.tasks[schema.config.compileTaskName]
             assert sourceSets.main.output.dirs.contains(compileTask.destinationDir)
         }
 
@@ -245,11 +250,11 @@ class XjcPluginTest {
 
 
     /**
-     * SKIF-171
-     * Regresjonsstester feil funnet i MAT-9900 der ideaModule task feiler pga feil oppsett av {@link org.gradle.api.tasks.SourceSet
+     * SKTOOLS-22
+     * Regresjonsstester feil funnet i MAT-9900 der ideaModule task feiler pga feil oppsett av {@link SourceSet }
      */
     @Test
-    void testSourceSetAllSourceConfiguration() {
+    void ideaTasksCanHandleSourceSetConfiguration() {
 
         //forks a new project in a temp folder
         ProjectHelper projectHelper = XjcProjectBuilder.builder().applyXjcPlugin().build()
@@ -269,11 +274,91 @@ class XjcPluginTest {
             }
         }
 
-        Project project = projectHelper.project
+        projectHelper.initializeProject()
 
-
-        SourceSet sourceSet = project.convention.plugins.java.sourceSets.main
+        final Project project = projectHelper.project
+        final SourceSet sourceSet = project.convention.plugins.java.sourceSets.main
         assert sourceSet.allSource.srcDirs.contains(project.file('src/main/xsd'))
+    }
+
+
+
+    @Test
+    void canSpecifyTaskNameForGen() {
+
+        //forks a new project in a temp folder
+        ProjectHelper projectHelper = XjcProjectBuilder.builder().applyXjcPlugin().build()
+
+        //config
+        projectHelper.configureProject {
+            sourceSets {
+                main.xjc {
+                    schema {
+                        config.genTaskName = 'genCustom'
+                    }
+                }
+            }
+        }
+
+        projectHelper.initializeProject()
+
+        assert projectHelper.project.convention.plugins.java.sourceSets.main.xjc[0].config.genTaskName == 'genCustom'
+        assert projectHelper.project.tasks.findByPath('genCustom')
+    }
+
+
+    @Test
+    void canSpecifyTaskNameForCompile() {
+
+        //forks a new project in a temp folder
+        ProjectHelper projectHelper = XjcProjectBuilder.builder().applyXjcPlugin().build()
+
+        //config
+        projectHelper.configureProject {
+            sourceSets {
+                main.xjc {
+                    schema {
+                        config.compileTaskName = 'compileCustom'
+                    }
+                }
+            }
+        }
+
+        projectHelper.initializeProject()
+
+        assert projectHelper.project.convention.plugins.java.sourceSets.main.xjc[0].config.compileTaskName == 'compileCustom'
+        assert projectHelper.project.tasks.findByPath('compileCustom')
+    }
+
+
+    @Test
+    void canSpecifyGenOutputPath() {
+
+        //forks a new project in a temp folder
+        ProjectHelper projectHelper = XjcProjectBuilder.builder().applyXjcPlugin().build()
+
+        //config
+        projectHelper.configureProject {
+            sourceSets {
+                main.xjc {
+                    schema {
+                        config.genTaskName = 'genCustom'
+                        config.genOutputPath = 'generated/custom'
+                    }
+                }
+            }
+        }
+
+        projectHelper.initializeProject()
+
+        //preconditions
+        assert projectHelper.project.convention.plugins.java.sourceSets.main.xjc[0].config.genTaskName == 'genCustom'
+        assert projectHelper.project.tasks.findByPath('genCustom')
+
+        //tests
+        assert projectHelper.project.convention.plugins.java.sourceSets.main.xjc[0].config.genOutputPath == 'generated/custom'
+        assert projectHelper.project.tasks.findByPath('genCustom').outputDirectory == projectHelper.project.file('generated/custom')
+
     }
 
 
