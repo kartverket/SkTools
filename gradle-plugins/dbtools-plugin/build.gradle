@@ -10,9 +10,6 @@ dependencies {
 
     testCompile libraries.hsqldb
 
-    //std groovy version defined in root project
-    groovy libraries.groovy
-
     //gradle api til byggesystemm blir benyttet som std
     compile gradleApi()
     compile 'commons-lang:commons-lang:2.6@jar'

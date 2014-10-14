@@ -11,9 +11,6 @@ dependencies {
     testCompile gradleApi()
     testCompile project(':build-utils:test-utils')
 
-    //groovy only for testing
-    groovy libraries.groovy
-
 }
 
 task sourcesJar(type: Jar, dependsOn:classes) {

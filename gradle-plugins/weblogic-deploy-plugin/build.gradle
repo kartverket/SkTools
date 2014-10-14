@@ -5,8 +5,6 @@ group = 'no.statkart.sktools.gradle'
 
 
 dependencies {
-    //std groovy version defined in root project
-    groovy libraries.groovy
 
     //gradle api til byggesystemm blir benyttet som std
     compile gradleApi()

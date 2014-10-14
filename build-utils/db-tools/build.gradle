@@ -8,8 +8,6 @@ dependencies {
     compile gradleApi()
 //    provided libraries.log4j //forutsetter at denne finnes på classpath
 
-    groovy libraries.groovy
-
     testCompile project(':build-utils:test-utils')
 
 }

@@ -10,9 +10,6 @@ dependencies {
     testCompile project(':build-utils:test-utils')
     testCompile gradleApi()
 
-    //groovy only for testing
-    groovy libraries.groovy
-
 }
 
 
