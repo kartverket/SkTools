@@ -2,7 +2,7 @@ apply plugin: 'sktools-dbtools-plugin'
 
 
 def libraries = [
-        drivers: ["com.oracle:ojdbc6:11.2.0.3.0@jar"]
+        drivers: ["com.oracle:ojdbc6:11.2.0.4.0@jar"]
 ]
 
 ext.username = 'BRUKER1'

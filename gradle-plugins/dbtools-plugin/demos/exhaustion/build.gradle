@@ -13,7 +13,7 @@ To change the setting on oracle database edit %ORA_HOME%/NETWORK/ADMIN/listener.
 """
 
 def libraries = [
-        drivers: ["com.oracle:ojdbc6:11.2.0.3.0@jar"]
+        drivers: ["com.oracle:ojdbc6:11.2.0.4.0@jar"]
 ]
 
 
