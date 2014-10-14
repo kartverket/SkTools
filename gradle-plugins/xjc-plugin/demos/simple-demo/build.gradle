@@ -14,7 +14,7 @@ sourceSets {
     main.xjc {
         schema {
             srcDir 'src/main/xsd'
-            srcDir 'build/gen/dirty'
+            srcDir 'build/dynamic/xsd'
         }
     }
 }
@@ -34,11 +34,11 @@ afterEvaluate {
  * Diverse tasker som tester og demonstrerer implementasjonen
  ******************************************************************************************************************** */
 
-task runDemo(dependsOn: 'clean') {
+task runDemo() {
     description = 'Kjører en enkel demo for å teste funksjonaliteten'
 
 
-    Assert.that('clean', sourceSets.main.xjc[0].generateXjcSchemaTaskName).describedAs("schemaGeneratesSourceCode").leadsTo(project).withState {
+    Assert.that('clean', sourceSets.main.xjc[0].config.genTaskName).describedAs("schemaGeneratesSourceCode").leadsTo(project).withState {
         assertXjcGeneratedSources()
     }
 
@@ -50,27 +50,33 @@ task runDemo(dependsOn: 'clean') {
 
     Assert.that('assemble').describedAs("modifiedGeneratedSourceFilesAssembles").prep {
         //'Tester at "dirty resources" ikke forekommer...'
-        createDirtySchema('build/gen/dirty')
+        createDirtySchema('build/dynamic/xsd')
+
     }.leadsTo(project).withState {
         assertDirtySources()
         assertDirtyClasses()
     }
 
-    Assert.that('assemble').describedAs("removedGeneratedSourceFilesRemovesAssembledOnes").prep {
-        project.delete('build/gen/dirty')
-    }.leadsTo(project).withState {
-            assertNoDirtySources()
-            assertNoDirtyClasses()
+    Assert.that('assemble').describedAs("removingGeneratedSourceFilesRemovesAssembledOnes").prep {
+        project.delete('build/dynamic/xsd')
+
+    }.leadsTo(project).withState LogLevel.INFO, {
+        assertNoDirtySources()
+        assertNoDirtyClasses()
     }
 
 
     Assert.that('clean', 'gen').describedAs("genTaskCanTriggersXjc").leadsTo(project).withState {
         assertXjcGeneratedSources()
         assertXjcClasses()
+
+        assertNoDirtySources()
+        assertNoDirtyClasses()
     }
 
     //keep it tidy!
     Assert.that('clean').describedAs("housekeeping").leadsTo(project).withState {
+        project.delete('gen')
     }
 
 }
@@ -132,12 +138,13 @@ class Assert {
         this.project = project; this
     }
 
-    Assert withState(Closure check) {
+    Assert withState(LogLevel logLevel = null, Closure check) {
         def task = project.task(taskName, type: GradleBuild) {
             dir = project.projectDir
             tasks = taskNames
             startParameter.systemPropertiesArgs = [noMavenBootstrap: 'true']
             startParameter.projectProperties = [sktools_versjon:"${project.version}"]
+            if (logLevel) startParameter.logLevel = logLevel
             prep.reverseEach { Closure beforeAsserts -> doFirst { beforeAsserts.setDelegate(this); beforeAsserts.run()}}
             doLast { check.setDelegate(this); check.run() }
             doFirst {
@@ -161,7 +168,7 @@ class Assert {
 
 
     void assertXjcGeneratedSources() {
-        assert project.files(project.sourceSets.main.xjc[0].generatedSourcesDir).asFileTree.files.find { it.name == 'SimpleType.java' }
+        assert project.files(project.sourceSets.main.xjc[0].config.genOutputPath).asFileTree.files.find { it.name == 'SimpleType.java' }
     }
 
     void assertXjcClasses() {
@@ -169,7 +176,7 @@ class Assert {
     }
 
     void assertDirtySources() {
-        assert project.files(project.sourceSets.main.xjc[0].generatedSourcesDir).asFileTree.files.find { it.name == 'Dirty.java' }
+        assert project.files(project.sourceSets.main.xjc[0].config.genOutputPath).asFileTree.files.find { it.name == 'Dirty.java' }
     }
 
     void assertDirtyClasses() {
@@ -177,7 +184,7 @@ class Assert {
     }
 
     void assertNoDirtySources() {
-        assert !project.files(project.sourceSets.main.xjc[0].generatedSourcesDir).asFileTree.files.find { it.name == 'Dirty.java' } //forventer ikke å finne Dirty.java blandt source
+        assert !project.files(project.sourceSets.main.xjc[0].config.genOutputPath).asFileTree.files.find { it.name == 'Dirty.java' } //forventer ikke å finne Dirty.java blandt source
     }
 
     void assertNoDirtyClasses() {

@@ -64,7 +64,7 @@ public class XjcSchemaContainer extends AbstractList<XjcSourceDirectorySet> {
         ConfigureUtil.configure(configureClosure, new GroovyObjectSupport() {
 
             public XjcSourceDirectorySet schema(Closure configureClosure) {
-                String schemaName = String.format("%sSchema", size());
+                String schemaName = String.format("%dSchema", size());
                 XjcSourceDirectorySet schema = create(schemaName, configureClosure);
                 add(schema);
                 return schema;
