@@ -1,7 +1,9 @@
 package no.statkart.sktools.gradle.plugins.provided;
 
+import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.repositories.MavenArtifactRepository;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.testfixtures.ProjectBuilder;
@@ -39,11 +41,13 @@ public class ProvidedPluginTest {
         project.getPlugins().apply("sktools-provided-plugin");
         project.getPlugins().apply("java");
 
-        Map<String, String> repoArgs = new HashMap<String, String>();
-        repoArgs.put("name", "PUBLIC");
-        repoArgs.put("url", "http://nexus.statkart.no:8090/nexus/content/groups/public/");
-
-        project.getRepositories().mavenRepo(repoArgs);
+        project.getRepositories().maven(new Action<MavenArtifactRepository>() {
+            @Override
+            public void execute(MavenArtifactRepository repository) {
+                repository.setName("PUBLIC");
+                repository.setUrl("http://nexus.statkart.no:8090/nexus/content/groups/public/");
+            }
+        });
 
         project.getDependencies().add("provided", "com.google.code.findbugs:jsr305:1.3.9");
 

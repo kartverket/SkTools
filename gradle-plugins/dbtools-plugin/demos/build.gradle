@@ -18,7 +18,7 @@ buildscript {
     repositories {
         //bruker kun lokale filer her da dette er et demo prosjekt...
         mavenLocal()
-        mavenRepo name: 'public', url: MAVEN_REPO
+        maven { name = 'public'; url = MAVEN_REPO }
     }
 
     dependencies {
@@ -31,7 +31,7 @@ allprojects {
 
     repositories {
         mavenLocal()
-        mavenRepo name: 'public', url: "${rootProject.MAVEN_REPO}"
+        maven { name = 'public'; url = "${rootProject.MAVEN_REPO}" }
     }
 }
 

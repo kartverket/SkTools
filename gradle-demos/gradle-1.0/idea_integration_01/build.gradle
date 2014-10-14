@@ -23,7 +23,7 @@ subprojects { p ->
     }
 
     repositories {
-        mavenRepo name: 'public', url: "${rootProject.MAVEN_REPO}"
+        maven { name = 'public'; url = "${rootProject.MAVEN_REPO}" }
     }
 }
 

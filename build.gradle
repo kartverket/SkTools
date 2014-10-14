@@ -113,7 +113,7 @@ subprojects { Project project ->
 
     repositories {
         mavenLocal()
-        mavenRepo name: 'public', url: "${rootProject.MAVEN_REPO}"
+        maven { name = 'public'; url = "${rootProject.MAVEN_REPO}" }
     }
 
 
