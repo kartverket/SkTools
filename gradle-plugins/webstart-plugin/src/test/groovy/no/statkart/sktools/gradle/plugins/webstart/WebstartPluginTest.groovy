@@ -201,11 +201,6 @@ class WebstartPluginTest {
 
         final Project project = projectHelper.project
 
-        if (project.gradle.gradleVersion.split(/\./)[1].toInteger() < 7) {
-            println "...skipping test due to gradle version ${project.gradle.gradleVersion} < 1.7"
-            return
-        }
-
         File warPath = project.war.archivePath
         Assert.assertTrue(warPath.exists())
 

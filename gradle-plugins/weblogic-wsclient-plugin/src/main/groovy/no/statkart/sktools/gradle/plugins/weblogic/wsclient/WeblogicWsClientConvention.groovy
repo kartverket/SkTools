@@ -133,24 +133,6 @@ class WebServiceConfig {
         baseWars.dependencies.add(baseWar)
     }
 
-    /**
-     * @deprecated since 1.2
-     */
-    @Deprecated
-    public WebServiceConfig dependency(Closure dependencyNotatonClosure) {
-        println 'dependency(*) is now depricated - use baseWar(*) instead!'
-        return baseWar(dependencyNotatonClosure)
-    }
-
-    /**
-     * @deprecated since 1.2
-     */
-    @Deprecated
-    public void dependency(Object notation) {
-        println 'dependency(*) is now depricated - use baseWar(*) instead!'
-        baseWar(notation)
-    }
-
 
     /**
      * Optional samling av exception til felles pakke

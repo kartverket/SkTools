@@ -173,24 +173,6 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
 
 
 
-    @Deprecated
-    public Task getImportTask() {
-        project.println "importTask property is depricated since version 1.2 - Use tasks.import instead !"
-        return tasks.getByName('import')
-    }
-
-    @Deprecated
-    public Task getExportTask() {
-        project.println "exportTask property is depricated since version 1.2 - Use tasks.export instead !"
-        return tasks.getByName('export')
-    }
-
-    @Deprecated
-    public Task getInfoTask() {
-        project.println "infoTask property is depricated since version 1.2 - Use tasks.info instead !"
-        return tasks.getByName('info')
-    }
-
     public OracleImportTask importTask(Closure closure = null) {
         return importTask([:], closure);
     }

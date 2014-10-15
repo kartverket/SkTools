@@ -28,7 +28,7 @@ configureDatabasePlugin {
 
     toolset(type:'oracle', name:'Db', prefix:'') {
 
-        ... //for details, see {@link DbtoolsConvention#useToolset(String, String, String, Closure) }
+        ... //for details, see {@link DbtoolsConvention#toolset(String, String, String, Closure) }
 
 
     }
@@ -109,30 +109,6 @@ configureDatabasePlugin {
      * @param closure konfigurasjon av toolset
      * @return
      */
-    @Deprecated //since 1.2
-    protected def useToolset(String type, String prefix, String path, Closure closure) {
-        println "useToolset(...){} is deprecated - use toolset(Map){} instead!"
-        println "new config syntax: "
-        println "toolset( name:'${prefix}', type:'${type}', prefix:'${prefix}') {"
-        AbstractDatabaseConvention toolset = toolset(type:type, name:prefix, closure)
-        toolset.config {
-
-            project.fileTree("src/${path}").include('**/*.sql').files.each { File file ->
-                String taskName = file.name.substring(0, file.name.length() - 4)
-                String taskNameWithPrefix = prefix + taskName
-
-                //ny syntax for config
-                println "   sqlTask( '${taskName}', sqlFile:'${project.relativePath(file).replaceAll('\\\\', '/')}')"
-
-                //legger til task
-                sqlTask(taskName, sqlFile:file)
-            }
-        }
-        println "   properties = project.properties"
-        println "   ..."
-        println "}"
-    }
-
     protected def toolset(Map<String, ?> params, Closure closure) {
 
         String type = params.get('type')

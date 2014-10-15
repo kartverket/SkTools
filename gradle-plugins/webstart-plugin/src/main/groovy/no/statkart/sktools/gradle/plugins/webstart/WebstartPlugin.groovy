@@ -116,10 +116,7 @@ class WebstartPlugin implements Plugin<Project> {
 
     public static CopySpec jnlpCopySpec(Project project, Object libDir, Object libs, Callable<String> digestProvider) {
         return project.copySpec {
-            if (project.gradle.gradleVersion.split(/\./)[1].toInteger() >= 7) {
-                logger.debug('...setting duplicate strategy introduced in Gradle 1.7')
-                duplicatesStrategy 'exclude'
-            }
+            duplicatesStrategy 'exclude'
 
             into libDir
             from libs

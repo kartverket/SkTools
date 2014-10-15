@@ -37,11 +37,6 @@ class PropertiesPluginTest {
         Project project = ProjectBuilder.builder().build()
 
 
-        if (project.gradle.gradleVersion.split(/\./)[1].toInteger() < 6) {
-            println "...skipping test due to gradle version ${project.gradle.gradleVersion} < 1.6"
-            return; //incubating feature in gradle 1.6
-        }
-
         project.apply plugin: 'maven-publish'
         project.apply plugin: 'sktools-properties-plugin'
 
