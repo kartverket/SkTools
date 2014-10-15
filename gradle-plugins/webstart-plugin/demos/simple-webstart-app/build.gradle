@@ -23,7 +23,7 @@ webstart {
     client1 {
         mainJar 'echo-client' //main jar [SKTOOLS-118]
         jarDependencies configurations.client1
-        sign { keystore = rootProject.file('kodesignering.jks'); alias = 'statenskartverk'; password = 'SagZ45_p1' }
+        sign keystore: rootProject.file('kodesignering.jks'), alias: 'statenskartverk', password: 'SagZ45_p1'
         jnlp {
             jnlpFilename 'client1-signed.jnlp'
             title 'Client1 - signed'
