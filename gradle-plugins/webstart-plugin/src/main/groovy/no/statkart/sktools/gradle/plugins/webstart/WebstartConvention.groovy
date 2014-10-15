@@ -73,6 +73,9 @@ class ClientConfiguration {
         return name
     }
 
+    public void sign(Closure config) {
+        sign(null, config)
+    }
     public void sign(Map properties = [:], Closure config = null) {
         signingConfiguration = new SigningConfiguration(project)
 
