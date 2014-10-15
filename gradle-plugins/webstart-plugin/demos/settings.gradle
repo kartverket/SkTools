@@ -5,25 +5,6 @@ include ':SKIF-209_uptodate'
 rootProject.name = 'webstart-demos'
 
 
-//eksempel implementasjon på SNAPSHOT versjonering
-gradle.projectsLoaded { Gradle g ->
-//    println 'gradle.projectsLoaded()'
-//    println startParameter.taskNames
-
-    if (!startParameter.taskNames.contains('release')) {
-        g.rootProject.allprojects {
-            it.afterEvaluate {
-                it.version += "-SNAPSHOT"
-            }
-        }
-    } else {
-        startParameter.taskNames.remove('release')
-
-        println 'Configuring build for release!'
-    }
-
-}
-
 
 //automatisk re-compile og install av siste versjon av plugin til lokal maven (spesifikt for demo-prosjekt)
 gradle.projectsLoaded { Gradle g ->

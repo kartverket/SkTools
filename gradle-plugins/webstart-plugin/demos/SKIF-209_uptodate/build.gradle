@@ -47,39 +47,39 @@ webstart {
 /******************************************************************************************************************** **
  * Diverse tasker som tester og demonstrerer implementasjonen
  ******************************************************************************************************************** */
-task runDemo(dependsOn:'clean') {
+task runDemo(dependsOn: ['clean', ':echo-client:clean']) {
     description = 'Tester at lib filer blir oppdaterte'
 
-    doLast {
+    final File resourceFile = project.project(':echo-client').file('src/main/SKIF-209/addedResource.txt')
 
-        Assert.that('release', 'war').describedAs('releaseAssemblesClient').prep {
-            println "Tømmer cache katalog..."
-            project.rootProject.delete('.cache')
+    Assert.that('war').describedAs('warAssemblesClient').prep {
+        println "Tømmer cache katalog..."
+        project.rootProject.delete('.cache')
 
-            println "Sletter genererte filer"
-            project.project(':echo-client').delete('src/main/SKIF-209')
+        println "Sletter genererte filer"
+        project.project(':echo-client').delete('src/main/SKIF-209')
+//        project.project(':echo-client').delete('build/resources/main')
 
-        }.leadsTo(project).withState {
+    }.leadsTo(project).withState {
 
-            //'release' version without SNAPSHOT
-            assertEchoClientClasses()
-        }
-
-
-        Assert.that('release', 'war').describedAs('releaseAssemblesUpdatedClient').prep {
-            println "Legger til genererte filer..."
-            File file = project.project(':echo-client').file('src/main/SKIF-209/addedResource.txt')
-            file.parentFile.mkdirs()
-            file.createNewFile()
-
-        }.leadsTo(project).withState {
-
-            //'release' version without SNAPSHOT
-            assertEchoClientClasses()
-            assertAddedEchoClientClasses()
-        }
-
+        assertWarEchoClientClasses()
+        assertSourceFileEchoClientResource(resourceFile, 0)
+        assertWarEchoClientResources('addedResource.txt', 0)
     }
+
+
+    Assert.that('war').describedAs('warAssemblesUpdatedClient').prep {
+        println "Legger til genererte filer..."
+        resourceFile.parentFile.mkdirs()
+        resourceFile.createNewFile()
+
+    }.leadsTo(project).withState {
+
+        assertWarEchoClientClasses()
+        assertSourceFileEchoClientResource(resourceFile, 1)
+        assertWarEchoClientResources('addedResource.txt', 1)
+    }
+
 }
 
 
@@ -137,8 +137,8 @@ class Assert {
 
     //convenience methods and asserts....
 
-    void assertEchoClientClasses() {
-        FileTree warTree = project.zipTree(war.archivePath)
+    void assertWarEchoClientClasses() {
+        FileTree warTree = project.zipTree(project.tasks.war.archivePath)
 
         ['signed/echo-client*.jar', 'unsigned/echo-client*.jar'].each { String pattern ->
             def archive = warTree.matching { include pattern }.singleFile
@@ -148,17 +148,21 @@ class Assert {
         }
     }
 
-    void assertAddedEchoClientClasses() {
-        FileTree warTree = project.zipTree(war.archivePath)
+    void assertWarEchoClientResources(String filePattern, int expectedCount) {
+        FileTree warTree = project.zipTree(project.tasks.war.archivePath)
 
         ['signed/echo-client*.jar', 'unsigned/echo-client*.jar'].each { String pattern ->
             def archive = warTree.matching { include pattern }.singleFile
             assert archive.exists() //forventer at jar fil er opprettet
 
-            assert project.zipTree(archive).matching {include 'addedResource.txt'}.files.size() == 1
+            assert project.zipTree(archive).matching { include filePattern }.files.size() == expectedCount
         }
     }
 
+    static void assertSourceFileEchoClientResource(File sourceFile, int expectedCount) {
+        println "asserting ${sourceFile} exists. Expected: ${expectedCount.asBoolean()}, actual: ${sourceFile.exists()}"
+        assert !sourceFile.exists() == !expectedCount //xnor expression
+    }
 
 }
 
