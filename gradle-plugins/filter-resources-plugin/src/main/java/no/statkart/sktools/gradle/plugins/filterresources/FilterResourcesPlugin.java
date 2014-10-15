@@ -8,7 +8,7 @@ import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.FileTreeElement;
 import org.gradle.api.internal.HasConvention;
-import org.gradle.api.internal.plugins.ProcessResources;
+import org.gradle.language.jvm.tasks.ProcessResources;
 import org.gradle.api.internal.project.ProjectInternal;
 import org.gradle.api.plugins.BasePlugin;
 import org.gradle.api.plugins.JavaBasePlugin;
