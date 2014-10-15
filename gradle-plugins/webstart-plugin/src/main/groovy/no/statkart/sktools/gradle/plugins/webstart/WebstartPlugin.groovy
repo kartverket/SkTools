@@ -75,7 +75,8 @@ class WebstartPlugin implements Plugin<Project> {
     private static WebstartTask configureGenJnlp(Project project, ClientConfiguration clientConfiguration, JarSigner jarSigner) {
 
         final WebstartTask webstartTask;
-        if (project.getGradle().getGradleVersion().compareTo("1.5") > 0 ) {
+        final int gradleSubersion = Integer.parseInt(project.getGradle().getGradleVersion().split("\\.")[1]);
+        if (gradleSubersion > 5 ) {
             webstartTask = project.tasks.replace(makeTaskName(WEBSTART_TASK_PREFIX, clientConfiguration.name, WEBSTART_TASK_POSTFIX), WebstartTask.class)  //todo: endre bruk av replace() til create()
         } else {
             webstartTask = project.tasks.add(makeTaskName(WEBSTART_TASK_PREFIX, clientConfiguration.name, WEBSTART_TASK_POSTFIX), WebstartTask.class) //todo: remove backward compability with Gradle 1.5
@@ -118,9 +119,11 @@ class WebstartPlugin implements Plugin<Project> {
 
     public static CopySpec jnlpCopySpec(Project project, Object libDir, Object libs, Callable<String> digestProvider) {
         return project.copySpec {
-            if (project.gradle.gradleVersion >= '1.7') {
+            if (project.gradle.gradleVersion.split(/\./)[1].toInteger() >= 7) {
+                logger.debug('...setting duplicate strategy introduced in Gradle 1.7')
                 duplicatesStrategy 'exclude'
             }
+
             into libDir
             from libs
             eachFile(new Action<FileCopyDetails>() {

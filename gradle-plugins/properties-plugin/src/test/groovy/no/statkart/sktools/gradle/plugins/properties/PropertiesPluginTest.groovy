@@ -36,8 +36,9 @@ class PropertiesPluginTest {
         //forks a new project in a temp folder
         Project project = ProjectBuilder.builder().build()
 
-        if (project.gradle.gradleVersion < '1.6') {
-            println "Skipping test for gradle ${project.gradle.gradleVersion}"
+
+        if (project.gradle.gradleVersion.split(/\./)[1].toInteger() < 6) {
+            println "...skipping test due to gradle version ${project.gradle.gradleVersion} < 1.6"
             return; //incubating feature in gradle 1.6
         }
 
