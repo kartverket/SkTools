@@ -23,7 +23,7 @@ webstart {
     client1 {
         mainJar 'echo-client' //main jar [SKTOOLS-118]
         jarDependencies configurations.client1
-        sign rootProject.file('kodesignering.jks'), 'statenskartverk', 'SagZ45_p1'
+        sign { keystore = rootProject.file('kodesignering.jks'); alias = 'statenskartverk'; password = 'SagZ45_p1' }
         jnlp {
             jnlpFilename 'client1-signed.jnlp'
             title 'Client1 - signed'
@@ -50,7 +50,6 @@ webstart {
     client3 {
         mainJar 'echo-client' //main jar [SKTOOLS-118]
         jarDependencies configurations.client
-//        sign rootProject.file('kodesignering.jks'), 'statenskartverk', 'SagZ45_p1'
         jnlp {
             jnlpFilename 'runtimes-demo.jnlp'
             title 'Demo - multiple runtimes'
@@ -67,7 +66,6 @@ webstart {
     client4 {
         mainJar 'echo-client' //main jar [SKTOOLS-118]
         jarDependencies configurations.client
-//        sign rootProject.file('kodesignering.jks'), 'statenskartverk', 'SagZ45_p1'
         jnlp {
             jnlpFilename 'properties.jnlp'
             title 'Demo - passing properties'

@@ -29,7 +29,7 @@ webstart {
         }
     }
     signed {
-        sign rootProject.file('kodesignering.jks'), 'statenskartverk', 'SagZ45_p1'
+        sign { keystore = rootProject.file('kodesignering.jks'); alias = 'statenskartverk'; password = 'SagZ45_p1' }
         libDir 'signed'
         mainJar 'echo-client'
         jarDependencies configurations.webstartlibs
