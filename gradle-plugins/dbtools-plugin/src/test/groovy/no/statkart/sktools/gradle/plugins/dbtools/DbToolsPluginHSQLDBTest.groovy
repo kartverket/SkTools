@@ -16,103 +16,6 @@ import org.gradle.api.tasks.TaskExecutionException
 class DbToolsPluginHSQLDBTest extends HSQLDBTest {
 
 
-    /**
-     * Tester at custom tasks blir lagt til i hht til konvensjon.
-     *
-     * STEG 1: Testen oppretter to filer relativt til prosjektet:
-     *     src/hsqldb/CreateSchema.sql
-     *     src/hsqldb/data.sql
-     *
-     * STEG 2: Konfigurering av plugin
-     *
-     * STEG 3: Deretter sjekkes det at to tasks er lagt til ihht til konvensjon:
-     *     Prefix_CreateSchema
-     *     Prefix_data
-     *
-     * STEG 4: Til sist blir taskene kalt og man kontrollerer databasen etter forventede endringer underveis.
-     *
-     *
-     */
-    @Test
-    void testCustomTasksByConvention() {
-
-        assert sql.connection.isValid(0)
-
-        final def testCase = new DbToolsPluginPatchTestContext()
-
-        // STEG 1 - oppretter sql-filer relativt til prosjekt
-
-        File createShemaFile = testCase.createNewFileWithDirsRelativeToProject('src/hsql/CreateSchema.sql', """\
-            CREATE TABLE TEST_TABLE (
-               ID INTEGER NOT NULL,
-               NAVN VARCHAR(32) NOT NULL,
-               PRIMARY KEY (ID)
-            );
-            """
-        )
-        File dataFile = testCase.createNewFileWithDirsRelativeToProject('src/hsql/data.sql', """\
-            INSERT INTO TEST_TABLE (ID, NAVN) VALUES (1, 'CHUCK NORRIS');
-            """
-        )
-
-
-        // STEG 2 - konfigurering av plugin
-        testCase.configureDatabasePlugin {
-            toolset( name:'Prefix', type:'hsqldb', prefix:'Prefix') {
-
-                credentials.username = defaultCredentials.username
-                credentials.password = defaultCredentials.password
-
-                url = sql.connection.properties.URL
-                driver = jdbcDriverClassString
-
-                sqlTask( 'CreateSchema', sqlFile:'src/hsql/CreateSchema.sql')
-                sqlTask( 'data', sqlFile:'src/hsql/data.sql')
-            }
-        }
-
-
-        // STEG 3 - tasks ihht konvensjon
-        Task createSchemaTask = testCase.project.tasks.getByName('prefixCreateSchema')
-        Task dataTask = testCase.project.tasks.getByName('prefixData')
-
-        Assert.assertNotNull createSchemaTask, "Forventet task for ${createShemaFile.name}"
-        Assert.assertNotNull dataTask, "Forventet task for ${dataFile.name}"
-
-
-        // STEG 4 - kjøring av tasks
-
-        try {
-            sql.firstRow('select * from TEST_TABLE')
-            Assert.fail 'Forventer tom base'
-        } catch (SQLSyntaxErrorException sqlsee) {
-            assert true
-        }
-
-        createSchemaTask.execute()
-
-        try {
-            def row = sql.firstRow('select * from TEST_TABLE')
-            Assert.assertNull row, 'Forventer ingen rader'
-        } catch (SQLSyntaxErrorException sqlsee) {
-            Assert.fail 'Forventer at tabell finnes'
-        }
-
-
-        dataTask.execute()
-
-        try {
-            def row = sql.firstRow('select ID, NAVN from TEST_TABLE where ID = 1')
-            Assert.assertNotNull row, 'Forventer en rad'
-            Assert.assertEquals row.ID, 1, 'forventet verdi'
-            Assert.assertEquals row.NAVN, 'CHUCK NORRIS', 'forventet verdi'
-        } catch (SQLSyntaxErrorException sqlsee) {
-            Assert.fail 'Forventer at tabell finnes'
-        }
-
-    }
-
-
 
     /**
      * Tester angivelse av brukernavn og passord mot basen
@@ -139,7 +42,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
 
         // STEG 1 - oppretter sql-filer relativt til prosjekt
 
-        File createShemaFile = testCase.createNewFileWithDirsRelativeToProject('src/hsql/CreateSchema.sql', """\
+        final File createShemaFile = testCase.createNewFileWithDirsRelativeToProject('src/hsql/CreateSchema.sql', """\
             CREATE TABLE TEST_TABLE (
                ID INTEGER NOT NULL,
                NAVN VARCHAR(32) NOT NULL,
@@ -148,7 +51,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
             """
         )
 
-        File createShema2File = testCase.createNewFileWithDirsRelativeToProject('src/hsql/CreateSchema2.sql', """
+        final File createShema2File = testCase.createNewFileWithDirsRelativeToProject('src/hsql/CreateSchema2.sql', """
                 CREATE TABLE TEST_TABLE2 (
                    ID INTEGER NOT NULL,
                    NAVN VARCHAR(32) NOT NULL,
@@ -159,7 +62,9 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
 
 
         testCase.configureDatabasePlugin {
-            useToolset('hsqldb', 'Prefix_', 'hsql') {
+            toolset( type:'hsqldb', prefix:'Prefix_', name:'hsql' ) {
+                sqlTask('CreateSchema', sqlFile: createShemaFile)
+                sqlTask('CreateSchema2', sqlFile: createShema2File)
 
                 url = sql.connection.properties.URL
                 driver = jdbcDriverClassString
@@ -171,7 +76,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
 
 
         // STEG 3 - credentials ihht konfig
-        def credentials = testCase.convention.dbToolSets['Prefix_'].credentials
+        def credentials = testCase.convention.dbToolSets['hsql'].credentials
         Assert.assertEquals credentials.username, defaultCredentials.username
         Assert.assertEquals credentials.password, defaultCredentials.password
 
@@ -268,7 +173,8 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
 
         // STEG 2 - konfigurering av plugin
         testCase.configureDatabasePlugin {
-            useToolset('hsqldb', 'DB1', 'hsql') {
+            toolset( type:'hsqldb', prefix:'DB1', name:'hsql' ) {
+                sqlTask('CreateSchema', sqlFile: createShemaFile)
 
                 url = "${getSql(user1).connection.properties.URL}"
                 driver = jdbcDriverClassString
@@ -276,7 +182,8 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
                 credentials.username = user1.username
                 credentials.password = user1.password
             }
-            useToolset('hsqldb', 'DB2', 'hsql2') {
+            toolset( type:'hsqldb', prefix:'DB2', name:'hsql' ) {
+                sqlTask('CreateSchema2', sqlFile: createShema2File)
 
                 url = "${getSql(user2).connection.properties.URL}"
                 driver = jdbcDriverClassString
