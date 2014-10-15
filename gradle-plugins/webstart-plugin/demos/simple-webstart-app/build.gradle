@@ -2,6 +2,10 @@ apply plugin: 'sktools-webstart-plugin'
 
 description = 'Demonstrates how to make a simple webstart war module.'
 
+repositories {
+    maven { name = 'public'; url = rootProject.MAVEN_REPO }
+}
+
 configurations {
     client1
     client
@@ -107,6 +111,3 @@ task testClean(dependsOn: ['testGenWebstart', 'clean']) << {
     println 'todo'
 }
 
-repositories {
-    mavenRepo name: 'public', url: rootProject.MAVEN_REPO
-}
