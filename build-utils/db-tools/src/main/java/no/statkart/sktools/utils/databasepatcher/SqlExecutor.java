@@ -16,11 +16,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.sql.CallableStatement;
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -34,37 +32,6 @@ public class SqlExecutor {
 
     //SKTOOLS-84: error håndtering
     boolean failOnError, failOnWarning;
-
-    /**
-    * Hjelpeklasse som inneholder en sql statement som godt kan strekke seg over flere linjer.
-    */
-   public static class ScriptLine {
-      /**
-       * Start linje
-       */
-      int lineno;
-      /**
-       * Er dette en kommentar eller en statement
-       */
-      boolean isComment;
-      /**
-       * Sql linjen som skal utføres.
-       */
-      String line;
-
-      public ScriptLine(int lineno, boolean comment, String line) {
-         this.lineno = lineno;
-         isComment = comment;
-         this.line = line;
-      }
-
-      public String toString() {
-         return "Line " + lineno + "\n" + line;
-      }
-   };
-
-
-
 
 
    /**
@@ -97,36 +64,46 @@ public class SqlExecutor {
     * @return filens innhold i en java.lang.String
     */
    public static String lesFilFraClasspath(String filnavn) {
-      ClassLoader classLoader = SqlExecutor.class.getClassLoader();
-      InputStream inputStream = classLoader.getResourceAsStream(filnavn.trim());
-      if( inputStream == null ) {
-         throw new OperationalException("Finner ikke filen " + filnavn + " i classpath");
-      }
-      BufferedReader br = null;
-      StringBuffer tmpScript = new StringBuffer();
-      try {
-         if( inputStream != null ) {
-            br = new BufferedReader(new InputStreamReader(inputStream,"UTF-8"));
-            String line = null;
-            try {
+       InputStream inputStream = null;
+       BufferedReader br = null;
+       try {
+           ClassLoader classLoader = SqlExecutor.class.getClassLoader();
+           StringBuilder tmpScript = new StringBuilder();
+           inputStream = classLoader.getResourceAsStream(filnavn.trim());
+           if (inputStream == null) {
+               throw new OperationalException("Finner ikke filen " + filnavn + " i classpath");
+           }
+
+           try {
+               br = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
+               String line;
+
                line = br.readLine();
-               while( line != null ) {
-                  tmpScript.append(line).append("\n");
-                  line = br.readLine();
+               while (line != null) {
+                   tmpScript.append(line).append("\n");
+                   line = br.readLine();
                }
-            } finally {
-               if( br != null ) {
-                  br.close();
+           } catch (IOException ioe) {
+               logger.error("Under lesing av sqlscript " + ioe.getMessage(), ioe);
+           }
+
+           return tmpScript.toString();
+       } finally {
+           if (br != null) {
+               try {
+                   br.close();
+               } catch (IOException e) {
+                   logger.error(e);
                }
-               if( inputStream != null ) {
-                  inputStream.close();
+           }
+           if (inputStream != null) {
+               try {
+                   inputStream.close();
+               } catch (IOException e) {
+                   logger.error(e);
                }
-            }
-         }
-      } catch( IOException ioe ) {
-         logger.error("Under lesing av sqlscript " + ioe.getMessage(), ioe);
-      }
-      return tmpScript.toString();
+           }
+       }
    }
 
    /**
@@ -137,36 +114,43 @@ public class SqlExecutor {
     */
    public static String lesFilFraWorkingDir(String filnavn) {
       InputStreamReader inputStream = null;
-      try {
-         inputStream = new FileReader(filnavn.trim());
-      } catch( FileNotFoundException e ) {
-         throw new OperationalException("Finner ikke filen " + filnavn);
-      }
       BufferedReader br = null;
-      StringBuffer tmpScript = new StringBuffer();
+      StringBuilder tmpScript = new StringBuilder();
       try {
-         if( inputStream != null ) {
-            br = new BufferedReader(inputStream);
-            String line = null;
-            try {
-               line = br.readLine();
-               while( line != null ) {
-                  tmpScript.append(line).append("\n");
-                  line = br.readLine();
-               }
-            } finally {
-               if( br != null ) {
+          try {
+              inputStream = new FileReader(filnavn.trim());
+          } catch( FileNotFoundException e ) {
+              throw new OperationalException("Finner ikke filen " + filnavn);
+          }
+          br = new BufferedReader(inputStream);
+          String line;
+          try {
+             line = br.readLine();
+             while( line != null ) {
+                tmpScript.append(line).append("\n");
+                line = br.readLine();
+             }
+          } catch (IOException ioe) {
+              logger.error("Under lesing av sqlscript " + ioe.getMessage(), ioe);
+          }
+          return tmpScript.toString();
+
+      } finally {
+          if (br != null) {
+              try {
                   br.close();
-               }
-               if( inputStream != null ) {
+              } catch (IOException e) {
+                  logger.error(e);
+              }
+          }
+          if (inputStream != null) {
+              try {
                   inputStream.close();
-               }
-            }
-         }
-      } catch( IOException ioe ) {
-         logger.error("Under lesing av sqlscript " + ioe.getMessage(), ioe);
+              } catch (IOException e) {
+                  logger.error(e);
+              }
+          }
       }
-      return tmpScript.toString();
    }
 
 
@@ -180,7 +164,7 @@ public class SqlExecutor {
     * @param sqlScript  scriptet som skal kjøres.
     * @return resultSet hvis det er kalt en stored procedure ommgitt av {} som gir resultatsett, gir flere linjer resultatsett blir disse lagt sammen i den rekkefølgen de er laget.
     */
-   public ResultSet[] runScript(Connection connection, String sqlScript) throws Exception {
+   public java.sql.ResultSet[] runScript(Connection connection, String sqlScript) throws Exception {
       if( connection == null ) {
          throw new ConfigurationException("Kan ikke kjøre databasescript med connection = null");
       }
@@ -193,8 +177,8 @@ public class SqlExecutor {
        return runScript(connection, expressions);
    }
 
-   public ResultSet[] runScript(Connection connection, List<? extends Expression> scriptLines) throws Exception {
-      List rsList = new ArrayList();
+   public java.sql.ResultSet[] runScript(Connection connection, List<? extends Expression> scriptLines) throws Exception {
+      List<java.sql.ResultSet> rsList = new ArrayList<java.sql.ResultSet>();
       boolean feilet = false;
       int antallFeil = 0;
       int antallWarnings = 0;
@@ -255,7 +239,7 @@ public class SqlExecutor {
       } else {
          logger.info(String.format("Script completed. Statements: %d. Warnings: %d.", antallStatements, antallWarnings));
       }
-      return (ResultSet[]) rsList.toArray(new ResultSet[rsList.size()]);
+      return rsList.toArray(new java.sql.ResultSet[rsList.size()]);
    }
 
     static boolean isWarning(SQLException e) {
@@ -268,17 +252,17 @@ public class SqlExecutor {
         return msg.contains("02443") || msg.contains("02275") || msg.contains("00955") || msg.contains("01418") || msg.contains("00942");
     }
 
-    private static CallableStatement callCallable(String scriptLine, Connection connection, List rsList) throws SQLException {
+    private static CallableStatement callCallable(String scriptLine, Connection connection, List<java.sql.ResultSet> rsList) throws SQLException {
       //prøver å ta hensyn til at det kan returneres flere Resultset fra ett storedProcedure kall.
       logger.info("Procedure: " + scriptLine);
       CallableStatement callablStatement = connection.prepareCall(scriptLine);
       boolean isResultset = callablStatement.execute();
       if( isResultset ) {
-         ResultSet rs = callablStatement.getResultSet();
+          java.sql.ResultSet rs = callablStatement.getResultSet();
          rsList.add(rs);
       }
       while( callablStatement.getMoreResults() ) {
-         ResultSet rs = callablStatement.getResultSet();
+          java.sql.ResultSet rs = callablStatement.getResultSet();
          rsList.add(rs);
       }
       JDBCHelper.close(callablStatement);
@@ -308,8 +292,8 @@ public class SqlExecutor {
         executor.failOnWarning = "true".equals(System.getProperty("FailOnWarning", "false"));
 
 
-        for (int i = 0; i < args.length; i++) {
-            executor.runScript(args[i]);
+        for (String arg : args) {
+            executor.runScript(arg);
         }
     }
 
