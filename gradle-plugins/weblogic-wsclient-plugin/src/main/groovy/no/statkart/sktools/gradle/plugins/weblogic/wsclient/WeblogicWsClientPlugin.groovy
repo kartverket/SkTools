@@ -137,15 +137,11 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
     private AbstractCompile createCompileTask(final WeblogicWsClientConvention wsClientConvention, final SourceSet sourceSet, final JavaPluginConvention javaConvention) {
         final Project project = wsClientConvention.project
 
-        final AbstractCompile compile;
-        final int gradleSubersion = Integer.parseInt(project.getGradle().getGradleVersion().split("\\.")[1]);
-        if (gradleSubersion > 5 ) {
-            compile = (AbstractCompile) project.tasks.replace(WeblogicWsClientPlugin.GEN_CLIENT_TASK_NAME, WeblogicWsClientCompileTaskImpl.class)  //todo: endre bruk av replace() til create()
-        } else {
-            compile = (AbstractCompile) project.tasks.add(WeblogicWsClientPlugin.GEN_CLIENT_TASK_NAME, WeblogicWsClientCompileTaskImpl.class)  //todo: remove backward compability with Gradle 1.5
-        }
-
-        compile.setDescription(String.format("Compiles the %s.%s.", sourceSet.name, 'wsclient'));
+        HashMap<String, Object> args = new HashMap<String, Object>();
+        args.put(Task.TASK_TYPE, WeblogicWsClientCompileTaskImpl.class);
+        args.put(Task.TASK_OVERWRITE, "false");
+        args.put(Task.TASK_DESCRIPTION, String.format("Compiles the %s.%s.", sourceSet.name, 'wsclient'));
+        final AbstractCompile compile = (AbstractCompile) project.task(args, WeblogicWsClientPlugin.GEN_CLIENT_TASK_NAME);
 
         ConventionMapping conventionMapping = compile.conventionMapping
         conventionMapping.map("classpath", new Callable<Object>() {

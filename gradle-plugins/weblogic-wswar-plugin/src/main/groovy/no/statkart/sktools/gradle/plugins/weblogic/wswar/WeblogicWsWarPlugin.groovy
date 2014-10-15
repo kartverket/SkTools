@@ -110,15 +110,13 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
             project.getTasks().getByName(JavaBasePlugin.CHECK_TASK_NAME).dependsOn(JavaPlugin.TEST_TASK_NAME);
         }
 
-        final WeblogicWarTask war;
-        final int gradleSubersion = Integer.parseInt(project.getGradle().getGradleVersion().split("\\.")[1]);
-        if (gradleSubersion > 5 ) {
-            war = project.getTasks().replace(WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME, WeblogicWarTask.class);  //todo: endre bruk av replace() til create()
-        } else {
-            war = project.getTasks().add(WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME, WeblogicWarTask.class); //todo: remove backward compability with Gradle 1.5
-        }
+        HashMap<String, Object> args = new HashMap<String, Object>();
+        args.put(Task.TASK_TYPE, WeblogicWarTask.class);
+        args.put(Task.TASK_OVERWRITE, "false");
+        args.put(Task.TASK_DESCRIPTION, "Assembles a war archive containing the main classes.");
 
-        war.setDescription("Assembles a war archive containing the main classes.");
+        final WeblogicWarTask war = (WeblogicWarTask) project.task(args, WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME);
+
         war.setAppendix(WeblogicWsWarPlugin.WEBLOGIC_SOURCE_SET_NAME)
         war.setGroup(BasePlugin.BUILD_GROUP);
 

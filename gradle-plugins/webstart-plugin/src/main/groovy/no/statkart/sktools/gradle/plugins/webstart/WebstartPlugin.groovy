@@ -5,6 +5,7 @@ import org.apache.commons.lang.StringUtils
 import org.gradle.api.Action
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.file.CopySpec
 import org.gradle.api.file.FileCopyDetails
 import org.gradle.api.plugins.WarPlugin
@@ -53,13 +54,11 @@ class WebstartPlugin implements Plugin<Project> {
 
     private static JarSigner configureJarSigner(Project project, ClientConfiguration clientConfiguration) {
 
-        final JarSigner jarSigner;
-        final int gradleSubersion = Integer.parseInt(project.getGradle().getGradleVersion().split("\\.")[1]);
-        if (gradleSubersion > 5 ) {
-            jarSigner = project.tasks.replace(makeTaskName(SIGN_TASK_PREFIX, clientConfiguration.name, null), JarSigner.class)  //todo: endre bruk av replace() til create()
-        } else {
-            jarSigner = project.tasks.add(makeTaskName(SIGN_TASK_PREFIX, clientConfiguration.name, null), JarSigner.class) //todo: remove backward compability with Gradle 1.5
-        }
+        HashMap<String, Object> args = new HashMap<String, Object>();
+        args.put(Task.TASK_TYPE, JarSigner.class);
+        args.put(Task.TASK_OVERWRITE, "false");
+
+        final JarSigner jarSigner = (JarSigner) project.task(args, makeTaskName(SIGN_TASK_PREFIX, clientConfiguration.name, null));
 
         jarSigner.jarFilesToSign = clientConfiguration.jarDependencies
         jarSigner.conventionMapping.certificateFile = { clientConfiguration?.signingConfiguration?.keystore }
@@ -74,13 +73,11 @@ class WebstartPlugin implements Plugin<Project> {
 
     private static WebstartTask configureGenJnlp(Project project, ClientConfiguration clientConfiguration, JarSigner jarSigner) {
 
-        final WebstartTask webstartTask;
-        final int gradleSubersion = Integer.parseInt(project.getGradle().getGradleVersion().split("\\.")[1]);
-        if (gradleSubersion > 5 ) {
-            webstartTask = project.tasks.replace(makeTaskName(WEBSTART_TASK_PREFIX, clientConfiguration.name, WEBSTART_TASK_POSTFIX), WebstartTask.class)  //todo: endre bruk av replace() til create()
-        } else {
-            webstartTask = project.tasks.add(makeTaskName(WEBSTART_TASK_PREFIX, clientConfiguration.name, WEBSTART_TASK_POSTFIX), WebstartTask.class) //todo: remove backward compability with Gradle 1.5
-        }
+        HashMap<String, Object> args = new HashMap<String, Object>();
+        args.put(Task.TASK_TYPE, WebstartTask.class);
+        args.put(Task.TASK_OVERWRITE, "false");
+
+        final WebstartTask webstartTask = (WebstartTask) project.task(args, makeTaskName(WEBSTART_TASK_PREFIX, clientConfiguration.name, WEBSTART_TASK_POSTFIX));
 
         webstartTask.jarResources jarSigner
         webstartTask.setJnlpConfigurations(clientConfiguration.jnlpConfigurations)

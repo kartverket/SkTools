@@ -108,15 +108,12 @@ public class FilterResourcesPlugin implements Plugin<ProjectInternal> {
 
 
                 //oppretter copy task for filtrering...
-                final ProcessResources filterResourcesTask;
-                final int gradleSubersion = Integer.parseInt(project.getGradle().getGradleVersion().split("\\.")[1]);
-                if (gradleSubersion > 5 ) {
-                    filterResourcesTask = project.getTasks().replace(filterResourcesTaskName, ProcessResources.class); //todo: endre bruk av replace() til create()
-                } else {
-                    filterResourcesTask = project.getTasks().add(filterResourcesTaskName, ProcessResources.class); //todo: remove backward compability with Gradle 1.5
-                }
+                HashMap<String, Object> args = new HashMap<String, Object>();
+                args.put(Task.TASK_TYPE, ProcessResources.class);
+                args.put(Task.TASK_OVERWRITE, "false");
+                args.put(Task.TASK_DESCRIPTION, String.format("Filters the %s resources for filtering.", sourceSet.getName()));
 
-                filterResourcesTask.setDescription(String.format("Filters the %s resources for filtering.", sourceSet.getName()));
+                final ProcessResources filterResourcesTask = (ProcessResources) project.task(args, filterResourcesTaskName);
 
                 filterResourcesTask.from(new Callable<Object>() {
                     public Object call() throws Exception {

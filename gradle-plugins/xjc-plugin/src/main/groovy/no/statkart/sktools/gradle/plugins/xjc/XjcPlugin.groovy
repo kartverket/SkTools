@@ -140,14 +140,11 @@ class XjcPlugin implements Plugin<ProjectInternal> {
                     }
 
                     private Task createCompileXjcTaskForSchema(XjcSourceDirectorySet xjcSchema, Task xjcTask, File buildOutputDir) {
-                        final AbstractCompile compile;
-                        final String taskName = xjcSchema.config.compileTaskName;
-                        final int gradleSubersion = Integer.parseInt(project.getGradle().getGradleVersion().split("\\.")[1]);
-                        if (gradleSubersion > 5 ) {
-                            compile = (AbstractCompile) project.tasks.replace(taskName, XjcCompileTaskImpl.class)  //todo: endre bruk av replace() til create()
-                        } else {
-                            compile = (AbstractCompile) project.tasks.add(taskName, XjcCompileTaskImpl.class) //todo: remove backward compability with Gradle 1.5
-                        }
+                        HashMap<String, Object> args = new HashMap<String, Object>();
+                        args.put(Task.TASK_TYPE, XjcCompileTaskImpl.class);
+                        args.put(Task.TASK_OVERWRITE, "false");
+
+                        final AbstractCompile compile = (AbstractCompile) project.task(args, xjcSchema.config.compileTaskName);
 
                         javaBasePlugin.configureForSourceSet(sourceSet, compile);
 
