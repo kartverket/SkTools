@@ -73,7 +73,7 @@ class ClientConfiguration {
         return name
     }
 
-    public void sign(Map properties = [], Closure config = null) {
+    public void sign(Map properties = [:], Closure config = null) {
         signingConfiguration = new SigningConfiguration(project)
 
         ConfigureUtil.configureByMap(properties, signingConfiguration)
