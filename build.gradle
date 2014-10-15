@@ -37,10 +37,8 @@ project.ext.libraries = [
 
         log4j: "log4j:log4j:${libVersion('log4j', '1.2.17')}@jar",
 
-        groovy: dependencies.localGroovy(),
-
         // Testing
-        testng: 'org.testng:testng:6.8.7@jar',
+        testng: 'org.testng:testng:6.8.8@jar',
         hsqldb: 'org.hsqldb:hsqldb:2.2.8',
 ]
 
