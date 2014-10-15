@@ -14,7 +14,7 @@ class XjcTestutilFilewriter extends AbstractTestutilFilewriter {
      * targetNamespace="http://sktools.statkart.no/test"
      */
     public static Collection<File> writeSimpleSchema(ProjectHelper projectHelper, String targetFilePath) {
-        return writeSimpleSchema(projectHelper, targetFilePath, [])
+        return writeSimpleSchemaImpl(projectHelper, targetFilePath, [])
     }
 
     /**
@@ -22,7 +22,7 @@ class XjcTestutilFilewriter extends AbstractTestutilFilewriter {
      * targetNamespace="http://sktools.statkart.no/test"
      */
     public static Collection<File> writeSimpleSchemaWithGdoc(ProjectHelper projectHelper, String targetFilePath) {
-        return writeSimpleSchema(projectHelper, targetFilePath, [gdoc: true])
+        return writeSimpleSchemaImpl(projectHelper, targetFilePath, [gdoc: true])
     }
 
     /**
@@ -60,7 +60,7 @@ class XjcTestutilFilewriter extends AbstractTestutilFilewriter {
 
 
 
-    private static Collection<File> writeSimpleSchema(ProjectHelper projectHelper, String targetFilePath, def args) {
+    private static Collection<File> writeSimpleSchemaImpl(ProjectHelper projectHelper, String targetFilePath, def args) {
         ArrayList<File> generatedFiles = new ArrayList<File>()
 
         def extensionBindingPrefixes = []
