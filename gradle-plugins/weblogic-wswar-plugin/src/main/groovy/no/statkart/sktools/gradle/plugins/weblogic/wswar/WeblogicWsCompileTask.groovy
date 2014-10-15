@@ -118,11 +118,11 @@ class WeblogicWsCompileTask extends AbstractCompile implements WeblogicTaskInter
         return spec.getCompileOptions();
     }
 
-    public org.gradle.api.internal.tasks.compile.Compiler<WeblogicCompileSpec> getCompiler() {
+    public org.gradle.language.base.internal.compile.Compiler<WeblogicCompileSpec> getCompiler() {
         return compiler;
     }
 
-    public void setCompiler(org.gradle.api.internal.tasks.compile.Compiler<WeblogicCompileSpec> compiler) {
+    public void setCompiler(org.gradle.language.base.internal.compile.Compiler<WeblogicCompileSpec> compiler) {
         this.compiler = compiler;
     }
 

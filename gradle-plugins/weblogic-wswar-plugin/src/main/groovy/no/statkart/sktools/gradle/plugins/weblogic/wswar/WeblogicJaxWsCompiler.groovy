@@ -15,7 +15,7 @@ import org.gradle.api.file.FileCollection
  *
  * @author Leif Lislegård
  */
-class WeblogicJaxWsCompiler implements org.gradle.api.internal.tasks.compile.Compiler<DefaultWeblogicCompileSpec>, Serializable {
+class WeblogicJaxWsCompiler implements org.gradle.language.base.internal.compile.Compiler<DefaultWeblogicCompileSpec>, Serializable {
     private static final Logger logger = LoggerFactory.getLogger(WeblogicJaxWsCompiler.class)
     private static final String WEBLOGIC_CLASSPATH_ID = "weblogic_classpath_id"
     private static final String JWSC_CLASSPATH_ID = "jwsc_classpath_id"

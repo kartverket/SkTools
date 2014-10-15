@@ -1,20 +1,20 @@
-@rem
-@rem SETTER ENVIRONMENT VARIABLE FOR PROSJEKT
-@rem
+:
+: SETTER ENVIRONMENT VARIABLE FOR PROSJEKT
+:
 
 @echo off
 @mode con codepage select=865
 @mode con cols=180 lines=3000
 
-rem Setter hovedkatalog for prosjektet. PROJECT_ROOT inneholder '\' til slutt derfor må det stå en '.' til slutt
+: Setter hovedkatalog for prosjektet. PROJECT_ROOT inneholder '\' til slutt derfor må det stå en '.' til slutt
 rem %~dp0 is name of current script under NT
 set PROJECT_ROOT=%~dp0.
 
-rem les inn JAVA_HOME, ANT_HOME, MAVEN_HOME og andre maskin/bruker spesifike settings
+: leser inn bruker-spesifike settings
 if exist setEnv_personal.cmd call setEnv_personal.cmd
 
 
-rem Java Setup:
+: Java Setup
 @echo JAVA_HOME=%JAVA_HOME%
 if not "%JAVA_HOME%"=="" goto CONFIGURE_JAVA_HOME
   @echo   JAVA_HOME environment variable er ikke satt. Har du glem å sette den i setEnv_personal.cmd?
@@ -25,7 +25,7 @@ if not "%JAVA_HOME%"=="" goto CONFIGURE_JAVA_HOME
 :END_JAVA_HOME
 
 
-rem Gradle Setup:
+: Gradle Setup
 @echo GRADLE_HOME=%GRADLE_HOME%
 if not "%GRADLE_HOME%"=="" goto CONFIGURE_GRADLE_HOME
   @echo   GRADLE_HOME environment variable er ikke satt. Har du glem å sette den i setEnv_personal.cmd?
@@ -37,7 +37,7 @@ if not "%GRADLE_HOME%"=="" goto CONFIGURE_GRADLE_HOME
 :END_GRADLE_HOME
 
 
-rem Groovy Setup (optional):
+: Groovy Setup (optional)
 if "%GROOVY_HOME%"=="" goto END_GROOVY_HOME
 :CONFIGURE_END_GROOVY_HOME
   set PATH=%PATH%;%GROOVY_HOME%\bin
@@ -45,7 +45,7 @@ if "%GROOVY_HOME%"=="" goto END_GROOVY_HOME
 
 
 
-rem Project Setup
+: Project Setup
 if "%ORG_GRADLE_PROJECT_sktools_versjon%"=="" (
    for /D %%P in (%PROJECT_ROOT%) do (
       set ORG_GRADLE_PROJECT_sktools_versjon=%%~nxP
@@ -55,7 +55,7 @@ if "%ORG_GRADLE_PROJECT_sktools_versjon%"=="" (
 
 
 
-rem Weglogic Setup
+: Weglogic Setup
 if "%WEBLOGIC_HOME%"=="" (
   @echo   WEBLOGIC_HOME environment variable er ikke satt. Har du glem å sette den i setEnv_personal.cmd?
   set ERROR=true
@@ -66,7 +66,7 @@ if "%WEBLOGIC_VERSION%"=="" (
 )
 
 
-rem Maven Repo & Nexus Setup
+: Maven Repo & Nexus Setup
 if "%MAVEN_REPO%"=="" (
    @echo Setter std Maven Repository for utvikling [felles]
    set MAVEN_REPO=http://nexus.statkart.no:8090/nexus/content/groups/public/

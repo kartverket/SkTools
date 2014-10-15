@@ -172,15 +172,14 @@ subprojects { Project project ->
                 def filterTask = task("filter${scopeName}Resources") {
                     inputs.dir(unfilteredPropertiesDir)
 
-                    @org.gradle.api.tasks.Input
-                    Map<String, Object> filterProperties = project.filterProperties
+                    inputs.properties(project.filterProperties)
                     outputs.dir(filteredResourcesDir)
                     doLast {
                         delete(filteredResourcesDir);
                         copy {
                             into(filteredResourcesDir)
                             from(unfilteredPropertiesDir)
-                            filter(org.apache.tools.ant.filters.ReplaceTokens, tokens: filterProperties)
+                            filter(org.apache.tools.ant.filters.ReplaceTokens, tokens: project.filterProperties)
                         }
                         ant.touch() { fileset(dir: filteredResourcesDir)}
                     }

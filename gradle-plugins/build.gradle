@@ -28,11 +28,11 @@ groovy.lang.Closure findDemoDirs = { project ->
 //task som eksekverer alle demo-prosjekter som evt måtte finnes
 task('testDemos') {
     project.tasks['test'].dependsOn it //part of test
-    
-    
-    int demoCount
-    findDemoDirs(project).each { values ->
-        demoCount++
+
+
+    final demoDirData = findDemoDirs(project)
+
+    demoDirData.eachWithIndex { def values, int demoCount ->
 
         def cleanDemoTask = project.task("cleanDemo$demoCount", type: GradleBuild) {
             tasks = ['clean']
@@ -81,7 +81,7 @@ task('testDemos') {
     }
     
     doLast {
-        println "\n...${demoCount} demos executed!"
+        println "\n...${demoDirData.size()} demos executed!"
     }
 }
 
