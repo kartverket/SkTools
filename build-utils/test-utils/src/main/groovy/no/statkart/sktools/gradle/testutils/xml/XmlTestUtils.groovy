@@ -36,7 +36,7 @@ class XmlTestUtils {
     }
 
     public static XmlSlurper buildXmlSlurper(Map entityFiles) {
-        XmlSlurper slurper = new XmlSlurper()
+        XmlSlurper slurper = new XmlSlurper(true, true, true) //allowDocTypeDeclaration=true for html documents
         slurper.setEntityResolver(new TestEntityResolver(entityFiles))
 
         return slurper
