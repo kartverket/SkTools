@@ -63,16 +63,6 @@ class WsDocGenConvention implements Serializable {
 
 
 
-
-    /**
-     * @depricated since 1.0 - bruk heller {@link #wsDoc(Closure)}.
-     */
-    def wsdlDoc(Closure closure) {
-        println 'wsdlDoc(Closure) is now depricated - use wsDoc(Closure) instead!'
-        return wsdlDoc(closure)
-    }
-
-
     public boolean equals(Object obj) {
         return EqualsBuilder.reflectionEquals(this, obj);
     }
