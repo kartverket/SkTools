@@ -36,7 +36,14 @@ class XmlTestUtils {
     }
 
     public static XmlSlurper buildXmlSlurper(Map entityFiles) {
-        XmlSlurper slurper = new XmlSlurper(true, true, true) //allowDocTypeDeclaration=true for html documents
+        XmlSlurper slurper;
+        if (GroovySystem.version.startsWith('1.8.')) {
+            slurper = XmlSlurper.class.newInstance(true, true) //allowDocTypeDeclaration=true for html documents
+        } else if (GroovySystem.version.startsWith('2.')) {
+            slurper = XmlSlurper.class.newInstance(true, true, true) //allowDocTypeDeclaration=true for html documents
+        } else {
+            throw new RuntimeException("Legg til opprettelse av XmlSlurper for Groovy ${GroovySystem.version}")
+        }
         slurper.setEntityResolver(new TestEntityResolver(entityFiles))
 
         return slurper
