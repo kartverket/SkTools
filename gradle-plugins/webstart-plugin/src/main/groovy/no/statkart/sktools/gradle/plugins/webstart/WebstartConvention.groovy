@@ -44,8 +44,8 @@ class ClientConfiguration {
     private final String name;
 
     private SigningConfiguration signingConfiguration
-    private Map<String, String> manifestAttributes = new LinkedHashMap<String, String>();
-    private List<JnlpConfiguration> jnlpConfigurations = new ArrayList<JnlpConfiguration>();
+    private final Map<String, String> manifestAttributes = new LinkedHashMap<String, String>();
+    private final List<JnlpConfiguration> jnlpConfigurations = new ArrayList<JnlpConfiguration>();
     private ConfigurableFileCollection jarDependencies
     private Closure mainJar = {
         project.logger.debug "Treating ${it.name} as main jar in ${name}..." //default så betraktes alle filer som main jars i #jarDependencies...
@@ -94,7 +94,7 @@ class ClientConfiguration {
 
     public void jnlp(Closure config) {
         JnlpConfiguration jnlpConfiguration = new JnlpConfiguration(project)
-        jnlpConfiguration.configure config
+        jnlpConfiguration.configure(config)
         jnlpConfigurations.add(jnlpConfiguration)
     }
 
@@ -188,7 +188,7 @@ class SigningConfiguration {
 }
 
 class JnlpConfiguration implements Serializable {
-    private final static long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     protected final transient Project project
 
@@ -307,18 +307,18 @@ class JnlpConfiguration implements Serializable {
         return this;
     }
 
-    boolean equals(o) {
-        return EqualsBuilder.reflectionEquals(this, o);
+    public boolean equals(Object other) {
+        return EqualsBuilder.reflectionEquals(this, other);
 
     }
 
-    int hashCode() {
+    public int hashCode() {
         return HashCodeBuilder.reflectionHashCode(this);
     }
 }
 
 class ApplicationConfiguration implements Serializable {
-    private final static long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
     protected final transient JnlpConfiguration jnlp;
 
     protected String mainClass;
@@ -340,11 +340,11 @@ class ApplicationConfiguration implements Serializable {
         return this;
     }
 
-    boolean equals(o) {
-        return EqualsBuilder.reflectionEquals(this, o);
+    public boolean equals(Object other) {
+        return EqualsBuilder.reflectionEquals(this, other);
     }
 
-    int hashCode() {
+    public int hashCode() {
         return HashCodeBuilder.reflectionHashCode(this);
     }
 }
@@ -353,7 +353,7 @@ class ApplicationConfiguration implements Serializable {
  * Represents the {@code <resource>} elements in a jnlp file.
  */
 class ResourcesConfiguration implements Serializable {
-    private final static long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
     protected final transient JnlpConfiguration jnlp;
 
     protected final Map<String, Object> systemProperties = new LinkedHashMap();
@@ -433,17 +433,17 @@ class ResourcesConfiguration implements Serializable {
         return this;
     }
 
-    boolean equals(o) {
-        return EqualsBuilder.reflectionEquals(this, o);
+    public boolean equals(Object other) {
+        return EqualsBuilder.reflectionEquals(this, other);
     }
 
-    int hashCode() {
+    public int hashCode() {
         return HashCodeBuilder.reflectionHashCode(this);
     }
 }
 
 abstract class RuntimeConfiguration {
-    private final static long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
     def final transient ResourcesConfiguration resources;
 
     /**
@@ -458,7 +458,7 @@ abstract class RuntimeConfiguration {
  * Represents the {@code <jfx:javafx-runtime>} elements in a jnlp file
  */
 class JavaFxRuntimeConfiguration extends RuntimeConfiguration implements Serializable {
-    private final static long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
     String version;
     String href = null;   //optional
 
@@ -478,11 +478,11 @@ class JavaFxRuntimeConfiguration extends RuntimeConfiguration implements Seriali
     }
 
 
-    boolean equals(o) {
-        return EqualsBuilder.reflectionEquals(this, o);
+    public boolean equals(Object other) {
+        return EqualsBuilder.reflectionEquals(this, other);
     }
 
-    int hashCode() {
+    public int hashCode() {
         return HashCodeBuilder.reflectionHashCode(this);
     }
 }
@@ -491,7 +491,7 @@ class JavaFxRuntimeConfiguration extends RuntimeConfiguration implements Seriali
  * Represents the {@code <j2se>} elements in a jnlp file
  */
 class JavaRuntimeConfiguration extends RuntimeConfiguration implements Serializable {
-    private final static long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
     String version;
     String href = null;   //optional
     /** initial-heap-size   */
@@ -530,11 +530,11 @@ class JavaRuntimeConfiguration extends RuntimeConfiguration implements Serializa
         return this;
     }
 
-    boolean equals(o) {
-        return EqualsBuilder.reflectionEquals(this, o);
+    public boolean equals(Object other) {
+        return EqualsBuilder.reflectionEquals(this, other);
     }
 
-    int hashCode() {
+    public int hashCode() {
         return HashCodeBuilder.reflectionHashCode(this);
     }
 }

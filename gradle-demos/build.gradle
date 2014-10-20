@@ -6,7 +6,7 @@ task runDemos(type: GradleBuild) {
     tasks = ['runDemos']
 
     doFirst {
-        if (gradle.gradleVersion > '1.0') {
+        if (GradleVersion.version('1.0').compareTo(GradleVersion.current()) < 0) {
 //            startParameter.currentDir = project.file('gradle-1.0')
             dir = project.file('gradle-1.0')
         } else {

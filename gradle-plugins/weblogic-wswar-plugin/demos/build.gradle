@@ -22,7 +22,7 @@ libraries.weblogic =  fileTree(dir:"${WEBLOGIC_HOME}", includes:[
 
 
 
-assert gradle.gradleVersion == '1.0' || gradle.gradleVersion >= '1.0-rc-2'
+assert GradleVersion.version('1.2').compareTo(GradleVersion.current()) <= 0 //lowest gradle version supported
 
 //innkobling av plugin jar filer for gradle byggesystem
 buildscript {

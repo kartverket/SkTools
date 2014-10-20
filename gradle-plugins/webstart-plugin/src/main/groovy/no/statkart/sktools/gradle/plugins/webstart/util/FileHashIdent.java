@@ -10,7 +10,7 @@ import java.security.MessageDigest;
  * Helper class for identification and maintaining hash codes of files.
  */
 public class FileHashIdent implements Serializable {
-    private final static long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     private transient File file;
     private String hash;
@@ -59,7 +59,7 @@ public class FileHashIdent implements Serializable {
             try {
                 return this.hash().equals(that.hash());
             } catch (Exception e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                e.printStackTrace();
             }
         }
         return false;
@@ -70,7 +70,7 @@ public class FileHashIdent implements Serializable {
         try {
             return hash().hashCode();
         } catch (Exception e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            e.printStackTrace();
             return 0;
         }
     }

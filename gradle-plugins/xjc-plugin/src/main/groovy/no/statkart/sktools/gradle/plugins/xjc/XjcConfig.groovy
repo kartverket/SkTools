@@ -12,7 +12,7 @@ import org.gradle.api.tasks.SourceSet
  * @author Leif Lislegård
  */
 class XjcConfig implements Serializable {
-    private final static long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     /*
      * For lovlige parametere se {@link com.sun.tools.xjc.addon.statkart.ListGenPlugin#parseArgument(com.sun.tools.xjc.Options, String[], int)
@@ -30,7 +30,7 @@ class XjcConfig implements Serializable {
     protected transient final XjcSourceDirectorySet source;
 
     protected Collection<String> includes;
-    protected def xjcOptions = [][] as HashMap
+    protected Map<String, Map> xjcOptions = [:] as HashMap
 
 
     XjcConfig(XjcSourceDirectorySet schema, SourceSet sourceSet) {
@@ -43,7 +43,7 @@ class XjcConfig implements Serializable {
 
 
 
-    XjcSourceDirectorySet includes(String... patterns) {
+    XjcConfig includes(String... patterns) {
         if (includes == null) {
             includes = new ArrayList<String>();
         }
@@ -122,10 +122,10 @@ class XjcConfig implements Serializable {
     }
 
 
-    XjcSourceDirectorySet configure(Closure closure) {
+    XjcConfig configure(Closure closure) {
         closure.setDelegate(this)
         closure.resolveStrategy = Closure.DELEGATE_FIRST
-        closure()
+        closure.run()
         return this
     }
 

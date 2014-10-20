@@ -104,7 +104,7 @@ public class WSDocProcessor extends AbstractProcessor {
             docBuilder = docFactory.newDocumentBuilder();
         } catch (ParserConfigurationException e) {
             processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, String.format("Feil ved opprettelse av DOM: %s ", e.getMessage()));
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            e.printStackTrace();
         }
 
         indexXsltFilePath = processingEnv.getOptions().get("indexXslt");
@@ -263,7 +263,7 @@ public class WSDocProcessor extends AbstractProcessor {
         try {
             printDocument(document, System.out);
         } catch (Exception e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            e.printStackTrace();
         }
     }
 

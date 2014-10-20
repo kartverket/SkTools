@@ -37,7 +37,7 @@ class WebstartTask extends ConventionTask {
     public void jnlp(Closure config) {
         def jnlpConfiguration = new JnlpConfiguration(project)
         jnlpConfiguration.configure(config)
-        jnlpConfigurations.add(jnlpConfiguration)
+        getJnlpConfigurations().add(jnlpConfiguration)
     }
 
     @InputFiles
@@ -63,7 +63,7 @@ class WebstartTask extends ConventionTask {
         return jnlpConfigurations
     }
 
-    protected void setJnlpConfigurations(List<JnlpConfiguration> jnlpConfigurations) {
+    void setJnlpConfigurations(List<JnlpConfiguration> jnlpConfigurations) {
         this.jnlpConfigurations = jnlpConfigurations
     }
 
@@ -88,7 +88,7 @@ class WebstartTask extends ConventionTask {
     @OutputFiles
     FileCollection getJnlpFiles() {
         project.files({
-            jnlpConfigurations.collect {
+            getJnlpConfigurations().collect {
                 new File(getDestinationDir(), it.jnlpFilename)
             }
         })
@@ -96,7 +96,7 @@ class WebstartTask extends ConventionTask {
 
     @TaskAction
     public void generate() {
-        jnlpConfigurations.each {
+        getJnlpConfigurations().each {
             createJnlp(it)
         }
     }

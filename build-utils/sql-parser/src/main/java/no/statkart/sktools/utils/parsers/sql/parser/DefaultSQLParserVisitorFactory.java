@@ -77,7 +77,7 @@ public class DefaultSQLParserVisitorFactory extends AbstractParserVisitorFactory
                         try {
                             current = reader.read();
                         } catch (IOException e) {
-                            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                            e.printStackTrace();
                         }
 
                         switch (current) {

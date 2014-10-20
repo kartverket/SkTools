@@ -1,3 +1,4 @@
+assert GradleVersion.version('1.2').compareTo(GradleVersion.current()) <= 0 //lowest gradle version supported
 
 allprojects {
     apply plugin: 'idea'

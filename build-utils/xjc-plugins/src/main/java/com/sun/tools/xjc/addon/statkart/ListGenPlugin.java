@@ -169,7 +169,7 @@ public class ListGenPlugin extends com.sun.tools.xjc.Plugin {
                 }
             }
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            e.printStackTrace();
         }
 
 
