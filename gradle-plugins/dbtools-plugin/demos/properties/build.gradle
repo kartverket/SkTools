@@ -5,13 +5,6 @@ def libraries = [
         drivers: ["com.oracle:ojdbc6:11.2.0.4.0@jar"]
 ]
 
-ext.username = 'BRUKER1'
-ext.password = 'BRUKER1'
-
-//mandatory, required values for project
-project.ext.set 'oracle_db_host', 'localhost'
-project.ext.set 'oracle_db_port', '1521'
-project.ext.set 'oracle_db_sid', '<YOUR_SID>'
 
 /**
  * SKTOOLS-32
@@ -43,8 +36,8 @@ configureDatabasePlugin {
         properties = [
                 dynamic: 'initialValue',
 
-                username: project.username,
-                password: project.password,
+                username: project.properties.get('username', 'BRUKER1'),
+                password: project.properties.get('password', 'BRUKER1'),
         ]
 
         //SKTOOLS-32

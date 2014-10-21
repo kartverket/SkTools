@@ -5,19 +5,9 @@ def libraries = [
         drivers: ["com.oracle:ojdbc6:11.2.0.4.0@jar"]
 ]
 
-ext.username = 'BRUKER1'
-ext.password = 'BRUKER1'
-
 
 //see DbtoolsConvention#ConfigureDatabasePlugin
 configureDatabasePlugin {
-
-    //mandatory, required values
-    project.ext.set 'oracle_db_host', 'localhost'
-    project.ext.set 'oracle_db_port', '1521'
-    project.ext.set 'oracle_db_sid', '<YOUR_SID>'
-
-
     useDrivers libraries.drivers
 
     toolset( name:'main', type:'oracle', prefix:'') {
@@ -26,8 +16,8 @@ configureDatabasePlugin {
         url = "jdbc:oracle:thin:@${project.ext.oracle_db_host}:${project.ext.oracle_db_port}:${project.ext.oracle_db_sid}"
 
         properties = [
-                username: project.username,
-                password: project.password,
+                username: project.properties.get('username', 'BRUKER1'),
+                password: project.properties.get('password', 'BRUKER1'),
         ]
     }
 
