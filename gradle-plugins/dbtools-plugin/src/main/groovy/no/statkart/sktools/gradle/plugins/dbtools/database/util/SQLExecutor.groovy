@@ -40,7 +40,7 @@ class SQLExecutor {
         waitForConnectionRate(15)
 
         def sql = Sql.newInstance(specs.url, specs.username, specs.password, specs.driver)
-        println("connected to database: ${sql.connection.metaData.URL} [${sql.connection.metaData.userName}]")
+        println("connected to database: ${specs.url} [${specs.username}]")
 
         statements.each() { Statement statement ->
 
