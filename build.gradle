@@ -12,17 +12,15 @@ allprojects {
     // valgfri build katalog - kan benyttes for kompilering for flere samtidige Gradle versjoner..
     buildDir = gradle.startParameter.systemPropertiesArgs.get('buildDirName', Project.DEFAULT_BUILD_DIR_NAME)
 
-    afterEvaluate {
-        if (plugins.hasPlugin('maven')) {
-            uploadArchives.repositories.mavenDeployer {
-                repository(url: uri(REPO_UPLOAD_RELEASES)) {
-                    authentication([userName: REPO_UPLOAD_RELEASES_USERNAME, password: REPO_UPLOAD_RELEASES_PASSWORD])
-                }
+    //kobler inn standard upload repositores ved bruk av maven plugin
+    plugins.withType(MavenPlugin) {
+        uploadArchives.repositories.mavenDeployer {
+            repository(url: uri(REPO_UPLOAD_RELEASES)) {
+                authentication([userName: REPO_UPLOAD_RELEASES_USERNAME, password: REPO_UPLOAD_RELEASES_PASSWORD])
             }
         }
     }
 }
-
 
 // Optional configuration of library versions to use. (not production)
 // Values will be read from project.properties with naming convention "version.<key>"
