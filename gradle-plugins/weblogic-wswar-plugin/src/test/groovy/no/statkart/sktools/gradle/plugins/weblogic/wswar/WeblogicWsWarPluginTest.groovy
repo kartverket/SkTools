@@ -37,9 +37,7 @@ class WeblogicWsWarPluginTest {
         }
 
 
-        assert project.convention.plugins.weblogicWsWar != null
-        Assert.assertTrue(project.convention.plugins.weblogicWsWar instanceof WeblogicWsWarConvention)
-
+        assert project.plugins.hasPlugin('sktools-weblogic-wswar-plugin')
     }
 
 
@@ -204,8 +202,8 @@ class WeblogicWsWarPluginTest {
 
         //legger til mappe
         projectHelper.configureProject {
-            weblogicWsWar {
-                sourceSet.resources.srcDir 'src/other/resources'
+            sourceSets {
+                weblogic.resources.srcDir 'src/other/resources'
             }
         }
 
@@ -257,12 +255,8 @@ class WeblogicWsWarPluginTest {
 
         //konfigurerer project
         projectHelper.configureProject {
-            weblogicWsWar {
-                sourceSet.java.srcDir 'src/div/java'
-            }
-
-            //alternativ konfigurasjon via JavaPluginConvention
             sourceSets {
+                weblogic.java.srcDir 'src/div/java'
                 weblogic.java.srcDir 'src/weblogic/java2'
             }
 

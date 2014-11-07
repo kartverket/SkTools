@@ -63,9 +63,6 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
         configureConfigurations(weblogicSourceSet, javaConvention);
         configureIdea(project, weblogicSourceSet)
 
-        WeblogicWsWarConvention convention = new WeblogicWsWarConvention(javaConvention);
-        project.convention.plugins.put(WeblogicWsWarPlugin.CONVENTION_NAME, convention);
-
 
         WeblogicWsCompileTask genTask = (WeblogicWsCompileTask) configureGenTask(project, weblogicSourceSet).dependsOn(
                 project.getConfigurations().getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME), //tvinger rekompilering ved endring i weblogicClasspath
