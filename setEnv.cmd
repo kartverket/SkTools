@@ -4,7 +4,6 @@
 
 @echo off
 @mode con codepage select=865
-@mode con cols=180 lines=3000
 
 : Setter hovedkatalog for prosjektet. PROJECT_ROOT inneholder '\' til slutt derfor må det stå en '.' til slutt
 rem %~dp0 is name of current script under NT
@@ -12,6 +11,15 @@ set PROJECT_ROOT=%~dp0.
 
 : leser inn bruker-spesifike settings
 if exist setEnv_personal.cmd call setEnv_personal.cmd
+
+
+: Window title
+if "%TITLE%"=="" (
+   for /D %%P in (%PROJECT_ROOT%) do (
+      set TITLE=SktoolsKode - %%~nxP
+   )
+)
+title %TITLE%
 
 
 : Java Setup
