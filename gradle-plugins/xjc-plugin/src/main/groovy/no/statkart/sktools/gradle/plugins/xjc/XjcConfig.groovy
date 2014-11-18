@@ -25,7 +25,7 @@ class XjcConfig implements Serializable {
 
 
     public String genOutputPath //SKTOOLS-10: mulighet for konfigurering av path
-    public transient String genTaskName, compileTaskName  //SKTOOLS-10: mulighet for konfigurering av navn
+    public transient String genTaskName, compileTaskName, hookTaskName  //SKTOOLS-10: mulighet for konfigurering av navn
 
     protected transient final XjcSourceDirectorySet source;
 
@@ -39,6 +39,7 @@ class XjcConfig implements Serializable {
 
         this.genTaskName = sourceSet.getTaskName("gen", schema.getName()); //SKTOOLS-10: mulighet for konfigurering av navn
         this.compileTaskName = sourceSet.getTaskName("compile", schema.getName()); //SKTOOLS-10: mulighet for konfigurering av navn
+        this.hookTaskName = sourceSet.getTaskName("hookCompile", schema.getName());
     }
 
 

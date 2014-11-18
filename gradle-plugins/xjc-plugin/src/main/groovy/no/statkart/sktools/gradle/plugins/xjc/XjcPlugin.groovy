@@ -1,5 +1,6 @@
 package no.statkart.sktools.gradle.plugins.xjc
 
+import no.statkart.sktools.gradle.plugins.xjc.internal.XjcCompileTaskImpl
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -10,6 +11,8 @@ import org.gradle.api.initialization.dsl.ScriptHandler
 import org.gradle.api.internal.file.UnionFileCollection
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSet
+import org.gradle.api.tasks.compile.JavaCompile
+
 import java.util.concurrent.Callable
 import org.gradle.api.Action
 import org.gradle.api.internal.project.ProjectInternal
@@ -18,8 +21,6 @@ import org.gradle.api.tasks.compile.AbstractCompile
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.file.ConfigurableFileCollection
 
-import no.statkart.sktools.gradle.plugins.xjc.internal.XjcCompileTaskImpl
-import org.gradle.api.internal.ConventionMapping
 
 /**
  * Genererer JAXB java klasser basert på <code>*.xsd<code> filer. <br />
@@ -89,6 +90,10 @@ class XjcPlugin implements Plugin<ProjectInternal> {
                                 project.getConfigurations().getByName(sourceSet.getCompileConfigurationName()),
                         )
 
+                        //hook task for XjcCompile...
+                        final Task interfaceHookTask = project.tasks.create(xjcSchema.config.hookTaskName, XjcCompileTaskImpl.class)
+                        interfaceHookTask.dependsOn xjcSchema.config.compileTaskName
+
                         sourceSet.compiledBy(compileTask); //SKTOOLS-48
 
                         project.tasks[sourceSet.getCompileJavaTaskName()].dependsOn(compileTask); //javaCompile depends on this to be compiled
@@ -140,11 +145,7 @@ class XjcPlugin implements Plugin<ProjectInternal> {
                     }
 
                     private Task createCompileXjcTaskForSchema(XjcSourceDirectorySet xjcSchema, Task xjcTask, File buildOutputDir) {
-                        HashMap<String, Object> args = new HashMap<String, Object>();
-                        args.put(Task.TASK_TYPE, XjcCompileTaskImpl.class);
-                        args.put(Task.TASK_OVERWRITE, "false");
-
-                        final AbstractCompile compile = (AbstractCompile) project.task(args, xjcSchema.config.compileTaskName);
+                        final AbstractCompile compile = (AbstractCompile) project.tasks.create(xjcSchema.config.compileTaskName, JavaCompile.class);
 
                         javaBasePlugin.configureForSourceSet(sourceSet, compile);
 
@@ -162,18 +163,6 @@ class XjcPlugin implements Plugin<ProjectInternal> {
                 });
             }
         });
-
-        project.getTasks().withType(XjcCompileTaskImpl.class, new Action<XjcCompileTaskImpl>() {
-            public void execute(final XjcCompileTaskImpl compile) {
-                ConventionMapping conventionMapping = compile.getConventionMapping();
-                conventionMapping.map("dependencyCacheDir", new Callable<Object>() {
-                    public Object call() throws Exception {
-                        return javaConvention.getDependencyCacheDir();
-                    }
-                });
-            }
-        });
-
 
     }
 

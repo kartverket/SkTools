@@ -70,12 +70,15 @@ class WsDocGenPluginTest {
         projectHelper.initializeProject()
 
         Project project = projectHelper.project
-        WsDocGenConvention convention = project.getConvention().getPlugins().get(WsDocGenPlugin.CONVENTION_NAME);
+        WsDocGenConvention convention = project.getConvention().getPlugins().get(WsDocGenPlugin.CONVENTION_NAME) as WsDocGenConvention;
 
         assert convention != null
 
         assert convention.sourceSetName == 'main'
-        assert convention.genDocTaskName == "genMainWsDoc"
+
+        assert project.tasks.findByName('genWsDoc')
+        assert project.tasks.findByName('genMainWsDoc')
+        assert project.tasks.findByName('genWsDoc').dependsOn.contains('genMainWsDoc')
 
         assert convention.groups.size() == 1
         assert convention.groups[0].includes == ['**/*Bean.java']
@@ -100,7 +103,7 @@ class WsDocGenPluginTest {
 
         projectHelper.initializeProject()
 
-        WsDocGenConvention convention = project.getConvention().getPlugins().get(WsDocGenPlugin.CONVENTION_NAME);
+        WsDocGenConvention convention = project.getConvention().getPlugins().get(WsDocGenPlugin.CONVENTION_NAME) as WsDocGenConvention;
 
         assert convention.sourceSetName == 'custom'
     }

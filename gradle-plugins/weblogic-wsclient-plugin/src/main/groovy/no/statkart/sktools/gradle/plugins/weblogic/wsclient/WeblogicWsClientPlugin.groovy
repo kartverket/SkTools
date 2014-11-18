@@ -1,5 +1,6 @@
 package no.statkart.sktools.gradle.plugins.weblogic.wsclient
 
+import no.statkart.sktools.gradle.plugins.weblogic.wsclient.internal.WeblogicWsClientCompileTaskImpl
 import org.apache.commons.lang.StringUtils
 import org.gradle.api.Project
 import org.gradle.api.Plugin
@@ -14,10 +15,10 @@ import org.gradle.api.tasks.compile.AbstractCompile
 
 import org.gradle.api.plugins.BasePlugin
 import org.gradle.api.internal.ConventionMapping
+import org.gradle.api.tasks.compile.JavaCompile
 
 import java.util.concurrent.Callable
 import org.gradle.api.tasks.SourceSetContainer
-import no.statkart.sktools.gradle.plugins.weblogic.wsclient.internal.WeblogicWsClientCompileTaskImpl
 
 /**
  * Baserer seg på {@code JavaBasePlugin} og integrerer med {@code JavaPlugin} dersom denne aktiveres.
@@ -48,13 +49,15 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
         wsClientConvention.genDir = "gen/${sourceSet.name}/wsclient"
 
         def compileTask = createCompileTask(wsClientConvention, sourceSet, javaConvention)
+        def compileTaskHook = project.tasks.create("${CONVENTION_NAME}Hook", WeblogicWsClientCompileTaskImpl.class)
 
         wsClientConvention.webService.all { WebServiceConfig webService ->
             Task collectSchemaTask = createCollectSchemaTask(project, webService)
             WeblogicGenClientTask genClientSourceTask = createGenerateSourceTask(project, webService, collectSchemaTask)
-            genClientSourceTask.dependsOn weblogicProvidedConfiguration //tvinger rekompilering ved endring i classpath + weblogic jar filer.
+            genClientSourceTask.dependsOn weblogicProvidedConfiguration //tvinger up to date check (evt recompile) av weblogic avhengigheter...
 
             compileTask.source(genClientSourceTask)
+            compileTaskHook.dependsOn compileTask
         }
 
         //hekter inn genClient ved kjøring av 'resources' task.
@@ -137,11 +140,8 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
     private AbstractCompile createCompileTask(final WeblogicWsClientConvention wsClientConvention, final SourceSet sourceSet, final JavaPluginConvention javaConvention) {
         final Project project = wsClientConvention.project
 
-        HashMap<String, Object> args = new HashMap<String, Object>();
-        args.put(Task.TASK_TYPE, WeblogicWsClientCompileTaskImpl.class);
-        args.put(Task.TASK_OVERWRITE, "false");
-        args.put(Task.TASK_DESCRIPTION, String.format("Compiles the %s.%s.", sourceSet.name, 'wsclient'));
-        final AbstractCompile compile = (AbstractCompile) project.task(args, WeblogicWsClientPlugin.GEN_CLIENT_TASK_NAME);
+        final AbstractCompile compile = (AbstractCompile) project.tasks.create(GEN_CLIENT_TASK_NAME, JavaCompile.class);
+        compile.description = String.format("Compiles the %s.%s.", sourceSet.name, 'wsclient')
 
         ConventionMapping conventionMapping = compile.conventionMapping
         conventionMapping.map("classpath", new Callable<Object>() {

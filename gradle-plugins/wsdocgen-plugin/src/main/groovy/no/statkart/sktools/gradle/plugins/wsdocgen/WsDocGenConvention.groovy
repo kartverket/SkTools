@@ -18,7 +18,7 @@ class WsDocGenConvention implements Serializable {
     private static final long serialVersionUID = 1L;
     protected final transient Project project
 
-    public final static String GEN_TASK_NAME_PATTERN = "gen%s%sWsDoc"
+    public final static String GEN_TASK_NAME_PATTERN = "gen%s%sWSDoc"
 
     protected final List<Group> groups = new ArrayList<Group>()
 
@@ -28,9 +28,6 @@ class WsDocGenConvention implements Serializable {
     protected String sourceSetName;    //defaults to "main"
 
 
-    //blir dynamisk satt av Plugin
-    //todo: faktorere denne bort
-    protected String genDocTaskName
 
     WsDocGenConvention(Project project) {
         this.project = project
@@ -164,9 +161,45 @@ class Group implements Serializable {
         return this;
     }
 
-
     public boolean equals(Object obj) {
         return EqualsBuilder.reflectionEquals(this, obj);
     }
+
+//    @InputFile //not up to date when change in file
+    public File getServiceXsltFile() {
+        if (serviceXsltPath) {
+            return project.file(serviceXsltPath)
+        } else {
+            project.logger.warn("WARNING: no xslt file specified - using template for TESTING purposes..")
+            return generateTestFile(new File(project.buildDir, "Transform.xsl")) //can't write to output dir because it gets wiped when not up to date...
+        }
+    }
+
+    private File generateTestFile(File testFile) {
+        if (testFile.exists()) return testFile;
+
+        testFile.getParentFile().mkdirs()
+        testFile.createNewFile()
+
+        testFile.withWriter { def writer ->
+            this.getClass().getResourceAsStream("tasks/DefaultTransform.xsl").withReader() {
+                it.readLines().each { writer.write(it); writer.write("\n") }
+            }
+            writer.flush()
+        }
+        return testFile
+    }
+
+
+//    @Optional
+//    @InputFile //not up to date when change in file
+    File getIndexXsltFile() {
+        if (indexXsltPath) {
+            return project.file(indexXsltPath)
+        } else {
+            return null
+        }
+    }
+
 
 }

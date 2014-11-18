@@ -1,23 +1,23 @@
 package no.statkart.sktools.gradle.plugins.wsdocgen
 
-import no.statkart.sktools.gradle.plugins.wsdocgen.tasks.WsDocCompileTask
+import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.Dependency
+import org.gradle.api.file.FileCollection
+import org.gradle.api.initialization.dsl.ScriptHandler
 import org.gradle.api.internal.artifacts.publish.ArchivePublishArtifact
-
+import org.gradle.api.logging.LogLevel
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSet
+import org.gradle.api.tasks.bundling.AbstractArchiveTask
 import org.gradle.api.tasks.bundling.Zip
-import org.gradle.api.artifacts.Configuration
-import org.gradle.api.initialization.dsl.ScriptHandler
+import org.gradle.api.tasks.compile.AbstractCompile
+import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.util.GUtil
-
-import org.gradle.api.GradleException
-import org.gradle.api.internal.file.UnionFileCollection
-import org.gradle.api.file.FileCollection
-import org.gradle.api.artifacts.Dependency
 
 import java.util.concurrent.Callable
 
@@ -31,7 +31,7 @@ import java.util.concurrent.Callable
 class WsDocGenPlugin implements Plugin<Project> {
 
     final public static String CONVENTION_NAME = 'wsdoc'
-    final public static String GEN_TASK_NAME = String.format(WsDocGenConvention.GEN_TASK_NAME_PATTERN, '', '')
+    final public static String GEN_TASK_NAME = 'genWsDoc'
     final public static String ARCHIVE_TASK_NAME = 'packWsDoc'
 
 
@@ -40,18 +40,17 @@ class WsDocGenPlugin implements Plugin<Project> {
         project.apply plugin: JavaBasePlugin.class
 
         final WsDocGenConvention wsDocGenConvention = new WsDocGenConvention(project)
-        project.convention.plugins.put(WsDocGenPlugin.CONVENTION_NAME, wsDocGenConvention);
+        project.convention.plugins.put(CONVENTION_NAME, wsDocGenConvention);
 
-        //creates the task
-        Task genWsDocTask = project.task(WsDocGenPlugin.GEN_TASK_NAME)
-
+        //common super task
+        configureGenTask(project)
 
         configureArchives(wsDocGenConvention)
 
         //setting defaults if not already configured
         project.afterEvaluate {
             setConventionalDefaults(wsDocGenConvention)
-            addTasks(wsDocGenConvention, project.getTasks().getByName(WsDocGenPlugin.GEN_TASK_NAME))
+            addTasks(wsDocGenConvention)
         }
     }
 
@@ -69,7 +68,7 @@ class WsDocGenPlugin implements Plugin<Project> {
         }
 
         if (wsDocGenConvention.sourceSetName == null) {
-            JavaPluginConvention javaConvention = project.getConvention().getPlugins().get("java");
+            JavaPluginConvention javaConvention = project.getConvention().getPlugins().get("java") as JavaPluginConvention;
             SortedMap<String, SourceSet> sourceSetMap = javaConvention.getSourceSets().getAsMap();
 
             if (sourceSetMap.isEmpty()) {
@@ -91,40 +90,30 @@ class WsDocGenPlugin implements Plugin<Project> {
 
     }
 
-    private static void addTasks(final WsDocGenConvention wsDocGenConvention, Task genWsDocTask) {
+    private static void addTasks(final WsDocGenConvention wsDocGenConvention) {
         final Project project = wsDocGenConvention.project
+        final AbstractArchiveTask archiveTask = (AbstractArchiveTask) project.getTasks().getByName(ARCHIVE_TASK_NAME);
 
-        String genWsDocTaskNameForSourceSet = String.format(WsDocGenConvention.GEN_TASK_NAME_PATTERN, GUtil.toCamelCase(wsDocGenConvention.sourceSetName), '')
-        wsDocGenConvention.genDocTaskName = genWsDocTaskNameForSourceSet
 
         //samletask for alle grupper for dette source settet
-        final Task sourceSetTask = project.task(wsDocGenConvention.genDocTaskName)
-        genWsDocTask.dependsOn(genWsDocTaskNameForSourceSet)
+        final Task sourceSetTask = project.task(String.format(WsDocGenConvention.GEN_TASK_NAME_PATTERN, GUtil.toCamelCase(wsDocGenConvention.sourceSetName), ''))
+        project.getTasks().getByName(GEN_TASK_NAME).dependsOn(sourceSetTask.name)
 
 
-        JavaPluginConvention javaConvention = project.getConvention().getPlugins().get("java");
+        final JavaPluginConvention javaConvention = (JavaPluginConvention) project.getConvention().getPlugins().get("java");
         final SourceSet sourceSet = javaConvention.getSourceSets().getByName(wsDocGenConvention.sourceSetName)
-
-
 
         wsDocGenConvention.groups.eachWithIndex { Group group, int i ->
             if (group.name == null) {
                 group.name = "Group${i+1}"
             }
 
-            String taskName = String.format(WsDocGenConvention.GEN_TASK_NAME_PATTERN, GUtil.toCamelCase(wsDocGenConvention.sourceSetName), group.name)
-            WsDocCompileTask task = (WsDocCompileTask) project.task(type: WsDocCompileTask.class, taskName)
-
+            AbstractCompile task = createWsDocGenForGroupTask(group, sourceSet)
             //setting conventional properties
             task.getConventionMapping().with {
                 map("source", new Callable() {   //tildeler en dynamisk default verdi
                     public Object call() {
                         return sourceSet.getAllJava();  //default source
-                    }
-                });
-                map("docGroup", new Callable() {
-                    public Object call() {
-                        return group;
                     }
                 });
                 map("classpath", new Callable() {
@@ -140,9 +129,11 @@ class WsDocGenPlugin implements Plugin<Project> {
             }
 
             sourceSetTask.dependsOn(task)
+            archiveTask.from(task)
         }
 
     }
+
 
     public static FileCollection findPluginClasspath(final Project project) {
 
@@ -173,18 +164,83 @@ class WsDocGenPlugin implements Plugin<Project> {
     }
 
 
-    private static void configureArchives(final WsDocGenConvention wsDocGenConvention) {
-        final Project project = wsDocGenConvention.project
-
-
-        Zip zip = (Zip) project.task(type: Zip, ARCHIVE_TASK_NAME)
-        zip.setClassifier(WsDocGenPlugin.CONVENTION_NAME)
-        zip.from(project.getTasks().withType(WsDocCompileTask.class)) //legger dynamiskt til alle definerte output kataloger for 'genWsDocTask'
-
-        ArchivePublishArtifact artifact = new ArchivePublishArtifact(zip)
-        project.getArtifacts().add(Dependency.ARCHIVES_CONFIGURATION, artifact);
-
+    def void configureGenTask(Project project) {
+        project.task(GEN_TASK_NAME)
     }
 
+    private static Zip configureArchives(final WsDocGenConvention wsDocGenConvention) {
+        final Project project = wsDocGenConvention.project
+
+        Zip zip = (Zip) project.tasks.create(ARCHIVE_TASK_NAME, Zip.class)
+        zip.setClassifier(CONVENTION_NAME)
+
+        project.getArtifacts().add(Dependency.ARCHIVES_CONFIGURATION, new ArchivePublishArtifact(zip));
+        return zip;
+    }
+
+
+    def static AbstractCompile createWsDocGenForGroupTask(Group docGroup, SourceSet sourceSet) {
+        final Project project = docGroup.project
+        final String taskName = String.format(WsDocGenConvention.GEN_TASK_NAME_PATTERN, GUtil.toCamelCase(docGroup.convention.sourceSetName), docGroup.name)
+        final AbstractCompile task = project.tasks.create(taskName, JavaCompile.class)
+
+        task.inputs.file(docGroup.getServiceXsltFile())
+        task.inputs.property('lookupPath', docGroup.lookupPath)
+        if (docGroup.indexXsltPath) {
+            task.inputs.file(docGroup.getIndexXsltFile()) //optional
+        }
+
+
+        task.with {
+            logging.captureStandardOutput LogLevel.INFO
+            logging.captureStandardError LogLevel.ERROR
+
+            options.compilerArgs = [
+                    "-proc:only",  //only annotation processing is done, without any subsequent compilation.
+                    "-processor", "no.statkart.sktools.utils.wsdocgen.processor.WSDocProcessor",  //Names of the annotation processors to run. This bypasses the default discovery process.
+            ]
+
+            final FileCollection processorClasspath = findPluginClasspath(project)
+            if (processorClasspath != null) {
+                options.compilerArgs << "-processorpath"
+                options.compilerArgs << processorClasspath.asFileTree.asPath
+            } else {
+                //ok under testing
+            }
+
+            doFirst {
+                final File xsl = docGroup.getServiceXsltFile()
+                if (!xsl.exists()) {
+                    throw new Exception("xslt file not found: ${project.relativePath(xsl)}");
+                }
+
+                options.compilerArgs += [
+                        "-Axslt=${xsl}", //xslt file
+                ]
+
+                if (docGroup.lookupPath) {
+                    options.compilerArgs << "-AjavaDocLookupPath=${docGroup.lookupPath}" //lookup path
+                }
+
+                if (docGroup.getIndexXsltFile()) {
+                    options.compilerArgs << "-AindexXslt=${docGroup.getIndexXsltFile()}" //SKTOOLS-105
+                }
+
+                docGroup.includes.each {
+                    include(it)
+                }
+
+                logger.debug("Classpath for generating WsDoc: ${getClasspath().files}")
+
+            }
+
+            options.setListFiles(logger.isDebugEnabled())
+            options.setVerbose(logger.isInfoEnabled())
+        }
+
+
+
+        return task
+    }
 
 }
