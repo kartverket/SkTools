@@ -77,8 +77,8 @@ class WsDocGenPluginTest {
         assert convention.sourceSetName == 'main'
 
         assert project.tasks.findByName('genWsDoc')
-        assert project.tasks.findByName('genMainWsDoc')
-        assert project.tasks.findByName('genWsDoc').dependsOn.contains('genMainWsDoc')
+        assert project.tasks.findByName('genMainWSDoc')
+        assert project.tasks.findByName('genWsDoc').dependsOn.contains('genMainWSDoc')
 
         assert convention.groups.size() == 1
         assert convention.groups[0].includes == ['**/*Bean.java']
