@@ -1,5 +1,7 @@
 package no.statkart.sktools.gradle.plugins.weblogic.deploy
 
+import org.gradle.api.logging.Logger
+import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
@@ -12,6 +14,7 @@ import org.gradle.api.tasks.TaskAction
  * @author Tor Egil R. Strand
  */
 class WeblogicStopTask extends AbstractWeblogicDeployTask {
+    protected static final Logger logger = Logging.getLogger(WeblogicStopTask.class);
 
     @Input
     @Optional
@@ -50,4 +53,7 @@ class WeblogicStopTask extends AbstractWeblogicDeployTask {
         ant.wldeploy(args)
     }
 
+    public Logger getLogger() {
+        return logger;
+    }
 }

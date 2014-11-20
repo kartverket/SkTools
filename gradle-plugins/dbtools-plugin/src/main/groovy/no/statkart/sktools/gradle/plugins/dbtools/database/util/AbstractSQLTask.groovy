@@ -1,7 +1,8 @@
 package no.statkart.sktools.gradle.plugins.dbtools.database.util
 
-import org.gradle.api.tasks.Input
 import org.gradle.api.internal.ConventionTask
+import org.gradle.api.logging.Logger
+import org.gradle.api.tasks.Input
 
 /**
  * Task for executing av statements over JDBC.
@@ -59,6 +60,8 @@ abstract class AbstractSQLTask extends ConventionTask {
     abstract File getSqlFile();
 
     abstract void validate(); //SKTOOLS-81
+
+    public abstract Logger getLogger();
 
     protected void validateAbstractSQLTask() {
 

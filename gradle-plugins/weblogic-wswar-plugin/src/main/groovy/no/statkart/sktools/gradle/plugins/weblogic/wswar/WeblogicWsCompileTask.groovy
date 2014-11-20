@@ -6,13 +6,14 @@ import no.statkart.sktools.gradle.plugins.weblogic.compile.WeblogicCompileSpec
 import org.gradle.api.file.FileCollection
 import org.gradle.api.internal.project.ProjectInternal
 import org.gradle.api.logging.LogLevel
+import org.gradle.api.logging.Logger
+import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.Nested
+import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.WorkResult
 import org.gradle.api.tasks.compile.AbstractCompile
 import org.gradle.api.tasks.compile.CompileOptions
-import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.file.CopySpec
 
 /**
  * Task for kompilering av java-ws weblogic server implementasjon
@@ -23,6 +24,7 @@ import org.gradle.api.file.CopySpec
  * @author Leif Lislegård
  */
 class WeblogicWsCompileTask extends AbstractCompile implements WeblogicTaskInterface {
+    protected static final Logger logger = Logging.getLogger(WeblogicWsCompileTask.class);
 
     private WeblogicJaxWsCompiler compiler
     private final DefaultWeblogicCompileSpec spec = new DefaultWeblogicCompileSpec();
@@ -134,4 +136,7 @@ class WeblogicWsCompileTask extends AbstractCompile implements WeblogicTaskInter
         return weblogicClasspath;
     }
 
+    public Logger getLogger() {
+        return logger;
+    }
 }

@@ -1,11 +1,11 @@
 package no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch
 
+import org.gradle.api.logging.Logger
+import org.gradle.api.logging.Logging
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.JavaExecSpec
-
-import org.gradle.api.tasks.Input
-
-import org.gradle.api.tasks.Optional
 
 /**
  * SKTOOLS-34 - Task som gir deg siste patchversjon.
@@ -13,7 +13,10 @@ import org.gradle.api.tasks.Optional
  * @author Leif Lislegård
  * @since 1.2
  */
+@SuppressWarnings("UnnecessaryQualifiedReference")
 class AssertPatchversionTask extends DatabasePatchTask {
+    protected static final Logger logger = Logging.getLogger(AssertPatchversionTask.class);
+
 
     @Input
     String dbVersion
@@ -41,11 +44,15 @@ class AssertPatchversionTask extends DatabasePatchTask {
         }
     }
 
-    //bruker ikke denne
-    File getSqlFile() { }
+    File getSqlFile() { null /* na*/ }
 
     @Override
     void validate() {
         super.validate();
     }
+
+    public Logger getLogger() {
+        return logger;
+    }
+
 }

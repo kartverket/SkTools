@@ -2,14 +2,10 @@ package no.statkart.sktools.gradle.plugins.webstart
 
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
+import org.gradle.api.internal.ConventionTask
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.OutputFiles
-import org.gradle.api.tasks.TaskAction
-import org.gradle.api.internal.ConventionTask
+import org.gradle.api.tasks.*
 
 /**
  *
@@ -17,7 +13,7 @@ import org.gradle.api.internal.ConventionTask
  * @author Tor Egil R. Strand
  */
 class WebstartTask extends ConventionTask {
-    protected static Logger log = Logging.getLogger(WebstartTask.class);
+    protected static final Logger logger = Logging.getLogger(WebstartTask.class);
 
     private List<JnlpConfiguration> jnlpConfigurations = new ArrayList<JnlpConfiguration>();
     private final ConfigurableFileCollection jarResources;
@@ -173,5 +169,9 @@ class WebstartTask extends ConventionTask {
         }
 
         return transformerClass.newInstance()
+    }
+
+    public Logger getLogger() {
+        return logger;
     }
 }

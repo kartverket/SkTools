@@ -1,9 +1,11 @@
 package no.statkart.sktools.gradle.plugins.dbtools.database.oracle
 
+import org.gradle.api.internal.ConventionTask
+import org.gradle.api.logging.Logger
+import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
-import org.gradle.api.internal.ConventionTask
 
 /**
  * Task for kjøring av import-script for oracle baser
@@ -14,8 +16,7 @@ import org.gradle.api.internal.ConventionTask
  * @since 1.0
  */
 class OracleImportTask extends ConventionTask {
-
-
+    protected static final Logger logger = Logging.getLogger(OracleImportTask.class);
 
     @Input
     String directory
@@ -117,16 +118,22 @@ class OracleImportTask extends ConventionTask {
         }
 
         if (serr.toString().contains('ORA-') || impdb.exitValue()) {
-            println '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
-            println 'Feil under kjøring av impdp.exe:'
-            print serr
-            println '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
-            System.exit(1)
+            logger.error( new StringBuilder()
+                    .append("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                    .append("\n Exception during impdp:")
+                    .append("\n").append(serr)
+                    .append("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                    .toString()
+            );
+            throw new Exception("Exception during impdp. See log for details.");
         }
 
+        logger.lifecycle("...oracle import OK")
+    }
 
-        println '...oracle import OK'
-        print sout
+
+    public Logger getLogger() {
+        return logger;
     }
 
 }

@@ -8,11 +8,11 @@ import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.CopySpec
 import org.gradle.api.file.FileCopyDetails
+import org.gradle.api.logging.Logger
+import org.gradle.api.logging.Logging
 import org.gradle.api.plugins.WarPlugin
 import org.gradle.api.tasks.bundling.War
 import org.gradle.util.GUtil
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 import java.util.concurrent.Callable
 
@@ -24,7 +24,7 @@ import java.util.concurrent.Callable
  * @author Tor Egil R. Strand
  */
 class WebstartPlugin implements Plugin<Project> {
-    private static Logger logger = LoggerFactory.getLogger(WebstartPlugin.class)
+    protected static Logger logger = Logging.getLogger(WebstartPlugin.class)
 
     public static final String WEBSTART_CONVENTION_NAME = 'webstart'
     public static final String SIGN_TASK_PREFIX = 'sign'

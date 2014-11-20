@@ -1,11 +1,12 @@
 package no.statkart.sktools.gradle.plugins.xjc
 
 import org.gradle.api.file.FileCollection
-import org.gradle.api.tasks.SourceTask
-import org.gradle.api.tasks.TaskAction
-
+import org.gradle.api.logging.Logger
+import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.SourceTask
+import org.gradle.api.tasks.TaskAction
 
 /**
  * Eksekverer XJC task via ant.
@@ -27,6 +28,7 @@ import org.gradle.api.tasks.OutputDirectory
  * @author Leif Lislegård
  */
 class XjcTask extends SourceTask {
+    protected static final Logger logger = Logging.getLogger(XjcTask.class);
 
     @Input
     XjcConfig config
@@ -71,4 +73,9 @@ class XjcTask extends SourceTask {
         }
 
     }
+
+    public Logger getLogger() {
+        return logger;
+    }
+
 }

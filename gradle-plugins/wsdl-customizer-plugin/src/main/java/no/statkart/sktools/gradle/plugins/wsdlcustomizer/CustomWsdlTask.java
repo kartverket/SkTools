@@ -5,7 +5,10 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.file.CopySpec;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.tasks.Input;import org.gradle.api.tasks.InputFiles;import org.gradle.api.tasks.OutputDirectory;import org.gradle.api.tasks.SkipWhenEmpty;import org.gradle.api.tasks.TaskAction;import org.w3c.dom.Document;
+import org.gradle.api.logging.Logger;
+import org.gradle.api.logging.Logging;
+import org.gradle.api.tasks.*;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -15,7 +18,8 @@ import javax.xml.namespace.NamespaceContext;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.Result;import javax.xml.transform.Source;import javax.xml.transform.Transformer;import javax.xml.transform.TransformerConfigurationException;import javax.xml.transform.TransformerException;import javax.xml.transform.TransformerFactory;import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathExpression;
@@ -23,7 +27,6 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import java.io.File;
 import java.io.IOException;
-import java.lang.Object;import java.lang.Override;import java.lang.String;import java.lang.SuppressWarnings;
 import java.util.*;
 
 /**
@@ -34,7 +37,8 @@ import java.util.*;
  */
 @SuppressWarnings("UnusedDeclaration")
 public class CustomWsdlTask extends DefaultTask {
-    private static final String xsdNamespace = "http://www.w3.org/2001/XMLSchema";
+    protected static final Logger logger = Logging.getLogger(CustomWsdlTask.class);
+    protected static final String xsdNamespace = "http://www.w3.org/2001/XMLSchema";
 
     private final List<Object> originalSchemaFiles = new ArrayList<Object>();
     private final List<Object> generatedWsdlAndSchemaFiles = new ArrayList<Object>();
@@ -350,4 +354,9 @@ public class CustomWsdlTask extends DefaultTask {
             return Collections.singletonList(getPrefix(namespaceURI)).iterator();
         }
     }
+
+    public Logger getLogger() {
+        return logger;
+    }
+
 }

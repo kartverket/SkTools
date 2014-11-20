@@ -1,11 +1,11 @@
 package no.statkart.sktools.gradle.plugins.dbtools.database.oracle
 
-import org.gradle.api.DefaultTask
-import org.gradle.api.InvalidUserDataException
+import org.gradle.api.internal.ConventionTask
+import org.gradle.api.logging.Logger
+import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
-import org.gradle.api.internal.ConventionTask
 
 /**
  * Task for kjøring av export-script for oracle baser
@@ -16,6 +16,7 @@ import org.gradle.api.internal.ConventionTask
  * @since 1.0
  */
 class OracleExportTask extends ConventionTask {
+    protected static final Logger logger = Logging.getLogger(OracleExportTask.class);
 
     @Input
     String directory
@@ -87,7 +88,7 @@ class OracleExportTask extends ConventionTask {
 
         def impdb = Runtime.runtime.exec(command as String[], null, getProject().getProjectDir())
 
-        logger.lifecycle('Kaller expdp.exe med bruker ' + getUsername() + ', tns ' + getTns());
+        logger.lifecycle('Calling expdp with user ' + getUsername() + ', tns ' + getTns());
 
         logger.info 'Executing command: \n' + command.join(' ').replace(getPassword(), getPassword().replaceAll(/./, "*"))
 
@@ -115,18 +116,23 @@ class OracleExportTask extends ConventionTask {
         }
 
         if (serr.toString().contains('ORA-') || impdb.exitValue()) {
-            println '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
-            println 'Feil under kjøring av expdp.exe:'
-            print serr
-            println '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
-            System.exit(1)
+            logger.error( new StringBuilder()
+                    .append("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                    .append("\n Exception during expdp:")
+                    .append("\n").append(serr)
+                    .append("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                    .toString()
+            );
+            throw new Exception("Exception during expdp. See log for details.");
         }
 
-
-        println '...oracle export OK'
-        print sout
+        logger.lifecycle("...oracle export OK")
     }
 
+
+    public Logger getLogger() {
+        return logger;
+    }
 
 }
 

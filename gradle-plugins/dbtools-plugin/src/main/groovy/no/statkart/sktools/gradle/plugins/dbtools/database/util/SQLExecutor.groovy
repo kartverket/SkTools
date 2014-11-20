@@ -1,5 +1,7 @@
 package no.statkart.sktools.gradle.plugins.dbtools.database.util
 
+import groovy.sql.Sql
+
 /*
  For at denne biten kan fungere, må jdbc driveren finnes i classpath og være registrert i kjørende classloader.
  Registrering av denne i Gradle kan gjøres på følgende måte:
@@ -12,10 +14,10 @@ package no.statkart.sktools.gradle.plugins.dbtools.database.util
 
  */
 
-import groovy.sql.Sql
 import no.statkart.sktools.utils.parsers.sql.model.Statement
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import org.gradle.api.logging.Logger
+import org.gradle.api.logging.Logging
+
 import java.sql.SQLException
 
 /**
@@ -27,7 +29,7 @@ import java.sql.SQLException
  * @author Leif Lislegård
  */
 class SQLExecutor {
-    private static Logger logger = LoggerFactory.getLogger(SQLExecutor.class);
+    protected static Logger logger = Logging.getLogger(SQLExecutor.class);
 
     List<Statement> statements
 
@@ -40,7 +42,7 @@ class SQLExecutor {
         waitForConnectionRate(15)
 
         def sql = Sql.newInstance(specs.url, specs.username, specs.password, specs.driver)
-        println("connected to database: ${specs.url} [${specs.username}]")
+        logger.lifecycle("connected to database: {} [{}]", specs.url, specs.username);
 
         statements.each() { Statement statement ->
 

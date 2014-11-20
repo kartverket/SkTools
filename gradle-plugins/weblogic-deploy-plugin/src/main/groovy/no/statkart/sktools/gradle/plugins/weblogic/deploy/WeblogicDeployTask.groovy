@@ -1,5 +1,7 @@
 package no.statkart.sktools.gradle.plugins.weblogic.deploy
 
+import org.gradle.api.logging.Logger
+import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.TaskAction
@@ -11,6 +13,7 @@ import org.gradle.api.tasks.TaskAction
  * @author Leif Lislegård
  */
 class WeblogicDeployTask extends AbstractWeblogicDeployTask {
+    protected static final Logger logger = Logging.getLogger(WeblogicDeployTask.class);
 
     @InputFiles
     Object file
@@ -51,6 +54,10 @@ class WeblogicDeployTask extends AbstractWeblogicDeployTask {
         }
 
         ant.wldeploy(args)
+    }
+
+    public Logger getLogger() {
+        return logger;
     }
 
 }

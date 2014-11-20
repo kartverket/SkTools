@@ -1,14 +1,13 @@
 package no.statkart.sktools.gradle.plugins.weblogic.wswar
 
+import no.statkart.sktools.gradle.plugins.weblogic.compile.DefaultWeblogicCompileSpec
 import org.gradle.api.AntBuilder
-import org.gradle.api.tasks.WorkResult
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import org.gradle.api.tasks.util.PatternSet
 import org.gradle.api.file.FileTree
 import org.gradle.api.internal.file.FileResolver
-import no.statkart.sktools.gradle.plugins.weblogic.compile.DefaultWeblogicCompileSpec
-import org.gradle.api.file.FileCollection
+import org.gradle.api.logging.Logger
+import org.gradle.api.logging.Logging
+import org.gradle.api.tasks.WorkResult
+import org.gradle.api.tasks.util.PatternSet
 
 /**
  * Steg for kompilering av JAX-WS implementasjon for server.
@@ -16,9 +15,9 @@ import org.gradle.api.file.FileCollection
  * @author Leif Lislegård
  */
 class WeblogicJaxWsCompiler implements org.gradle.language.base.internal.compile.Compiler<DefaultWeblogicCompileSpec>, Serializable {
-    private static final Logger logger = LoggerFactory.getLogger(WeblogicJaxWsCompiler.class)
-    private static final String WEBLOGIC_CLASSPATH_ID = "weblogic_classpath_id"
-    private static final String JWSC_CLASSPATH_ID = "jwsc_classpath_id"
+    protected static Logger logger = Logging.getLogger(WeblogicJaxWsCompiler.class)
+    static final String WEBLOGIC_CLASSPATH_ID = "weblogic_classpath_id"
+    static final String JWSC_CLASSPATH_ID = "jwsc_classpath_id"
 
     File baseDir;
     AntBuilder ant;

@@ -4,6 +4,8 @@ import no.statkart.sktools.gradle.plugins.weblogic.WeblogicTaskInterface
 import org.apache.commons.io.FileUtils
 import org.gradle.api.file.FileCollection
 import org.gradle.api.logging.LogLevel
+import org.gradle.api.logging.Logger
+import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.*
 import org.gradle.api.tasks.compile.AbstractCompile
 import org.gradle.api.tasks.compile.CompileOptions
@@ -16,6 +18,8 @@ import org.gradle.api.tasks.compile.CompileOptions
  * @author Leif Lislegård
  */
 class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInterface {
+    protected static final Logger logger = Logging.getLogger(WeblogicGenClientTask.class);
+
     private static final String WEBLOGIC_CLASSPATH_ID = "weblogic_classpath_id"
     private static final String WEBLOGIC_WSCLIENT_CLASSPATH_ID = "weblogic_wsclient_classpath_id"
 
@@ -221,5 +225,7 @@ class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInter
         return super.getClasspath() ? super.getClasspath() : getProject().files()
     }
 
-
+    public Logger getLogger() {
+        return logger;
+    }
 }

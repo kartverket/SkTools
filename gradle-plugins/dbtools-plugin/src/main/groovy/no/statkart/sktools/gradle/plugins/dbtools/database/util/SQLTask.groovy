@@ -1,10 +1,11 @@
 package no.statkart.sktools.gradle.plugins.dbtools.database.util
 
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.TaskAction
 import no.statkart.sktools.utils.parsers.sql.SQLStatementParser
-import org.gradle.api.internal.ConventionTask
+import org.gradle.api.logging.Logger;
+import org.gradle.api.logging.Logging;
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.TaskAction
 
 /**
  * Task for executing av statements over JDBC.
@@ -13,6 +14,7 @@ import org.gradle.api.tasks.Optional
  * @since 1.0
  */
 public class SQLTask extends AbstractSQLTask {
+    protected static final Logger logger = Logging.getLogger(SQLTask.class);
 
     private final SQLExecutor executor = new SQLExecutor()
 
@@ -77,5 +79,9 @@ public class SQLTask extends AbstractSQLTask {
     }
 
 
+
+    public Logger getLogger() {
+        return logger;
+    }
 
 }

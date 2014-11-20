@@ -9,6 +9,7 @@ import org.gradle.process.JavaExecSpec
  * @author Leif Lislegård
  * @since 1.3
  */
+@SuppressWarnings("UnnecessaryQualifiedReference")
 class SyncPatchTask extends PatchTask {
 
 

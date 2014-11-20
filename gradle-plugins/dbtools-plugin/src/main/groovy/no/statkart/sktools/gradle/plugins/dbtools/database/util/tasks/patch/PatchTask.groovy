@@ -1,9 +1,11 @@
 package no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch
 
+import org.gradle.api.logging.Logger
+import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.JavaExecSpec
-import org.gradle.api.tasks.Optional
 
 /**
  * Task for patching av schema over JDBC.
@@ -11,7 +13,9 @@ import org.gradle.api.tasks.Optional
  * @author Leif Lislegård
  * @since 1.2
  */
+@SuppressWarnings("UnnecessaryQualifiedReference")
 class PatchTask extends DatabasePatchTask {
+    protected static final Logger logger = Logging.getLogger(PatchTask.class);
 
     @Input
     File sqlFile
@@ -62,6 +66,11 @@ class PatchTask extends DatabasePatchTask {
         if (!getSqlFile().exists()) {
             throw new Exception("File does not exist! sqlFile=${project.relativePath(getSqlFile())}")
         }
+    }
+
+
+    public Logger getLogger() {
+        return logger;
     }
 
 }

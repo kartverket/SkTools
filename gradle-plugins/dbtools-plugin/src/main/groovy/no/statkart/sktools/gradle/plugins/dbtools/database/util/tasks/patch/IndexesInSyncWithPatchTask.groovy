@@ -1,8 +1,10 @@
 package no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch
 
+import org.gradle.api.logging.Logger
+import org.gradle.api.logging.Logging
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.JavaExecSpec
-import org.gradle.api.tasks.Input
 
 /**
  * Task som setter flagg i databasen om indexer er up-to-date for gjeldende patch eller ikke.
@@ -10,8 +12,9 @@ import org.gradle.api.tasks.Input
  * @author Leif Lislegård
  * @since 1.2
  */
+@SuppressWarnings("UnnecessaryQualifiedReference")
 class IndexesInSyncWithPatchTask extends DatabasePatchTask {
-
+    protected static final Logger logger = Logging.getLogger(IndexesInSyncWithPatchTask.class);
 
     @Input
     Boolean indexesUpToDate
@@ -31,11 +34,15 @@ class IndexesInSyncWithPatchTask extends DatabasePatchTask {
     }
 
 
-    //bruker ikke denne
-    File getSqlFile() { }
+    File getSqlFile() { null /* na*/ }
 
     @Override
     void validate() {
         super.validate();
     }
+
+    public Logger getLogger() {
+        return logger;
+    }
+
 }
