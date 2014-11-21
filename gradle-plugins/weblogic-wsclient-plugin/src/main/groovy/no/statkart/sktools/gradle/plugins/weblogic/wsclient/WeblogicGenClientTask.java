@@ -38,17 +38,17 @@ class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInter
         getLogging().captureStandardOutput(LogLevel.INFO);
         getLogging().captureStandardError(LogLevel.DEBUG);
 
-        getOptions().setFork(true)
-        getOptions().setListFiles(true)
-        getOptions().setVerbose(logger.isDebugEnabled())
-        getOptions().setFailOnError(true) //defaults to true
+        getOptions().setFork(true);
+        getOptions().setListFiles(true);
+        getOptions().setVerbose(logger.isDebugEnabled());
+        getOptions().setFailOnError(true); //defaults to true
 
     }
 
     @TaskAction
     protected void compile() {
         //clean resources
-        project.delete(getDestinationDir());
+        getProject().delete(getDestinationDir());
 
         gen();
     }
@@ -67,7 +67,7 @@ class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInter
     }
 
     WsClientGenerator createGenerator() {
-        final WsClientGenerator generator = new WsClientGenerator(project
+        final WsClientGenerator generator = new WsClientGenerator(getProject()
                 , getDestinationDir()
                 , getTemporaryDir()
                 , getSource()
@@ -102,8 +102,8 @@ class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInter
 
     @InputFiles
     @Optional
-    FileCollection getClasspath() { //markerer denne som optional
-        return super.getClasspath() ? super.getClasspath() : getProject().files()
+    public FileCollection getClasspath() { //markerer denne som optional
+        return super.getClasspath() != null ? super.getClasspath() : getProject().files();
     }
 
     public Logger getLogger() {
@@ -113,19 +113,19 @@ class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInter
     @Optional
     @Input
     String getPackageName() {
-        return packageName
+        return packageName;
     }
 
-    @SuppressWarnings("GroovyUnusedDeclaration")
+    @SuppressWarnings("UnusedDeclaration")
     void setPackageName(String packageName) {
-        this.packageName = packageName
+        this.packageName = packageName;
     }
 
     WebServiceConfig getWebServiceConfig() {
-        return webServiceConfig
+        return webServiceConfig;
     }
 
     void setWebServiceConfig(WebServiceConfig webServiceConfig) {
-        this.webServiceConfig = webServiceConfig
+        this.webServiceConfig = webServiceConfig;
     }
 }

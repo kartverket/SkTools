@@ -1,4 +1,4 @@
-package no.statkart.sktools.gradle.plugins.weblogic.wsclient
+package no.statkart.sktools.gradle.plugins.weblogic.wsclient;
 
 /**
  * Task for kompilerings-steg.

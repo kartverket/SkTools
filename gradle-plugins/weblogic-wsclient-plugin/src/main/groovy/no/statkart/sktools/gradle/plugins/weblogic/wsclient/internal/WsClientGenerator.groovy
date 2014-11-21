@@ -24,9 +24,9 @@ class WsClientGenerator {
     final FileCollection classpath, weblogicClasspath;
 
     //optional attributes...
-    String sourceCompatibility;
-    String targetCompatibility;
-    String packageName;
+    public String sourceCompatibility;
+    public String targetCompatibility;
+    public String packageName;
 
 
     public WsClientGenerator(Project project, File destinationDir, File temporaryDir, FileTree source, FileCollection classpath, FileCollection weblogicClasspath) {
