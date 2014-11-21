@@ -1,6 +1,5 @@
 package no.statkart.sktools.gradle.plugins.xjc
 
-import no.statkart.sktools.gradle.plugins.xjc.internal.XjcCompileTaskImpl
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -11,8 +10,6 @@ import org.gradle.api.initialization.dsl.ScriptHandler
 import org.gradle.api.internal.file.UnionFileCollection
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSet
-import org.gradle.api.tasks.compile.JavaCompile
-
 import java.util.concurrent.Callable
 import org.gradle.api.Action
 import org.gradle.api.internal.project.ProjectInternal
@@ -39,6 +36,7 @@ import org.gradle.api.file.ConfigurableFileCollection
  * @author Leif Lislegård
 
  */
+@SuppressWarnings("UnnecessaryQualifiedReference")
 class XjcPlugin implements Plugin<ProjectInternal> {
 
     final static String CONVENTION_NAME = 'xjc'
@@ -89,10 +87,6 @@ class XjcPlugin implements Plugin<ProjectInternal> {
                         Task compileTask = createCompileXjcTaskForSchema(xjcSchema, xjcTask, buildOutputDir).dependsOn(
                                 project.getConfigurations().getByName(sourceSet.getCompileConfigurationName()),
                         )
-
-                        //hook task for XjcCompile...
-                        final Task interfaceHookTask = project.tasks.create(xjcSchema.config.hookTaskName, XjcCompileTaskImpl.class)
-                        interfaceHookTask.dependsOn xjcSchema.config.compileTaskName
 
                         sourceSet.compiledBy(compileTask); //SKTOOLS-48
 
@@ -145,7 +139,7 @@ class XjcPlugin implements Plugin<ProjectInternal> {
                     }
 
                     private Task createCompileXjcTaskForSchema(XjcSourceDirectorySet xjcSchema, Task xjcTask, File buildOutputDir) {
-                        final AbstractCompile compile = (AbstractCompile) project.tasks.create(xjcSchema.config.compileTaskName, JavaCompile.class);
+                        final AbstractCompile compile = (AbstractCompile) project.tasks.create(xjcSchema.config.compileTaskName, XjcCompile.class);
 
                         javaBasePlugin.configureForSourceSet(sourceSet, compile);
 
@@ -203,7 +197,7 @@ class XjcPlugin implements Plugin<ProjectInternal> {
 
 
     //classpath classpath for jaxb libs (needed at runtime)
-    private Configuration createConfiguration(Project project) {
+    private static Configuration createConfiguration(Project project) {
         Configuration configuration = project.configurations.create(JAXB_CONFIGURATION_NAME).setVisible(false).setDescription("Classpath for jaxb library and extensions.");
         return configuration;
     }

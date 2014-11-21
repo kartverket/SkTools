@@ -1,5 +1,7 @@
 package no.statkart.sktools.gradle.plugins.weblogic.wsclient;
 
+import org.gradle.api.logging.Logger;
+import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.compile.JavaCompile;
 
 /**
@@ -29,4 +31,10 @@ import org.gradle.api.tasks.compile.JavaCompile;
  * @author Leif Lislegård
  */
 public class WeblogicWsClientCompileTask extends JavaCompile {
+    protected static final Logger logger = Logging.getLogger(WeblogicWsClientCompileTask.class);
+
+    @Override
+    public Logger getLogger() {
+        return logger;
+    }
 }

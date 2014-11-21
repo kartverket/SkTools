@@ -1,6 +1,10 @@
 package no.statkart.sktools.gradle.plugins.xjc;
 
 
+import org.gradle.api.logging.Logger;
+import org.gradle.api.logging.Logging;
+import org.gradle.api.tasks.compile.JavaCompile;
+
 /**
  * Task for kompilerings-steg.
  *
@@ -26,5 +30,11 @@ package no.statkart.sktools.gradle.plugins.xjc;
  * @since 1.2
  * @author Leif Lislegård
  */
-public interface XjcCompile {
+public class XjcCompile extends JavaCompile {
+    protected static final Logger logger = Logging.getLogger(XjcCompile.class);
+
+    @Override
+    public Logger getLogger() {
+        return logger;
+    }
 }
