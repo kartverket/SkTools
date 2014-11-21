@@ -1,14 +1,18 @@
-package no.statkart.sktools.gradle.plugins.weblogic.wsclient
+package no.statkart.sktools.gradle.plugins.weblogic.wsclient;
 
-import no.statkart.sktools.gradle.plugins.weblogic.WeblogicTaskInterface
-import no.statkart.sktools.gradle.plugins.weblogic.wsclient.internal.WsClientGenerator
-import org.gradle.api.file.FileCollection
-import org.gradle.api.logging.LogLevel
-import org.gradle.api.logging.Logger
-import org.gradle.api.logging.Logging
-import org.gradle.api.tasks.*
-import org.gradle.api.tasks.compile.AbstractCompile
-import org.gradle.api.tasks.compile.CompileOptions
+import no.statkart.sktools.gradle.plugins.weblogic.WeblogicTaskInterface;
+import no.statkart.sktools.gradle.plugins.weblogic.wsclient.internal.WsClientGenerator;
+import org.gradle.api.file.FileCollection;
+import org.gradle.api.logging.LogLevel;
+import org.gradle.api.logging.Logger;
+import org.gradle.api.logging.Logging;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Nested;
+import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.compile.AbstractCompile;
+import org.gradle.api.tasks.compile.CompileOptions;
 
 /**
  * Task for generering av weblogic webservice klient
@@ -23,18 +27,16 @@ class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInter
 
     WebServiceConfig webServiceConfig;
 
-    @Optional
-    @Input
-    String packageName;
+    private String packageName;
 
     private final CompileOptions compileOptions = new CompileOptions();
 
     private FileCollection weblogicClasspath;
-    private File dependencyCacheDir;
+
 
     WeblogicGenClientTask() {
-        logging.captureStandardOutput LogLevel.INFO
-        logging.captureStandardError LogLevel.DEBUG
+        getLogging().captureStandardOutput(LogLevel.INFO);
+        getLogging().captureStandardError(LogLevel.DEBUG);
 
         getOptions().setFork(true)
         getOptions().setListFiles(true)
@@ -53,7 +55,7 @@ class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInter
 
 
     void gen() {
-        WsClientGenerator generator = createGenerator()
+        WsClientGenerator generator = createGenerator();
 
         generator.gen(getOptions(), getWebServiceConfig());
 
@@ -64,7 +66,7 @@ class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInter
         generator.deleteTemporaryFiles();
     }
 
-    def WsClientGenerator createGenerator() {
+    WsClientGenerator createGenerator() {
         final WsClientGenerator generator = new WsClientGenerator(project
                 , getDestinationDir()
                 , getTemporaryDir()
@@ -74,19 +76,10 @@ class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInter
         );
         generator.sourceCompatibility = getSourceCompatibility();
         generator.targetCompatibility = getTargetCompatibility();
-        generator.packageName = packageName;
-        return generator
+        generator.packageName = getPackageName();
+        return generator;
     }
 
-    @Optional
-    @OutputDirectory
-    public File getDependencyCacheDir() {
-        return dependencyCacheDir;
-    }
-
-    public void setDependencyCacheDir(File dependencyCacheDir) {
-        this.dependencyCacheDir = dependencyCacheDir;
-    }
 
     /**
      * Returns the compilation options.
@@ -115,5 +108,24 @@ class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInter
 
     public Logger getLogger() {
         return logger;
+    }
+
+    @Optional
+    @Input
+    String getPackageName() {
+        return packageName
+    }
+
+    @SuppressWarnings("GroovyUnusedDeclaration")
+    void setPackageName(String packageName) {
+        this.packageName = packageName
+    }
+
+    WebServiceConfig getWebServiceConfig() {
+        return webServiceConfig
+    }
+
+    void setWebServiceConfig(WebServiceConfig webServiceConfig) {
+        this.webServiceConfig = webServiceConfig
     }
 }
