@@ -17,6 +17,7 @@ import org.apache.commons.lang.builder.EqualsBuilder
  * @author Leif Lislegård
  * @author Tor Egil R. Strand
  */
+@SuppressWarnings("GroovyUnusedDeclaration")
 class WeblogicWsClientConvention {
     protected final transient Project project
 
@@ -55,6 +56,7 @@ class WeblogicWsClientConvention {
 /**
  * @since 1.1
  */
+@SuppressWarnings("GroovyUnusedDeclaration")
 class WebServiceConfig {
     private final WeblogicWsClientConvention convention;
     protected final String name;
@@ -154,6 +156,14 @@ class WebServiceConfig {
         lastWsdl = wsdl;
     }
 
+    String getLastWsdl() {
+        return lastWsdl
+    }
+
+    ExceptionConfig getException() {
+        return exception
+    }
+
     public String toString() {
         return getClass().getSimpleName() + ": " + name;
     }
@@ -177,7 +187,13 @@ class ExceptionConfig {
         this.convention = convention
     }
 
+    String getPackageString() {
+        return packageOrPathString?.replace('/', '.')?.replace('\\', '.')
+    }
 
+    PatternSet getExceptionFilePatternSet() {
+        return exceptionFilePatternSet
+    }
 
     public boolean equals(Object obj) {
         return EqualsBuilder.reflectionEquals(this, obj);

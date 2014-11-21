@@ -35,7 +35,6 @@ import java.util.*;
  *
  * @author Tor Egil R. Strand
  */
-@SuppressWarnings("UnusedDeclaration")
 public class CustomWsdlTask extends DefaultTask {
     protected static final Logger logger = Logging.getLogger(CustomWsdlTask.class);
     protected static final String xsdNamespace = "http://www.w3.org/2001/XMLSchema";

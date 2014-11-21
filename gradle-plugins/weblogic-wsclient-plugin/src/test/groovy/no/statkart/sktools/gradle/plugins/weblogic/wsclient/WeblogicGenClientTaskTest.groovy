@@ -1,5 +1,6 @@
 package no.statkart.sktools.gradle.plugins.weblogic.wsclient
 
+import no.statkart.sktools.gradle.plugins.weblogic.wsclient.internal.WsClientGenerator
 import no.statkart.sktools.gradle.plugins.weblogic.wswar.WeblogicWsWarPlugin
 import no.statkart.sktools.gradle.testutils.ProjectHelper
 import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
@@ -146,7 +147,7 @@ class WeblogicGenClientTaskTest {
     }
 
     /**
-     * Tester {@link WeblogicGenClientTask#fixResourceLoaders()}
+     * Tester {@link WsClientGenerator#fixResourceLoaders()}
      */
     @Test
     void testResourceRewrite() {
@@ -165,7 +166,8 @@ class WeblogicGenClientTaskTest {
         genClientTask.setProject(project)
         genClientTask.setDestinationDir(dir)
 
-        genClientTask.fixResourceLoaders()
+        final WsClientGenerator generator = genClientTask.createGenerator()
+        generator.fixResourceLoaders()
 
         Assert.assertEquals(this.class.getResourceAsStream('BorettInformasjonServiceWS.result').text, targetFile.text)
 
