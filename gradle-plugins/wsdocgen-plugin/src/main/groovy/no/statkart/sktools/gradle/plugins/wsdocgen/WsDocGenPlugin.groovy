@@ -9,14 +9,12 @@ import org.gradle.api.artifacts.Dependency
 import org.gradle.api.file.FileCollection
 import org.gradle.api.initialization.dsl.ScriptHandler
 import org.gradle.api.internal.artifacts.publish.ArchivePublishArtifact
-import org.gradle.api.logging.LogLevel
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.bundling.AbstractArchiveTask
 import org.gradle.api.tasks.bundling.Zip
 import org.gradle.api.tasks.compile.AbstractCompile
-import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.util.GUtil
 
 import java.util.concurrent.Callable
@@ -108,7 +106,7 @@ class WsDocGenPlugin implements Plugin<Project> {
                 group.name = "Group${i+1}"
             }
 
-            AbstractCompile task = createWsDocGenForGroupTask(group, sourceSet)
+            AbstractCompile task = createWsDocGenForGroupTask(group)
             //setting conventional properties
             task.getConventionMapping().with {
                 map("source", new Callable() {   //tildeler en dynamisk default verdi
@@ -164,7 +162,7 @@ class WsDocGenPlugin implements Plugin<Project> {
     }
 
 
-    def void configureGenTask(Project project) {
+    static def void configureGenTask(Project project) {
         project.task(GEN_TASK_NAME)
     }
 
@@ -179,66 +177,11 @@ class WsDocGenPlugin implements Plugin<Project> {
     }
 
 
-    def static AbstractCompile createWsDocGenForGroupTask(Group docGroup, SourceSet sourceSet) {
+    def static AbstractCompile createWsDocGenForGroupTask(final Group docGroup) {
         final Project project = docGroup.project
         final String taskName = String.format(WsDocGenConvention.GEN_TASK_NAME_PATTERN, GUtil.toCamelCase(docGroup.convention.sourceSetName), docGroup.name)
-        final AbstractCompile task = project.tasks.create(taskName, JavaCompile.class)
-
-        task.inputs.file(docGroup.getServiceXsltFile())
-        task.inputs.property('lookupPath', docGroup.lookupPath)
-        if (docGroup.indexXsltPath) {
-            task.inputs.file(docGroup.getIndexXsltFile()) //optional
-        }
-
-
-        task.with {
-            logging.captureStandardOutput LogLevel.INFO
-            logging.captureStandardError LogLevel.ERROR
-
-            options.compilerArgs = [
-                    "-proc:only",  //only annotation processing is done, without any subsequent compilation.
-                    "-processor", "no.statkart.sktools.utils.wsdocgen.processor.WSDocProcessor",  //Names of the annotation processors to run. This bypasses the default discovery process.
-            ]
-
-            final FileCollection processorClasspath = findPluginClasspath(project)
-            if (processorClasspath != null) {
-                options.compilerArgs << "-processorpath"
-                options.compilerArgs << processorClasspath.asFileTree.asPath
-            } else {
-                //ok under testing
-            }
-
-            doFirst {
-                final File xsl = docGroup.getServiceXsltFile()
-                if (!xsl.exists()) {
-                    throw new Exception("xslt file not found: ${project.relativePath(xsl)}");
-                }
-
-                options.compilerArgs += [
-                        "-Axslt=${xsl}", //xslt file
-                ]
-
-                if (docGroup.lookupPath) {
-                    options.compilerArgs << "-AjavaDocLookupPath=${docGroup.lookupPath}" //lookup path
-                }
-
-                if (docGroup.getIndexXsltFile()) {
-                    options.compilerArgs << "-AindexXslt=${docGroup.getIndexXsltFile()}" //SKTOOLS-105
-                }
-
-                docGroup.includes.each {
-                    include(it)
-                }
-
-                logger.debug("Classpath for generating WsDoc: ${getClasspath().files}")
-
-            }
-
-            options.setListFiles(logger.isDebugEnabled())
-            options.setVerbose(logger.isInfoEnabled())
-        }
-
-
+        final WsDocCompileTask task = project.tasks.create(taskName, WsDocCompileTask.class)
+        task.setDocGroup(docGroup);
 
         return task
     }

@@ -1,0 +1,120 @@
+package no.statkart.sktools.gradle.plugins.wsdocgen;
+
+import org.gradle.api.file.FileCollection;
+import org.gradle.api.logging.LogLevel;
+import org.gradle.api.logging.Logger;
+import org.gradle.api.logging.Logging;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputFile;
+import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.compile.CompileOptions;
+import org.gradle.api.tasks.compile.JavaCompile;
+
+import java.io.File;
+import java.util.List;
+
+/**
+ * @author Leif Lislegård
+ * @since 2.0
+ */
+public class WsDocCompileTask extends JavaCompile {
+    protected static final Logger logger = Logging.getLogger(WsDocCompileTask.class);
+
+    private Group docGroup;
+
+
+    /**
+     * Gradle 1.2/2.0 - no arg constructor or @Inject annotated constructor
+     */
+    public WsDocCompileTask() {
+        super();
+        getLogging().captureStandardOutput(LogLevel.INFO);
+        getLogging().captureStandardError(LogLevel.DEBUG);
+
+        final List<String> compilerArgs = getOptions().getCompilerArgs();
+        compilerArgs.add("-proc:only"); //only annotation processing is done, without any subsequent compilation.
+        compilerArgs.add("-processor");
+        compilerArgs.add("no.statkart.sktools.utils.wsdocgen.processor.WSDocProcessor"); //Names of the annotation processors to run. This bypasses the default discovery process.
+
+        final FileCollection processorClasspath = WsDocGenPlugin.findPluginClasspath(getProject());
+        if (processorClasspath != null) {
+            compilerArgs.add("-processorpath");
+            compilerArgs.add(processorClasspath.getAsFileTree().getAsPath());
+        } else {
+            assert true; //ok under testing
+        }
+
+    }
+
+
+    @Override
+    protected void compile() {
+        final List<String> compilerArgs = getOptions().getCompilerArgs();
+        final File xsl = getServiceXsltFile();
+        if (!xsl.exists()) {
+            throw new RuntimeException("xslt file not found: " + getProject().relativePath(xsl));
+        }
+
+        compilerArgs.add("-Axslt=" + xsl.getPath()); //xslt file
+
+        if (getDocGroup().lookupPath != null) {
+            compilerArgs.add("-AjavaDocLookupPath=" + getDocGroup().lookupPath); //lookup path
+        }
+
+        if (getIndexXsltFile() != null) {
+            compilerArgs.add("-AindexXslt=" + getIndexXsltFile().getPath()); //SKTOOLS-105
+        }
+
+        if (getDocGroup().includes != null) {
+            include(getDocGroup().includes);
+        }
+
+        logger.debug("Classpath for generating WsDoc: {}", getClasspath().getFiles());
+        super.compile();
+    }
+
+
+    @Override
+    public CompileOptions getOptions() {
+        final CompileOptions options = super.getOptions();
+        options.setListFiles(logger.isDebugEnabled());
+        options.setVerbose(logger.isInfoEnabled());
+
+        return options;
+    }
+
+    @InputFile
+    public File getServiceXsltFile() {
+        if (getDocGroup().serviceXsltPath != null) {
+            return getProject().file(getDocGroup().serviceXsltPath);
+        } else {
+            logger.warn("WARNING: no xslt file specified - using template for TESTING purposes..");
+            return Group.generateTestFile(new File(getProject().getBuildDir(), "Transform.xsl")); //can't write to output dir because it gets wiped when not up to date...
+        }
+    }
+
+    @Optional
+    @InputFile //not up to date when change in file
+    File getIndexXsltFile() {
+        if (getDocGroup().indexXsltPath != null) {
+            return getProject().file(getDocGroup().indexXsltPath);
+        } else {
+            return null; //optional null
+        }
+    }
+
+    @Input
+    public Group getDocGroup() {
+        return docGroup;
+    }
+
+    public void setDocGroup(Group docGroup) {
+        this.docGroup = docGroup;
+    }
+
+    @Override
+    public Logger getLogger() {
+        return logger;
+    }
+
+}

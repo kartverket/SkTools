@@ -165,24 +165,20 @@ class Group implements Serializable {
         return EqualsBuilder.reflectionEquals(this, obj);
     }
 
-//    @InputFile //not up to date when change in file
-    public File getServiceXsltFile() {
-        if (serviceXsltPath) {
-            return project.file(serviceXsltPath)
-        } else {
-            project.logger.warn("WARNING: no xslt file specified - using template for TESTING purposes..")
-            return generateTestFile(new File(project.buildDir, "Transform.xsl")) //can't write to output dir because it gets wiped when not up to date...
-        }
-    }
 
-    private File generateTestFile(File testFile) {
+    static File generateTestFile(File testFile) {
         if (testFile.exists()) return testFile;
 
         testFile.getParentFile().mkdirs()
         testFile.createNewFile()
 
         testFile.withWriter { def writer ->
-            this.getClass().getResourceAsStream("tasks/DefaultTransform.xsl").withReader() {
+            final String xsltRelativeFilePath = 'tasks/DefaultTransform.xsl';
+            final InputStream xsltAsStream = WsDocGenConvention.class.getResourceAsStream(xsltRelativeFilePath)
+            if (!xsltAsStream) {
+                throw new RuntimeException("Resource not found: " + xsltRelativeFilePath)
+            }
+            xsltAsStream.withReader() {
                 it.readLines().each { writer.write(it); writer.write("\n") }
             }
             writer.flush()
@@ -190,16 +186,6 @@ class Group implements Serializable {
         return testFile
     }
 
-
-//    @Optional
-//    @InputFile //not up to date when change in file
-    File getIndexXsltFile() {
-        if (indexXsltPath) {
-            return project.file(indexXsltPath)
-        } else {
-            return null
-        }
-    }
 
 
 }
