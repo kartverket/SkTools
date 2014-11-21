@@ -1,13 +1,15 @@
-package no.statkart.sktools.gradle.plugins.xjc
+package no.statkart.sktools.gradle.plugins.xjc;
 
-import no.statkart.sktools.gradle.plugins.xjc.internal.XjcGenerator
-import org.gradle.api.file.FileCollection
-import org.gradle.api.logging.Logger
-import org.gradle.api.logging.Logging
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.SourceTask
-import org.gradle.api.tasks.TaskAction
+import no.statkart.sktools.gradle.plugins.xjc.internal.XjcGenerator;
+import org.gradle.api.file.FileCollection;
+import org.gradle.api.logging.Logger;
+import org.gradle.api.logging.Logging;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.SourceTask;
+import org.gradle.api.tasks.TaskAction;
+
+import java.io.File;
 
 /**
  * Eksekverer XJC task via ant.
@@ -82,6 +84,7 @@ class XjcTask extends SourceTask {
         return classpath;
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public void setClasspath(FileCollection classpath) {
         this.classpath = classpath;
     }
