@@ -1,5 +1,7 @@
 package no.statkart.sktools.gradle.plugins.weblogic.wsclient;
 
+import org.gradle.api.tasks.compile.JavaCompile;
+
 /**
  * Task for kompilerings-steg.
  *
@@ -26,5 +28,5 @@ package no.statkart.sktools.gradle.plugins.weblogic.wsclient;
  * @since 1.2
  * @author Leif Lislegård
  */
-public interface WeblogicWsClientCompileTask {
+public class WeblogicWsClientCompileTask extends JavaCompile {
 }

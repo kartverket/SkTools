@@ -1,6 +1,5 @@
 package no.statkart.sktools.gradle.plugins.weblogic.wsclient
 
-import no.statkart.sktools.gradle.plugins.weblogic.wsclient.internal.WeblogicWsClientCompileTaskImpl
 import org.apache.commons.lang.StringUtils
 import org.gradle.api.Project
 import org.gradle.api.Plugin
@@ -15,7 +14,6 @@ import org.gradle.api.tasks.compile.AbstractCompile
 
 import org.gradle.api.plugins.BasePlugin
 import org.gradle.api.internal.ConventionMapping
-import org.gradle.api.tasks.compile.JavaCompile
 
 import java.util.concurrent.Callable
 import org.gradle.api.tasks.SourceSetContainer
@@ -45,11 +43,10 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
         final SourceSet sourceSet = configureSourceSet(javaConvention);
 
         WeblogicWsClientConvention wsClientConvention = new WeblogicWsClientConvention(project);
-        project.convention.plugins.put(WeblogicWsClientPlugin.CONVENTION_NAME, wsClientConvention);
+        project.convention.plugins.put(CONVENTION_NAME, wsClientConvention);
         wsClientConvention.genDir = "gen/${sourceSet.name}/wsclient"
 
         def compileTask = createCompileTask(wsClientConvention, sourceSet, javaConvention)
-        def compileTaskHook = project.tasks.create("${CONVENTION_NAME}Hook", WeblogicWsClientCompileTaskImpl.class)
 
         wsClientConvention.webService.all { WebServiceConfig webService ->
             Task collectSchemaTask = createCollectSchemaTask(project, webService)
@@ -57,17 +54,16 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
             genClientSourceTask.dependsOn weblogicProvidedConfiguration //tvinger up to date check (evt recompile) av weblogic avhengigheter...
 
             compileTask.source(genClientSourceTask)
-            compileTaskHook.dependsOn compileTask
         }
 
         //hekter inn genClient ved kjøring av 'resources' task.
         Task processWeblogicResources = project.tasks.getByName(sourceSet.processResourcesTaskName).dependsOn(
-                WeblogicWsClientPlugin.GEN_CLIENT_TASK_NAME,
+                GEN_CLIENT_TASK_NAME,
         );
 
         //hekter inn genClient ved kjøring av 'compile' task.
         Task compileWeblogicResources = project.tasks.getByName(sourceSet.compileJavaTaskName).dependsOn(
-                WeblogicWsClientPlugin.GEN_CLIENT_TASK_NAME,
+                GEN_CLIENT_TASK_NAME,
         );
 
     }
@@ -140,7 +136,7 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
     private AbstractCompile createCompileTask(final WeblogicWsClientConvention wsClientConvention, final SourceSet sourceSet, final JavaPluginConvention javaConvention) {
         final Project project = wsClientConvention.project
 
-        final AbstractCompile compile = (AbstractCompile) project.tasks.create(GEN_CLIENT_TASK_NAME, JavaCompile.class);
+        final AbstractCompile compile = (AbstractCompile) project.tasks.create(GEN_CLIENT_TASK_NAME, WeblogicWsClientCompileTask.class);
         compile.description = String.format("Compiles the %s.%s.", sourceSet.name, 'wsclient')
 
         ConventionMapping conventionMapping = compile.conventionMapping
