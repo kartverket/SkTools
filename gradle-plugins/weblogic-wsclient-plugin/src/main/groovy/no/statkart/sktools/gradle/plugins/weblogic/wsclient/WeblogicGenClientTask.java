@@ -24,14 +24,10 @@ import org.gradle.api.tasks.compile.CompileOptions;
 class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInterface {
     protected static final Logger logger = Logging.getLogger(WeblogicGenClientTask.class);
 
-
-    WebServiceConfig webServiceConfig;
-
-    private String packageName;
-
+    private WebServiceConfig webServiceConfig;
     private final CompileOptions compileOptions = new CompileOptions();
-
     private FileCollection weblogicClasspath;
+    private String packageName;
 
 
     /**
@@ -116,20 +112,20 @@ class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInter
 
     @Optional
     @Input
-    String getPackageName() {
+    public String getPackageName() {
         return packageName;
     }
 
     @SuppressWarnings("UnusedDeclaration")
-    void setPackageName(String packageName) {
+    public void setPackageName(String packageName) {
         this.packageName = packageName;
     }
 
-    WebServiceConfig getWebServiceConfig() {
+    public WebServiceConfig getWebServiceConfig() {
         return webServiceConfig;
     }
 
-    void setWebServiceConfig(WebServiceConfig webServiceConfig) {
+    public void setWebServiceConfig(WebServiceConfig webServiceConfig) {
         this.webServiceConfig = webServiceConfig;
     }
 }
