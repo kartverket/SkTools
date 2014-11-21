@@ -34,7 +34,11 @@ class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInter
     private FileCollection weblogicClasspath;
 
 
-    WeblogicGenClientTask() {
+    /**
+     * Gradle 1.2/2.0 - no arg constructor or @Inject annotated constructor
+     */
+    public WeblogicGenClientTask() {
+        super();
         getLogging().captureStandardOutput(LogLevel.INFO);
         getLogging().captureStandardError(LogLevel.DEBUG);
 
