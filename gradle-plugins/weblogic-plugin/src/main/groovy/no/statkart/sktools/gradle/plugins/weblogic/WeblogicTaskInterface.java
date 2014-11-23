@@ -1,8 +1,8 @@
-package no.statkart.sktools.gradle.plugins.weblogic
+package no.statkart.sktools.gradle.plugins.weblogic;
 
-import org.gradle.api.file.FileCollection
-import org.gradle.api.tasks.InputFiles
-import org.gradle.api.internal.IConventionAware
+import org.gradle.api.file.FileCollection;
+import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.internal.IConventionAware;
 
 /**
  * Interface for {@link org.gradle.api.internal.ConventionTask}-implementasjoner
