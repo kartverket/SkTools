@@ -30,7 +30,7 @@ import java.io.File;
 public class WeblogicWsCompileTask extends AbstractCompile implements WeblogicTaskInterface {
     protected static final Logger logger = Logging.getLogger(WeblogicWsCompileTask.class);
 
-    private final WeblogicJaxWsCompiler compiler;
+    private final WeblogicJaxWsCompiler compiler = new WeblogicJaxWsCompiler();
     private final DefaultWeblogicCompileSpec spec = new DefaultWeblogicCompileSpec();
 
     private FileCollection weblogicClasspath;
@@ -41,16 +41,8 @@ public class WeblogicWsCompileTask extends AbstractCompile implements WeblogicTa
 
 
     public WeblogicWsCompileTask() {
-        final Project project = getProject();
-
         getLogging().captureStandardOutput(LogLevel.INFO);
         getLogging().captureStandardError(LogLevel.DEBUG);
-
-        compiler = new WeblogicJaxWsCompiler();
-        compiler.setAnt(project.getAnt());
-        compiler.setBaseDir(project.file("src"));
-        compiler.setWarName(project.getName() + ".war");
-        compiler.setFileResolver(((ProjectInternal) project).getFileResolver());
 
         //setting defaults for this compiler.
         getOptions().setFork(true);
@@ -63,6 +55,12 @@ public class WeblogicWsCompileTask extends AbstractCompile implements WeblogicTa
     @TaskAction
     protected void compile() {
         final Project project = getProject();
+
+        compiler.setAnt(project.getAnt()); //ant have to be initialized - assigning it in task execution phase
+        compiler.setBaseDir(project.file("src"));
+        compiler.setWarName(project.getName() + ".war");
+        compiler.setFileResolver(((ProjectInternal) project).getFileResolver());
+
 
         spec.setWeblogicClasspath(getWeblogicClasspath().getFiles());
         spec.setTempDir(getTemporaryDir());
