@@ -1,7 +1,6 @@
 package no.statkart.sktools.gradle.plugins.weblogic;
 
 import org.gradle.api.Task;
-import org.gradle.api.internal.project.ProjectInternal;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Action;
@@ -16,26 +15,23 @@ import org.gradle.api.specs.Spec;
  * task som blir lagt til prosjektet.
  *
  * <p>
- * <!-- SKIF-213 -->
+ * <!-- SKTOOLS-19: Provided configuration -->
  * Dersom en ønsker å publisere weblogic spesifike artifakter som war filer mm så bør disse kobles til egen configuration.
  * Det er IKKE anbefalt å benytte {@link WeblogicBasePlugin#WEBLOGIC_PROVIDED_CONFIGURATION_NAME} til dette.
  *
  * @author Leif Lislegård
  */
-public class WeblogicBasePlugin implements Plugin<ProjectInternal> {
+public class WeblogicBasePlugin implements Plugin<Project> {
 
     public static final String WEBLOGIC_PROVIDED_CONFIGURATION_NAME = "weblogicProvided";
 
     @Override
-    public void apply(ProjectInternal project) {
-
+    public void apply(Project project) {
         createConfiguration(project);
-
         configureWeblogicTaskDefaults(project);
-
     }
 
-    private Configuration createConfiguration(ProjectInternal project) {
+    private static Configuration createConfiguration(Project project) {
         return project.getConfigurations().create(WEBLOGIC_PROVIDED_CONFIGURATION_NAME)
                 .setVisible(false)
                 .setTransitive(true)
@@ -43,7 +39,7 @@ public class WeblogicBasePlugin implements Plugin<ProjectInternal> {
         ;
     }
 
-    private void configureWeblogicTaskDefaults(final Project project) {
+    private static void configureWeblogicTaskDefaults(final Project project) {
         project.getTasks().matching(new Spec<Task>(){
             @Override
             public boolean isSatisfiedBy(Task task) {
