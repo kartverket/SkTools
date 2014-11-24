@@ -27,7 +27,7 @@ import java.io.File;
  * @since 1.1
  * @author Leif Lislegård
  */
-class WeblogicWsCompileTask extends AbstractCompile implements WeblogicTaskInterface {
+public class WeblogicWsCompileTask extends AbstractCompile implements WeblogicTaskInterface {
     protected static final Logger logger = Logging.getLogger(WeblogicWsCompileTask.class);
 
     private final WeblogicJaxWsCompiler compiler;
