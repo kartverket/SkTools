@@ -40,7 +40,7 @@ class WeblogicWsCompileTask extends AbstractCompile implements WeblogicTaskInter
     private File genDir = null;
 
 
-    WeblogicWsCompileTask() {
+    public WeblogicWsCompileTask() {
         final Project project = getProject();
 
         getLogging().captureStandardOutput(LogLevel.INFO);
