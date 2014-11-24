@@ -66,10 +66,8 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
                 project.getConfigurations().getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME), //tvinger rekompilering ved endring i weblogicClasspath
         )
 
-        project.afterEvaluate {
-            //task for bygging av war artifakt
-            War war = configureArchives(project, weblogicSourceSet)
-        }
+        //task for bygging av war artifakt
+        War war = configureArchives(project, weblogicSourceSet);
     }
 
     private static void configureIdea(final Project project, final SourceSet weblogicSourceSet) {
@@ -99,8 +97,11 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
     private static War configureArchives(final Project project, final SourceSet weblogicSourceSet) {
         final WeblogicWsCompileTask genTask = (WeblogicWsCompileTask) project.getTasks().getByName(WEBLOGIC_GEN_TASK_NAME);
 
-        if (project.getTasks().findByName(JavaPlugin.TEST_TASK_NAME) != null) {
-            project.getTasks().getByName(JavaBasePlugin.CHECK_TASK_NAME).dependsOn(JavaPlugin.TEST_TASK_NAME);
+        //late evaluate if java plugin is applied anytome after...
+        project.afterEvaluate {
+            if (project.getTasks().findByName(JavaPlugin.TEST_TASK_NAME) != null) {
+                project.getTasks().getByName(JavaBasePlugin.CHECK_TASK_NAME).dependsOn(JavaPlugin.TEST_TASK_NAME);
+            }
         }
 
         final War war = project.getTasks().create(WEBLOGIC_WAR_TASK_NAME, War.class);
