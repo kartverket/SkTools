@@ -30,33 +30,27 @@ import java.io.File;
 class WeblogicWsCompileTask extends AbstractCompile implements WeblogicTaskInterface {
     protected static final Logger logger = Logging.getLogger(WeblogicWsCompileTask.class);
 
-    private WeblogicJaxWsCompiler compiler = new WeblogicJaxWsCompiler();
+    private final WeblogicJaxWsCompiler compiler;
     private final DefaultWeblogicCompileSpec spec = new DefaultWeblogicCompileSpec();
 
     private FileCollection weblogicClasspath;
 
-    public File getGenDir() {
-        return genDir != null ? genDir : getProject().file("${project.buildDir}/weblogic/jwsc");
-    }
-    private File genDir;
-
-    @OutputDirectory
-    public File getClassesDir() {
-        return classesDir != null ? classesDir : getProject().file("${destinationDir}/WEB-INF/classes");
-    }
-    private File classesDir;  //for filer som skal på classpath
-
-    @OutputDirectory
-    public File getGenSourcesDir() {
-        return genSourcesDir != null ? genSourcesDir : getProject().file("gen/weblogic/jwsc");
-    }
-    private File genSourcesDir;
-
+    private File classesDir = null;  //for filer som skal på classpath
+    private File genSourcesDir = null;
+    private File genDir = null;
 
 
     WeblogicWsCompileTask() {
+        final Project project = getProject();
+
         getLogging().captureStandardOutput(LogLevel.INFO);
         getLogging().captureStandardError(LogLevel.DEBUG);
+
+        compiler = new WeblogicJaxWsCompiler();
+        compiler.setAnt(project.getAnt());
+        compiler.setBaseDir(project.file("src"));
+        compiler.setWarName(project.getName() + ".war");
+        compiler.setFileResolver(((ProjectInternal) project).getFileResolver());
 
         //setting defaults for this compiler.
         getOptions().setFork(true);
@@ -69,10 +63,6 @@ class WeblogicWsCompileTask extends AbstractCompile implements WeblogicTaskInter
     @TaskAction
     protected void compile() {
         final Project project = getProject();
-        compiler.setAnt(project.getAnt());
-        compiler.setBaseDir(project.file("src"));
-        compiler.setWarName(project.getName() + ".war");
-        compiler.setFileResolver(((ProjectInternal) project).getFileResolver());
 
         spec.setWeblogicClasspath(getWeblogicClasspath().getFiles());
         spec.setTempDir(getTemporaryDir());
@@ -103,6 +93,7 @@ class WeblogicWsCompileTask extends AbstractCompile implements WeblogicTaskInter
     }
 
 
+    @SuppressWarnings("UnusedDeclaration") //kalles via groovy closure
     private void applicationFilesCopySpec(CopySpec spec) {
         spec.into(getDestinationDir());
         spec.from(getGenDir().getPath() + "/" + getProject().getName() + ".war")
@@ -113,12 +104,14 @@ class WeblogicWsCompileTask extends AbstractCompile implements WeblogicTaskInter
         spec.setIncludeEmptyDirs(false);
     }
 
+    @SuppressWarnings("UnusedDeclaration") //kalles via groovy closure
     private void generatedClassesCopySpec(CopySpec spec) {
         spec.into(getClassesDir());
         spec.from(getGenDir().getPath() + "/" + getProject().getName() + ".war/WEB-INF/classes")
         ;
     }
 
+    @SuppressWarnings("UnusedDeclaration") //kalles via groovy closure
     private void generatedSourcesCopySpec(CopySpec spec) {
         spec.into(getClassesDir());
         spec.from(getGenDir().getPath() + "/" + getProject().getName() + ".war/")
@@ -126,6 +119,33 @@ class WeblogicWsCompileTask extends AbstractCompile implements WeblogicTaskInter
         ;
     }
 
+
+    @OutputDirectory
+    public File getClassesDir() {
+        return classesDir != null ? classesDir : getProject().file("${destinationDir}/WEB-INF/classes");
+    }
+
+    void setClassesDir(File classesDir) {
+        this.classesDir = classesDir;
+    }
+
+    @OutputDirectory
+    public File getGenSourcesDir() {
+        return genSourcesDir != null ? genSourcesDir : getProject().file("gen/weblogic/jwsc");
+    }
+
+    void setGenSourcesDir(File genSourcesDir) {
+        this.genSourcesDir = genSourcesDir;
+    }
+
+    public File getGenDir() {
+        return genDir != null ? genDir : getProject().file("${project.buildDir}/weblogic/jwsc");
+    }
+
+
+    void setGenDir(File genDir) {
+        this.genDir = genDir;
+    }
 
     /**
      * Returns the compilation options.

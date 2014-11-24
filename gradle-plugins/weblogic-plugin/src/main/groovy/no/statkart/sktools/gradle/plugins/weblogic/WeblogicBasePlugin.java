@@ -22,7 +22,7 @@ import org.gradle.api.specs.Spec;
  *
  * @author Leif Lislegård
  */
-class WeblogicBasePlugin implements Plugin<ProjectInternal> {
+public class WeblogicBasePlugin implements Plugin<ProjectInternal> {
 
     public static final String WEBLOGIC_PROVIDED_CONFIGURATION_NAME = "weblogicProvided";
 
