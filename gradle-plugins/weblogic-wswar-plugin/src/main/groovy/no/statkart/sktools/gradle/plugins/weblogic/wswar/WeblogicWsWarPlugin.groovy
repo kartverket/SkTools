@@ -5,6 +5,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.internal.artifacts.publish.ArchivePublishArtifact
 import org.gradle.api.internal.plugins.DefaultArtifactPublicationSet
 import org.gradle.api.plugins.BasePlugin
@@ -12,6 +13,7 @@ import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSet
+import org.gradle.api.tasks.bundling.War
 import org.gradle.plugins.ide.idea.IdeaPlugin
 
 /**
@@ -68,12 +70,10 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
                 project.getConfigurations().getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME), //tvinger rekompilering ved endring i weblogicClasspath
         )
 
-        //task for bygging av war artifakt
-        WeblogicWarTask war = (WeblogicWarTask) configureArchives(javaConvention, weblogicSourceSet, genTask).dependsOn(
-                genTask,
-        )
-
-
+        project.afterEvaluate {
+            //task for bygging av war artifakt
+            War war = configureArchives(javaConvention, weblogicSourceSet)
+        }
     }
 
     private void configureIdea(final Project project, final SourceSet sourceSet) {
@@ -100,24 +100,23 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
         }
     }
 
-    private Task configureArchives(final JavaPluginConvention javaConvention, final SourceSet sourceSet, final WeblogicWsCompileTask genTask) {
-        Project project = javaConvention.project;
+    private War configureArchives(final JavaPluginConvention javaConvention, final SourceSet sourceSet) {
+        final Project project = javaConvention.project;
+        final WeblogicWsCompileTask genTask = (WeblogicWsCompileTask) project.getTasks().getByName(WEBLOGIC_GEN_TASK_NAME);
 
         if (project.getTasks().findByName(JavaPlugin.TEST_TASK_NAME) != null) {
             project.getTasks().getByName(JavaBasePlugin.CHECK_TASK_NAME).dependsOn(JavaPlugin.TEST_TASK_NAME);
         }
 
-        HashMap<String, Object> args = new HashMap<String, Object>();
-        args.put(Task.TASK_TYPE, WeblogicWarTask.class);
-        args.put(Task.TASK_OVERWRITE, "false");
-        args.put(Task.TASK_DESCRIPTION, "Assembles a war archive containing the main classes.");
+        final War war = project.getTasks().create(WEBLOGIC_WAR_TASK_NAME, War.class);
+        war.setDescription("Assembles a war archive containing the main classes.");
+        war.dependsOn(genTask);
 
-        final WeblogicWarTask war = (WeblogicWarTask) project.task(args, WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME);
-
-        war.setAppendix(WeblogicWsWarPlugin.WEBLOGIC_SOURCE_SET_NAME)
+        war.setAppendix(WEBLOGIC_SOURCE_SET_NAME);
         war.setGroup(BasePlugin.BUILD_GROUP);
 
-        // pass på duplikater og vær obs på rekkefølgen!
+        // following duplicate files will be excluded (first one into archive stays)
+        war.setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE); //SKTOOLS-121
 
         // Må ta inn output fra genTask eksplisitt
         war.into('WEB-INF/classes') {
