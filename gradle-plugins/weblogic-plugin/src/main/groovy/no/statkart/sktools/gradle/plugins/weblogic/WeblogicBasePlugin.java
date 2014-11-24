@@ -1,11 +1,12 @@
-package no.statkart.sktools.gradle.plugins.weblogic
+package no.statkart.sktools.gradle.plugins.weblogic;
 
-import org.gradle.api.internal.project.ProjectInternal
-import org.gradle.api.Plugin
-import org.gradle.api.Project
-import org.gradle.api.Action
-import org.gradle.api.artifacts.Configuration
-import java.util.concurrent.Callable
+import org.gradle.api.Task;
+import org.gradle.api.internal.project.ProjectInternal;
+import org.gradle.api.Plugin;
+import org.gradle.api.Project;
+import org.gradle.api.Action;
+import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.specs.Spec;
 
 /**
  * Setter opp {@link org.gradle.api.artifacts.Configuration} for weblogic bibliotek og/eller avhengigheter som skal være providede.
@@ -23,10 +24,10 @@ import java.util.concurrent.Callable
  */
 class WeblogicBasePlugin implements Plugin<ProjectInternal> {
 
-    public static final String WEBLOGIC_PROVIDED_CONFIGURATION_NAME = 'weblogicProvided';
+    public static final String WEBLOGIC_PROVIDED_CONFIGURATION_NAME = "weblogicProvided";
 
     @Override
-    void apply(ProjectInternal project) {
+    public void apply(ProjectInternal project) {
 
         createConfiguration(project);
 
@@ -35,19 +36,26 @@ class WeblogicBasePlugin implements Plugin<ProjectInternal> {
     }
 
     private Configuration createConfiguration(ProjectInternal project) {
-        project.getConfigurations().create(WEBLOGIC_PROVIDED_CONFIGURATION_NAME).setVisible(false).setTransitive(true).setDescription("Weblogic tools and provided libraries.")
+        return project.getConfigurations().create(WEBLOGIC_PROVIDED_CONFIGURATION_NAME)
+                .setVisible(false)
+                .setTransitive(true)
+                .setDescription("Weblogic tools and provided libraries.")
+        ;
     }
 
     private void configureWeblogicTaskDefaults(final Project project) {
-        project.getTasks().withType(WeblogicTaskInterface.class, new Action<WeblogicTaskInterface>() {
-            public void execute(WeblogicTaskInterface compile) {
-                //setter weblogicClasspath property som conventional value.
-                // Dvs at følgende default verdier blir brukt dersom ikke property eksplisitt blir satt (null)
-                compile.getConventionMapping().map("weblogicClasspath", new Callable() {
-                    Object call() {
-                        return project.getConfigurations().getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME);
-                    }
-                });
+        project.getTasks().matching(new Spec<Task>(){
+            @Override
+            public boolean isSatisfiedBy(Task task) {
+                return task instanceof WeblogicTaskInterface;
+            }
+        }).whenTaskAdded( new Action<Task>() {
+            @Override
+            public void execute(Task compile) {
+                final WeblogicTaskInterface weblogicTask = (WeblogicTaskInterface) compile;
+                final Configuration weblogicProviedConfiguration = project.getConfigurations().getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME);
+                //sets conventional weblogicClasspath.
+                weblogicTask.setWeblogicClasspath(weblogicProviedConfiguration);
             }
         });
     }

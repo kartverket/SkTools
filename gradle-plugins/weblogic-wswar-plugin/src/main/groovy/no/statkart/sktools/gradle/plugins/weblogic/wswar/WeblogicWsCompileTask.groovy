@@ -2,7 +2,6 @@ package no.statkart.sktools.gradle.plugins.weblogic.wswar
 
 import no.statkart.sktools.gradle.plugins.weblogic.WeblogicTaskInterface
 import no.statkart.sktools.gradle.plugins.weblogic.compile.DefaultWeblogicCompileSpec
-import no.statkart.sktools.gradle.plugins.weblogic.compile.WeblogicCompileSpec
 import org.gradle.api.file.FileCollection
 import org.gradle.api.internal.project.ProjectInternal
 import org.gradle.api.logging.LogLevel
@@ -118,14 +117,6 @@ class WeblogicWsCompileTask extends AbstractCompile implements WeblogicTaskInter
     @Nested
     public CompileOptions getOptions() {
         return spec.getCompileOptions();
-    }
-
-    public org.gradle.language.base.internal.compile.Compiler<WeblogicCompileSpec> getCompiler() {
-        return compiler;
-    }
-
-    public void setCompiler(org.gradle.language.base.internal.compile.Compiler<WeblogicCompileSpec> compiler) {
-        this.compiler = compiler;
     }
 
     public void setWeblogicClasspath(FileCollection weblogicClasspath) {

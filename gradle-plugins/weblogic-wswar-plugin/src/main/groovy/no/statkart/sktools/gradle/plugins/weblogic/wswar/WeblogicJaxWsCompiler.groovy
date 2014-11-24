@@ -1,6 +1,6 @@
 package no.statkart.sktools.gradle.plugins.weblogic.wswar
 
-import no.statkart.sktools.gradle.plugins.weblogic.compile.DefaultWeblogicCompileSpec
+import no.statkart.sktools.gradle.plugins.weblogic.compile.WeblogicCompileSpec
 import org.gradle.api.AntBuilder
 import org.gradle.api.file.FileTree
 import org.gradle.api.internal.file.FileResolver
@@ -14,7 +14,7 @@ import org.gradle.api.tasks.util.PatternSet
  *
  * @author Leif Lislegård
  */
-class WeblogicJaxWsCompiler implements org.gradle.language.base.internal.compile.Compiler<DefaultWeblogicCompileSpec>, Serializable {
+class WeblogicJaxWsCompiler implements no.statkart.sktools.gradle.plugins.weblogic.compile.Compiler<WeblogicCompileSpec> {
     protected static Logger logger = Logging.getLogger(WeblogicJaxWsCompiler.class)
     static final String WEBLOGIC_CLASSPATH_ID = "weblogic_classpath_id"
     static final String JWSC_CLASSPATH_ID = "jwsc_classpath_id"
@@ -26,7 +26,7 @@ class WeblogicJaxWsCompiler implements org.gradle.language.base.internal.compile
 
 
     @Override
-    WorkResult execute(DefaultWeblogicCompileSpec spec) {
+    WorkResult execute(WeblogicCompileSpec spec) {
 
         createAntClassPath(ant, spec.classpath, JWSC_CLASSPATH_ID)
         createAntClassPath(ant, spec.weblogicClasspath, WEBLOGIC_CLASSPATH_ID)

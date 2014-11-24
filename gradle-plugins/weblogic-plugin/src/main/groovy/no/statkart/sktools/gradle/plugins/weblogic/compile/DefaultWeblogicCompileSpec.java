@@ -1,6 +1,6 @@
 package no.statkart.sktools.gradle.plugins.weblogic.compile;
 
-import org.gradle.api.internal.tasks.compile.DefaultJavaCompileSpec;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.compile.CompileOptions;
 
 import java.io.File;
@@ -9,7 +9,7 @@ import java.io.File;
  * @since 1.2
  * @author Leif Lislegård
  */
-public class DefaultWeblogicCompileSpec extends DefaultJavaCompileSpec implements WeblogicCompileSpec {
+public class DefaultWeblogicCompileSpec implements WeblogicCompileSpec {
 
     /**
      * Classpath for bruk av weblogic spesifike verktøy
@@ -17,33 +17,37 @@ public class DefaultWeblogicCompileSpec extends DefaultJavaCompileSpec implement
     private Iterable<File> weblogicClasspath;
 
     /**
+     * Classpath for kompilering av kildekode
+     */
+    private Iterable<File> classpath;
+
+    /**
      * Mappe som kan benyttes generering av temporære filer
      */
     private File tempDir;
 
-    /**
-     * @deprecated backwards compability to grade.version < 1.2
-     */
     private CompileOptions compileOptions;
 
-    /**
-     * @deprecated backwards compability to grade.version < 1.2
-     */
-    public CompileOptions getCompileOptions() {
-        return compileOptions;
-    }
+//    private File workingDir;
+    private File destinationDir;
+    private FileCollection source;
 
-    /**
-     * @deprecated backwards compability to grade.version < 1.2
-     */
-    public void setCompileOptions(CompileOptions compileOptions) {
-        this.compileOptions = compileOptions;
-    }
+    private String sourceCompatibility;
+    private String targetCompatibility;
 
 
     public DefaultWeblogicCompileSpec() {
         setCompileOptions(new CompileOptions());
     }
+
+    public CompileOptions getCompileOptions() {
+        return compileOptions;
+    }
+
+    public void setCompileOptions(CompileOptions compileOptions) {
+        this.compileOptions = compileOptions;
+    }
+
 
     @Override
     public Iterable<File> getWeblogicClasspath() {
@@ -63,4 +67,43 @@ public class DefaultWeblogicCompileSpec extends DefaultJavaCompileSpec implement
         this.tempDir = tempDir;
     }
 
+    public String getSourceCompatibility() {
+        return sourceCompatibility;
+    }
+
+    public void setSourceCompatibility(String sourceCompatibility) {
+        this.sourceCompatibility = sourceCompatibility;
+    }
+
+    public Iterable<File> getClasspath() {
+        return classpath;
+    }
+
+    public void setClasspath(Iterable<File> classpath) {
+        this.classpath = classpath;
+    }
+
+    public File getDestinationDir() {
+        return destinationDir;
+    }
+
+    public void setDestinationDir(File destinationDir) {
+        this.destinationDir = destinationDir;
+    }
+
+    public FileCollection getSource() {
+        return source;
+    }
+
+    public void setSource(FileCollection source) {
+        this.source = source;
+    }
+
+    public String getTargetCompatibility() {
+        return targetCompatibility;
+    }
+
+    public void setTargetCompatibility(String targetCompatibility) {
+        this.targetCompatibility = targetCompatibility;
+    }
 }
