@@ -93,8 +93,8 @@ class WeblogicWsCompileTask extends AbstractCompile implements WeblogicTaskInter
     }
 
 
-    @SuppressWarnings("UnusedDeclaration") //kalles via groovy closure
-    private void applicationFilesCopySpec(CopySpec spec) {
+    @SuppressWarnings("UnusedDeclaration") //groovy closure call (not private method)
+    void applicationFilesCopySpec(CopySpec spec) {
         spec.into(getDestinationDir());
         spec.from(getGenDir().getPath() + "/" + getProject().getName() + ".war")
                 .exclude("WEB-INF/classes/**"
@@ -104,15 +104,15 @@ class WeblogicWsCompileTask extends AbstractCompile implements WeblogicTaskInter
         spec.setIncludeEmptyDirs(false);
     }
 
-    @SuppressWarnings("UnusedDeclaration") //kalles via groovy closure
-    private void generatedClassesCopySpec(CopySpec spec) {
+    @SuppressWarnings("UnusedDeclaration") //groovy closure call (not private method)
+    void generatedClassesCopySpec(CopySpec spec) {
         spec.into(getClassesDir());
         spec.from(getGenDir().getPath() + "/" + getProject().getName() + ".war/WEB-INF/classes")
         ;
     }
 
-    @SuppressWarnings("UnusedDeclaration") //kalles via groovy closure
-    private void generatedSourcesCopySpec(CopySpec spec) {
+    @SuppressWarnings("UnusedDeclaration") //groovy closure call (not private method)
+    void generatedSourcesCopySpec(CopySpec spec) {
         spec.into(getClassesDir());
         spec.from(getGenDir().getPath() + "/" + getProject().getName() + ".war/")
                 .exclude("WEB-INF/**") //no compiled class files etc...
