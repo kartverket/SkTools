@@ -108,12 +108,11 @@ public class FilterResourcesPlugin implements Plugin<ProjectInternal> {
 
 
                 //oppretter copy task for filtrering...
-                HashMap<String, Object> args = new HashMap<String, Object>();
-                args.put(Task.TASK_TYPE, ProcessResources.class);
-                args.put(Task.TASK_OVERWRITE, "false");
-                args.put(Task.TASK_DESCRIPTION, String.format("Filters the %s resources for filtering.", sourceSet.getName()));
+                final ProcessResources filterResourcesTask = project.getTasks().create(filterResourcesTaskName, ProcessResources.class);
+                filterResourcesTask.setDescription(String.format("Filters the %s resources for filtering.", sourceSet.getName()));
 
-                final ProcessResources filterResourcesTask = (ProcessResources) project.task(args, filterResourcesTaskName);
+                filterResourcesTask.setFileMode(755);  //SKTOOLS-123 no read only generated files i linux
+                filterResourcesTask.setDirMode(555); //SKTOOLS-123 no read only generated files i linux
 
                 filterResourcesTask.from(new Callable<Object>() {
                     public Object call() throws Exception {
