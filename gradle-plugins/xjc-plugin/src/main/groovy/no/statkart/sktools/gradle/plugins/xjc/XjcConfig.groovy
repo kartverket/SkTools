@@ -128,7 +128,7 @@ class XjcConfig implements Serializable {
     boolean equals(Object o) {
         if (this.is(o)) return true
 
-        // Sammenlikningen 'getClass() != o.class' feiler når gradle-daemon er aktiv. Forstår ikke helt hvorfor, men o er ikke altid av type XjcConfig
+        // SKTOOLS-128: Sammenlikningen 'getClass() != o.class' feiler når gradle-daemon er aktiv. Forstår ikke helt hvorfor, men o er ikke altid av type XjcConfig
         // selv om o.getClass().toString() returnerer riktig klasse. Det går heller ikke an å caste til XjcConfig men det trengs ikke i Groovy så det er
         // ikke noe problem.
         // Hvis man caster kan man få følgende feil:
