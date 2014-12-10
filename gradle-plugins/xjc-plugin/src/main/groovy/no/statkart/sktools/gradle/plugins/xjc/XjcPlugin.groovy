@@ -69,9 +69,9 @@ class XjcPlugin implements Plugin<ProjectInternal> {
                 ((HasConvention) sourceSet).getConvention().getPlugins().put(CONVENTION_NAME, new XjcSourceSetExtension(xjcSchemaContainer));
 
                 //hekter inn generert resultat og legger dette compile classpath
-                ConfigurableFileCollection xjcOutputClasspath = project.files()
-                sourceSet.setCompileClasspath( sourceSet.getCompileClasspath().plus(xjcOutputClasspath) )
-
+                final FileCollection xjcCompileClasspath = sourceSet.getCompileClasspath();
+                final ConfigurableFileCollection xjcOutputClasses = project.files();
+                sourceSet.setCompileClasspath( xjcCompileClasspath.plus(xjcOutputClasses) ); //SKTOOLS-129: ikke compile output på compile classpath for xjc.. (ellers vil ikke task bli up-to-date)
 
                 xjcSchemaContainer.all(new Action<XjcSourceDirectorySet>() {
                     void execute(XjcSourceDirectorySet xjcSchema) {
@@ -93,7 +93,7 @@ class XjcPlugin implements Plugin<ProjectInternal> {
                         project.tasks[sourceSet.getCompileJavaTaskName()].dependsOn(compileTask); //javaCompile depends on this to be compiled
 
                         //legger til output til classpath
-                        xjcOutputClasspath.from(buildOutputDir)
+                        xjcOutputClasses.from(buildOutputDir)
 
                         //legger til output katalog til sourceset
                         sourceSet.output.dir(buildOutputDir, builtBy: compileTask)
@@ -138,7 +138,7 @@ class XjcPlugin implements Plugin<ProjectInternal> {
                         return task
                     }
 
-                    private Task createCompileXjcTaskForSchema(XjcSourceDirectorySet xjcSchema, Task xjcTask, File buildOutputDir) {
+                    private AbstractCompile createCompileXjcTaskForSchema(XjcSourceDirectorySet xjcSchema, Task xjcTask, File buildOutputDir) {
                         final AbstractCompile compile = (AbstractCompile) project.tasks.create(xjcSchema.config.compileTaskName, XjcCompile.class);
 
                         javaBasePlugin.configureForSourceSet(sourceSet, compile);
@@ -147,6 +147,7 @@ class XjcPlugin implements Plugin<ProjectInternal> {
                         compile.setSource(xjcTask);
                         compile.source(xjcSchema.getJava());  //for evt ListAdapter implementasjon osv
                         compile.setDestinationDir(buildOutputDir);
+                        compile.setClasspath(xjcCompileClasspath);
 
                         compile.doFirst { project.delete(getDestinationDir()) } //SKTOOLS-48
 
