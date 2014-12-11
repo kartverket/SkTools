@@ -2,7 +2,6 @@ package no.statkart.sktools.gradle.plugins.wsdocgen
 
 import org.gradle.api.Project
 
-import org.apache.commons.lang.builder.EqualsBuilder
 
 /**
  * Kan konfigureres oppt til å dokumentere valgfritt sourceSet via {@link WsDocGenConvention#sourceSetName}
@@ -67,7 +66,7 @@ class WsDocGenConvention implements Serializable {
  * @since 1.1
  */
 class Group implements Serializable {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L; //SKTOOLS-130: remove Serializable in sktools version 1.5
 
     protected final transient Project project
     protected final transient WsDocGenConvention convention
@@ -157,10 +156,6 @@ class Group implements Serializable {
         return this;
     }
 
-    public boolean equals(Object obj) {
-        return EqualsBuilder.reflectionEquals(this, obj);
-    }
-
 
     static File generateTestFile(File testFile) {
         if (testFile.exists()) return testFile;
@@ -170,12 +165,13 @@ class Group implements Serializable {
 
         testFile.withWriter { def writer ->
             final String xsltRelativeFilePath = 'tasks/DefaultTransform.xsl';
-            final InputStream xsltAsStream = WsDocGenConvention.class.getResourceAsStream(xsltRelativeFilePath)
-            if (!xsltAsStream) {
-                throw new RuntimeException("Resource not found: " + xsltRelativeFilePath)
-            }
-            xsltAsStream.withReader() {
-                it.readLines().each { writer.write(it); writer.write("\n") }
+            WsDocGenConvention.class.getResource(xsltRelativeFilePath).with { xsltResources -> //groovy way of handling streams
+                if (!xsltResources) {
+                    throw new RuntimeException("Resource not found: " + xsltRelativeFilePath)
+                }
+                xsltResources.withReader() {
+                    it.readLines().each { writer.write(it); writer.write("\n") }
+                }
             }
             writer.flush()
         }

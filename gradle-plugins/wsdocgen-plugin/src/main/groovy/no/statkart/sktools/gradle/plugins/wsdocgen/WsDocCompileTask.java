@@ -4,7 +4,6 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
-import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.compile.CompileOptions;
@@ -57,8 +56,8 @@ public class WsDocCompileTask extends JavaCompile {
 
         compilerArgs.add("-Axslt=" + xsl.getPath()); //xslt file
 
-        if (getDocGroup().lookupPath != null) {
-            compilerArgs.add("-AjavaDocLookupPath=" + getDocGroup().lookupPath); //lookup path
+        if (getLookupPath() != null) {
+            compilerArgs.add("-AjavaDocLookupPath=" + getLookupPath()); //lookup path
         }
 
         if (getIndexXsltFile() != null) {
@@ -66,11 +65,17 @@ public class WsDocCompileTask extends JavaCompile {
         }
 
         if (getDocGroup().includes != null) {
-            include(getDocGroup().includes);
+            include(getDocGroup().includes); //up to date affects getSource()
         }
 
         logger.debug("Classpath for generating WsDoc: {}", getClasspath().getFiles());
         super.compile();
+    }
+
+    @Optional
+    @InputFile //not up to date when changed
+    public String getLookupPath() {
+        return getDocGroup().lookupPath;
     }
 
 
@@ -103,7 +108,6 @@ public class WsDocCompileTask extends JavaCompile {
         }
     }
 
-    @Input
     public Group getDocGroup() {
         return docGroup;
     }

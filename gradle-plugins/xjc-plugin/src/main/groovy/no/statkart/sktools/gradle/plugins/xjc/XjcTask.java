@@ -4,10 +4,7 @@ import no.statkart.sktools.gradle.plugins.xjc.internal.XjcGenerator;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.SourceTask;
-import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.*;
 
 import java.io.File;
 
@@ -51,7 +48,7 @@ class XjcTask extends SourceTask {
         getProject().delete(getOutputDirectory());
 
         final XjcGenerator generator = new XjcGenerator(getProject()
-                , getConfig()
+                , getConfig() //kandidat for parameter objekt (klasse)
                 , getSource()
                 , getOutputDirectory()
                 , getClasspath()
@@ -61,7 +58,7 @@ class XjcTask extends SourceTask {
     }
 
 
-    @Input
+    @Nested //SKTOOLS-128: kun interessert i enkelte felter
     public XjcConfig getConfig() {
         return config;
     }

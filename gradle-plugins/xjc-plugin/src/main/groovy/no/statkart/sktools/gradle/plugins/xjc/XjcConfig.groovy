@@ -1,6 +1,6 @@
 package no.statkart.sktools.gradle.plugins.xjc
 
-import org.apache.commons.lang.builder.EqualsBuilder
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.SourceSet
 
 /**
@@ -12,7 +12,7 @@ import org.gradle.api.tasks.SourceSet
  * @author Leif Lislegård
  */
 class XjcConfig implements Serializable {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L; //SKTOOLS-130: remove Serializable in sktools version 1.5
 
     /*
      * For lovlige parametere se {@link com.sun.tools.xjc.addon.statkart.ListGenPlugin#parseArgument(com.sun.tools.xjc.Options, String[], int)
@@ -30,6 +30,7 @@ class XjcConfig implements Serializable {
     protected transient final XjcSourceDirectorySet source;
 
     protected Collection<String> includes;
+    @Input //SKTOOLS-128: annoterer properties som er input felter
     protected Map<String, Map> xjcOptions = [:] as HashMap
 
 
@@ -103,7 +104,7 @@ class XjcConfig implements Serializable {
         skDoc(params);
     }
 
-    //ikke eskponert
+    //ikke eksponert
     private Map skDoc(Map params) {
 
         // Gjennbruker grunnbokDoc-implementasjon her inntill annen dokumentasjonsgenerering er på plass
@@ -115,31 +116,6 @@ class XjcConfig implements Serializable {
             grunnbokDocParams.put('to', params.get('to'));
         }
         grunnbokDoc(grunnbokDocParams);
-    }
-
-    int hashCode() {
-        int result
-        result = (genOutputPath != null ? genOutputPath.hashCode() : 0)
-        result = 31 * result + (includes != null ? includes.hashCode() : 0)
-        result = 31 * result + (xjcOptions != null ? xjcOptions.hashCode() : 0)
-        return result
-    }
-
-    boolean equals(Object o) {
-        if (this.is(o)) return true
-
-        // SKTOOLS-128: Sammenlikningen 'getClass() != o.class' feiler når gradle-daemon er aktiv. Forstår ikke helt hvorfor, men o er ikke altid av type XjcConfig
-        // selv om o.getClass().toString() returnerer riktig klasse. Det går heller ikke an å caste til XjcConfig men det trengs ikke i Groovy så det er
-        // ikke noe problem.
-        // Hvis man caster kan man få følgende feil:
-        // Cannot cast object 'no.statkart.sktools.gradle.plugins.xjc.XjcConfig@4f5924d0' with
-        // class 'no.statkart.sktools.gradle.plugins.xjc.XjcConfig' to class 'no.statkart.sktools.gradle.plugins.xjc.XjcConfig'
-        if (!getClass().toString().equals(o.getClass().toString())) return false
-        if (genOutputPath != o.genOutputPath) return false
-        if (includes != o.includes) return false
-        if (xjcOptions != o.xjcOptions) return false
-
-        return true
     }
 
     XjcConfig configure(Closure closure) {
