@@ -4,6 +4,7 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.compile.CompileOptions;
@@ -73,7 +74,7 @@ public class WsDocCompileTask extends JavaCompile {
     }
 
     @Optional
-    @InputFile //not up to date when changed
+    @Input //not up to date when changed
     public String getLookupPath() {
         return getDocGroup().lookupPath;
     }
