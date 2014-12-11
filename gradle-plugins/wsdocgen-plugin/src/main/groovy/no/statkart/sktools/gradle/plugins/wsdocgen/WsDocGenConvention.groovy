@@ -15,7 +15,7 @@ import org.apache.commons.lang.builder.EqualsBuilder
  * @author Leif Lislegård
  */
 class WsDocGenConvention implements Serializable {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L; //SKTOOLS-130: remove Serializable in sktools version 1.5
     protected final transient Project project
 
     public final static String GEN_TASK_NAME_PATTERN = "gen%s%sWSDoc"
@@ -59,10 +59,6 @@ class WsDocGenConvention implements Serializable {
     }
 
 
-
-    public boolean equals(Object obj) {
-        return EqualsBuilder.reflectionEquals(this, obj);
-    }
 }
 
 /**

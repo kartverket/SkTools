@@ -6,7 +6,6 @@ import org.gradle.api.artifacts.Configuration
 
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.util.PatternSet
-import org.apache.commons.lang.builder.EqualsBuilder
 
 /**
  *
@@ -193,10 +192,6 @@ class ExceptionConfig {
 
     PatternSet getExceptionFilePatternSet() {
         return exceptionFilePatternSet
-    }
-
-    public boolean equals(Object obj) {
-        return EqualsBuilder.reflectionEquals(this, obj);
     }
 
 }
