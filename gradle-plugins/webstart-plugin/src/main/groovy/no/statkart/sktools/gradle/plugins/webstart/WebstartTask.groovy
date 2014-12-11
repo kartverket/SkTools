@@ -103,42 +103,44 @@ class WebstartTask extends ConventionTask {
      * Filen blir delvis basert på template og delvis bygget opp i koden via {@link groovy.util.Node}.
      */
     public void createJnlp(JnlpConfiguration jnlp) {
-        Node jnlpNode = new XmlParser().parse(getClass().getResourceAsStream('template.jnlp'))
-        jnlpNode.attributes().put('xmlns:jfx', 'http://javafx.com')
+        this.getClass().getResource('template.jnlp').withInputStream { jnlpTemplateStream ->  //groovy way of handling streams
+            Node jnlpNode = new XmlParser().parse(jnlpTemplateStream)
+            jnlpNode.attributes().put('xmlns:jfx', 'http://javafx.com')
 
-        jnlpNode.attributes().put('href', jnlp.jnlpFilename)
-        jnlpNode.attributes().put('version', jnlp.version)
+            jnlpNode.attributes().put('href', jnlp.jnlpFilename)
+            jnlpNode.attributes().put('version', jnlp.version)
 
-        Node informationNode = jnlpNode.information[0]
-        informationNode.title[0].value = jnlp.title
-        informationNode.vendor[0].value = jnlp.vendor
-        informationNode.description[0].value = jnlp.description
+            Node informationNode = jnlpNode.information[0]
+            informationNode.title[0].value = jnlp.title
+            informationNode.vendor[0].value = jnlp.vendor
+            informationNode.description[0].value = jnlp.description
 
-        if (jnlp.homepage != null) {
-            informationNode.homepage[0].attributes().put('href', jnlp.homepage)
-        } else {
-            informationNode.remove(informationNode.homepage[0]) //homepage must have an href if set
+            if (jnlp.homepage != null) {
+                informationNode.homepage[0].attributes().put('href', jnlp.homepage)
+            } else {
+                informationNode.remove(informationNode.homepage[0]) //homepage must have an href if set
+            }
+
+            jnlp.resources.each { ResourcesConfiguration resources ->
+                jnlpNode.append(JnlpSyntaxUtil.createResourcesElement(resources))
+            }
+
+            if (jnlp.resources.isEmpty()) {
+                logger.info "Adding empty resources element to jnlp ..."
+                jnlpNode.append(JnlpSyntaxUtil.createResourcesElement(null))
+            }
+
+            //adds all jars for dependencies to very first <resources> element in jnlp
+            JnlpSyntaxUtil.appendJarElementForAllDependencies(jnlpNode.resources[0], getMainJar().files, getJarResources().files, getLibDir(), getDigest() != null ? ('-' + getDigest()) : '')
+
+
+            if (jnlp.hasApplication()) {
+                jnlpNode.appendNode('application-desc', ['main-class': jnlp.application.mainClass])
+            }
+
+
+            writeXml(new File(getDestinationDir(), jnlp.jnlpFilename), jnlpNode, jnlp.withXml)
         }
-
-        jnlp.resources.each { ResourcesConfiguration resources ->
-            jnlpNode.append(JnlpSyntaxUtil.createResourcesElement(resources))
-        }
-
-        if (jnlp.resources.isEmpty()) {
-            logger.info "Adding empty resources element to jnlp ..."
-            jnlpNode.append(JnlpSyntaxUtil.createResourcesElement(null))
-        }
-
-        //adds all jars for dependencies to very first <resources> element in jnlp
-        JnlpSyntaxUtil.appendJarElementForAllDependencies(jnlpNode.resources[0], getMainJar().files, getJarResources().files, getLibDir(), getDigest() != null ? ('-' + getDigest()) : '')
-
-
-        if (jnlp.hasApplication()) {
-            jnlpNode.appendNode('application-desc', ['main-class': jnlp.application.mainClass])
-        }
-
-
-        writeXml(new File(getDestinationDir(), jnlp.jnlpFilename), jnlpNode, jnlp.withXml)
     }
 
     /**
