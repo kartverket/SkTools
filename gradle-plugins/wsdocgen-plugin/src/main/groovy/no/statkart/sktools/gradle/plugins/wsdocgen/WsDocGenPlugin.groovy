@@ -181,7 +181,8 @@ class WsDocGenPlugin implements Plugin<Project> {
         final Project project = docGroup.project
         final String taskName = String.format(WsDocGenConvention.GEN_TASK_NAME_PATTERN, GUtil.toCamelCase(docGroup.convention.sourceSetName), docGroup.name)
         final WsDocCompileTask task = project.tasks.create(taskName, WsDocCompileTask.class)
-        task.setDocGroup(docGroup);
+        //SKTOOLS-131: configuration have to be configured at this point
+        task.init(docGroup);
 
         return task
     }

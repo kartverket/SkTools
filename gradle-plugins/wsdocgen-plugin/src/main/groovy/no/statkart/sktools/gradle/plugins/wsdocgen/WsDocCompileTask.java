@@ -7,6 +7,7 @@ import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.compile.CompileOptions;
 import org.gradle.api.tasks.compile.JavaCompile;
 
@@ -30,8 +31,17 @@ public class WsDocCompileTask extends JavaCompile {
         super();
         getLogging().captureStandardOutput(LogLevel.INFO);
         getLogging().captureStandardError(LogLevel.DEBUG);
+    }
 
-        final List<String> compilerArgs = getOptions().getCompilerArgs();
+    /**
+     * Initial input values - oo mutation of state in {@code @TaskAction} [SKTOOLS-131]
+     */
+    public void init(Group docGroup) {
+        setDocGroup(docGroup);
+        initCompilerArgs(getOptions().getCompilerArgs());
+    }
+
+    void initCompilerArgs(final List<String> compilerArgs) {
         compilerArgs.add("-proc:only"); //only annotation processing is done, without any subsequent compilation.
         compilerArgs.add("-processor");
         compilerArgs.add("no.statkart.sktools.utils.wsdocgen.processor.WSDocProcessor"); //Names of the annotation processors to run. This bypasses the default discovery process.
@@ -44,12 +54,6 @@ public class WsDocCompileTask extends JavaCompile {
             assert true; //ok under testing
         }
 
-    }
-
-
-    @Override
-    protected void compile() {
-        final List<String> compilerArgs = getOptions().getCompilerArgs();
         final File xsl = getServiceXsltFile();
         if (!xsl.exists()) {
             throw new RuntimeException("xslt file not found: " + getProject().relativePath(xsl));
@@ -69,6 +73,12 @@ public class WsDocCompileTask extends JavaCompile {
             include(getDocGroup().includes); //up to date affects getSource()
         }
 
+    }
+
+    @TaskAction
+    @Override
+    protected void compile() {
+        logger.info("args: " + getOptions().getCompilerArgs());
         logger.debug("Classpath for generating WsDoc: {}", getClasspath().getFiles());
         super.compile();
     }
@@ -109,11 +119,11 @@ public class WsDocCompileTask extends JavaCompile {
         }
     }
 
-    public Group getDocGroup() {
+    private Group getDocGroup() {
         return docGroup;
     }
 
-    public void setDocGroup(Group docGroup) {
+    private void setDocGroup(Group docGroup) {
         this.docGroup = docGroup;
     }
 
