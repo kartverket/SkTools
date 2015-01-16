@@ -73,8 +73,8 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
         String taskName = String.format("collect%sSchema", StringUtils.capitalize(webService.name));
 
         Sync task = project.tasks.replace(taskName, Sync);
-        task.setFileMode(755);  //SKTOOLS-123 no read only generated files i linux
-        task.setDirMode(555); //SKTOOLS-123 no read only generated files i linux
+        task.setFileMode(0755);  //SKTOOLS-123 no read only generated files i linux
+        task.setDirMode(0755); //SKTOOLS-123 no read only generated files i linux
 
         task.destinationDir = new File(new File(project.buildDir, 'wsclient'), taskName);
         task.inputs.files webService.baseWars, webService.schemaFiles

@@ -111,8 +111,8 @@ public class FilterResourcesPlugin implements Plugin<ProjectInternal> {
                 final ProcessResources filterResourcesTask = project.getTasks().create(filterResourcesTaskName, ProcessResources.class);
                 filterResourcesTask.setDescription(String.format("Filters the %s resources for filtering.", sourceSet.getName()));
 
-                filterResourcesTask.setFileMode(755);  //SKTOOLS-123 no read only generated files i linux
-                filterResourcesTask.setDirMode(555); //SKTOOLS-123 no read only generated files i linux
+                filterResourcesTask.setFileMode(0755);  //SKTOOLS-123 no read only generated files i linux
+                filterResourcesTask.setDirMode(0755); //SKTOOLS-123 no read only generated files i linux
 
                 filterResourcesTask.from(new Callable<Object>() {
                     public Object call() throws Exception {
@@ -137,6 +137,15 @@ public class FilterResourcesPlugin implements Plugin<ProjectInternal> {
                         Map<String,Object> filterProperties = convention.getProperties();
                         filterResourcesTask.getInputs().properties(filterProperties);
                         filterResourcesTask.filter(Collections.singletonMap("tokens", filterProperties), org.apache.tools.ant.filters.ReplaceTokens.class);
+                    }
+                });
+
+
+                filterResourcesTask.doFirst(new Action<Task>() {
+                    @Override
+                    public void execute(Task task) {
+                        System.out.println(String.format("Starter task %s", task.getName()));
+                        System.out.println();
                     }
                 });
             }
