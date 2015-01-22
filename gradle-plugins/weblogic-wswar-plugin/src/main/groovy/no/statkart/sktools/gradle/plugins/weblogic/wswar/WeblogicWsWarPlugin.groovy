@@ -78,17 +78,12 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
 
                     def weblogicConfiguration = project.getConfigurations().getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME)
 
-                    // Dersom Java
-                    if (project.plugins.hasPlugin(JavaPlugin.class)) {
-                        scopes.COMPILE.plus += [project.configurations[weblogicSourceSet.compileConfigurationName], weblogicConfiguration]
-                        scopes.RUNTIME.minus += project.configurations[weblogicSourceSet.compileConfigurationName]
-                        scopes.RUNTIME.plus += project.configurations[weblogicSourceSet.runtimeConfigurationName]
-                    } else {
-                        scopes.PROVIDED = [plus: [], minus: []]
-                        scopes.COMPILE = [plus: [project.configurations[weblogicSourceSet.compileConfigurationName], weblogicConfiguration], minus: []]
-                        scopes.RUNTIME = [plus: [project.configurations[weblogicSourceSet.runtimeConfigurationName]], minus: [project.configurations[weblogicSourceSet.compileConfigurationName]]]
-                        scopes.TEST = [plus: [], minus: []]
-                    }
+
+                    scopes.COMPILE.plus += [project.configurations[weblogicSourceSet.compileConfigurationName], weblogicConfiguration]
+                    scopes.RUNTIME.plus += [project.configurations[weblogicSourceSet.runtimeConfigurationName]]
+                    scopes.RUNTIME.minus += [project.configurations[weblogicSourceSet.compileConfigurationName]]
+                    scopes.TEST.plus += [project.configurations[weblogicSourceSet.runtimeConfigurationName]]
+
                 }
             }
         }
