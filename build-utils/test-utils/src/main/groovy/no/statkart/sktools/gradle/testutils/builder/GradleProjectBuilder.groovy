@@ -14,7 +14,7 @@ import org.gradle.api.plugins.WarPlugin
  *
  * @author Leif Lislegård
  */
-class GradleProjectBuilder<T extends GradleProjectBuilder> {
+class GradleProjectBuilder<T extends GradleProjectBuilder<T>> {
 
     protected ProjectHelper projectHelper
     private ProjectBuilder builder
