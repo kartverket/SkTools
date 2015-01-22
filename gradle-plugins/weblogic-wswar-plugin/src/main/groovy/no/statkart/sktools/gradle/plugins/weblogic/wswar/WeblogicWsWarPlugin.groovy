@@ -79,6 +79,10 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
                     def weblogicConfiguration = project.getConfigurations().getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME)
 
 
+                    ['COMPILE', 'RUNTIME', 'TEST', 'PROVIDED'].each { scopeName ->
+                        scopes[scopeName] = scopes[scopeName] ?: [plus: [], minus: []] //SKTOOLS-133: oppretter scopes selv dersom ikke JavaPlugin er aktivert...
+                    }
+
                     scopes.COMPILE.plus += [project.configurations[weblogicSourceSet.compileConfigurationName], weblogicConfiguration]
                     scopes.RUNTIME.plus += [project.configurations[weblogicSourceSet.runtimeConfigurationName]]
                     scopes.RUNTIME.minus += [project.configurations[weblogicSourceSet.compileConfigurationName]]
