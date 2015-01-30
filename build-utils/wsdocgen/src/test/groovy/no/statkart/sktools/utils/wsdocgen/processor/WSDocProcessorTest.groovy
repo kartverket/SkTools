@@ -1460,6 +1460,171 @@ class WSDocProcessorTest {
         }
     }
 
+    /**
+     * Parameter description skal ha formatert description
+     * med inline taglet.
+     * @since 1.4 - SKTOOLS-134
+     */
+    @Test
+    void parameterCanHaveFormattedDescription() {
+        ProjectHelper projectHelper = GradleProjectBuilder.builder('WsDocgenTest').build()
+        def outputPath = 'build/gen/wsdoc'
+        def sourcePath = 'src/main/java'
+        def resourcePath = 'src/main/resources'
+
+        def xslt;
+
+        //generer eksempel-kildekode
+        use(WsDocgenTestutilFilewriter) {
+            projectHelper.writeCustomFile('src/main/java/TestWSBean.java') {
+                """
+                package test1;
+
+                 @javax.jws.WebService(
+                         name = "TestService",
+                         serviceName = "TestServiceWS",
+                         targetNamespace = "http://test.statkart.no/test1")
+                 public class TestWSBean {
+
+                     /**
+                     * @param value value in {@code base} system
+                     * @return value typed as {@code long} {@code <encoded>}
+                     */
+                     public long intToLong(int value, int base) {
+                         return 0;
+                     }
+                 }
+                """
+            }
+
+            xslt = projectHelper.writeCustomFile('minimal.xsl') {
+                """
+<xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+
+<xsl:output method="xml" version="1.0" indent="yes"
+  doctype-public="-//W3C//DTD XHTML 1.0 Strict//EN"
+  doctype-system="http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"
+  media-type="text/html"
+  omit-xml-declaration="no" />
+
+<xsl:template match="/services/service">
+<html><body>
+    <div>
+        <xsl:for-each select="methods/method">
+        <div>
+            <h4><xsl:value-of select="@name"/></h4>
+            <p><xsl:apply-templates select="description"/></p>
+
+            <h5>Input</h5>
+            <ul>
+                <xsl:for-each select="parameters/parameter">
+                <li>
+                   <span><xsl:value-of select="@name"/></span>
+                   <p><xsl:apply-templates select="description"/></p>
+                </li>
+                </xsl:for-each>
+            </ul>
+
+        </div>
+        </xsl:for-each>
+    </div>
+</body></html>
+</xsl:template>
+
+<xsl:template match="description">
+  <xsl:comment>DESCRIPTION:</xsl:comment>
+  <xsl:for-each select="text()|*">
+    <xsl:choose>
+      <xsl:when test="name(.)">
+        <xsl:apply-templates select="." mode="#default"/>
+      </xsl:when>
+
+      <xsl:otherwise>
+        <xsl:apply-templates select="." mode="noEscapedText"/>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:for-each>
+
+</xsl:template>
+
+
+<xsl:template match="span" mode="#all">
+  <xsl:element name="span">
+    <xsl:attribute name="class" select="@class" />
+
+    <xsl:choose>
+      <xsl:when test="@class='javadoc_tag_code'">
+        <xsl:attribute name="debug">span with escaped contents!</xsl:attribute>
+        <xsl:apply-templates mode="#default" />
+      </xsl:when>
+
+      <xsl:otherwise>
+        <xsl:attribute name="debug">normal span element</xsl:attribute>
+        <xsl:apply-templates mode="noEscapedText"/>
+      </xsl:otherwise>
+    </xsl:choose>
+
+  </xsl:element>
+</xsl:template>
+
+<xsl:template match="text()" mode="noEscapedText">
+    <xsl:value-of select="." disable-output-escaping="yes" />
+</xsl:template>
+
+</xsl:stylesheet>
+                """
+            }
+
+        }
+
+        //setter opp testprosjekt
+        projectHelper.configureProject {
+            mkdir(outputPath)
+
+            apply plugin: 'java'
+
+            task('testWSDocProcessor', type: JavaCompile.class) {
+
+                options.compilerArgs = [
+                        "-proc:only",
+                        "-processor", WSDocProcessor.class.getName(),
+
+                        "-Axslt=${xslt}", //xslt file
+                ]
+
+                // specify output of generated code
+                destinationDir = file(outputPath)
+
+                // specify source files
+                source = sourceSets.main.java
+                include('**/*WSBean.java')
+
+                classpath = configurations.compile
+
+            }
+        } //end configure
+
+        //utfører task
+        projectHelper.executeTask('testWSDocProcessor')
+
+
+        //tester resultat
+        projectHelper.assertFileExists(outputPath + '/TestService.html') { File file ->
+
+            println "Generert html: \n" + file.getText()
+
+            //leser inn html dokumentasjon som xml - dette steget validerer derfor html-koden
+            GPathResult html = parseXML(file)
+
+            Assert.assertEquals html.body.div[0].div[0].h4[0].text().trim(), 'intToLong', "forventet overskrift"
+            Assert.assertEquals html.body.div[0].div[0].h5[0].text().trim(), 'Input', "forventet overskrift"
+
+            Assert.assertEquals html.body.div[0].div[0].ul[0].li[0].span[0].text(), 'value', "forventet parameternavn"
+            Assert.assertEquals html.body.div[0].div[0].ul[0].li[0].p[0].text().trim(), 'value in base system', "forventet tekstlig dokumentasjon"
+            Assert.assertEquals html.body.div[0].div[0].ul[0].li[0].p[0].span[0].text().trim(), 'base', "{@code base} wraps to <span>"
+
+        }
+    }
 
     public static GPathResult parseXML(File file) {
         XmlSlurper slurper = XmlTestUtils.defaultXmlSlurper()
