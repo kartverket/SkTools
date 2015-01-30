@@ -1274,6 +1274,7 @@ class WSDocProcessorTest {
 
                 /**
                  * Service description. {@bold Bold sentence.}
+                 * <p>wrapped text test of {@code GBOK-4872}</p>
                  * @since SKTOOLS-108
                  **/
                  @javax.jws.WebService(
@@ -1288,6 +1289,7 @@ class WSDocProcessorTest {
                      * <ul><li>testlist</li></ul>
                      * @since SKTOOLS-108
                      * @hint
+                     * @param value value in {@code base} system
                      * @return value typed as {@code long} {@code <encoded>}
                      */
                      public long intToLong(int value, int base) {
@@ -1309,7 +1311,11 @@ class WSDocProcessorTest {
 
 <xsl:template match="/services/service">
 <html><body>
-   <xsl:comment>description without formatting</xsl:comment>
+
+   <xsl:comment>description with no escaped javadoc: </xsl:comment>
+   description=<div><xsl:apply-templates select="description"/></div>
+
+   <xsl:comment>description without formatting: </xsl:comment>
    description=<div><xsl:value-of select="description"/></div>
 
     <div>
@@ -1426,24 +1432,30 @@ class WSDocProcessorTest {
             //leser inn html dokumentasjon som xml - dette steget validerer derfor html-koden
             GPathResult html = parseXML(file)
 
-            //sjekker innhold
-            Assert.assertEquals html.body.div[0].text(), 'Service description. Bold sentence.', "service description"
+            //sjekker innhold - example with no escaped text
+            Assert.assertEquals html.body.div[0].text(), 'Service description. Bold sentence.wrapped text test of GBOK-4872', "plaintext service description"
+            Assert.assertEquals html.body.div[0].span[0].text(), 'Bold sentence.', "{@bold ...} turns into <div>"
+            Assert.assertEquals html.body.div[0].p.text(), 'wrapped text test of GBOK-4872', "nested <p>"
+            Assert.assertEquals html.body.div[0].p.span[0].text(), 'GBOK-4872', "{@code GBOK-4872} turns into <div>"
+
+            //sjekker innhold - example of escaped text
+            Assert.assertEquals html.body.div[1].text().replaceAll('\n', ''), 'Service description. Bold sentence.<p>wrapped text test of GBOK-4872</p>', "escaped service description"
 
             //sjekker dokumenterte metoder
-            Assert.assertEquals html.body.div[1].div.size(), 1, "forventet antall metoder for service"
+            Assert.assertEquals html.body.div[2].div.size(), 1, "forventet antall metoder for service"
 
-            Assert.assertEquals html.body.div[1].div[0].h4[0].text().trim(), 'intToLong', "forventet overskrift"
-            Assert.assertEquals html.body.div[1].div[0].p[0].text().trim().replaceAll("\\s+"," "), 'Bold sentence. Intended for asserting a conversion. testlist', "forventet dokumentasjon"
+            Assert.assertEquals html.body.div[2].div[0].h4[0].text().trim(), 'intToLong', "forventet overskrift"
+            Assert.assertEquals html.body.div[2].div[0].p[0].text().trim().replaceAll("\\s+"," "), 'Bold sentence. Intended for asserting a conversion. testlist', "forventet dokumentasjon"
 
-            Assert.assertEquals html.body.div[1].div[0].p[0].span[0].@class.text(), 'javadoc_tag_bold', "forventet CSS.class"
-            Assert.assertEquals html.body.div[1].div[0].p[0].span[0].text().trim(), 'Bold sentence.', "forventet tekst for span"
+            Assert.assertEquals html.body.div[2].div[0].p[0].span[0].@class.text(), 'javadoc_tag_bold', "forventet CSS.class"
+            Assert.assertEquals html.body.div[2].div[0].p[0].span[0].text().trim(), 'Bold sentence.', "forventet tekst for span"
 
-            Assert.assertEquals html.body.div[1].div[0].p[0].ul[0].li[0].text().trim(), 'testlist', "forventet tekst for li"
+            Assert.assertEquals html.body.div[2].div[0].p[0].ul[0].li[0].text().trim(), 'testlist', "forventet tekst for li"
 
-            Assert.assertEquals html.body.div[1].div[0].ul[0].li[0].span[0].text(), 'return', "forventet tekst for retur"
-            Assert.assertEquals html.body.div[1].div[0].ul[0].li[0].p[0].text().trim().replaceAll("\\s+"," "), 'value typed as long<encoded>', "forventet dokumentasjon av retur" //groovy substituerer &gt; og andre entiteter...
-            Assert.assertEquals html.body.div[1].div[0].ul[0].li[0].p[0].span[0].text().trim(), 'long', "forventet formatert dokumentasjon av retur"
-            Assert.assertEquals html.body.div[1].div[0].ul[0].li[0].p[0].span[1].text().trim(), '<encoded>', "forventet formatert dokumentasjon av retur" //groovy substituerer &gt; og andre entiteter...
+            Assert.assertEquals html.body.div[2].div[0].ul[0].li[0].span[0].text(), 'return', "forventet tekst for retur"
+            Assert.assertEquals html.body.div[2].div[0].ul[0].li[0].p[0].text().trim().replaceAll("\\s+"," "), 'value typed as long<encoded>', "forventet dokumentasjon av retur" //groovy substituerer &gt; og andre entiteter...
+            Assert.assertEquals html.body.div[2].div[0].ul[0].li[0].p[0].span[0].text().trim(), 'long', "forventet formatert dokumentasjon av retur"
+            Assert.assertEquals html.body.div[2].div[0].ul[0].li[0].p[0].span[1].text().trim(), '<encoded>', "forventet formatert dokumentasjon av retur" //groovy substituerer &gt; og andre entiteter...
 
         }
     }
