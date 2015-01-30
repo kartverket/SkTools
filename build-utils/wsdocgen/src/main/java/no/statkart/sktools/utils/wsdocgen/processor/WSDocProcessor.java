@@ -141,6 +141,7 @@ public class WSDocProcessor extends AbstractProcessor {
 
             final XMLBuilderFactory xmlBuilder = new XMLBuilderFactory(docBuilder.newDocument(), processingEnv);
             final org.w3c.dom.Element services = xmlBuilder.getServicesBuilder().createServices();
+            final Element wsiElement = wsiByWSBeanName.get(element.getSimpleName().toString()); //korresponderende element for WSI deklarasjon
 
 //            final Filer filer = processingEnv.getFiler();
 //            final Elements elementUtils = processingEnv.getElementUtils();
@@ -151,7 +152,7 @@ public class WSDocProcessor extends AbstractProcessor {
             FileObject outputFile = null;
 
             try {
-                xmlBuilder.getServiceBuilder().appendServiceTo(services, element, fileName, wsiByWSBeanName.get(element.getSimpleName().toString()));
+                xmlBuilder.getServiceBuilder().appendServiceTo(services, element, fileName, wsiElement);
             } catch (RuntimeException e) {
                 processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, String.format("%s", e.getMessage()), element);
             }
@@ -174,7 +175,7 @@ public class WSDocProcessor extends AbstractProcessor {
 
             //index fil: SKTOOLS-105
             if (indexServices != null) {
-                indexXmlBuilderFactory.getServiceBuilder().appendServiceTo(indexServices, element, fileName, wsiByWSBeanName.get(element.getSimpleName().toString()));
+                indexXmlBuilderFactory.getServiceBuilder().appendServiceTo(indexServices, element, fileName, wsiElement);
             }
 
             int debug = 0;

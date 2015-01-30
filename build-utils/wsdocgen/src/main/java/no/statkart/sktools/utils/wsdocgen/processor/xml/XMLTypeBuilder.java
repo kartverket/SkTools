@@ -17,8 +17,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+
 import no.statkart.sktools.utils.wsdocgen.processor.util.*;
-import org.w3c.dom.Node;
 
 import static javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI;
 
@@ -34,8 +34,6 @@ class XMLTypeBuilder {
     private final org.w3c.dom.Document document;
 
 
-
-
     XMLTypeBuilder(XMLBuilderFactory factory) {
         this.factory = factory;
         this.processingEnv = factory.getProcessingEnv();
@@ -45,7 +43,6 @@ class XMLTypeBuilder {
             initializeCommponTypes();
         }
     }
-
 
 
     public org.w3c.dom.Element appendTypeTo(org.w3c.dom.Node parent, Element element) {
@@ -95,7 +92,6 @@ class XMLTypeBuilder {
     }
 
 
-
     private org.w3c.dom.Element buildTypeImpl(Document document, String name, String ns, JavaDocUtils javaDocUtils) {
         org.w3c.dom.Element type = document.createElement("type");
         type.setAttribute("name", name);
@@ -111,14 +107,14 @@ class XMLTypeBuilder {
         //NT 17.01.2014, tom streng vil trigge relativ url sti i browseren.
         String javadocPath = (basePath == null) ? "" : basePath;
         String remainingUrlPath = buildJavadocPath(ns, clazz);
-        final StringBuffer buffer=new StringBuffer(javadocPath);
-        if(remainingUrlPath!=null && remainingUrlPath.trim().length()>0)
+        final StringBuilder buffer = new StringBuilder(javadocPath);
+        if (remainingUrlPath != null && remainingUrlPath.trim().length() > 0)
             buffer.append("?").append(remainingUrlPath);
         //javadocPath += '?' + remainingUrlPath;
         return buffer.toString();
     }
 
-    /**
+    /*
      getJavadocURL("http://grunnbok.statkart.no/borett/info/wsapi/exception", "ServiceException")
 
      => "no/statkart/grunnbok/borett/info/wsapi/exception/ServiceException.html"
@@ -205,9 +201,9 @@ class XMLTypeBuilder {
         defineCachedType(Boolean.class,                new QName(W3C_XML_SCHEMA_NS_URI, "boolean"));
         defineCachedType(Byte.class,                   new QName(W3C_XML_SCHEMA_NS_URI, "byte"));
         defineCachedType(byte.class,                   new QName(W3C_XML_SCHEMA_NS_URI, "byte"));
-        defineCachedType(QName.class, new QName(W3C_XML_SCHEMA_NS_URI, "QName"));
-        defineCachedType(java.util.Calendar.class, new QName(W3C_XML_SCHEMA_NS_URI, "dateTime"));
-        defineCachedType(XMLGregorianCalendar.class, new QName(W3C_XML_SCHEMA_NS_URI, "dateTime"));
+        defineCachedType(QName.class,                  new QName(W3C_XML_SCHEMA_NS_URI, "QName"));
+        defineCachedType(java.util.Calendar.class,     new QName(W3C_XML_SCHEMA_NS_URI, "dateTime"));
+        defineCachedType(XMLGregorianCalendar.class,   new QName(W3C_XML_SCHEMA_NS_URI, "dateTime"));
         defineCachedType(byte[].class,                 new QName(W3C_XML_SCHEMA_NS_URI, "base64Binary"));
     }
 

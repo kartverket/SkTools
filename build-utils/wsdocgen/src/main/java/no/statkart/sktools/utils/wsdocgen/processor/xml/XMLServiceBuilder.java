@@ -19,6 +19,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * Builds {@code <service>} elements for parametrized class
+ *
  * @author Leif Lislegård
  * @since 1.3
  */
@@ -138,7 +140,10 @@ public class XMLServiceBuilder {
         for (VariableElement variableElement : element.getParameters()) {
             org.w3c.dom.Element parameter = document.createElement("parameter");
             parameter.setAttribute("name", WSUtils.findName(variableElement, true));
-            parameter.setAttribute("description", paramsDocumentation.get(variableElement.getSimpleName().toString()));
+
+            String documentationString = paramsDocumentation.get(variableElement.getSimpleName().toString());
+            parameter.appendChild(factory.getDescriptionBuilder().buildDescription(documentationString));
+            parameter.setAttribute("description", documentationString); //no-escaped text not possible with attribute...
 
             parameter.appendChild(factory.getTypeBuilder().buildType(variableElement));
 
