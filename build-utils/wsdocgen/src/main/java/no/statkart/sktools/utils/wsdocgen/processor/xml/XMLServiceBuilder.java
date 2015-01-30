@@ -3,6 +3,7 @@ package no.statkart.sktools.utils.wsdocgen.processor.xml;
 import no.statkart.sktools.utils.wsdocgen.processor.util.JavaDocUtils;
 import no.statkart.sktools.utils.wsdocgen.processor.util.WSUtils;
 import org.w3c.dom.Document;
+import org.w3c.dom.Node;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.jws.WebMethod;
@@ -14,6 +15,7 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -34,15 +36,15 @@ public class XMLServiceBuilder {
     }
 
 
-    public org.w3c.dom.Element appendServiceTo(org.w3c.dom.Node servicesNode, Element element, String relativeUrl) {
-        org.w3c.dom.Element service = buildService(document, element, relativeUrl);
+    public org.w3c.dom.Element appendServiceTo(Node servicesNode, Element element, String relativeUrl, Element wsiElement) {
+        org.w3c.dom.Element service = buildService(document, element, relativeUrl, wsiElement);
         servicesNode.appendChild(service);
         return service;
     }
 
-    org.w3c.dom.Element buildService(Document document, Element element, String relativeUrl) {
+    org.w3c.dom.Element buildService(Document document, Element element, String relativeUrl, Element wsiElement) {
         final org.w3c.dom.Element serviceElement = document.createElement("service");
-        JavaDocUtils javaDocUtils = findComment(element);
+        JavaDocUtils javaDocUtils = findComment(element, wsiElement);
 
         System.out.println(String.format("Beskrivelse : %s %s", javaDocUtils.getText(), javaDocUtils.getAllTags()));
 
@@ -52,18 +54,23 @@ public class XMLServiceBuilder {
         serviceElement.setAttribute("href", relativeUrl);
 
         serviceElement.appendChild(factory.getDescriptionBuilder().buildDescription(javaDocUtils));
-        serviceElement.appendChild(buildMethods(document, element));
+        serviceElement.appendChild(buildMethods(document, element, wsiElement));
 
         return serviceElement;
     }
 
 
-    private JavaDocUtils findComment(Element element) {
+    private JavaDocUtils findComment(Element element, Element wsiElement) {
         String docComment = processingEnv.getElementUtils().getDocComment(element);
+
+        if(docComment == null && wsiElement != null) {
+            docComment = processingEnv.getElementUtils().getDocComment(wsiElement);
+        }
+
         return JavaDocUtils.parse(docComment);
     }
 
-    org.w3c.dom.Element buildMethods(Document document, Element element) {
+    org.w3c.dom.Element buildMethods(Document document, Element element, Element wsiElement) {
         org.w3c.dom.Element methods = document.createElement("methods");
 
         boolean isUsingWebMethodAnnotation = false;
@@ -74,17 +81,25 @@ public class XMLServiceBuilder {
             }
         }
 
+        Map<String, Element> wsiEnclosedElements = new HashMap<String, Element>();
+        if (wsiElement != null) {
+            for (Element element1 : wsiElement.getEnclosedElements()) {
+                wsiEnclosedElements.put(element1.getSimpleName().toString(), element1);
+            }
+        }
+
         for (Element enclosedElement : element.getEnclosedElements()) {
+
             if (enclosedElement.getKind().equals(ElementKind.METHOD)) {
                 org.w3c.dom.Element method = null;
 
                 if (isUsingWebMethodAnnotation) {
                     WebMethod webMethod = enclosedElement.getAnnotation(WebMethod.class);
                     if (webMethod != null && webMethod.exclude() == false) {
-                        method = buildMethod(document, enclosedElement, isUsingWebMethodAnnotation);
+                        method = buildMethod(document, enclosedElement, isUsingWebMethodAnnotation, wsiEnclosedElements.get(enclosedElement.getSimpleName().toString()));
                     }
                 } else {
-                    method = buildMethod(document, enclosedElement, isUsingWebMethodAnnotation);
+                    method = buildMethod(document, enclosedElement, isUsingWebMethodAnnotation, wsiEnclosedElements.get(enclosedElement.getSimpleName().toString()));
                 }
 
                 if (method != null) {
@@ -97,7 +112,7 @@ public class XMLServiceBuilder {
     }
 
 
-    org.w3c.dom.Element buildMethod(Document document, Element methodElement, boolean usingWebMethodAnnotation) {
+    org.w3c.dom.Element buildMethod(Document document, Element methodElement, boolean usingWebMethodAnnotation, Element wsiElement) {
         org.w3c.dom.Element method = null;
         if (methodElement instanceof ExecutableElement) {
             ExecutableElement executableElement = (ExecutableElement) methodElement;
@@ -106,7 +121,7 @@ public class XMLServiceBuilder {
             System.out.println(String.format("Found method: %s", methodElement));
             //processingEnv.getMessager().printMessage(Diagnostic.Kind.OTHER, String.format("Found method: %s", methodElement));
 
-            JavaDocUtils javaDocUtils = findComment(executableElement);
+            JavaDocUtils javaDocUtils = findComment(executableElement, wsiElement);
 
             method.setAttribute("name", WSUtils.findMethodName(executableElement, usingWebMethodAnnotation));
 

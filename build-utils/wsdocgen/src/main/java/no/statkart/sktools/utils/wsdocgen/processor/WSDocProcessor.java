@@ -23,6 +23,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 
@@ -119,6 +121,20 @@ public class WSDocProcessor extends AbstractProcessor {
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
 
+        Map<String, Element> wsiByWSBeanName = new HashMap<String, Element>();
+        for (Element element : roundEnv.getRootElements()) {
+            String simpleName = element.getSimpleName().toString();
+            if(simpleName.endsWith("WSI")) {
+                String wsBeanName = simpleName.replaceAll("WSI\\z", "WSBean");
+                wsiByWSBeanName.put(wsBeanName, element);
+            }
+        }
+
+//        for (Map.Entry<String, Element> stringElementEntry : wsiByWSBeanName.entrySet()) {
+//            System.out.println("Key: " + stringElementEntry.getKey());
+//            System.out.println("Value: " + stringElementEntry.getValue());
+//        }
+
         for (Element element : roundEnv.getElementsAnnotatedWith(WebService.class)) {
             System.out.println(String.format("Processing class: %s ", element));
             //processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, String.format("Processing class: %s ", element));
@@ -135,7 +151,7 @@ public class WSDocProcessor extends AbstractProcessor {
             FileObject outputFile = null;
 
             try {
-                xmlBuilder.getServiceBuilder().appendServiceTo(services, element, fileName);
+                xmlBuilder.getServiceBuilder().appendServiceTo(services, element, fileName, wsiByWSBeanName.get(element.getSimpleName().toString()));
             } catch (RuntimeException e) {
                 processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, String.format("%s", e.getMessage()), element);
             }
@@ -158,7 +174,7 @@ public class WSDocProcessor extends AbstractProcessor {
 
             //index fil: SKTOOLS-105
             if (indexServices != null) {
-                indexXmlBuilderFactory.getServiceBuilder().appendServiceTo(indexServices, element, fileName);
+                indexXmlBuilderFactory.getServiceBuilder().appendServiceTo(indexServices, element, fileName, wsiByWSBeanName.get(element.getSimpleName().toString()));
             }
 
             int debug = 0;
