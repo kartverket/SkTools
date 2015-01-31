@@ -2,6 +2,7 @@ package no.statkart.sktools.gradle.testutils.xml
 
 import org.xml.sax.InputSource
 import org.xml.sax.SAXException
+import org.xml.sax.SAXParseException
 
 /**
  * Resolver DTD filer uten å laste ned disse ifra internett ({@code systemId})
@@ -38,16 +39,56 @@ class XmlTestUtils {
     public static XmlSlurper buildXmlSlurper(Map entityFiles) {
         XmlSlurper slurper;
         if (GroovySystem.version.startsWith('1.8.')) {
-            slurper = XmlSlurper.class.newInstance(true, true) //allowDocTypeDeclaration=true for html documents
+            slurper = XmlSlurper.class.newInstance(true, true) //validation, allowDocTypeDeclaration=true for html documents
         } else if (GroovySystem.version.startsWith('2.')) {
-            slurper = XmlSlurper.class.newInstance(true, true, true) //allowDocTypeDeclaration=true for html documents
+            slurper = XmlSlurper.class.newInstance(true, true, true) //validation, allowDocTypeDeclaration=true for html documents
         } else {
             throw new RuntimeException("Legg til opprettelse av XmlSlurper for Groovy ${GroovySystem.version}")
         }
         slurper.setEntityResolver(new TestEntityResolver(entityFiles))
+        slurper.setErrorHandler(new TestValidationReporter()); //removes warnings in output when validate=true
 
         return slurper
     }
+}
+
+class TestValidationReporter implements org.xml.sax.ErrorHandler {
+
+    /**
+     * Errors, warnings are sent to this output.
+     */
+    private PrintStream output;
+
+    private boolean hadError = false;
+
+    TestValidationReporter(PrintStream output = System.out) {
+        this.output = output;
+    }
+
+    @Override
+    void warning(SAXParseException exception) throws SAXException {
+        print("WARNING", exception);
+    }
+
+    @Override
+    void error(SAXParseException exception) throws SAXException {
+        print("ERROR", exception);
+    }
+
+    @Override
+    void fatalError(SAXParseException exception) throws SAXException {
+        print("FATAL", exception);
+    }
+
+    public boolean hadError() {
+        return hadError;
+    }
+
+    private void print( String severity, SAXParseException e ) {
+        output.println(String.format("%s: line:%d col:%d %s", severity, e.getLineNumber(), e.getColumnNumber(), e.getMessage()));
+        output.flush();
+    }
+
 }
 
 class TestEntityResolver implements org.xml.sax.EntityResolver {
