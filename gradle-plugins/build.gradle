@@ -72,7 +72,7 @@ task('testDemos') {
 
             //kjøring av tester før kjøring av demos
             if (project.gradle.startParameter.taskNames.contains('test')) {
-                runDemoTask.dependsOn project.subprojects.collectAll { it.getTasksByName('test', true) }
+                runDemoTask.dependsOn project.subprojects.collectNested { it.getTasksByName('test', true) }
             }
 
         }
