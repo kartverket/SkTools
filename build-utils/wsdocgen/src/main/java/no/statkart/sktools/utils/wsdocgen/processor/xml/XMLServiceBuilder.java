@@ -7,6 +7,7 @@ import org.w3c.dom.Node;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.jws.WebMethod;
+import javax.jws.WebResult;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -145,7 +146,7 @@ public class XMLServiceBuilder {
             parameter.appendChild(factory.getDescriptionBuilder().buildDescription(documentationString));
             parameter.setAttribute("description", documentationString); //no-escaped text not possible with attribute...
 
-            parameter.appendChild(factory.getTypeBuilder().buildType(variableElement));
+            parameter.appendChild(factory.getTypeBuilder().buildType(variableElement.asType()));
 
             parameters.appendChild(parameter);
         }
@@ -157,12 +158,23 @@ public class XMLServiceBuilder {
         final TypeMirror returnType = element.getReturnType();
 
         if (!TypeKind.VOID.equals(returnType.getKind())) {
-            org.w3c.dom.Element parameter = document.createElement("parameter");
-            parameter.setAttribute("name", WSUtils.findName(element, false));
-            if ("".equals(parameter.getAttribute("name"))) {
-                parameter.setAttribute("name", "return"); //weblogic defaulter til dette navnet?
+            final org.w3c.dom.Element parameter = document.createElement("parameter");
+
+            String name = "";
+            WebResult webResultAnnotation = element.getAnnotation(WebResult.class);
+            if (webResultAnnotation != null) {
+                if (!"".equals(webResultAnnotation.name())) {
+                    name = webResultAnnotation.name();
+                }
+            }
+            if (!"".equals(name)) {
+                name = WSUtils.findName(element, false);
+            }
+            if (!"".equals(name)) {
+                name = "return"; //weblogic defaulter til dette navnet?
             }
 
+            parameter.setAttribute("name", name);
             parameter.appendChild(factory.getDescriptionBuilder().buildDescription(returnDocumentation));
             parameter.appendChild(factory.getTypeBuilder().buildType(returnType));
 

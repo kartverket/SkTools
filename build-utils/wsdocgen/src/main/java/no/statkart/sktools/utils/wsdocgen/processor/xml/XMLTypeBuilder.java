@@ -10,7 +10,9 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.tools.Diagnostic;
 import javax.xml.bind.annotation.XmlSchema;
+import javax.xml.bind.annotation.XmlType;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.namespace.QName;
 import java.net.MalformedURLException;
@@ -20,6 +22,8 @@ import java.util.Map;
 
 import no.statkart.sktools.utils.wsdocgen.processor.util.*;
 
+import static javax.lang.model.type.TypeKind.DECLARED;
+import static javax.lang.model.type.TypeKind.ERROR;
 import static javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI;
 
 /**
@@ -52,6 +56,9 @@ class XMLTypeBuilder {
     }
 
     public org.w3c.dom.Element buildType(Element element) {
+        if (ERROR.equals(element.getKind())) {
+            return null;
+        }
         if (element instanceof VariableElement || element instanceof TypeElement) {
             final String name = WSUtils.findName(element, true);
             final String ns = findObjectNamespace(element);
@@ -79,16 +86,30 @@ class XMLTypeBuilder {
             }
         }
 
-        if (typeMirror.getKind().equals(TypeKind.DECLARED)) {
-            DeclaredType declaredType = (DeclaredType) typeMirror;
-            final Element declaredElement = declaredType.asElement();
+        switch (typeMirror.getKind()) {
+            case DECLARED: {
+                DeclaredType declaredType = (DeclaredType) typeMirror;
+                final Element declaredElement = declaredType.asElement();
 
-            final String name = declaredElement.getSimpleName().toString();
-            final String ns = findObjectNamespace(declaredType);
-            return buildTypeImpl(document, name, ns, null);
+                final String name = declaredElement.getSimpleName().toString();
+                final String ns = findObjectNamespace(typeMirror);
+                return buildTypeImpl(document, name, ns, null);
+            }
+            case VOID: {
+                throw new IllegalArgumentException("Void type not allowed here!");
+            }
+            case ERROR: {
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.WARNING, String.format("No sources found. Unknown type: %s", typeMirror));
+            }
+            default: {
+                return buildUnknownType(document, typeMirror);
+            }
         }
 
-        throw new RuntimeException(String.format("Unhandled type: %s", typeMirror));
+    }
+
+    private org.w3c.dom.Element buildUnknownType(Document document, TypeMirror typeMirror) {
+        return buildTypeImpl(document, typeMirror.toString(), findObjectNamespace(typeMirror), null);
     }
 
 
@@ -103,6 +124,9 @@ class XMLTypeBuilder {
 
 
     public static String buildJavadocPath(String basePath, String ns, String clazz) {
+        if (ns == null || "".equals(ns)) {
+            return "";
+        }
         //String javadocPath = basePath == null ? "VALUE_NOT_PARAMETRIZED" : basePath;
         //NT 17.01.2014, tom streng vil trigge relativ url sti i browseren.
         String javadocPath = (basePath == null) ? "" : basePath;
@@ -160,22 +184,33 @@ class XMLTypeBuilder {
      * For kjente typer returneres namespace for disse.
      */
     private String findObjectNamespace(TypeMirror typeMirror) {
-        String objectNS = null;
+        String objectNS = "";
         if (typeMirror != null) {
             for (Map.Entry<TypeMirror, QName> entry : typeCache.entrySet()) {
                 if (entry.getKey().equals(typeMirror)) {
                     return entry.getValue().getNamespaceURI();
                 }
             }
+            XmlType xmlTypeAnnotation = typeMirror.getClass().getAnnotation(XmlType.class);
+            if (xmlTypeAnnotation != null) {
+                if (!"##default".equals(xmlTypeAnnotation.namespace())) {
+                    return xmlTypeAnnotation.namespace();
+                }
+            }
             XmlSchema xmlSchemaAnnotation = typeMirror.getClass().getPackage().getAnnotation(XmlSchema.class);
             if (xmlSchemaAnnotation != null) {
-                objectNS = xmlSchemaAnnotation.namespace();
+                if (!"".equals(xmlSchemaAnnotation.namespace())) {
+                    return xmlSchemaAnnotation.namespace();
+                }
             }
         }
-        if (objectNS == null || objectNS.isEmpty()) {
 
-            System.out.println(String.format("WARNING: no namespace defined for %s", typeMirror));
-            //processingEnv.getMessager().printMessage(Diagnostic.Kind.WARNING, String.format("WARNING: no namespace defined for %s", typeMirror));
+        if (objectNS.isEmpty()) {
+            if (ERROR.equals(typeMirror.getKind())) {
+                System.out.println(String.format("WARNING: no namespace found for %s", typeMirror));
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.WARNING, String.format("WARNING: no namespace found for %s", typeMirror));
+                return "";
+            }
         }
         return objectNS;
     }

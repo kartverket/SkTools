@@ -136,50 +136,54 @@ public class WSDocProcessor extends AbstractProcessor {
 //        }
 
         for (Element element : roundEnv.getElementsAnnotatedWith(WebService.class)) {
-            System.out.println(String.format("Processing class: %s ", element));
-            //processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, String.format("Processing class: %s ", element));
+            String webServicePortTypeName = WSUtils.findWebServicePortTypeName(element);
+            if (webServicePortTypeName != null) { //skipping none WebSerivce elements in input...
 
-            final XMLBuilderFactory xmlBuilder = new XMLBuilderFactory(docBuilder.newDocument(), processingEnv);
-            final org.w3c.dom.Element services = xmlBuilder.getServicesBuilder().createServices();
-            final Element wsiElement = wsiByWSBeanName.get(element.getSimpleName().toString()); //korresponderende element for WSI deklarasjon
+                final String fileName = String.format("%s.html", webServicePortTypeName);
+                System.out.println(String.format("Processing class: %s ", element));
+                //processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, String.format("Processing class: %s ", element));
+
+                final XMLBuilderFactory xmlBuilder = new XMLBuilderFactory(docBuilder.newDocument(), processingEnv);
+                final org.w3c.dom.Element services = xmlBuilder.getServicesBuilder().createServices();
+                final Element wsiElement = wsiByWSBeanName.get(element.getSimpleName().toString()); //korresponderende element for WSI deklarasjon
 
 //            final Filer filer = processingEnv.getFiler();
 //            final Elements elementUtils = processingEnv.getElementUtils();
 //            printDocumentTilSystemOut(document);
 
 
-            final String fileName = String.format("%s.html", WSUtils.findWebServicePortTypeName(element));
-            FileObject outputFile = null;
+                FileObject outputFile = null;
 
-            try {
-                xmlBuilder.getServiceBuilder().appendServiceTo(services, element, fileName, wsiElement);
-            } catch (RuntimeException e) {
-                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, String.format("%s", e.getMessage()), element);
+                try {
+                    xmlBuilder.getServiceBuilder().appendServiceTo(services, element, fileName, wsiElement);
+                } catch (RuntimeException e) {
+                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, String.format("%s", e.getMessage()), element);
+                }
+
+
+                try {
+                    outputFile = processingEnv.getFiler().createResource(StandardLocation.CLASS_OUTPUT, "", fileName);
+                } catch (IOException e) {
+                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, String.format("Error creating target-file %s", fileName));
+                    continue;
+                }
+
+                String xsltFilePath = processingEnv.getOptions().get("xslt");
+                if (xsltFilePath == null) {
+                    throw new RuntimeException(String.format("No xslt file defined! Configure javac with argument -Axslt=<file>"));
+                }
+
+                writeToFile(xmlBuilder.getDocument(), outputFile, xsltFilePath);
+
+
+                //index fil: SKTOOLS-105
+                if (indexServices != null) {
+                    indexXmlBuilderFactory.getServiceBuilder().appendServiceTo(indexServices, element, fileName, wsiElement);
+                }
+
+                int debug = 0;
+
             }
-
-
-            try {
-                outputFile = processingEnv.getFiler().createResource(StandardLocation.CLASS_OUTPUT, "", fileName);
-            } catch (IOException e) {
-                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, String.format("Error creating target-file %s", fileName));
-            }
-
-
-            String xsltFilePath = processingEnv.getOptions().get("xslt");
-            if (xsltFilePath == null) {
-                throw new RuntimeException(String.format("No xslt file defined! Configure javac with argument -Axslt=<file>"));
-            }
-
-            writeToFile(xmlBuilder.getDocument(), outputFile, xsltFilePath);
-
-
-            //index fil: SKTOOLS-105
-            if (indexServices != null) {
-                indexXmlBuilderFactory.getServiceBuilder().appendServiceTo(indexServices, element, fileName, wsiElement);
-            }
-
-            int debug = 0;
-
         }
 
         //index fil: SKTOOLS-105
