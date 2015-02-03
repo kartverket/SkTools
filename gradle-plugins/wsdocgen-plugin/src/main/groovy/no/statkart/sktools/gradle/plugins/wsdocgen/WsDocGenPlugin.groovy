@@ -6,9 +6,8 @@ import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.Dependency
-import org.gradle.api.file.FileCollection
-import org.gradle.api.initialization.dsl.ScriptHandler
 import org.gradle.api.internal.artifacts.publish.ArchivePublishArtifact
+import org.gradle.api.internal.project.ProjectInternal
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSet
@@ -26,16 +25,19 @@ import java.util.concurrent.Callable
  * @since 1.0
  * @author Leif Lislegård
  */
-class WsDocGenPlugin implements Plugin<Project> {
+class WsDocGenPlugin implements Plugin<ProjectInternal> {
 
-    final public static String CONVENTION_NAME = 'wsdoc'
-    final public static String GEN_TASK_NAME = 'genWsDoc'
-    final public static String ARCHIVE_TASK_NAME = 'packWsDoc'
+    public final static String CONVENTION_NAME = 'wsdoc'
+    public final static String GEN_TASK_NAME = 'genWsDoc'
+    public final static String ARCHIVE_TASK_NAME = 'packWsDoc'
+    public final static String DOCGEN_CONFIGURATION_NAME = 'wsdocgen'
 
 
     @Override
-    void apply(Project project) {
+    void apply(ProjectInternal project) {
         project.apply plugin: JavaBasePlugin.class
+
+        final Configuration configuration = createConfiguration(project);
 
         final WsDocGenConvention wsDocGenConvention = new WsDocGenConvention(project)
         project.convention.plugins.put(CONVENTION_NAME, wsDocGenConvention);
@@ -44,6 +46,7 @@ class WsDocGenPlugin implements Plugin<Project> {
         configureGenTask(project)
 
         configureArchives(wsDocGenConvention)
+        configureDocgenDependencies(project);
 
         //setting defaults if not already configured
         project.afterEvaluate {
@@ -133,35 +136,6 @@ class WsDocGenPlugin implements Plugin<Project> {
     }
 
 
-    public static FileCollection findPluginClasspath(final Project project) {
-
-        Closure<Boolean> pluginDependencyMatcher = {Dependency dependency -> dependency.getGroup() == 'no.statkart.sktools.gradle' && dependency.getName() == 'wsdocgen-plugin'}
-        Closure<Boolean> samlepomDependencyMatcher = {Dependency dependency -> dependency.getGroup() == 'no.statkart.sktools.gradle' && dependency.getName() == 'gradle-plugins'}
-
-        List<FileCollection> candidateFileCollections = [project, project.getRootProject()].collect {
-            FileCollection resolvedFiles = project.files();
-            Configuration buildConfiguration = it.getBuildscript().getConfigurations().getByName(ScriptHandler.CLASSPATH_CONFIGURATION);
-
-            Dependency pluginDependency = buildConfiguration.dependencies.find (pluginDependencyMatcher);
-            if (!pluginDependency.is(null)) {
-                resolvedFiles = buildConfiguration.fileCollection(pluginDependency);
-            } else {
-                //forsøker å finne 'samlepom' [SKIF-154]
-                Dependency samlepomDependency = buildConfiguration.dependencies.find (samlepomDependencyMatcher);
-                if (!samlepomDependency.is(null)) {
-                    resolvedFiles = buildConfiguration.fileCollection(samlepomDependency);
-                }
-            }
-//            println "resolved files: ${resolvedFiles.files}"
-            return resolvedFiles;
-        }
-
-        FileCollection candidate = candidateFileCollections.find { !it.isEmpty() }
-
-        return candidate;
-    }
-
-
     static def void configureGenTask(Project project) {
         project.task(GEN_TASK_NAME)
     }
@@ -186,5 +160,28 @@ class WsDocGenPlugin implements Plugin<Project> {
 
         return task
     }
+
+    /**
+     * processor implementations (needed on runtime classpath)
+     */
+    private static Configuration createConfiguration(Project project) {
+        Configuration configuration = project.configurations.create(DOCGEN_CONFIGURATION_NAME).setVisible(false).setDescription("Classpath for doc gen tool.");
+        return configuration;
+    }
+
+    /**
+     * Docgen processor as dependency
+     */
+    private static def configureDocgenDependencies(ProjectInternal project) {
+        if (runningInIDEATestEnvironment(project)) {
+            final String version = WsDocGenPlugin.class.getPackage().getImplementationVersion(); //manifest informasjon satt ifra byggesystem
+            project.getDependencies().add(DOCGEN_CONFIGURATION_NAME, [group: 'no.statkart.sktools', name: 'wsdocgen', version: version]);
+        }
+    }
+
+    static boolean runningInIDEATestEnvironment(final ProjectInternal project) {
+        project.rootProject.buildScriptSource.resource.file //antar at denne ikke er tilgjengelig ved bruk av org.gradle.testfixtures.ProjectBuilder og vice versa
+    }
+
 
 }

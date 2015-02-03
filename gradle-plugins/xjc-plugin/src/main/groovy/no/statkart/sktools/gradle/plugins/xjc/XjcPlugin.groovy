@@ -4,10 +4,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.Dependency
 import org.gradle.api.file.FileCollection
-import org.gradle.api.initialization.dsl.ScriptHandler
-import org.gradle.api.internal.file.UnionFileCollection
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSet
 import java.util.concurrent.Callable
@@ -46,9 +43,10 @@ class XjcPlugin implements Plugin<ProjectInternal> {
     void apply(ProjectInternal project) {
         project.apply plugin: JavaBasePlugin.class
 
-        final Configuration xjcConfiguration = createConfiguration(project);
-        final SourceSet sourceSet = configureSourceSets(project, xjcConfiguration)
+        final Configuration configuration = createConfiguration(project);
+        final SourceSet sourceSet = configureSourceSets(project, configuration)
 
+        configureXjcDependencies(project);
     }
 
     /**
@@ -130,8 +128,7 @@ class XjcPlugin implements Plugin<ProjectInternal> {
                             });
                             map("classpath", new Callable() {
                                 public Object call() {
-                                    //merge plugins dependencies with jaxb, putting jaxb first in classpath for optional override.
-                                    return new UnionFileCollection(project.getConfigurations().getByName(XjcPlugin.JAXB_CONFIGURATION_NAME), findPluginClasspath(project));
+                                    return project.getConfigurations().getByName(XjcPlugin.JAXB_CONFIGURATION_NAME);
                                 }
                             });
                         }
@@ -161,46 +158,26 @@ class XjcPlugin implements Plugin<ProjectInternal> {
 
     }
 
-
-
-    //todo: en bedre strategi her er eksplisitt å legge til dependencies. Dette kunne feks leses inn via en property fil for pluginet?
-    // Ovenstående strategi har utfordring da en i test sammenheng ikke kan deklarere dependencies. Disse vil da feile når man ikke
-    // har noe installert i noen repositories som er tilgjengelige.
-    // TIPS: se hva som er gjort for dbtools-plugin
-    private static FileCollection findPluginClasspath(final Project project) {
-
-        Closure<Boolean> pluginDependencyMatcher = {Dependency dependency -> dependency.getGroup() == 'no.statkart.sktools.gradle' && dependency.getName() == 'xjc-plugin'}
-        Closure<Boolean> samlepomDependencyMatcher = {Dependency dependency -> dependency.getGroup() == 'no.statkart.sktools.gradle' && dependency.getName() == 'gradle-plugins'}
-
-        List<FileCollection> candidateFileCollections = [project, project.getRootProject()].collect {
-            FileCollection resolvedFiles = project.files();
-            Configuration buildConfiguration = it.getBuildscript().getConfigurations().getByName(ScriptHandler.CLASSPATH_CONFIGURATION);
-
-            Dependency pluginDependency = buildConfiguration.dependencies.find (pluginDependencyMatcher);
-            if (!pluginDependency.is(null)) {
-                resolvedFiles = buildConfiguration.fileCollection(pluginDependency);
-            } else {
-                //forsøker å finne 'samlepom' [SKIF-154]
-                Dependency samlepomDependency = buildConfiguration.dependencies.find (samlepomDependencyMatcher);
-                if (!samlepomDependency.is(null)) {
-                    resolvedFiles = buildConfiguration.fileCollection(samlepomDependency);
-                }
-            }
-//            println "resolved files: ${resolvedFiles.files}"
-            return resolvedFiles;
-        }
-
-        FileCollection candidate = candidateFileCollections.find { !it.isEmpty() }
-        if (candidate == null) candidate = project.files(); //ok under eksekvering av test da man ikke bruker noen filer her.
-
-        return candidate;
-    }
-
-
-    //classpath classpath for jaxb libs (needed at runtime)
+    /**
+     * jaxb libs (needed on runtime classpath)
+     */
     private static Configuration createConfiguration(Project project) {
         Configuration configuration = project.configurations.create(JAXB_CONFIGURATION_NAME).setVisible(false).setDescription("Classpath for jaxb library and extensions.");
         return configuration;
+    }
+
+    /**
+     * xjc-plugin and default jaxb version
+     */
+    private static def configureXjcDependencies(ProjectInternal project) {
+        if (runningInIDEATestEnvironment(project)) {
+            final String version = XjcPlugin.class.getPackage().getImplementationVersion(); //manifest informasjon satt ifra byggesystem
+            project.getDependencies().add(JAXB_CONFIGURATION_NAME, [group: 'no.statkart.sktools.gradle', name: 'xjc-plugin', version: version]);
+        }
+    }
+
+    static boolean runningInIDEATestEnvironment(final ProjectInternal project) {
+        project.rootProject.buildScriptSource.resource.file //antar at denne ikke er tilgjengelig ved bruk av org.gradle.testfixtures.ProjectBuilder og vice versa
     }
 
 }

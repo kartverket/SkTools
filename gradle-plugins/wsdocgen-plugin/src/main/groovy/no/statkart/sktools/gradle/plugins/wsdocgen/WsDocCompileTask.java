@@ -1,5 +1,6 @@
 package no.statkart.sktools.gradle.plugins.wsdocgen;
 
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
@@ -34,7 +35,7 @@ public class WsDocCompileTask extends JavaCompile {
     }
 
     /**
-     * Initial input values - oo mutation of state in {@code @TaskAction} [SKTOOLS-131]
+     * Initial input values - no mutation of state in {@code @TaskAction} [SKTOOLS-131]
      */
     public void init(Group docGroup) {
         setDocGroup(docGroup);
@@ -46,8 +47,8 @@ public class WsDocCompileTask extends JavaCompile {
         compilerArgs.add("-processor");
         compilerArgs.add("no.statkart.sktools.utils.wsdocgen.processor.WSDocProcessor"); //Names of the annotation processors to run. This bypasses the default discovery process.
 
-        final FileCollection processorClasspath = WsDocGenPlugin.findPluginClasspath(getProject());
-        if (processorClasspath != null) {
+        final FileCollection processorClasspath = getProcessorClasspath();
+        if (!processorClasspath.isEmpty()) {
             compilerArgs.add("-processorpath");
             compilerArgs.add(processorClasspath.getAsFileTree().getAsPath());
         } else {
@@ -73,6 +74,10 @@ public class WsDocCompileTask extends JavaCompile {
             include(getDocGroup().includes); //up to date affects getSource()
         }
 
+    }
+
+    public Configuration getProcessorClasspath() {
+        return getProject().getConfigurations().getByName(WsDocGenPlugin.DOCGEN_CONFIGURATION_NAME);
     }
 
     @TaskAction
