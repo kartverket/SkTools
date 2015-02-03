@@ -22,7 +22,6 @@ import java.util.Map;
 
 import no.statkart.sktools.utils.wsdocgen.processor.util.*;
 
-import static javax.lang.model.type.TypeKind.DECLARED;
 import static javax.lang.model.type.TypeKind.ERROR;
 import static javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI;
 
@@ -44,23 +43,17 @@ class XMLTypeBuilder {
         this.document = factory.getDocument();
 
         if (typeCache == null) {
-            initializeCommponTypes();
+            initializeCommonTypes();
         }
     }
 
-
-    public org.w3c.dom.Element appendTypeTo(org.w3c.dom.Node parent, Element element) {
-        org.w3c.dom.Element typeNode = buildType(element);
-        parent.appendChild(typeNode);
-        return typeNode;
-    }
 
     public org.w3c.dom.Element buildType(Element element) {
         if (ERROR.equals(element.getKind())) {
             return null;
         }
         if (element instanceof VariableElement || element instanceof TypeElement) {
-            final String name = WSUtils.findName(element, true);
+            final String name = WSUtils.nameForException(element);
             final String ns = findObjectNamespace(element);
             String docComment = processingEnv.getElementUtils().getDocComment(element);
             final JavaDocUtils javaDocUtils = JavaDocUtils.parse(docComment);
@@ -70,12 +63,6 @@ class XMLTypeBuilder {
         }
     }
 
-
-    public org.w3c.dom.Element appendTypeTo(org.w3c.dom.Node parent, TypeMirror typeMirror) {
-        org.w3c.dom.Element typeNode = buildType(typeMirror);
-        parent.appendChild(typeNode);
-        return typeNode;
-    }
 
     public org.w3c.dom.Element buildType(TypeMirror typeMirror) {
         for (Map.Entry<TypeMirror, QName> entry : typeCache.entrySet()) {
@@ -199,7 +186,7 @@ class XMLTypeBuilder {
             }
             XmlSchema xmlSchemaAnnotation = typeMirror.getClass().getPackage().getAnnotation(XmlSchema.class);
             if (xmlSchemaAnnotation != null) {
-                if (!"".equals(xmlSchemaAnnotation.namespace())) {
+                if ("".equals(xmlSchemaAnnotation.namespace())) {
                     return xmlSchemaAnnotation.namespace();
                 }
             }
@@ -215,7 +202,7 @@ class XMLTypeBuilder {
         return objectNS;
     }
 
-    private void initializeCommponTypes() {
+    private void initializeCommonTypes() {
         typeCache = new HashMap<TypeMirror, QName>();
         defineCachedType(String.class,                 new QName(W3C_XML_SCHEMA_NS_URI, "string"));
         defineCachedType(Character.class,              new QName(W3C_XML_SCHEMA_NS_URI, "string"));

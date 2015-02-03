@@ -7,7 +7,6 @@ import org.w3c.dom.Node;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.jws.WebMethod;
-import javax.jws.WebResult;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -140,7 +139,7 @@ public class XMLServiceBuilder {
         org.w3c.dom.Element parameters = document.createElement("parameters");
         for (VariableElement variableElement : element.getParameters()) {
             org.w3c.dom.Element parameter = document.createElement("parameter");
-            parameter.setAttribute("name", WSUtils.findName(variableElement, true));
+            parameter.setAttribute("name", WSUtils.nameForParameter(variableElement));
 
             String documentationString = paramsDocumentation.get(variableElement.getSimpleName().toString());
             parameter.appendChild(factory.getDescriptionBuilder().buildDescription(documentationString));
@@ -159,22 +158,7 @@ public class XMLServiceBuilder {
 
         if (!TypeKind.VOID.equals(returnType.getKind())) {
             final org.w3c.dom.Element parameter = document.createElement("parameter");
-
-            String name = "";
-            WebResult webResultAnnotation = element.getAnnotation(WebResult.class);
-            if (webResultAnnotation != null) {
-                if (!"".equals(webResultAnnotation.name())) {
-                    name = webResultAnnotation.name();
-                }
-            }
-            if (!"".equals(name)) {
-                name = WSUtils.findName(element, false);
-            }
-            if (!"".equals(name)) {
-                name = "return"; //weblogic defaulter til dette navnet?
-            }
-
-            parameter.setAttribute("name", name);
+            parameter.setAttribute("name", WSUtils.nameForReturn(element));
             parameter.appendChild(factory.getDescriptionBuilder().buildDescription(returnDocumentation));
             parameter.appendChild(factory.getTypeBuilder().buildType(returnType));
 
@@ -191,7 +175,7 @@ public class XMLServiceBuilder {
             org.w3c.dom.Element exception = document.createElement("exception");
             if (exceptionType instanceof DeclaredType) {
                 final Element exceptionElement = ((DeclaredType) exceptionType).asElement();
-                exception.setAttribute("name", WSUtils.findName(exceptionElement, true));
+                exception.setAttribute("name", WSUtils.nameForException(exceptionElement));
                 exception.appendChild(factory.getDescriptionBuilder().buildDescription(resolveExceptionDocumentation(exceptionsDocumentation, element, exceptionType)));
 
             } else {

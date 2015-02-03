@@ -6,8 +6,6 @@ import javax.jws.WebResult;
 import javax.jws.WebService;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
-import java.net.MalformedURLException;
-import java.net.URL;
 
 /**
  * Helper methods for JAX-WS implementations.
@@ -68,7 +66,18 @@ public class WSUtils {
         return name;
     }
 
-    public static String findName(Element element, boolean assignDefaultWhenNull) {
+    public static String nameForReturn(Element element) {
+       return nameFor(element, "return"); //weblogic defaulter til return?
+    }
+    public static String nameForParameter(Element element) {
+        String defaultName = element.getSimpleName().toString();
+        return nameFor(element, defaultName);
+    }
+    public static String nameForException(Element element) {
+        return element.getSimpleName().toString();
+    }
+
+    public static String nameFor(Element element, String defaultName) {
         String name = null;
 
         WebParam webParam = element.getAnnotation(WebParam.class);
@@ -81,10 +90,8 @@ public class WSUtils {
             name = webResult.name();
         }
 
-        if (assignDefaultWhenNull) {
-            if (name == null || name.isEmpty()) {
-                name = element.getSimpleName().toString();
-            }
+        if (name == null || name.isEmpty()) {
+            name = defaultName;
         }
 
         return name;
