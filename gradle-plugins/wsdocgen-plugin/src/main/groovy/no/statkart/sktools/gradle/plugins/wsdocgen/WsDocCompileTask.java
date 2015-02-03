@@ -1,6 +1,5 @@
 package no.statkart.sktools.gradle.plugins.wsdocgen;
 
-import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
@@ -23,7 +22,7 @@ public class WsDocCompileTask extends JavaCompile {
     protected static final Logger logger = Logging.getLogger(WsDocCompileTask.class);
 
     private Group docGroup;
-
+    private FileCollection processorClasspath;
 
     /**
      * Gradle 1.2/2.0 - no arg constructor or @Inject annotated constructor
@@ -76,8 +75,12 @@ public class WsDocCompileTask extends JavaCompile {
 
     }
 
-    public Configuration getProcessorClasspath() {
-        return getProject().getConfigurations().getByName(WsDocGenPlugin.DOCGEN_CONFIGURATION_NAME);
+    public FileCollection getProcessorClasspath() {
+        return processorClasspath;
+    }
+
+    public void setProcessorClasspath(FileCollection processorClasspath) {
+        this.processorClasspath = processorClasspath;
     }
 
     @TaskAction

@@ -4,6 +4,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.Dependency
 import org.gradle.api.file.FileCollection
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSet
@@ -18,9 +19,9 @@ import org.gradle.api.file.ConfigurableFileCollection
 
 /**
  * Genererer JAXB java klasser basert på <code>*.xsd<code> filer. <br />
- * Pluginen baserer seg på {@code JavaBasePlugin} og integrerer seg med deklarerte {@link SourceSet}s.
+ * Pluginen baserer seg på {@code JavaBasePlugin} og integrerer seg med deklarerte {@link SourceSet}.
  *
- * For hvert sourceSet plugges det inn muglihet for ekstra konfiguasjon. Se {@link XjcSourceSetExtension }
+ * For hvert sourceSet plugges det inn muglihet for ekstra konfigurasjon. Se {@link XjcSourceSetExtension }
  *
  * Se dokumentasjon for <i>xjc-plugins</i> modul for bruk av utvidelser.
  * <ul>
@@ -31,7 +32,6 @@ import org.gradle.api.file.ConfigurableFileCollection
  * @since 1.0
  * @author Thor Åge Eldby
  * @author Leif Lislegård
-
  */
 @SuppressWarnings("UnnecessaryQualifiedReference")
 class XjcPlugin implements Plugin<ProjectInternal> {
@@ -46,7 +46,7 @@ class XjcPlugin implements Plugin<ProjectInternal> {
         final Configuration configuration = createConfiguration(project);
         final SourceSet sourceSet = configureSourceSets(project, configuration)
 
-        configureXjcDependencies(project);
+        configureJaxbXjcDependencies(project);
     }
 
     /**
@@ -126,11 +126,6 @@ class XjcPlugin implements Plugin<ProjectInternal> {
                                     return genOutputDir;
                                 }
                             });
-                            map("classpath", new Callable() {
-                                public Object call() {
-                                    return project.getConfigurations().getByName(XjcPlugin.JAXB_CONFIGURATION_NAME);
-                                }
-                            });
                         }
                         return task
                     }
@@ -167,17 +162,32 @@ class XjcPlugin implements Plugin<ProjectInternal> {
     }
 
     /**
-     * xjc-plugin and default jaxb version
+     * xjc-plugin and jaxb configuration
      */
-    private static def configureXjcDependencies(ProjectInternal project) {
-        if (runningInIDEATestEnvironment(project)) {
+    private static def configureJaxbXjcDependencies(final ProjectInternal project) {
+        final def buildscript = project.getRootProject().getBuildscript(); //root projects repo configuration
+        final Configuration processorConfiguration = buildscript.getConfigurations().detachedConfiguration(xjcDependency(project));
+        final Configuration jaxbConfiguration = project.getConfigurations().getByName(JAXB_CONFIGURATION_NAME)
+
+        project.getTasks().withType(XjcTask.class, new Action<XjcTask>() {
+            @Override
+            void execute(XjcTask task) {
+                task.setClasspath(jaxbConfiguration.plus(processorConfiguration))
+            }
+        })
+    }
+
+    static Dependency[] xjcDependency(ProjectInternal project) {
+        if (!runningInIDEATestEnvironment()) {
             final String version = XjcPlugin.class.getPackage().getImplementationVersion(); //manifest informasjon satt ifra byggesystem
-            project.getDependencies().add(JAXB_CONFIGURATION_NAME, [group: 'no.statkart.sktools.gradle', name: 'xjc-plugin', version: version]);
+            return [project.getDependencies().create([group: 'no.statkart.sktools', name: 'xjc-plugins', version: version])] as Dependency[];
+        } else {
+            return [] as Dependency[];
         }
     }
 
-    static boolean runningInIDEATestEnvironment(final ProjectInternal project) {
-        project.rootProject.buildScriptSource.resource.file //antar at denne ikke er tilgjengelig ved bruk av org.gradle.testfixtures.ProjectBuilder og vice versa
+    static boolean runningInIDEATestEnvironment() {
+        return !XjcPlugin.class.getProtectionDomain().getCodeSource().getLocation().getPath().endsWith(".jar");
     }
 
 }
