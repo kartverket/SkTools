@@ -1,5 +1,6 @@
 package no.statkart.sktools.gradle.plugins.wsdocgen;
 
+import groovy.lang.Closure;
 import org.gradle.api.Action;
 import org.gradle.api.GradleException;
 import org.gradle.api.Plugin;
@@ -18,6 +19,9 @@ import org.gradle.api.tasks.bundling.Zip;
 import org.gradle.api.tasks.compile.AbstractCompile;
 import org.gradle.util.GUtil;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.SortedMap;
 import java.util.concurrent.Callable;
 
 /**
@@ -65,7 +69,7 @@ public class WsDocGenPlugin implements Plugin<ProjectInternal> {
         final Project project = wsDocGenConvention.project;
 
         if (wsDocGenConvention.groups.isEmpty()) {
-            wsDocGenConvention.docGroup(new Closure(this) {
+            wsDocGenConvention.docGroup(new Closure(wsDocGenConvention) {
                 public void doCall() {} //empty closure
             });
         }
@@ -178,12 +182,19 @@ public class WsDocGenPlugin implements Plugin<ProjectInternal> {
     }
 
     static Dependency[] wsDocgenDependency(ProjectInternal project) {
+        ArrayList<Dependency> dependencies = new ArrayList<Dependency>(1);
         if (!runningInIDEATestEnvironment()) {
-            final String version = WsDocGenPlugin.class.getPackage().getImplementationVersion(); //manifest informasjon satt ifra byggesystem
-            return [project.getDependencies().create([group: 'no.statkart.sktools', name: 'wsdocgen', version: version])] as Dependency[];
-        } else {
-            return [] as Dependency[];
+            dependencies.add(wsDocGenDependency(project));
         }
+        return dependencies.toArray(new Dependency[dependencies.size()]);
+    }
+
+    private static Dependency wsDocGenDependency(ProjectInternal project) {
+        HashMap<String, String> props = new HashMap<String, String>();
+        props.put("group", "no.statkart.sktools");
+        props.put("name", "wsdocgen");
+        props.put("version", WsDocGenPlugin.class.getPackage().getImplementationVersion()); //manifest informasjon satt ifra byggesystem
+        return project.getDependencies().create(props);
     }
 
     static boolean runningInIDEATestEnvironment() {
