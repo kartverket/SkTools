@@ -10,7 +10,7 @@ package no.statkart.sktools.gradle.plugins.wsdocgen
 class WsDocGenConvention implements Serializable {
     private static final long serialVersionUID = 1L; //SKTOOLS-130: remove Serializable in sktools version 2.1
 
-    public final String GEN_TASK_NAME_PATTERN = "gen%sWSDoc%s"
+    public final String GEN_TASK_NAME_PATTERN = "gen%sWsdoc%s"
 
 
     /**

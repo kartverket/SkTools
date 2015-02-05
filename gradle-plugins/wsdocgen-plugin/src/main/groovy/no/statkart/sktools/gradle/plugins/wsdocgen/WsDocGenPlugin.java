@@ -35,8 +35,8 @@ import java.util.concurrent.Callable;
 public class WsDocGenPlugin implements Plugin<ProjectInternal> {
 
     public final static String CONVENTION_NAME = "wsdoc";
-    public final static String GEN_TASK_NAME = "genWsDoc";
-    public final static String ARCHIVE_TASK_NAME = "packWsDoc";
+    public final static String GEN_TASK_NAME = "genWsdoc";
+    public final static String ARCHIVE_TASK_NAME = "packWsdoc";
 
     @Override
     public void apply(ProjectInternal project) {

@@ -77,12 +77,12 @@ class WsDocGenPluginTest {
 
         final Project project = projectHelper.project
 
-        assertNotNull project.tasks.findByName('genWsDoc'), "gen task"
-        assertNotNull project.tasks.findByName('genMainWSDoc'), "gen task for source set"
-        assertNotNull project.tasks.findByName('genMainWSDocGroup1'), "gen task for group1"
+        assertNotNull project.tasks.findByName('genWsdoc'), "gen task"
+        assertNotNull project.tasks.findByName('genMainWsdoc'), "gen task for source set"
+        assertNotNull project.tasks.findByName('genMainWsdocGroup1'), "gen task for group1"
 
-        assertTrue project.tasks['genWsDoc'].dependsOn.contains('genMainWSDoc')
-        assertTrue project.tasks['genMainWSDoc'].dependsOn.contains(project.tasks['genMainWSDocGroup1'])
+        assertTrue project.tasks['genWsdoc'].dependsOn.contains('genMainWsdoc')
+        assertTrue project.tasks['genMainWsdoc'].dependsOn.contains(project.tasks['genMainWsdocGroup1'])
     }
 
     /**
@@ -102,15 +102,15 @@ class WsDocGenPluginTest {
 
         final Project project = projectHelper.project
 
-        assertNotNull project.tasks.findByName('genWsDoc'), "gen task"
+        assertNotNull project.tasks.findByName('genWsdoc'), "gen task"
 
         //negative test
-        assertNull project.tasks.findByName('genMainWSDoc'), "gen task for source set"
-        assertNull project.tasks.findByName('genMainWSDocGroup1'), "gen task for group1"
+        assertNull project.tasks.findByName('genMainWsdoc'), "gen task for source set"
+        assertNull project.tasks.findByName('genMainWsdocGroup1'), "gen task for group1"
 
         //positive test
-        assertNotNull project.tasks.findByName('genOtherWSDoc'), "gen task for source set"
-        assertNotNull project.tasks.findByName('genOtherWSDocGroup1'), "gen task for group1"
+        assertNotNull project.tasks.findByName('genOtherWsdoc'), "gen task for source set"
+        assertNotNull project.tasks.findByName('genOtherWsdocGroup1'), "gen task for group1"
     }
 
     @Test
@@ -159,17 +159,17 @@ class WsDocGenPluginTest {
 
         //tests vanilla configuration
         assertEquals project.sourceSets.main.wsdoc[0].targetPath, 'build/main/wsdoc/Group1'
-        assertEquals project.tasks.genMainWSDocGroup1.destinationDir, project.file('build/main/wsdoc/Group1')
+        assertEquals project.tasks.genMainWsdocGroup1.destinationDir, project.file('build/main/wsdoc/Group1')
 
         //test override
         assertEquals project.sourceSets.other.wsdoc[0].targetPath, 'gen/doc'
-        assertEquals project.tasks.genOtherWSDocGroup1.destinationDir, project.file('gen/doc')
+        assertEquals project.tasks.genOtherWsdocGroup1.destinationDir, project.file('gen/doc')
 
         //test multiple groups
         assertEquals project.sourceSets.multi.wsdoc[0].targetPath, 'gen/doc'
         assertEquals project.sourceSets.multi.wsdoc[1].targetPath, 'gen/doc2'
-        assertEquals project.tasks.genMultiWSDocGroup1.destinationDir, project.file('gen/doc')
-        assertEquals project.tasks.genMultiWSDocGroup2.destinationDir, project.file('gen/doc2')
+        assertEquals project.tasks.genMultiWsdocGroup1.destinationDir, project.file('gen/doc')
+        assertEquals project.tasks.genMultiWsdocGroup2.destinationDir, project.file('gen/doc2')
     }
 
 
@@ -186,7 +186,7 @@ class WsDocGenPluginTest {
 
         final Project project = projectHelper.project
         assertEquals project.sourceSets.main.wsdoc[0].lookupPath, '../../some/wacky/path'
-        assertEquals project.tasks.genMainWSDocGroup1.lookupPath, '../../some/wacky/path'
+        assertEquals project.tasks.genMainWsdocGroup1.lookupPath, '../../some/wacky/path'
     }
 
 
@@ -203,8 +203,8 @@ class WsDocGenPluginTest {
 
         final Project project = projectHelper.project
         assertEquals project.sourceSets.main.wsdoc[0].includes, ['**/TestServiceWSBean.java']
-        assertEquals project.tasks.genMainWSDocGroup1.includes.size(), 1
-        assertTrue project.tasks.genMainWSDocGroup1.includes.contains('**/TestServiceWSBean.java')
+        assertEquals project.tasks.genMainWsdocGroup1.includes.size(), 1
+        assertTrue project.tasks.genMainWsdocGroup1.includes.contains('**/TestServiceWSBean.java')
     }
 
 

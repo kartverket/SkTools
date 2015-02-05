@@ -13,15 +13,20 @@ sourceSets {
 
 
 task runDemo() {
-    dependsOn 'testGenWsDoc'
+    dependsOn 'testGenWsdoc'
+    dependsOn 'testPackWsdoc'
     dependsOn 'testClean'
 
 }
 
-task testGenWsDoc(dependsOn:'genWsDoc') << {
+task testPackWsdoc(dependsOn:'packWsdoc') << {
+    assert project.zipTree(packWsdoc.archivePath).matching { include '**/TestService.html' }.files.size() == 1
+}
+
+task testGenWsdoc(dependsOn:'genWsdoc') << {
     assert file('build/main/docs/wsdoc/TestService.html').exists()
 }
 
-task testClean(dependsOn:['testGenWsDoc', 'clean']) << {
+task testClean(dependsOn:['testGenWsdoc', 'clean']) << {
     println 'todo'
 }
