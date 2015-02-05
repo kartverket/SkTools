@@ -3,11 +3,13 @@ package no.statkart.sktools.gradle.plugins.wsdocgen
 import org.testng.annotations.Test
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
-import org.testng.Assert
 import no.statkart.sktools.gradle.testutils.builder.WsDocGenProjectBuilder
 import no.statkart.sktools.gradle.testutils.ProjectHelper
 import no.statkart.sktools.gradle.testutils.filewriter.WsDocgenTestutilFilewriter
-import org.gradle.api.plugins.JavaPluginConvention
+
+import static org.testng.Assert.assertEquals
+import static org.testng.Assert.assertNotNull
+import static org.testng.Assert.assertTrue
 
 /**
  * Test av {@link WsDocGenPlugin}
@@ -24,102 +26,163 @@ class WsDocGenPluginTest {
      * Tester registrering av plugin via navn
      */
     @Test
-    void testAppplyPlugin() {
+    void appplyPlugin() {
         //forks a new project in a temp folder
         Project project = ProjectBuilder.builder().build()
 
         project.apply plugin: 'sktools-wsdocgen-plugin'
 
 
-        assert project.convention.plugins.wsdoc != null
-        Assert.assertTrue(project.convention.plugins.wsdoc instanceof WsDocGenConvention)
-
+        assertNotNull project.convention.plugins.wsdoc
+        assertTrue project.convention.plugins.wsdoc instanceof WsDocGenConvention
     }
 
 
-    /**
-     * Tester minimalt oppsett, kun defaultverdier
-     */
     @Test
-    void testDefaultSetting() {
+    void genWsDocGeneratesDocumentationForAllSourceSets() {
         //forks a new java project in a temp folder
         ProjectHelper projectHelper = WsDocGenProjectBuilder.builder().applyJavaPlugin().applyWsDocGenPlugin().build()
 
 
-        //generates a simple source file
         use(WsDocgenTestutilFilewriter) {
-            projectHelper.writeSimpleDemoServiceWSBean("src/main/java")
+            projectHelper.writeSimpleDemoServiceWSBean("src/main/java") //generates simple source file
+            projectHelper.writeSimpleDemoServiceWSBean("src/other/java") //generates simple source file
         }
 
-        projectHelper.initializeProject()
+        projectHelper.configureProject {
+            sourceSets {
+                main.wsdoc.group { }
+                other.wsdoc.group { }
+            }
+        }
 
         projectHelper.executeTask(WsDocGenPlugin.GEN_TASK_NAME)
 
-        projectHelper.assertFileExistsInBuildDir('main/docs/wsdoc/TestService.html')
-
+        projectHelper.assertFileExistsInBuildDir('main/wsdoc/Group1/TestService.html')
+        projectHelper.assertFileExistsInBuildDir('other/wsdoc/Group1/TestService.html')
     }
 
-    /**
-     * Tester verdier for default konfigurasjon
-     */
+
     @Test
-    void testDefaultConfiguration() {
+    void tasksForVanillaConfiguration() {
         //forks a new java project in a temp folder
         ProjectHelper projectHelper = WsDocGenProjectBuilder.builder().applyJavaPlugin().applyWsDocGenPlugin().build()
 
-        projectHelper.initializeProject()
+        projectHelper.configureProject {
+            sourceSets {
+                main.wsdoc.group { }
+            }
+        }
 
-        Project project = projectHelper.project
-        WsDocGenConvention convention = project.getConvention().getPlugins().get(WsDocGenPlugin.CONVENTION_NAME) as WsDocGenConvention;
+        final Project project = projectHelper.project
 
-        assert convention != null
+        assertNotNull project.tasks.findByName('genWsDoc'), "gen task"
+        assertNotNull project.tasks.findByName('genMainWSDoc'), "gen task for source set"
+        assertNotNull project.tasks.findByName('genMainWSDocGroup1'), "gen task for group1"
 
-        assert convention.sourceSetName == 'main'
-
-        assert project.tasks.findByName('genWsDoc')
-        assert project.tasks.findByName('genMainWSDoc')
-        assert project.tasks.findByName('genWsDoc').dependsOn.contains('genMainWSDoc')
-
-        assert convention.groups.size() == 1
-        assert convention.groups[0].includes == ['**/*Bean.java']
-        assert convention.groups[0].targetDir == project.file('build/main/docs/wsdoc')
-
+        assertTrue project.tasks['genWsDoc'].dependsOn.contains('genMainWSDoc')
+        assertTrue project.tasks['genMainWSDoc'].dependsOn.contains(project.tasks['genMainWSDocGroup1'])
     }
 
 
-
-    /**
-     * Tester annet sourceSet
-     */
     @Test
-    void testCustomSourceSet() {
+    void sourceSetForVanillaConfiguration() {
+        //forks a new java project in a temp folder
+        ProjectHelper projectHelper = WsDocGenProjectBuilder.builder().applyJavaPlugin().applyWsDocGenPlugin().build()
+
+        projectHelper.configureProject {
+            sourceSets {
+                main.wsdoc.group { }
+                other
+            }
+        }
+
+        final Project project = projectHelper.project
+        assertNotNull project.sourceSets.main.wsdoc
+        assertNotNull project.sourceSets.other.wsdoc
+
+        assertEquals project.sourceSets.main.wsdoc.size(), 1
+        assertEquals project.sourceSets.other.wsdoc.size(), 0
+
+        assertEquals project.sourceSets.main.wsdoc[0].includes, ['**/*Bean.java']
+        assertEquals project.sourceSets.main.wsdoc[0].targetPath, 'build/main/wsdoc/Group1'
+    }
+
+
+    @Test
+    void canCustomizeOutputLocation() {
         //forks a new java project in a temp folder
         ProjectHelper projectHelper = WsDocGenProjectBuilder.builder().applyWsDocGenPlugin().build()
-        Project project = projectHelper.project
 
-        JavaPluginConvention javaConvention = project.getConvention().getPlugins().get("java");
-        javaConvention.getSourceSets().create('custom')
+        projectHelper.configureProject {
+            sourceSets {
+                multi {
+                    wsdoc {
+                        group { targetPath 'gen/doc' }
+                        group { targetPath 'gen/doc2' }
+                    }
+                }
+                main.wsdoc.group { /*default*/ }
+                other.wsdoc.group { targetPath 'gen/doc' }
+            }
+        }
 
+        final Project project = projectHelper.project
 
-        projectHelper.initializeProject()
+        //tests vanilla configuration
+        assertEquals project.sourceSets.main.wsdoc[0].targetPath, 'build/main/wsdoc/Group1'
+        assertEquals project.tasks.genMainWSDocGroup1.destinationDir, project.file('build/main/wsdoc/Group1')
 
-        WsDocGenConvention convention = project.getConvention().getPlugins().get(WsDocGenPlugin.CONVENTION_NAME) as WsDocGenConvention;
+        //test override
+        assertEquals project.sourceSets.other.wsdoc[0].targetPath, 'gen/doc'
+        assertEquals project.tasks.genOtherWSDocGroup1.destinationDir, project.file('gen/doc')
 
-        assert convention.sourceSetName == 'custom'
+        //test multiple groups
+        assertEquals project.sourceSets.multi.wsdoc[0].targetPath, 'gen/doc'
+        assertEquals project.sourceSets.multi.wsdoc[1].targetPath, 'gen/doc2'
+        assertEquals project.tasks.genMultiWSDocGroup1.destinationDir, project.file('gen/doc')
+        assertEquals project.tasks.genMultiWSDocGroup2.destinationDir, project.file('gen/doc2')
     }
 
 
-
-    /**
-     * Tester syntaks for konfigurasjon
-     */
     @Test
-    void testConventionConfiguration() {
-
+    void canCustomizeLookupPath() {
         //forks a new java project in a temp folder
-        //ps: notice that the java plugin is applied after the plugin, at a  later stage.
-        ProjectHelper projectHelper = WsDocGenProjectBuilder.builder().applyWsDocGenPlugin().applyJavaPlugin().build()
+        ProjectHelper projectHelper = WsDocGenProjectBuilder.builder().applyWsDocGenPlugin().build()
 
+        projectHelper.configureProject {
+            sourceSets {
+                main.wsdoc.group { lookupPath '../../some/wacky/path' }
+            }
+        }
+
+        final Project project = projectHelper.project
+        assertEquals project.sourceSets.main.wsdoc[0].lookupPath, '../../some/wacky/path'
+        assertEquals project.tasks.genMainWSDocGroup1.lookupPath, '../../some/wacky/path'
+    }
+
+
+    @Test
+    void canCustomizeInclude() {
+        //forks a new java project in a temp folder
+        ProjectHelper projectHelper = WsDocGenProjectBuilder.builder().applyWsDocGenPlugin().build()
+
+        projectHelper.configureProject {
+            sourceSets {
+                main.wsdoc.group { include '**/TestServiceWSBean.java' }
+            }
+        }
+
+        final Project project = projectHelper.project
+        assertEquals project.sourceSets.main.wsdoc[0].includes, ['**/TestServiceWSBean.java']
+        assertEquals project.tasks.genMainWSDocGroup1.includes.size(), 1
+        assertTrue project.tasks.genMainWSDocGroup1.includes.contains('**/TestServiceWSBean.java')
+    }
+
+
+    @Test
+    void generatedFilesHasLookupPath() {
+        ProjectHelper projectHelper = WsDocGenProjectBuilder.builder().applyWsDocGenPlugin().build()
 
         //generer eksempel-kildekode som har domene-klasse definert
         use(WsDocgenTestutilFilewriter) {
@@ -128,22 +191,19 @@ class WsDocGenPluginTest {
 
 
         projectHelper.configureProject {
-          wsDoc {
-              docGroup {
-                  targetPath 'build/mydocs'
-                  lookupPath '../../some/wacky/place'
-                  include '**/*WSBean.java'
-              }
+            sourceSets {
+                main.wsdoc.group {
+                    targetPath 'build/mydocs'
+                    lookupPath '../wacky/path'
+                }
             }
         }
-        projectHelper.initializeProject()
 
         projectHelper.executeTask(WsDocGenPlugin.GEN_TASK_NAME)
 
         projectHelper.assertFileExists('build/mydocs/InterfaceService.html') { File file ->
-            assert file.text.contains("../../some/wacky/place") //skal ha link som peker til domeneklasse (javadoc)
+            assertTrue file.text.contains("../wacky/path") //skal ha link som peker til domeneklasse (javadoc)
         }
-
     }
 
 
@@ -151,7 +211,7 @@ class WsDocGenPluginTest {
      * Demonstrerer hvordan en kan spre kilekode over flere mapper
      */
     @Test
-    void testMultipleSourceFolders() {
+    void multipleSourceFoldersForSourceSet() {
 
         //forks a new java project in a temp folder
         //ps: notice that the java plugin is applied after the plugin, at a  later stage.
@@ -166,9 +226,9 @@ class WsDocGenPluginTest {
 
 
         projectHelper.configureProject {
-            sourceSets.main.java.srcDir 'src/main/morejava'
-            wsDoc {
-                docGroup {
+            sourceSets.main {
+                java.srcDir 'src/main/morejava'
+                wsdoc.group {
                     targetPath 'build'
                 }
             }

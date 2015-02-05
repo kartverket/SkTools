@@ -1,13 +1,14 @@
 apply plugin: 'java'
 apply plugin: 'sktools-wsdocgen-plugin'
 
-
-wsDoc {
-  docGroup {
-      targetPath 'build/main/docs/wsdoc' //default
-      include '**/*WSBean.java'          //default
-      lookupPath '../../domain/javadoc'  //valgfri funksjonalitet
-  }
+sourceSets {
+    main {
+        wsdoc.group {
+            targetPath 'build/main/docs/wsdoc' //default
+            include '**/*WSBean.java'          //default
+            lookupPath '../../domain/javadoc'  //valgfri funksjonalitet
+        }
+    }
 }
 
 

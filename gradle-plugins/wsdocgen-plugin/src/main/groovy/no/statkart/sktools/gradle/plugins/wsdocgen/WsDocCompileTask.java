@@ -21,7 +21,7 @@ import java.util.List;
 public class WsDocCompileTask extends JavaCompile {
     protected static final Logger logger = Logging.getLogger(WsDocCompileTask.class);
 
-    private Group docGroup;
+    private WsDocGroup docGroup;
     private FileCollection processorClasspath;
 
     /**
@@ -36,7 +36,7 @@ public class WsDocCompileTask extends JavaCompile {
     /**
      * Initial input values - no mutation of state in {@code @TaskAction} [SKTOOLS-131]
      */
-    public void init(Group docGroup) {
+    public void init(WsDocGroup docGroup) {
         setDocGroup(docGroup);
         initCompilerArgs(getOptions().getCompilerArgs());
     }
@@ -113,7 +113,8 @@ public class WsDocCompileTask extends JavaCompile {
             return getProject().file(getDocGroup().serviceXsltPath);
         } else {
             logger.warn("WARNING: no xslt file specified - using template for TESTING purposes..");
-            return Group.generateTestFile(new File(getProject().getBuildDir(), "Transform.xsl")); //can't write to output dir because it gets wiped when not up to date...
+            WsDocGenConvention convention = (WsDocGenConvention) getProject().getConvention().getPlugins().get(WsDocGenPlugin.CONVENTION_NAME);
+            return convention.generateTestFile(new File(getProject().getBuildDir(), "Transform.xsl")); //can't write to output dir because it gets wiped when not up to date...
         }
     }
 
@@ -127,11 +128,11 @@ public class WsDocCompileTask extends JavaCompile {
         }
     }
 
-    private Group getDocGroup() {
+    private WsDocGroup getDocGroup() {
         return docGroup;
     }
 
-    private void setDocGroup(Group docGroup) {
+    private void setDocGroup(WsDocGroup docGroup) {
         this.docGroup = docGroup;
     }
 
