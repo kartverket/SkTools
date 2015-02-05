@@ -60,17 +60,15 @@ public class WsDocGenPlugin implements Plugin<ProjectInternal> {
         //for hvert source sett som finnes/blir lagt til
         project.getConvention().getPlugin(JavaPluginConvention.class).getSourceSets().all(new Action<SourceSet>() {
             public void execute(final SourceSet sourceSet) {
-                final WsDocGroupContainer container = new WsDocGroupContainer(sourceSet);
+                final WsDocGroupContainer container = new WsDocGroupContainer(sourceSet, convention);
 
                 //hekter inn utvidelser på source settet
                 ((HasConvention) sourceSet).getConvention().getPlugins().put(CONVENTION_NAME, new WsDocSourceSetExtension(container));
 
-                //samletask for alle grupper for dette source settet
-                final Task sourceSetTask = project.task(String.format(convention.GEN_TASK_NAME_PATTERN, GUtil.toCamelCase(sourceSet.getName()), ""));
-                project.getTasks().getByName(GEN_TASK_NAME).dependsOn(sourceSetTask.getName());
-
-
                 container.all(new Action<WsDocGroup>() {
+                    //samletask for alle grupper for dette source settet
+                    final String commonSourceSetTaskName = String.format(convention.GEN_TASK_NAME_PATTERN, GUtil.toCamelCase(sourceSet.getName()), "");
+
                     @Override
                     public void execute(final WsDocGroup group) {
 
@@ -83,7 +81,7 @@ public class WsDocGenPlugin implements Plugin<ProjectInternal> {
                         }
 
 
-                        AbstractCompile task = createWsDocGenForGroupTask(project, group, convention);
+                        AbstractCompile task = createWsDocGenForGroupTask(project, group);
                         //setting conventional properties
                         task.getConventionMapping().map("source", new Callable() {   //tildeler en dynamisk default verdi
                             public Object call() {
@@ -101,9 +99,18 @@ public class WsDocGenPlugin implements Plugin<ProjectInternal> {
                             }
                         });
 
-                        sourceSetTask.dependsOn(task);
+                        maybeCreateSourceSetSuperTask().dependsOn(task);
                         archiveTask.from(task);
 
+                    }
+
+                    private Task sourceSetSuperTask = null;
+                    Task maybeCreateSourceSetSuperTask() {
+                        if (sourceSetSuperTask == null) {
+                            sourceSetSuperTask = project.task(commonSourceSetTaskName);
+                            project.getTasks().getByName(GEN_TASK_NAME).dependsOn(commonSourceSetTaskName);
+                        }
+                        return sourceSetSuperTask;
                     }
                 });
             }
@@ -124,8 +131,8 @@ public class WsDocGenPlugin implements Plugin<ProjectInternal> {
     }
 
 
-    private static AbstractCompile createWsDocGenForGroupTask(Project project, WsDocGroup docGroup, WsDocGenConvention convention) {
-        final String taskName = docGroup.getWsDocGenTaskName(convention);
+    private static AbstractCompile createWsDocGenForGroupTask(Project project, WsDocGroup docGroup) {
+        final String taskName = docGroup.getWsdocTaskName();
         final WsDocCompileTask task = project.getTasks().create(taskName, WsDocCompileTask.class);
         //SKTOOLS-131: configuration have to be configured at this point
         task.init(docGroup);

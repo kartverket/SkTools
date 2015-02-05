@@ -9,6 +9,7 @@ import no.statkart.sktools.gradle.testutils.filewriter.WsDocgenTestutilFilewrite
 
 import static org.testng.Assert.assertEquals
 import static org.testng.Assert.assertNotNull
+import static org.testng.Assert.assertNull
 import static org.testng.Assert.assertTrue
 
 /**
@@ -84,6 +85,33 @@ class WsDocGenPluginTest {
         assertTrue project.tasks['genMainWSDoc'].dependsOn.contains(project.tasks['genMainWSDocGroup1'])
     }
 
+    /**
+     * Samletask for source sets skal ikke komme med dersom tomme wsdoc grupper (ikke annotert i konfigurasjon)
+     */
+    @Test
+    void noTasksForNoneAnnotatedSourceSets() {
+        //forks a new java project in a temp folder
+        ProjectHelper projectHelper = WsDocGenProjectBuilder.builder().applyJavaPlugin().applyWsDocGenPlugin().build()
+
+        projectHelper.configureProject {
+            sourceSets {
+                main { }
+                other.wsdoc.group { }
+            }
+        }
+
+        final Project project = projectHelper.project
+
+        assertNotNull project.tasks.findByName('genWsDoc'), "gen task"
+
+        //negative test
+        assertNull project.tasks.findByName('genMainWSDoc'), "gen task for source set"
+        assertNull project.tasks.findByName('genMainWSDocGroup1'), "gen task for group1"
+
+        //positive test
+        assertNotNull project.tasks.findByName('genOtherWSDoc'), "gen task for source set"
+        assertNotNull project.tasks.findByName('genOtherWSDocGroup1'), "gen task for group1"
+    }
 
     @Test
     void sourceSetForVanillaConfiguration() {

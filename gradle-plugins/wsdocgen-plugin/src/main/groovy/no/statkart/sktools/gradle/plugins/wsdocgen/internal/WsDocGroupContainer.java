@@ -2,6 +2,7 @@ package no.statkart.sktools.gradle.plugins.wsdocgen.internal;
 
 import groovy.lang.Closure;
 import groovy.lang.GroovyObjectSupport;
+import no.statkart.sktools.gradle.plugins.wsdocgen.WsDocGenConvention;
 import no.statkart.sktools.gradle.plugins.wsdocgen.WsDocGroup;
 import org.apache.commons.lang.StringUtils;
 import org.gradle.api.Action;
@@ -22,16 +23,18 @@ import java.util.List;
 public class WsDocGroupContainer extends AbstractList<WsDocGroup> {
     private final List<WsDocGroup> store = new ArrayList<WsDocGroup>();
     private final SourceSet sourceSet;
+    private final WsDocGenConvention convention;
 
     private final List<Action<WsDocGroup>> configActions = new ArrayList<Action<WsDocGroup>>();
 
-    public WsDocGroupContainer(SourceSet sourceSet) {
+    public WsDocGroupContainer(SourceSet sourceSet, WsDocGenConvention convention) {
         this.sourceSet = sourceSet;
+        this.convention = convention;
     }
 
     WsDocGroup create(String name) throws InvalidUserDataException {
         String docGroupName = StringUtils.capitalize(name);
-        return new WsDocGroup(docGroupName, sourceSet);
+        return new WsDocGroup(docGroupName, sourceSet, convention);
     }
 
     WsDocGroup create(String name, Closure configureClosure) throws InvalidUserDataException {
