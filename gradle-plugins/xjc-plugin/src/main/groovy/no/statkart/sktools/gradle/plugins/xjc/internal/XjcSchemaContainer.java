@@ -1,10 +1,11 @@
-package no.statkart.sktools.gradle.plugins.xjc;
+package no.statkart.sktools.gradle.plugins.xjc.internal;
 
 import groovy.lang.Closure;
 
 import java.util.*;
 
 import groovy.lang.GroovyObjectSupport;
+import no.statkart.sktools.gradle.plugins.xjc.XjcSourceDirectorySet;
 import org.apache.commons.lang.StringUtils;
 import org.gradle.api.Action;
 import org.gradle.api.InvalidUserDataException;
@@ -53,26 +54,19 @@ public class XjcSchemaContainer extends AbstractList<XjcSourceDirectorySet> {
     }
 
     //call back funksjon for dynamisk konfigurasjon
-    void all(Action<XjcSourceDirectorySet> action) {
+    public void all(Action<XjcSourceDirectorySet> action) {
         configActions.add(action);
         if (size() > 0) {
-            throw new RuntimeException("State not yet implemented!");
+            throw new IllegalStateException("Elements needs to be added before any actions!"); //no handling of this state
         }
     }
 
-    XjcSchemaContainer configure(final Closure configureClosure) {
-        ConfigureUtil.configure(configureClosure, new GroovyObjectSupport() {
-
-            public XjcSourceDirectorySet schema(Closure configureClosure) {
-                String schemaName = String.format("%dSchema", size());
-                XjcSourceDirectorySet schema = create(schemaName, configureClosure);
-                add(schema);
-                return schema;
-            }
-
-        });
-
-        return this;
+    //for configuration
+    public XjcSourceDirectorySet schema(Closure configureClosure) {
+        String schemaName = String.format("%dSchema", size());
+        XjcSourceDirectorySet schema = create(schemaName, configureClosure);
+        add(schema);
+        return schema;
     }
 
 

@@ -1,5 +1,7 @@
 package no.statkart.sktools.gradle.plugins.xjc
 
+import no.statkart.sktools.gradle.plugins.xjc.internal.XjcSchemaContainer
+import no.statkart.sktools.gradle.plugins.xjc.internal.XjcSourceSetExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -21,7 +23,7 @@ import org.gradle.api.file.ConfigurableFileCollection
  * Genererer JAXB java klasser basert på <code>*.xsd<code> filer. <br />
  * Pluginen baserer seg på {@code JavaBasePlugin} og integrerer seg med deklarerte {@link SourceSet}.
  *
- * For hvert sourceSet plugges det inn muglihet for ekstra konfigurasjon. Se {@link XjcSourceSetExtension }
+ * For hvert {@code SourceSet} plugges det inn mulighet for ekstra konfigurasjon. Se {@link no.statkart.sktools.gradle.plugins.xjc.internal.XjcSourceSetExtension }
  *
  * Se dokumentasjon for <i>xjc-plugins</i> modul for bruk av utvidelser.
  * <ul>
@@ -167,7 +169,7 @@ class XjcPlugin implements Plugin<ProjectInternal> {
     private static def configureJaxbXjcDependencies(final ProjectInternal project) {
         final def buildscript = project.getRootProject().getBuildscript(); //root projects repo configuration
         final Configuration processorConfiguration = buildscript.getConfigurations().detachedConfiguration(xjcDependency(project));
-        final Configuration jaxbConfiguration = project.getConfigurations().getByName(JAXB_CONFIGURATION_NAME)
+        final Configuration jaxbConfiguration = project.getConfigurations().getByName(JAXB_CONFIGURATION_NAME);
 
         project.getTasks().withType(XjcTask.class, new Action<XjcTask>() {
             @Override
@@ -177,13 +179,20 @@ class XjcPlugin implements Plugin<ProjectInternal> {
         })
     }
 
-    static Dependency[] xjcDependency(ProjectInternal project) {
+    private static Dependency[] xjcDependency(ProjectInternal project) {
+        ArrayList<Dependency> dependencies = new ArrayList<Dependency>(1);
         if (!runningInIDEATestEnvironment()) {
-            final String version = XjcPlugin.class.getPackage().getImplementationVersion(); //manifest informasjon satt ifra byggesystem
-            return [project.getDependencies().create([group: 'no.statkart.sktools', name: 'xjc-plugins', version: version])] as Dependency[];
-        } else {
-            return [] as Dependency[];
+            dependencies.add(wsDocGenDependency(project));
         }
+        return dependencies.toArray(new Dependency[dependencies.size()]);
+    }
+
+    private static Dependency wsDocGenDependency(ProjectInternal project) {
+        HashMap<String, String> props = new HashMap<String, String>();
+        props.put("group", "no.statkart.sktools");
+        props.put("name", "xjc-plugins");
+        props.put("version", XjcPlugin.class.getPackage().getImplementationVersion()); //manifest informasjon satt ifra byggesystem
+        return project.getDependencies().create(props);
     }
 
     static boolean runningInIDEATestEnvironment() {

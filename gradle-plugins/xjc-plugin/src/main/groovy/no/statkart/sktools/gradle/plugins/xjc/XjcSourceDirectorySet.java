@@ -19,7 +19,7 @@ public class XjcSourceDirectorySet extends DefaultSourceDirectorySet {
     //optional java source for custom implementations
     private final SourceDirectorySet javaSource;
 
-    XjcSourceDirectorySet(String name, SourceSet sourceSet, FileResolver fileResolver) {
+    public XjcSourceDirectorySet(String name, SourceSet sourceSet, FileResolver fileResolver) {
         super(name, String.format("%s XJC Schemas", name), fileResolver);
         this.config = new XjcConfig(this, sourceSet);
         this.javaSource = new DefaultSourceDirectorySet(getName(), getDisplayName() + " Source", fileResolver);

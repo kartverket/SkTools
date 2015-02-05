@@ -1,16 +1,15 @@
-package no.statkart.sktools.gradle.plugins.xjc;
+package no.statkart.sktools.gradle.plugins.xjc.internal;
 
 import groovy.lang.Closure;
-import org.gradle.api.internal.file.FileResolver;
-import org.gradle.api.tasks.SourceSet;
+import org.gradle.util.ConfigureUtil;
 
 /**
- * Vedhengsklasse til {@link org.gradle.api.tasks.SourceSet}
+ * Vedhengsklasse til {@link org.gradle.api.tasks.SourceSet SourceSet}
  *
  * @since 1.2
  * @author Leif Lislegård
  */
-class XjcSourceSetExtension {
+public class XjcSourceSetExtension {
     final private XjcSchemaContainer xjcSchemas;
 
     XjcSourceSetExtension(XjcSchemaContainer xjcSchemas) {
@@ -21,8 +20,9 @@ class XjcSourceSetExtension {
         return xjcSchemas;
     }
 
+    //for configuration
     public XjcSourceSetExtension xjc(Closure configureClosure) {
-        getXjc().configure(configureClosure);
+        ConfigureUtil.configure(configureClosure, getXjc());
         return this;
     }
 }

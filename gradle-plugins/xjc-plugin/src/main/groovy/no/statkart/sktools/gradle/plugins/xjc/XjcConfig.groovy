@@ -12,7 +12,7 @@ import org.gradle.api.tasks.SourceSet
  * @author Leif Lislegård
  */
 class XjcConfig implements Serializable {
-    private static final long serialVersionUID = 1L; //SKTOOLS-130: remove Serializable in sktools version 1.5
+    private static final long serialVersionUID = 1L; //SKTOOLS-130: remove Serializable in sktools version 2.1
 
     /*
      * For lovlige parametere se {@link com.sun.tools.xjc.addon.statkart.ListGenPlugin#parseArgument(com.sun.tools.xjc.Options, String[], int)

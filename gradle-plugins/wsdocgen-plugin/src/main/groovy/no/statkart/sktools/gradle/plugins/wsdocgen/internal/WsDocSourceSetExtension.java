@@ -4,7 +4,7 @@ import groovy.lang.Closure;
 import org.gradle.util.ConfigureUtil;
 
 /**
- * Vedhengsklasse til {@link org.gradle.api.tasks.SourceSet}
+ * Vedhengsklasse til {@link org.gradle.api.tasks.SourceSet SourceSet}
  *
  * @since 2.0
  * @author Leif Lislegård
