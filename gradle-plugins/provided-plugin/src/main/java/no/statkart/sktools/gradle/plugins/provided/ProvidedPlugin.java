@@ -45,16 +45,16 @@ public class ProvidedPlugin implements Plugin<Project> {
                 SourceSet testSourceSet = javaPluginConvention.getSourceSets().getByName(SourceSet.TEST_SOURCE_SET_NAME);
                 testSourceSet.setCompileClasspath(testSourceSet.getCompileClasspath().plus(providedConfiguration));
                 testSourceSet.setRuntimeClasspath(testSourceSet.getRuntimeClasspath().plus(providedConfiguration).plus(singlevmConfiguration));
-            }
-        });
 
-        // Legg til for Idea Plugin
-        project.getPlugins().withType(IdeaPlugin.class).all(new Action<IdeaPlugin>() {
-            @Override
-            public void execute(IdeaPlugin ideaPlugin) {
-                IdeaModel ideaModel = project.getExtensions().getByType(IdeaModel.class);
-                ideaModel.getModule().getScopes().get("COMPILE").get("plus").add(providedConfiguration);
-                ideaModel.getModule().getScopes().get("RUNTIME").get("plus").add(singlevmConfiguration);
+                // Legg til for Idea Plugin
+                project.getPlugins().withType(IdeaPlugin.class).all(new Action<IdeaPlugin>() {
+                    @Override
+                    public void execute(IdeaPlugin ideaPlugin) {
+                        IdeaModel ideaModel = project.getExtensions().getByType(IdeaModel.class);
+                        ideaModel.getModule().getScopes().get("COMPILE").get("plus").add(providedConfiguration);
+                        ideaModel.getModule().getScopes().get("RUNTIME").get("plus").add(singlevmConfiguration);
+                        }
+                });
             }
         });
     }
