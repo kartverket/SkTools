@@ -36,7 +36,7 @@ public class ProvidedPluginTest {
     }
 
     @Test
-    public void testConfiguration() {
+    public void testProvidedConfiguration() {
         Project project = ProjectBuilder.builder().build();
         project.getPlugins().apply("sktools-provided-plugin");
         project.getPlugins().apply("java");
@@ -59,5 +59,31 @@ public class ProvidedPluginTest {
         Assert.assertFalse(javaConvention.getSourceSets().getByName(SourceSet.MAIN_SOURCE_SET_NAME).getRuntimeClasspath().getFiles().containsAll(provided.getFiles()), "Main runtime classpath inneholder provided");
         Assert.assertTrue(javaConvention.getSourceSets().getByName(SourceSet.TEST_SOURCE_SET_NAME).getCompileClasspath().getFiles().containsAll(provided.getFiles()), "Test compile classpath inneholder ikke provided");
         Assert.assertTrue(javaConvention.getSourceSets().getByName(SourceSet.TEST_SOURCE_SET_NAME).getRuntimeClasspath().getFiles().containsAll(provided.getFiles()), "Test runtime classpath inneholder ikke provided");
+    }
+
+    @Test
+    public void testSinglevmConfiguration() {
+        Project project = ProjectBuilder.builder().build();
+        project.getPlugins().apply("sktools-provided-plugin");
+        project.getPlugins().apply("java");
+
+        project.getRepositories().maven(new Action<MavenArtifactRepository>() {
+            @Override
+            public void execute(MavenArtifactRepository repository) {
+                repository.setName("PUBLIC");
+                repository.setUrl("http://nexus.statkart.no:8090/nexus/content/groups/public/");
+            }
+        });
+
+        project.getDependencies().add("singlevm", "com.google.code.findbugs:jsr305:1.3.9");
+
+        Assert.assertTrue(project.getConfigurations().getByName("default").isEmpty(), "default er ikke tom");
+
+        JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
+        Configuration provided = project.getConfigurations().getByName("singlevm");
+        Assert.assertFalse(javaConvention.getSourceSets().getByName(SourceSet.MAIN_SOURCE_SET_NAME).getCompileClasspath().getFiles().containsAll(provided.getFiles()), "Main compile classpath inneholder singlevm");
+        Assert.assertTrue(javaConvention.getSourceSets().getByName(SourceSet.MAIN_SOURCE_SET_NAME).getRuntimeClasspath().getFiles().containsAll(provided.getFiles()), "Main runtime classpath inneholder ikke singlevm");
+        Assert.assertFalse(javaConvention.getSourceSets().getByName(SourceSet.TEST_SOURCE_SET_NAME).getCompileClasspath().getFiles().containsAll(provided.getFiles()), "Test compile classpath inneholder singlevm");
+        Assert.assertTrue(javaConvention.getSourceSets().getByName(SourceSet.TEST_SOURCE_SET_NAME).getRuntimeClasspath().getFiles().containsAll(provided.getFiles()), "Test runtime classpath inneholder ikke singlevm");
     }
 }
