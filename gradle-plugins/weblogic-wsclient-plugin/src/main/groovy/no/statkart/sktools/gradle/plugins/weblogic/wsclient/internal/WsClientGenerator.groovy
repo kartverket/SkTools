@@ -119,7 +119,7 @@ class WsClientGenerator {
             // Fra: url = new URL(<WS-Stub>.class.getResource("."), "META-INF/wsdls/<wsdlname>.wsdl");
             // Til: url = <WS-Stub>.class.getResource("/META-INF/wsdls/<wsdlname>.wsdl"); if (url == null) throw new MalformedURLException("Not found");
             regexp(pattern: /url = new URL\(([^"]+)"\."\), "(.*)"\);/)
-            substitution(expression: ('url = $1"/$2"); if (url == null) throw new MalformedURLException("Not found");'))
+            substitution(expression: ('url = \\1"/\\2"); if (url == null) throw new MalformedURLException("Not found");'))
             fileset(dir: getDestinationDir(), erroronmissingdir: true) {
                 include(name: '**/*.java')
             }
