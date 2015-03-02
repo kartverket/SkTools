@@ -81,7 +81,7 @@ public class WsdlCustomizerPlugin implements Plugin<Project> {
         // Bruker replace() siden add() er depracated og create() ikke fantes før
         Copy extractWsdls = project.getTasks().replace("extractWsdls", Copy.class);
         extractWsdls.setDestinationDir(new File(project.getBuildDir(), extractWsdls.getName()));
-        extractWsdls.setDependsOn(generatedSchemas);
+        extractWsdls.dependsOn(generatedSchemas);
         extractWsdls.from(new Callable<Collection<FileCollection>>() {
             @Override
             public Collection<FileCollection> call() throws Exception {
