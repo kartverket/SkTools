@@ -174,4 +174,70 @@ class WeblogicGenClientTaskTest {
     }
 
 
+    /**
+     * Tester compiler med standardverdier, bortsett fra at apiPrefix blir satt til "sktoolstest".
+     *
+     * Input blir generert og hentet ifra et WsWar prosjekt.
+     *
+     * Til sist blir en kompiler instans opprettet og konfigurert, deretter eksekvert og testet.
+     */
+    @Test
+    void testApiPrefix() {
+        //forks a new project in a temp folder
+        ProjectHelper rootProjectHelper = GradleProjectBuilder.builder("rootProject").build()
+        Project rootProject = rootProjectHelper.project
+
+        //forks a new project in a temp folder
+        ProjectHelper wsWarProjectHelper = WeblogicWsWarProjectBuilder.builder().applyWsWarPlugin(true).withName("wswar").withParent(rootProject).build()
+
+        //oppretter to servicer
+        use(WeblogicWsWarTestutilFilewriter) {
+            wsWarProjectHelper.writeDemoServiceWSBean2('src/weblogic/java')
+            wsWarProjectHelper.writePingServiceWSBean('src/weblogic/java')
+        }
+
+        wsWarProjectHelper.executeTask(WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME)
+        wsWarProjectHelper.assertTaskExecutedNotSkipped(WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME)
+
+        // pakker ut schema filer ifra generert war
+        assert wsWarProjectHelper.assertFileExists(wsWarProjectHelper.project.configurations['weblogic'].artifacts.files.singleFile) { warFile ->
+            rootProject.copy {
+                into 'somedir'
+                from wsWarProjectHelper.project.zipTree(warFile).matching { include '**/TestService*.wsdl', '**/TestService*.xsd' }.files
+            }
+            rootProject.copy {
+                into 'additional'
+                from wsWarProjectHelper.project.zipTree(warFile).matching { include '**/PingService*.wsdl', '**/PingService*.xsd' }.files
+            }
+        }
+
+        rootProjectHelper.assertFileExists('somedir/TestServiceWS.wsdl')
+        rootProjectHelper.assertFileExists('somedir/TestServiceWS_schema1.xsd')
+        rootProjectHelper.assertFileExists('additional/PingServiceWS.wsdl')
+        rootProjectHelper.assertFileExists('additional/PingServiceWS_schema1.xsd')
+
+        FileCollection someDirFiles = rootProject.files('somedir')
+        FileCollection additionalFiles = rootProject.files('additional')
+
+        //konfigurerer compiler
+        WeblogicGenClientTask genClientTask = rootProject.task([type: WeblogicGenClientTask], 'genClient')
+        genClientTask.webServiceConfig = new WebServiceConfig(rootProject)
+        genClientTask.webServiceConfig.schemaFiles someDirFiles, additionalFiles
+        genClientTask.webServiceConfig.apiPrefix 'sktoolstest'
+        genClientTask.setWeblogicClasspath(rootProjectHelper.weblogicClasspath + rootProjectHelper.toolsJar)
+        genClientTask.setDestinationDir(rootProject.buildDir)
+        genClientTask.source = genClientTask.webServiceConfig.schemaFiles
+
+        //eksekverer
+        genClientTask.gen()
+
+        //tester at enkelte filer er generert
+        rootProjectHelper.assertFileExists('build/META-INF/wsdls/sktoolstest/TestServiceWS.wsdl')
+        rootProjectHelper.assertFileExists('build/no/statkart/test/service/demotns/TestServiceWS.class')
+        rootProjectHelper.assertFileExists('build/no/statkart/test/service/demotns/TestServiceWS.java')
+
+        rootProjectHelper.assertFileExists('build/META-INF/wsdls/sktoolstest/PingServiceWS_schema1.xsd')
+
+    }
+
 }

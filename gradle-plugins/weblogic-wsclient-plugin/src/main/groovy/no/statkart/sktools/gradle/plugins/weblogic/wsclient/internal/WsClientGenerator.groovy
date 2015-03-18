@@ -89,6 +89,11 @@ class WsClientGenerator {
         source.matching {include '**/*.wsdl'}.files.split { webServiceConfig.getLastWsdl() != it.name }.each { Collection groups ->
             groups.each { File f ->
                 attributes['wsdl'] = f
+
+                if (webServiceConfig.apiPrefix != null) {
+                    attributes.wsdlLocation = 'META-INF/wsdls/' + webServiceConfig.apiPrefix + '/' + f.name
+                }
+
                 logger.info('Calling clientgen with attributes = ' + attributes)
                 def result = ant.clientgen(attributes) {
                     //nested <fileset> fungerer ikke (testet for WLS 10.3.1), må angi en og en wsdl-fil

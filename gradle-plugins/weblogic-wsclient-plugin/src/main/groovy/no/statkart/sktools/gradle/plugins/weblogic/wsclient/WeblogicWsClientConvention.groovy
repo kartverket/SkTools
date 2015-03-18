@@ -67,6 +67,7 @@ class WebServiceConfig {
     protected ExceptionConfig exception;
 
     protected String lastWsdl = null;
+    protected String apiPrefix = null;
 
 
     WebServiceConfig(WeblogicWsClientConvention convention, String name) {
@@ -161,6 +162,14 @@ class WebServiceConfig {
 
     ExceptionConfig getException() {
         return exception
+    }
+
+    public void apiPrefix(String apiPrefix) {
+        this.apiPrefix = apiPrefix;
+    }
+
+    String getApiPrefix() {
+        return apiPrefix
     }
 
     public String toString() {
