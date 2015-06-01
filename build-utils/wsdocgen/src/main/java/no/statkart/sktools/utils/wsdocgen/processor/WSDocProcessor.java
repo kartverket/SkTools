@@ -19,6 +19,7 @@ import javax.xml.transform.*;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
+import javax.xml.ws.WebServiceProvider;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -43,7 +44,7 @@ import java.util.Set;
         <parameters>
           <parameter name="">
             <description>...</description>
-            <type name="" namespace="" javadocPath="">description</type>
+            <type name="" namespace="" javadocPath="">description of type</type>
           </parameter>
         </parameters>
 
@@ -51,7 +52,7 @@ import java.util.Set;
           <!-- empty list when void -->
           <parameter name="">
             <description>...</description>
-            <type name="" namespace="" javadocPath="">description</type>
+            <type name="" namespace="" javadocPath="">description of type</type>
           </parameter>
         </returns>
 
@@ -59,7 +60,7 @@ import java.util.Set;
           <!-- might be empty -->
           <exception name="">
             <description>...</description>
-            <type name="" namespace="" javadocPath="">description</type>
+            <type name="" namespace="" javadocPath="">description of type</type>
           </exception>
         </exceptions>
 
@@ -120,24 +121,11 @@ public class WSDocProcessor extends AbstractProcessor {
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-
-        Map<String, Element> wsiByWSBeanName = new HashMap<String, Element>();
-        for (Element element : roundEnv.getRootElements()) {
-            String simpleName = element.getSimpleName().toString();
-            if(simpleName.endsWith("WSI")) {
-                String wsBeanName = simpleName.replaceAll("WSI\\z", "WSBean");
-                wsiByWSBeanName.put(wsBeanName, element);
-            }
-        }
-
-//        for (Map.Entry<String, Element> stringElementEntry : wsiByWSBeanName.entrySet()) {
-//            System.out.println("Key: " + stringElementEntry.getKey());
-//            System.out.println("Value: " + stringElementEntry.getValue());
-//        }
+        final Map<String, Element> wsiByWSBeanName = findWsiNames(roundEnv);
 
         for (Element element : roundEnv.getElementsAnnotatedWith(WebService.class)) {
             String webServicePortTypeName = WSUtils.findWebServicePortTypeName(element);
-            if (webServicePortTypeName != null) { //skipping none WebSerivce elements in input...
+            if (webServicePortTypeName != null) {
 
                 final String fileName = String.format("%s.html", webServicePortTypeName);
                 System.out.println(String.format("Processing class: %s ", element));
@@ -147,19 +135,13 @@ public class WSDocProcessor extends AbstractProcessor {
                 final org.w3c.dom.Element services = xmlBuilder.getServicesBuilder().createServices();
                 final Element wsiElement = wsiByWSBeanName.get(element.getSimpleName().toString()); //korresponderende element for WSI deklarasjon
 
-//            final Filer filer = processingEnv.getFiler();
-//            final Elements elementUtils = processingEnv.getElementUtils();
-//            printDocumentTilSystemOut(document);
-
-
-                FileObject outputFile = null;
-
                 try {
                     xmlBuilder.getServiceBuilder().appendServiceTo(services, element, fileName, wsiElement);
                 } catch (RuntimeException e) {
                     processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, String.format("%s", e.getMessage()), element);
                 }
 
+                FileObject outputFile = null;
 
                 try {
                     outputFile = processingEnv.getFiler().createResource(StandardLocation.CLASS_OUTPUT, "", fileName);
@@ -175,14 +157,11 @@ public class WSDocProcessor extends AbstractProcessor {
 
                 writeToFile(xmlBuilder.getDocument(), outputFile, xsltFilePath);
 
+                addToIndex(element, fileName, wsiElement);
 
-                //index fil: SKTOOLS-105
-                if (indexServices != null) {
-                    indexXmlBuilderFactory.getServiceBuilder().appendServiceTo(indexServices, element, fileName, wsiElement);
-                }
-
-                int debug = 0;
-
+            } else {
+                //skipping some WebService elements in input...
+                System.out.println(String.format("Unable to resolve portType - skipping class %s", element));
             }
         }
 
@@ -203,7 +182,26 @@ public class WSDocProcessor extends AbstractProcessor {
         return false;
     }
 
+    static Map<String, Element> findWsiNames(RoundEnvironment roundEnv) {
+        Map<String, Element> wsiByWSBeanName = new HashMap<String, Element>();
+        for (Element element : roundEnv.getRootElements()) {
+            String simpleName = element.getSimpleName().toString();
+            if(simpleName.endsWith("WSI")) {
+                String wsBeanName = simpleName.replaceAll("WSI\\z", "WSBean");
+                wsiByWSBeanName.put(wsBeanName, element);
+            }
+        }
+        return wsiByWSBeanName;
+    }
 
+    /**
+     * index fil: SKTOOLS-105
+     */
+    void addToIndex(Element element, String fileName, Element wsiElement) {
+        if (indexServices != null) {
+            indexXmlBuilderFactory.getServiceBuilder().appendServiceTo(indexServices, element, fileName, wsiElement);
+        }
+    }
 
 
     void writeToFile(Document document, FileObject outputFile, String xsltFilePath) {
