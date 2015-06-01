@@ -47,8 +47,8 @@ class WeblogicJaxWsCompiler implements no.statkart.sktools.gradle.plugins.weblog
         attributes += spec.compileOptions.optionMap()
 
         if (attributes.encoding) {
-            attributes.srcEncoding = attributes.enocding
-            attributes.remove('enocding')
+            attributes.srcEncoding = attributes.encoding
+            attributes.remove('encoding')
         }
 
 
