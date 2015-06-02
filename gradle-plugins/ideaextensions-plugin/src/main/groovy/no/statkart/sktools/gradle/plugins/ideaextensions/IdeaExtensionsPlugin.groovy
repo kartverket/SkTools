@@ -200,17 +200,26 @@ class IdeaExtensionsPlugin implements Plugin<Project> {
                     }
                 }
 
-                //sletter evt gammelt duplikat med samme navn
-                inspectionProjectProfileManager.profiles.profile.each {
-                    def name = it.option.find { it.@name = 'myName' }.@value
-                    if (profileName.equals(name)) {
-                        it.parent().remove(it)
-                    } else {
-                        def debug = name
-                    }
-                }
 
-                inspectionProjectProfileManager.profiles[0].append(profileNode)
+                removeProfileWithName(profileName, inspectionProjectProfileManager.profiles.profile)
+                inspectionProjectProfileManager.profiles[0].append(profileNode) //idea > 14
+
+                removeProfileWithName(profileName, inspectionProjectProfileManager.profile)
+                inspectionProjectProfileManager.append(profileNode) //idea 14+
+            }
+        }
+    }
+
+    /**
+     * sletter evt gammelt duplikat med samme navn
+     */
+    private static Object removeProfileWithName(profileName, Iterable<Node> profileNodes) {
+        profileNodes.each {
+            def name = it.option.find { it.@name = 'myName' }.@value
+            if (profileName.equals(name)) {
+                it.parent().remove(it)
+            } else {
+                def debug = name
             }
         }
     }
@@ -219,8 +228,7 @@ class IdeaExtensionsPlugin implements Plugin<Project> {
     private static Node buildInspectionProfileManager(String defaultProfileName) {
         def builder = new NodeBuilder()
         builder.component(name: 'InspectionProjectProfileManager') {
-            profiles {
-            }
+            profiles { } //idea > 14
             option(name: 'PROJECT_PROFILE', value: defaultProfileName)
             option(name: 'USE_PROJECT_PROFILE', value: 'true')
             version(value: '1.0')

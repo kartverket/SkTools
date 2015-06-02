@@ -44,7 +44,7 @@ class IdeaExtensionPluginTest {
      * @since 1.3
      */
     @Test
-    void testAddInspectionProfileClean() {
+    void testAddInspectionProfileCleanIdea12() {
         final def testCase = new InspectionProfileTestContext()
         testCase.ideaTemplate = testCase.IDEA_TEMPLATE_EMPTY_XML
         testCase.addInspectionProfileFile(testCase.INSPECTION_PROFILE_1_XML)
@@ -59,7 +59,28 @@ class IdeaExtensionPluginTest {
         Node managerNode = rootNode.component.findAll { it.@name == "InspectionProjectProfileManager" }[0]
 
         assert managerNode.profiles.profile.size() == 2; // forventer to profiler
+    }
 
+    /**
+     * SKTOOLS-142: Tester angivelse xml for inspection profiles
+     * @since 2.0
+     */
+    @Test
+    void testAddInspectionProfileCleanIdea14() {
+        final def testCase = new InspectionProfileTestContext()
+        testCase.ideaTemplate = testCase.IDEA_TEMPLATE_EMPTY_XML
+        testCase.addInspectionProfileFile(testCase.INSPECTION_PROFILE_1_XML)
+        testCase.addInspectionProfileFile(testCase.INSPECTION_PROFILE_2_XML)
+
+        def rootNode = testCase.buildIdeaTemplateNode()
+
+        IdeaExtensionsPlugin.addInspectionProfile(rootNode, testCase.extension)
+
+        assert rootNode.component.findAll { it.@name == "InspectionProjectProfileManager" }.size() == 1 //forventet kun ett element
+
+        Node managerNode = rootNode.component.findAll { it.@name == "InspectionProjectProfileManager" }[0]
+
+        assert managerNode.profile.size() == 2; // forventer to profiler
     }
 
     /**
