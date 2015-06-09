@@ -4,6 +4,7 @@ import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 
 /**
@@ -26,6 +27,10 @@ class WeblogicDeployTask extends AbstractWeblogicDeployTask {
 
     @Input
     boolean library = false
+
+    @Input
+    @Optional
+    String appversion = null
 
     @TaskAction
     void deploy() {
@@ -51,6 +56,10 @@ class WeblogicDeployTask extends AbstractWeblogicDeployTask {
 
         if (library) {
             args.library = true
+        }
+
+        if (getAppversion() != null) {
+            args.appversion = getAppversion()
         }
 
         ant.wldeploy(args)
