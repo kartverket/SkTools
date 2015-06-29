@@ -187,11 +187,20 @@ class IdeaExtensionsPlugin implements Plugin<Project> {
                     }
                 }
 
-                removeProfileWithName(profileName, component.profiles.profile)
-                component.profiles.first().append(profileNode) //idea > 14
+                //idea > 14
+                Node profiles;
+                if (!component.profiles) { //blir strippet vekk av nyere versjoner av IntelliJ.
+                    profiles = new NodeBuilder().profiles {};
+                    component.append(profiles)
+                } else {
+                    profiles = component.profiles.first()
+                    removeProfileWithName(profileName, profiles.profile)
+                }
+                profiles.append(profileNode)
 
+                //idea 14+
                 removeProfileWithName(profileName, component.profile)
-                component.append(profileNode) //idea 14+
+                component.append(profileNode)
             }
         }
     }
@@ -212,7 +221,6 @@ class IdeaExtensionsPlugin implements Plugin<Project> {
     private static Node buildInspectionProfileManager(String defaultProfileName) {
         def builder = new NodeBuilder()
         builder.component(name: 'InspectionProjectProfileManager') {
-            profiles { } //idea > 14
             option(name: 'PROJECT_PROFILE', value: defaultProfileName)
             option(name: 'USE_PROJECT_PROFILE', value: 'true')
             version(value: '1.0')
