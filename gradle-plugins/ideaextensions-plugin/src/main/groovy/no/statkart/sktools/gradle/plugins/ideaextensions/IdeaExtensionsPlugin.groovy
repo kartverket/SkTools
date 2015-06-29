@@ -81,22 +81,22 @@ class IdeaExtensionsPlugin implements Plugin<Project> {
      * Legger til filter for ignorerte filer til VCS systemet
      */
     static def addIgnoreMasksAndPaths(GPathResult xml, Project project, IdeaExtensionsPluginExtension convention) {
-        xml.component.grep { it.@name == 'ChangeListManager' }.each {
-            it.ignored.each { it.replaceNode {} }
+        xml.component.grep { it.@name == 'ChangeListManager' }.each { Node component ->
+            component.ignored.each { it.replaceNode {} }
 
             convention.ignoreMasks.each { mask ->
-                it.appendNode { ignored(mask: mask) }
+                component.appendNode { ignored(mask: mask) }
             }
 
             convention.ignorePaths.each { path ->
                 String relPath = FileUtil.relativeTo(project.projectDir, path).replaceAll('\\\\', '/') + '/'
-                it.appendNode { ignored(path: relPath) }
+                component.appendNode { ignored(path: relPath) }
             }
 
             //legger også til ignore for alle build-kataloger
             project.getSubprojects().each { subproject ->
                 String path = FileUtil.relativeTo(project.projectDir, subproject.buildDir).replaceAll('\\\\', '/') + '/'
-                it.appendNode { ignored(path: path) }
+                component.appendNode { ignored(path: path) }
             }
         }
     }
@@ -105,20 +105,15 @@ class IdeaExtensionsPlugin implements Plugin<Project> {
      * @since 1.2
      */
     static def addGradle(Node rootNode, IdeaExtensionsPluginExtension convention) {
-
-        Node gradleComponentNode = rootNode.component.find { it.@name == 'GradleSettings' }
-
-        if (gradleComponentNode == null) {
-            def builder = new NodeBuilder()
-
-            gradleComponentNode = builder.component(name: 'GradleSettings') {
+        Node component = rootNode.component.find { it.@name == 'GradleSettings' }
+        if (component == null) {
+            component = new NodeBuilder().component(name: 'GradleSettings') {
                 option(name: 'gradleHome', value: 'replace me!')
             }
-
-            rootNode.append(gradleComponentNode)
+            rootNode.append(component)
         }
 
-        gradleComponentNode.option.find { it.@name == 'gradleHome' }.replaceNode {
+        component.option.find { it.@name == 'gradleHome' }.replaceNode {
             option(name: 'gradleHome', value: convention.project.gradle.gradleHomeDir) {}
         }
 
@@ -129,10 +124,10 @@ class IdeaExtensionsPlugin implements Plugin<Project> {
      * @since 1.2
      */
     static def addVcsMappings(Node rootNode, IdeaExtensionsPluginExtension convention) {
-        rootNode.component.grep { it.@name == 'VcsDirectoryMappings' }.each {
+        rootNode.component.grep { it.@name == 'VcsDirectoryMappings' }.each { Node  component ->
 
             //sletter alle noder
-            it.mapping.each { it.replaceNode {} }
+            component.mapping.each { component.remove(it) }
 
             //legger inn nye noder
             convention.vcsDirectoryMappings.each { path, vcs ->
@@ -141,9 +136,7 @@ class IdeaExtensionsPlugin implements Plugin<Project> {
                     vcs = 'svn'
                 }
 
-                def builder = new NodeBuilder()
-
-                it.append(builder.mapping(directory: path, vcs: vcs))
+                component.append(new NodeBuilder().mapping(directory: path, vcs: vcs))
             }
         }
     }
@@ -154,18 +147,14 @@ class IdeaExtensionsPlugin implements Plugin<Project> {
      */
     static def addCodeStyle(Node rootNode, IdeaExtensionsPluginExtension convention) {
         for (def path : convention.codeStyles) {
-            def codeStyleFile = convention.project.file(path)
+            final File codeStyleFile = convention.project.file(path)
+            final Node codeStyle = new XmlParser().parse(codeStyleFile)
 
-            if (codeStyleFile != null) {
-                Node profileNode = new XmlParser().parse(codeStyleFile)
-
-                //sletter evt gamle noder
-                profileNode.component.each { def newComponent ->
-                    rootNode.component.findAll { it.@name == newComponent.@name }.each { rootNode.remove(it) }
-                }
-
-                rootNode.append(profileNode)
+            //sletter evt gamle noder
+            rootNode.component.findAll { it.@name == codeStyle.@name }.each { Node component ->
+                rootNode.remove(component)
             }
+            rootNode.append(codeStyle)
         }
     }
 
@@ -185,27 +174,24 @@ class IdeaExtensionsPlugin implements Plugin<Project> {
                     defaultProfileName = profileName
                 }
 
-                final Node inspectionProjectProfileManager = rootNode.component.find { it.@name == 'InspectionProjectProfileManager'}
-                if (inspectionProjectProfileManager == null) {
-                    inspectionProjectProfileManager = buildInspectionProfileManager(defaultProfileName)
-                    rootNode.append(inspectionProjectProfileManager)
+                Node component = rootNode.component.find { it.@name == 'InspectionProjectProfileManager'}
+                if (component == null) {
+                    component = buildInspectionProfileManager(defaultProfileName)
+                    rootNode.append(component)
                 } else {
                     //sletter evt duplikater som er kommet inn ved feil rettet i SKTOOLS-82
                     rootNode.component.findAll { it.@name == 'InspectionProjectProfileManager' }.each {
-                        if (it != inspectionProjectProfileManager) {
-                            rootNode.remove(it)
-                        } else {
-                            def debug = it
+                        if (it != component) {
+                            rootNode.remove(component)
                         }
                     }
                 }
 
+                removeProfileWithName(profileName, component.profiles.profile)
+                component.profiles.first().append(profileNode) //idea > 14
 
-                removeProfileWithName(profileName, inspectionProjectProfileManager.profiles.profile)
-                inspectionProjectProfileManager.profiles[0].append(profileNode) //idea > 14
-
-                removeProfileWithName(profileName, inspectionProjectProfileManager.profile)
-                inspectionProjectProfileManager.append(profileNode) //idea 14+
+                removeProfileWithName(profileName, component.profile)
+                component.append(profileNode) //idea 14+
             }
         }
     }
@@ -218,8 +204,6 @@ class IdeaExtensionsPlugin implements Plugin<Project> {
             def name = it.option.find { it.@name = 'myName' }.@value
             if (profileName.equals(name)) {
                 it.parent().remove(it)
-            } else {
-                def debug = name
             }
         }
     }
