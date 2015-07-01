@@ -35,16 +35,10 @@ class IdeaExtensionsPlugin implements Plugin<Project> {
         IdeaExtensionsPluginExtension extension = project.extensions.create(EXTENSION_NAME, IdeaExtensionsPluginExtension.class, project)
 
         if (project.parent == null) { //root
-
-            project.tasks.ideaWorkspace.doLast {
-                FileUtil.modifyXmlFile(project.file(it.outputFile)) { xml ->
-                    addIgnoreMasksAndPaths(xml, project, extension)
-                }
-            }
-
             project.idea.project.ipr.withXml { provider ->
                 Node rootNode = provider.asNode()
 
+                addIgnoreMasksAndPaths(rootNode, extension)
                 addGradle(rootNode, extension)
                 addVcsMappings(rootNode, extension)
                 addInspectionProfile(rootNode, extension)
@@ -80,8 +74,8 @@ class IdeaExtensionsPlugin implements Plugin<Project> {
     /**
      * Legger til filter for ignorerte filer til VCS systemet
      */
-    static def addIgnoreMasksAndPaths(GPathResult xml, Project project, IdeaExtensionsPluginExtension convention) {
-        xml.component.grep { it.@name == 'ChangeListManager' }.each { Node component ->
+    static def addIgnoreMasksAndPaths(Node rootNode, IdeaExtensionsPluginExtension convention) {
+        rootNode.component.grep { it.@name == 'ChangeListManager' }.each { Node component ->
             component.ignored.each { it.replaceNode {} }
 
             convention.ignoreMasks.each { mask ->
