@@ -75,7 +75,6 @@ import java.util.Set;
  * @since 1.3 - ny grunnbok sprint 30
  */
 @SupportedAnnotationTypes(value= {"javax.jws.WebService"})
-@SupportedSourceVersion(SourceVersion.RELEASE_6)
 @SupportedOptions(value = {
         "xslt",
         "indexXslt",  //SKTOOLS-105
@@ -97,6 +96,10 @@ public class WSDocProcessor extends AbstractProcessor {
  //       System.out.println(String.format("Constructing class %s", this.getClass().getSimpleName()));
     }
 
+    @Override
+    public SourceVersion getSupportedSourceVersion() {
+        return SourceVersion.latestSupported();
+    }
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
