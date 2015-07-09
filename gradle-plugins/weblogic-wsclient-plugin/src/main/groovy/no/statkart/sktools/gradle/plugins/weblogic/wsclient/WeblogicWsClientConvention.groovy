@@ -3,7 +3,6 @@ package no.statkart.sktools.gradle.plugins.weblogic.wsclient
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
-
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.util.PatternSet
 
@@ -77,16 +76,6 @@ class WebServiceConfig {
         this.schemaFiles = convention.project.files(schemaFilesSpecs)
     }
 
-    /**
-     * Kun for testing
-     */
-    WebServiceConfig(Project project) {
-        this.name = null
-        this.convention = new WeblogicWsClientConvention(project)
-        this.baseWars = convention.project.configurations.detachedConfiguration()
-        this.schemaFiles = convention.project.files(schemaFilesSpecs)
-    }
-
     protected WebServiceConfig configure(Closure closure) {
         closure.setResolveStrategy(Closure.DELEGATE_FIRST);
         closure.delegate = this
@@ -97,10 +86,11 @@ class WebServiceConfig {
     String getName() {
         return name
     }
-/**
+
+    /**
      * Alternativ spesifisering av wsdl filer dersom en ønsker overstyring av default verdier.
      *
-     * @see Project#files(Object... paths)
+     * @see Project#files(Object ... paths)
      */
     public WebServiceConfig schemaFiles(Object... paths) {
         schemaFilesSpecs.addAll paths
@@ -114,8 +104,6 @@ class WebServiceConfig {
         closure.setDelegate(convention) //eksponerer med dette bla convention sin 'project' property
         return schemaFiles(closure())
     }
-
-
 
     /**
      * Bestemmer hvor wsdl schema befinner seg.
@@ -188,7 +176,6 @@ class ExceptionConfig {
 
     protected String packageOrPathString
     protected PatternSet exceptionFilePatternSet = new PatternSet(includes: ['**/*Exception.java'])
-
 
 
     protected ExceptionConfig(WebServiceConfig convention) {

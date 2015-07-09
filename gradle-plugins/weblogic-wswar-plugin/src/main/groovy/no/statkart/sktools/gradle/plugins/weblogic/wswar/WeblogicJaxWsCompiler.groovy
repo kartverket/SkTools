@@ -8,6 +8,7 @@ import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.WorkResult
 import org.gradle.api.tasks.util.PatternSet
+import org.gradle.api.tasks.util.PatternSet
 
 /**
  * Steg for kompilering av JAX-WS implementasjon for server.

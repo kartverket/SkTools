@@ -1,12 +1,13 @@
-package no.statkart.test.test1;
+package no.statkart.test.service.v2;
 
 /**
  * Bla bla bla beskrivelse av service.
  */
 @javax.jws.WebService(
         name = "TestService",
-        serviceName = "TestServiceWS_v1",
-        targetNamespace = "http://test.statkart.no/service1")
+        serviceName = "TestServiceWS",
+        targetNamespace = "http://test.statkart.no/service/v2"
+)
 public class DemoServiceWSBean {
 
     /**

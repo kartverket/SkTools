@@ -1,7 +1,7 @@
 apply plugin: 'java'
 apply plugin: 'sktools-weblogic-wswar-plugin'
 
-description = "Web modul med webservice implementasjon"
+description = "Web modul med webservice implementasjon - v2"
 
 dependencies {
     weblogicCompile project(path: project.path, configuration: 'runtime')

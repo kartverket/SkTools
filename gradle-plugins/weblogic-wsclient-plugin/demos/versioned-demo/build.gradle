@@ -1,7 +1,5 @@
 /******************************************************************************************************************** **
- * Demonstrerer standard bruk av plugin
- *
- * Det demonstreres også eksempel implementasjon av 'gen' target
+ * Demonstrerer versjonert api og løsning for navnekonflikter
  ******************************************************************************************************************** */
 
 apply plugin: 'java'
@@ -17,6 +15,11 @@ dependencies {
 weblogicWsClient {
     client1 {
         baseWar { project(path: ':war1', configuration: 'weblogic') }
+        apiPrefix = "v1"
+    }
+    client2 {
+        baseWar { project(path: ':war2', configuration: 'weblogic') }
+        apiPrefix = "v2"
     }
 }
 
@@ -130,11 +133,13 @@ class Assert {
     }
 
     void assertGeneratedWeblogicResources() {
-        assert project.file('gen/main/wsclient/META-INF/wsdls/TestServiceWS.wsdl').exists()
+        assert project.file('gen/main/wsclient/META-INF/wsdls/v1/TestServiceWS.wsdl').exists()
+        assert project.file('gen/main/wsclient/META-INF/wsdls/v2/TestServiceWS.wsdl').exists()
     }
 
     void assertGeneratedWeblogicClasses() {
         assert project.file('gen/main/wsclient/no/statkart/test/service/v1/TestServiceWS.java').exists()
+        assert project.file('gen/main/wsclient/no/statkart/test/service/v2/TestServiceWS.java').exists()
     }
 
 

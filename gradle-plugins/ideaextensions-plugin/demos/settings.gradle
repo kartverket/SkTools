@@ -10,7 +10,7 @@ rootProject.name = 'ideaextensions-demo'
 gradle.projectsLoaded { Gradle g ->
     //if nested build...
     if (g.startParameter.systemPropertiesArgs['noMavenBootstrap']) {
-        logger.info "Skipping maven install doe to -DnoMavenBootstrap=${g.startParameter.systemPropertiesArgs['noMavenBootstrap']}"
+        logger.info "Skipping maven install due to -DnoMavenBootstrap=${g.startParameter.systemPropertiesArgs['noMavenBootstrap']}"
     } else {
         logger.quiet 'Asserting project is up to date. Running gradle deamon on root-project...'
 

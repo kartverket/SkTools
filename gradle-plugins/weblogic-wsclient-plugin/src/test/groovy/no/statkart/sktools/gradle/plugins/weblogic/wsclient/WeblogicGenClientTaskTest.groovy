@@ -64,8 +64,8 @@ class WeblogicGenClientTaskTest {
         FileCollection additionalFiles = rootProject.files('additional')
 
         //konfigurerer compiler
-        WeblogicGenClientTask genClientTask = rootProject.task([type: WeblogicGenClientTask], 'genClient')
-        genClientTask.webServiceConfig = new WebServiceConfig(rootProject)
+        WeblogicGenClientTask genClientTask = rootProject.tasks.create('genClient', WeblogicGenClientTask)
+        genClientTask.webServiceConfig = createWebServiceConfigFor(rootProject)
         genClientTask.webServiceConfig.schemaFiles someDirFiles, additionalFiles
         genClientTask.setWeblogicClasspath(rootProjectHelper.weblogicClasspath + rootProjectHelper.toolsJar)
         genClientTask.setDestinationDir(rootProject.buildDir)
@@ -125,8 +125,8 @@ class WeblogicGenClientTaskTest {
         FileCollection schemaFiles = rootProject.fileTree('somedir').matching(new PatternSet(includes: ['*.wsdl']))
 
         //konfigurerer compiler
-        WeblogicGenClientTask genClientTask = rootProject.task([type: WeblogicGenClientTask], 'genClient')
-        genClientTask.webServiceConfig = new WebServiceConfig(rootProject)
+        WeblogicGenClientTask genClientTask = rootProject.tasks.create('genClient', WeblogicGenClientTask)
+        genClientTask.webServiceConfig = createWebServiceConfigFor(rootProject)
         genClientTask.webServiceConfig.schemaFiles(schemaFiles)
         genClientTask.webServiceConfig.exceptionReusePackage('no.statkart.test.exceptiondemo01.common')
 
@@ -162,7 +162,7 @@ class WeblogicGenClientTaskTest {
         targetFile.deleteOnExit()
 
 
-        WeblogicGenClientTask genClientTask = project.task([type: WeblogicGenClientTask], 'genClient')
+        WeblogicGenClientTask genClientTask = project.tasks.create('genClient', WeblogicGenClientTask)
         genClientTask.setProject(project)
         genClientTask.setDestinationDir(dir)
 
@@ -220,8 +220,8 @@ class WeblogicGenClientTaskTest {
         FileCollection additionalFiles = rootProject.files('additional')
 
         //konfigurerer compiler
-        WeblogicGenClientTask genClientTask = rootProject.task([type: WeblogicGenClientTask], 'genClient')
-        genClientTask.webServiceConfig = new WebServiceConfig(rootProject)
+        WeblogicGenClientTask genClientTask = rootProject.tasks.create('genClient', WeblogicGenClientTask)
+        genClientTask.webServiceConfig = createWebServiceConfigFor(rootProject)
         genClientTask.webServiceConfig.schemaFiles someDirFiles, additionalFiles
         genClientTask.webServiceConfig.apiPrefix 'sktoolstest'
         genClientTask.setWeblogicClasspath(rootProjectHelper.weblogicClasspath + rootProjectHelper.toolsJar)
@@ -238,6 +238,14 @@ class WeblogicGenClientTaskTest {
 
         rootProjectHelper.assertFileExists('build/META-INF/wsdls/sktoolstest/PingServiceWS_schema1.xsd')
 
+    }
+
+
+    /**
+     * Kun for testing
+     */
+    private static WebServiceConfig createWebServiceConfigFor(Project project) {
+        return new WebServiceConfig(new WeblogicWsClientConvention(project), null)
     }
 
 }

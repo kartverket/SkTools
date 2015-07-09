@@ -1,5 +1,7 @@
 package no.statkart.sktools.gradle.plugins.weblogic.wsclient;
 
+import no.statkart.sktools.gradle.plugins.weblogic.compile.DefaultWeblogicCompileSpec;
+import no.statkart.sktools.gradle.plugins.weblogic.compile.WeblogicCompileSpec;
 import no.statkart.sktools.gradle.plugins.weblogic.WeblogicTaskInterface;
 import no.statkart.sktools.gradle.plugins.weblogic.wsclient.internal.WsClientGenerator;
 import org.gradle.api.file.FileCollection;
@@ -25,7 +27,8 @@ class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInter
     protected static final Logger logger = Logging.getLogger(WeblogicGenClientTask.class);
 
     private WebServiceConfig webServiceConfig;
-    private final CompileOptions compileOptions = new CompileOptions();
+    private final DefaultWeblogicCompileSpec spec = new DefaultWeblogicCompileSpec();
+
     private FileCollection weblogicClasspath;
     private String packageName;
 
@@ -50,11 +53,18 @@ class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInter
         //clean resources
         getProject().delete(getDestinationDir());
 
-        gen();
+        spec.setWeblogicClasspath(getWeblogicClasspath().getFiles());
+        spec.setTempDir(getTemporaryDir());
+
+        spec.setDestinationDir(getDestinationDir());
+        spec.setSource(getSource());
+        spec.setClasspath(getClasspath());
+
+        gen(spec);
     }
 
 
-    void gen() {
+    void gen(WeblogicCompileSpec spec) {
         WsClientGenerator generator = createGenerator();
 
         generator.gen(getOptions(), getWebServiceConfig());
@@ -88,7 +98,7 @@ class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInter
      */
     @Nested
     public CompileOptions getOptions() {
-        return this.compileOptions;
+        return spec.getCompileOptions();
     }
 
     public void setWeblogicClasspath(FileCollection weblogicClasspath) {

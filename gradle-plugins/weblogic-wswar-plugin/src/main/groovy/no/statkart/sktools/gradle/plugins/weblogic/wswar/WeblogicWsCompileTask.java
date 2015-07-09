@@ -10,10 +10,7 @@ import org.gradle.api.internal.project.ProjectInternal;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
-import org.gradle.api.tasks.Nested;
-import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.TaskAction;
-import org.gradle.api.tasks.WorkResult;
+import org.gradle.api.tasks.*;
 import org.gradle.api.tasks.compile.AbstractCompile;
 import org.gradle.api.tasks.compile.CompileOptions;
 
@@ -159,6 +156,7 @@ public class WeblogicWsCompileTask extends AbstractCompile implements WeblogicTa
         this.weblogicClasspath = weblogicClasspath;
     }
 
+    @InputFiles
     public FileCollection getWeblogicClasspath() {
         return weblogicClasspath;
     }
