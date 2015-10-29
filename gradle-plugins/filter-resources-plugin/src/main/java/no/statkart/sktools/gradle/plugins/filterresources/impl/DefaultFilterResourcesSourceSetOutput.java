@@ -38,7 +38,7 @@ public class DefaultFilterResourcesSourceSetOutput extends CompositeFileCollecti
     }
 
     @Override
-    public void resolve(FileCollectionResolveContext context) {
+    public void visitContents(FileCollectionResolveContext context) {
         context.add(outputDirectories);
     }
 
