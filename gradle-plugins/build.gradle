@@ -29,16 +29,15 @@ groovy.lang.Closure findDemoDirs = { project ->
 task('testDemos') {
     project.tasks['test'].dependsOn it //part of test
 
-
     final demoDirData = findDemoDirs(project)
 
     demoDirData.eachWithIndex { def values, int demoCount ->
 
-        def cleanDemoTask = project.task("cleanDemo$demoCount", type: GradleBuild) {
-            tasks = ['clean']
+        def demoTask = project.task("cleanDemo$demoCount", type: GradleBuild) {
+            tasks = ['clean', 'runDemo']
             doFirst {
                 println('################################################################################');
-                println '## cleaning demo in ' + project.relativePath(dir)
+                println '## starting demo in ' + project.relativePath(dir)
             }
             doLast {
                 println "\n  ...end of demo ${name}"
@@ -46,19 +45,7 @@ task('testDemos') {
             }
         }
 
-        def runDemoTask = project.task("runDemo$demoCount", type: GradleBuild, dependsOn:cleanDemoTask) {
-            tasks = ['runDemo']
-            doFirst {
-                println('################################################################################');
-                println '## executing demo in ' + project.relativePath(dir)
-            }
-            doLast {
-                println "\n  ...end of clean ${name}"
-                println('################################################################################\n\n');
-            }
-        }
-
-        [cleanDemoTask, runDemoTask].each { def task ->
+        [demoTask].each { def task ->
             task.dir = values[0]
             task.startParameter.projectProperties = [sktools_versjon: "${values[1].version}", MAVEN_REPO: MAVEN_REPO, WEBLOGIC_HOME: WEBLOGIC_HOME]
             task.startParameter.systemPropertiesArgs = [noMavenBootstrap: 'true'];
@@ -66,24 +53,18 @@ task('testDemos') {
         }
 
         gradle.projectsEvaluated {
-
             // Vi må installere alle artefakter før demoer kjøres
-            cleanDemoTask.dependsOn rootProject.getTasksByName('install', true)
+            demoTask.dependsOn rootProject.getTasksByName('install', true)
 
-            //kjøring av tester før kjøring av demos
-            if (project.gradle.startParameter.taskNames.contains('test')) {
-                runDemoTask.dependsOn project.subprojects.collectNested { it.getTasksByName('test', true) }
-            }
+            // kjøring av tester før kjøring av demos
+            demoTask.dependsOn project.subprojects.collectNested { it.getTasksByName('test', true) }
 
+            //dependsOn demoTask
+            dependsOn demoTask
         }
-
-        dependsOn runDemoTask
     }
     
     doLast {
         println "\n...${demoDirData.size()} demos executed!"
     }
 }
-
-
-
