@@ -1,6 +1,7 @@
 package no.statkart.sktools.gradle.plugins.wsdlcustomizer;
 
 import groovy.lang.Closure;
+import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.file.CopySpec;
@@ -131,7 +132,7 @@ public class CustomWsdlTask extends DefaultTask {
         //noinspection ResultOfMethodCallIgnored
         destinationDir.mkdirs();
 
-        final CopySpec copySpec = getProject().copySpec(null);
+        final CopySpec copySpec = getProject().copySpec((Action<? super CopySpec>) null);
 
         Map<String, String> namespaceSchemaFileMap = readOriginalSchemas(documentBuilder, copySpec);
 
