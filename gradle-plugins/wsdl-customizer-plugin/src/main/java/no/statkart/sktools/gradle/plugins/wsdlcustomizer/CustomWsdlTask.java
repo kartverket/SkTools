@@ -132,7 +132,7 @@ public class CustomWsdlTask extends DefaultTask {
         //noinspection ResultOfMethodCallIgnored
         destinationDir.mkdirs();
 
-        final CopySpec copySpec = getProject().copySpec((Action<? super CopySpec>) null);
+        final CopySpec copySpec = getProject().copySpec();
 
         Map<String, String> namespaceSchemaFileMap = readOriginalSchemas(documentBuilder, copySpec);
 
