@@ -75,7 +75,8 @@ class WeblogicDeployConfiguration {
      */
     Task askIfProdserverTask(Closure config) {
         askIfProdserverTask = project.task(convention.getTaskName('askIfProdserver', name)) << {
-            print("\nDeploy til PRODSERVER (${url}), vil du fortsette? (j/n)")
+            print("\nDeploy til PRODSERVER (${url}), vil du fortsette? (j/n) ")
+            System.out.flush();
             BufferedReader br = new BufferedReader(new InputStreamReader(System.in))
             def svar = br.readLine()
             if( !svar.equalsIgnoreCase("j") && !svar.equalsIgnoreCase("ja") ) {
