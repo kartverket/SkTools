@@ -1,4 +1,4 @@
-package no.statkart.sktools.gradle.plugins.filterresources.impl;
+package no.statkart.sktools.gradle.plugins.filterresources;
 
 import groovy.lang.Closure;
 import no.statkart.sktools.gradle.plugins.filterresources.FilterResourcesSourceSet;
@@ -14,11 +14,10 @@ import org.gradle.util.GUtil;
  * @since 1.1
  * @author Leif Lislegård
  */
-public class DefaultFilterResourcesSourceSet implements FilterResourcesSourceSet {
+class DefaultFilterResourcesSourceSet implements FilterResourcesSourceSet {
     final String name;
     final SourceDirectorySet filterResources;
     final FileResolver fileResolver;
-    Object outputPath;
 
 
     public DefaultFilterResourcesSourceSet(String name, FileResolver fileResolver) {

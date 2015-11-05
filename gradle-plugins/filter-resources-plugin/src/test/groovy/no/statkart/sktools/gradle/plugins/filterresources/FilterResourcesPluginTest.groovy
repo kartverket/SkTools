@@ -245,7 +245,7 @@ class FilterResourcesPluginTest {
     /**
      * SKIF-173
      *
-     * Tester at filtrerte filer ikke kommer med som {@code source} eller {@resources}
+     * Tester at filtrerte filer ikke kommer med som {@code source} eller {@code resources}
      */
     @Test
     void testSourceSetIkkeOverlapper() {
