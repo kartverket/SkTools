@@ -1,45 +1,11 @@
 package no.statkart.sktools.gradle.plugins.weblogic.deploy
 
-import org.gradle.util.ConfigureUtil
-import org.gradle.api.Project
 import org.gradle.api.GradleException
-import org.gradle.api.internal.ConventionTask
-import org.gradle.api.file.FileCollection
+import org.gradle.api.Project
 import org.gradle.api.Task
-import org.apache.commons.lang.StringUtils
-
-/**
- * Convention for å konfigurere opp egenskaper felles for både deploy og undeploy
- *
- * @author Tor Egil R. Strand
- * @since 1.2
- */
-class WeblogicDeployConvention {
-    protected final transient Project project
-
-    protected WeblogicDeployConvention(Project project) {
-        this.project = project
-    }
-
-    /**
-     * Konfigurerer opp sett av tasker for deploy basert på 'weblogic.ant.taskdefs.management.WLDeploy'
-     * <p>
-     *     Dette er deploy tasker som er ment for bruk i utviklingsmiljøer for å understøtte iterativ utvikling.
-     *
-     * <p> Følgende tasker er implementert
-     * <ul>
-     *   <li> WeblogicDeployTask - deployer deployment
-     *   <li> WeblogicUndeployTask - undeployer deployment
-     * </ul>
-     */
-    public weblogicDeploy(Closure c) {
-        ConfigureUtil.configure(c, new WeblogicDeployConfiguration(project, this))
-    }
-
-    protected getTaskName(def verb, def target = project.name) {
-        return StringUtils.uncapitalize(String.format("%s%s", verb, StringUtils.capitalize(target)))
-    }
-}
+import org.gradle.api.file.FileCollection
+import org.gradle.api.internal.ConventionTask
+import org.gradle.util.ConfigureUtil
 
 /**
  * Konfigurasjon av weblogic-tjeneren det skal deployes på / undeployes fra.
@@ -113,8 +79,8 @@ class WeblogicDeployConfiguration {
             BufferedReader br = new BufferedReader(new InputStreamReader(System.in))
             def svar = br.readLine()
             if( !svar.equalsIgnoreCase("j") && !svar.equalsIgnoreCase("ja") ) {
-              println "Build aborted by user"
-              assert false
+                println "Build aborted by user"
+                assert false
             }
         }
         this.dependsOn askIfProdserverTask
