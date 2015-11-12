@@ -50,6 +50,10 @@ class WeblogicStartTask extends AbstractWeblogicDeployTask {
             args.appversion = getAppversion()
         }
 
+        if (getTimeout() != null) {
+            args.timeout = getTimeout()
+        }
+
         ant.wldeploy(args)
     }
 

@@ -8,6 +8,9 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 
+import java.util.jar.JarFile
+import java.util.jar.Manifest
+
 /**
  * Alt som er felles for deploying og undeploying.
  *
@@ -39,10 +42,19 @@ abstract class AbstractWeblogicDeployTask extends ConventionTask {
 
 
     @Input
+    @Optional
+    String getTimeout() {
+        if (timeout != null) {
+            return isTimeoutInMilliseconds() ? timeout + "000" : timeout;
+        }
+        return null;
+    }
+    String timeout
+
+    @Input
     boolean failOnError = false
     @Input
     boolean verbose = true
-
 
 
     AbstractWeblogicDeployTask() {
@@ -60,5 +72,22 @@ abstract class AbstractWeblogicDeployTask extends ConventionTask {
     }
 
     public abstract Logger getLogger();
+
+    protected boolean isTimeoutInMilliseconds() {
+        String version = findWeblogicVersion()
+        if (version != null && version.startsWith("12.1.3.")) {
+            return true;
+        }
+        return false;
+    }
+
+    protected String findWeblogicVersion() {
+        final File file = getClasspath().getAsFileTree().filter { "weblogic.jar" == it.name }.getSingleFile();
+        final Manifest manifest = new JarFile(file, false).getManifest();
+        if (manifest != null) {
+            return manifest.getMainAttributes().getValue("Implementation-Version");
+        }
+        return null;
+    }
 
 }

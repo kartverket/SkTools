@@ -23,9 +23,6 @@ class WeblogicDeployTask extends AbstractWeblogicDeployTask {
     boolean upload = true
 
     @Input
-    String timeout = '18000'
-
-    @Input
     boolean library = false
 
     @Input
@@ -60,6 +57,10 @@ class WeblogicDeployTask extends AbstractWeblogicDeployTask {
 
         if (getAppversion() != null) {
             args.appversion = getAppversion()
+        }
+
+        if (getTimeout() != null) {
+            args.timeout = getTimeout()
         }
 
         ant.wldeploy(args)
