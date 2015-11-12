@@ -42,6 +42,7 @@ configureDatabasePlugin {
  *     @see DbtoolsConvention
  */
 class DbtoolsPlugin implements Plugin<Project>  {
+
     public static final String CONVENTION_NAME = "db";
     public static final String DBTOOLS_CONFIGURATION = "dbTools";
     public static final String CHECK_TASK_NAME = "check";
@@ -58,12 +59,26 @@ class DbtoolsPlugin implements Plugin<Project>  {
         configureConfiguration(project)
         assignConventionMappings(project)
 
-        configureTest(project, dbtoolsConvention); //SKTOOLS-81
-        configureInfo(project, dbtoolsConvention); //SKTOOLS-88
+        Task cp = configureClasspath(project);
+        configureTest(project, dbtoolsConvention).dependsOn(cp) //SKTOOLS-81
+        configureInfo(project, dbtoolsConvention).dependsOn(cp) //SKTOOLS-88
 
         project.afterEvaluate {
             assignConventionalValues(project);
             registerDrivers(project);
+        }
+    }
+
+    // For å kunne benytte jdbc funksjonalitet, må jdbc klasser være lastet inn i classloader til groovy.
+    private Task configureClasspath(Project project) {
+        return project.tasks.create('cp') {
+            // Konfigurasjonen DBTOOLS må kun deferereres i eksekveringsfasen, dette blir et krav i gradle 3
+            doLast {
+                URLClassLoader groovyClassloader = GroovyObject.class.classLoader
+                project.configurations[DBTOOLS_CONFIGURATION].files.each { File file ->
+                    groovyClassloader.addURL(file.toURL())
+                }
+            }
         }
     }
 
@@ -86,7 +101,6 @@ class DbtoolsPlugin implements Plugin<Project>  {
         }
         return checkSQLTasks
     }
-
 
     /** @since 1.3 - SKTOOLS-81  **/
     private Task configureTest(final Project project, final DbtoolsConvention pluginConvention) {
@@ -111,13 +125,11 @@ class DbtoolsPlugin implements Plugin<Project>  {
     }
 
     private Configuration configureConfiguration(Project project) {
-        Configuration configuration = project.configurations.create(DBTOOLS_CONFIGURATION);
-        return configuration
+        return project.configurations.create(DBTOOLS_CONFIGURATION);
     }
 
     void assignConventionMappings(Project project) {
         PatchConfiguration.assignConventionMappings(project)
-
         //SKTOOLS-40: setter parallell dersom -Dparallel=<nr> er angitt
         def setParallelClosure = { ConventionTask it ->
             def systemProperties = project.gradle.getStartParameter().getSystemPropertiesArgs()
@@ -129,15 +141,13 @@ class DbtoolsPlugin implements Plugin<Project>  {
                 }
             }
         }
-
         project.tasks.withType(OracleExportTask.class, setParallelClosure)
         project.tasks.withType(OracleImportTask.class, setParallelClosure)
     }
 
     void assignConventionalValues(Project project) {
         dbtoolsConvention.dbToolSets.values().each {
-
-            //setter default properties
+            // Setter default properties
             if (it.properties == null) {
                 Map<String, Object> props = new HashMap<String,Object>()
                 project.properties.each {
@@ -147,37 +157,22 @@ class DbtoolsPlugin implements Plugin<Project>  {
                 }
                 it.properties = props;
             }
-
         }
-
     }
 
     private void registerDrivers(Project project) {
-
-        //For å kunne benytte jdbc funksjonalitet, må jdbc klasser være lastet inn i classloader til groovy.
-        URLClassLoader groovyClassloader = GroovyObject.class.classLoader
-        project.configurations[DBTOOLS_CONFIGURATION].files.each {File file ->
-            groovyClassloader.addURL(file.toURL())
-        }
-
         dbtoolsConvention.dbToolSets.values().collect { it.driver }.each {
             String driverAsString = it
-
             if (!loadedDrivers.contains(driverAsString)) {
                 project.logger.info("Registring jdbc-driver: ${driverAsString}")
                 Class driver = groovy.lang.GroovyObject.class.classLoader.loadClass(driverAsString)
-
                 // You might need one or both of these as well
                 Driver instance = driver.newInstance()
                 DriverManager.registerDriver(instance)
-
                 loadedDrivers.add(driverAsString)
             }
         }
     }
 
-
 }
-
-
 
