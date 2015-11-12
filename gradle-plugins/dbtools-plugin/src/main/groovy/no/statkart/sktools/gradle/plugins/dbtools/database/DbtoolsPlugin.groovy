@@ -59,24 +59,32 @@ class DbtoolsPlugin implements Plugin<Project>  {
         configureConfiguration(project)
         assignConventionMappings(project)
 
-        Task cp = configureClasspath(project);
-        configureTest(project, dbtoolsConvention).dependsOn(cp) //SKTOOLS-81
-        configureInfo(project, dbtoolsConvention).dependsOn(cp) //SKTOOLS-88
+        Task initialize = configureInitialize(project);
+        configureTest(project, dbtoolsConvention).dependsOn(initialize) //SKTOOLS-81
+        configureInfo(project, dbtoolsConvention).dependsOn(initialize) //SKTOOLS-88
 
         project.afterEvaluate {
             assignConventionalValues(project);
-            registerDrivers(project);
         }
     }
 
     // For å kunne benytte jdbc funksjonalitet, må jdbc klasser være lastet inn i classloader til groovy.
-    private Task configureClasspath(Project project) {
-        return project.tasks.create('cp') {
-            // Konfigurasjonen DBTOOLS må kun deferereres i eksekveringsfasen, dette blir et krav i gradle 3
-            doLast {
-                URLClassLoader groovyClassloader = GroovyObject.class.classLoader
-                project.configurations[DBTOOLS_CONFIGURATION].files.each { File file ->
-                    groovyClassloader.addURL(file.toURL())
+    private Task configureInitialize(Project project) {
+        return project.tasks.create('initialize').doFirst {
+            // Konfigurasjonen DBTOOLS må kun deferereres i eksekveringsfasen
+            URLClassLoader groovyClassloader = GroovyObject.class.classLoader
+            project.configurations[DBTOOLS_CONFIGURATION].files.each { File file ->
+                groovyClassloader.addURL(file.toURL())
+            }
+            dbtoolsConvention.dbToolSets.values().collect { it.driver }.each {
+                String driverAsString = it
+                if (!loadedDrivers.contains(driverAsString)) {
+                    project.logger.info("Registring jdbc-driver: ${driverAsString}")
+                    Class driver = groovy.lang.GroovyObject.class.classLoader.loadClass(driverAsString)
+                    // You might need one or both of these as well
+                    Driver instance = driver.newInstance()
+                    DriverManager.registerDriver(instance)
+                    loadedDrivers.add(driverAsString)
                 }
             }
         }
@@ -156,20 +164,6 @@ class DbtoolsPlugin implements Plugin<Project>  {
                     }
                 }
                 it.properties = props;
-            }
-        }
-    }
-
-    private void registerDrivers(Project project) {
-        dbtoolsConvention.dbToolSets.values().collect { it.driver }.each {
-            String driverAsString = it
-            if (!loadedDrivers.contains(driverAsString)) {
-                project.logger.info("Registring jdbc-driver: ${driverAsString}")
-                Class driver = groovy.lang.GroovyObject.class.classLoader.loadClass(driverAsString)
-                // You might need one or both of these as well
-                Driver instance = driver.newInstance()
-                DriverManager.registerDriver(instance)
-                loadedDrivers.add(driverAsString)
             }
         }
     }
