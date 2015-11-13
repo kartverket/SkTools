@@ -41,12 +41,14 @@ configureDatabasePlugin {
  */
 public class DbtoolsConvention {
     protected final transient Project project;
+    private final Task initialize;
 
     protected final List<Dependency> jdbcDependencies = new ArrayList<Dependency>(4);
     public final Map<String, ? extends AbstractDatabaseConvention> dbToolSets = new HashMap<String, AbstractDatabaseConvention>()
 
-    DbtoolsConvention(Project project) {
+    DbtoolsConvention(Project project, Task initialize) {
         this.project = project
+        this.initialize = initialize
     }
 
     /**
@@ -117,15 +119,18 @@ configureDatabasePlugin {
 
         project.logger.info("Adding ${type} toolset with name '${name}' (prefix=${prefix})...")
 
+        def toolset;
         if ('oracle'.equalsIgnoreCase(type)) {
-            return addOracleToolset(prefix, name, closure)
-
+            toolset = addOracleToolset(prefix, name, closure)
         } else if ('hsqldb'.equalsIgnoreCase(type)) {
-            return addHsqldbToolset(prefix, name, closure)
-
+            toolset = addHsqldbToolset(prefix, name, closure)
         } else {
             throw new GradleException("Ukjent verktøyset/database")
         }
+        toolset.tasks.each {
+            it.dependsOn(initialize)
+        }
+        return toolset;
 
     }
 

@@ -53,13 +53,13 @@ class DbtoolsPlugin implements Plugin<Project>  {
 
 
     def void apply(final Project project) {
-        dbtoolsConvention = new DbtoolsConvention(project)
+        Task initialize = configureInitialize(project);
+        dbtoolsConvention = new DbtoolsConvention(project, initialize)
         project.getConvention().getPlugins().put(CONVENTION_NAME, dbtoolsConvention);
 
         configureConfiguration(project)
         assignConventionMappings(project)
 
-        Task initialize = configureInitialize(project);
         configureTest(project, dbtoolsConvention).dependsOn(initialize) //SKTOOLS-81
         configureInfo(project, dbtoolsConvention).dependsOn(initialize) //SKTOOLS-88
 
