@@ -28,7 +28,7 @@ configureDatabasePlugin {
 
     toolset(type:'oracle', name:'Db', prefix:'') {
 
-        ... //for details, see {@link DbtoolsConvention#toolset(String, String, String, Closure) }
+        ... //for details, see {@link DbtoolsConvention#toolset(Map, Closure) }
 
 
     }
@@ -41,14 +41,12 @@ configureDatabasePlugin {
  */
 public class DbtoolsConvention {
     protected final transient Project project;
-    private final Task initialize;
 
     protected final List<Dependency> jdbcDependencies = new ArrayList<Dependency>(4);
     public final Map<String, ? extends AbstractDatabaseConvention> dbToolSets = new HashMap<String, AbstractDatabaseConvention>()
 
-    DbtoolsConvention(Project project, Task initialize) {
+    DbtoolsConvention(Project project) {
         this.project = project
-        this.initialize = initialize
     }
 
     /**
@@ -126,9 +124,6 @@ configureDatabasePlugin {
             toolset = addHsqldbToolset(prefix, name, closure)
         } else {
             throw new GradleException("Ukjent verktøyset/database")
-        }
-        toolset.tasks.each {
-            it.dependsOn(initialize)
         }
         return toolset;
 
