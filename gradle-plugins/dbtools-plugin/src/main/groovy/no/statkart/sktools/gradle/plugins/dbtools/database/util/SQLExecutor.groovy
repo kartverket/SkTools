@@ -1,6 +1,7 @@
 package no.statkart.sktools.gradle.plugins.dbtools.database.util
 
 import groovy.sql.Sql
+import groovy.transform.CompileStatic
 
 /*
  For at denne biten kan fungere, må jdbc driveren finnes i classpath og være registrert i kjørende classloader.
@@ -44,7 +45,7 @@ class SQLExecutor {
         def sql = Sql.newInstance(specs.url, specs.username, specs.password, specs.driver)
         logger.lifecycle("connected to database: {} [{}]", specs.url, specs.username);
 
-        sql.getConnection().setAutoCommit(specs.getAutocommit());
+        setAutoCommit(sql.getConnection(), specs.getAutoCommit());
 
         statements.each() { Statement statement ->
 
@@ -104,6 +105,15 @@ class SQLExecutor {
 
     }
 
+    /**
+     * Fiks for groovy feil: {@code java.lang.ClassNotFoundException: oracle.xdb.XMLType}
+     * https://issues.apache.org/jira/browse/GROOVY-7105
+     */
+    @CompileStatic
+    void setAutoCommit(java.sql.Connection conn, boolean autoCommit) {
+        conn.setAutoCommit(autoCommit);
+    }
+
 }
 
 public class ExecSpecs {
@@ -119,5 +129,5 @@ public class ExecSpecs {
     boolean failOnError
 
     //SKTOOLS-148
-    boolean autocommit
+    boolean autoCommit
 }
