@@ -44,6 +44,8 @@ class SQLExecutor {
         def sql = Sql.newInstance(specs.url, specs.username, specs.password, specs.driver)
         logger.lifecycle("connected to database: {} [{}]", specs.url, specs.username);
 
+        sql.getConnection().setAutoCommit(specs.getAutocommit());
+
         statements.each() { Statement statement ->
 
             logger.info("Executing ${statement.class.simpleName}: \n${statement.sql}")
@@ -115,4 +117,7 @@ public class ExecSpecs {
 
     //SKTOOLS-27
     boolean failOnError
+
+    //SKTOOLS-148
+    boolean autocommit
 }

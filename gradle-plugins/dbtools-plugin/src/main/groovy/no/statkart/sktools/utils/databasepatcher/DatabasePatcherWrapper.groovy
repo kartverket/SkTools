@@ -24,8 +24,10 @@ public class DatabasePatcherWrapper extends DatabasePatcher {
 
     @Override
     protected Connection createConnection() {
-        def sql = Sql.newInstance(url, username, password, driver)
-        sql.getConnection()
+        final Sql sql = Sql.newInstance(url, username, password, driver);
+        final Connection connection = sql.getConnection();
+        connection.setAutoCommit(false);
+        return connection;
     }
 
 

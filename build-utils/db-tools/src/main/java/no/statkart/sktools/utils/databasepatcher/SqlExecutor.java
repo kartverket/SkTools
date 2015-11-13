@@ -28,219 +28,221 @@ import java.util.List;
  * @author Henrik Fredholm
  */
 public class SqlExecutor {
-   private static Logger logger = Logger.getLogger(SqlExecutor.class);
+    private static Logger logger = Logger.getLogger(SqlExecutor.class);
 
     //SKTOOLS-84: error håndtering
     boolean failOnError, failOnWarning;
 
 
-   /**
-    * Denne klassen er brukt i fra Ant.
-    * <p/>
-    * Hvis parameteren FailOnError er med, vil det bli kastet en exception ved ORACLE SQL error
-    * fra feil med andre feilkoder en: 02443, 02275, 00955, 01418, 00942
-    * <p/>
-    * Kjører ett sql script på database anngitt som VM-Parametere, parameterebrukt:
-    * -DFailOnError=true
-    *
-    * @param sqlScriptNavn, navn på filen som skal lastes.
-    */
-   public void runScript(String sqlScriptNavn) throws Exception {
-      Connection con = null;
-       try {
-         con = JDBCHelper.createConnection();
-         runScript(con, lesFilFraWorkingDir(sqlScriptNavn));
-      } finally {
-         if( con != null ) {
-            con.close();
-         }
-      }
-   }
+    /**
+     * Denne klassen er brukt i fra Ant.
+     * <p/>
+     * Hvis parameteren FailOnError er med, vil det bli kastet en exception ved ORACLE SQL error
+     * fra feil med andre feilkoder en: 02443, 02275, 00955, 01418, 00942
+     * <p/>
+     * Kjører ett sql script på database anngitt som VM-Parametere, parameterebrukt:
+     * -DFailOnError=true
+     *
+     * @param sqlScriptNavn, navn på filen som skal lastes.
+     */
+    public void runScript(String sqlScriptNavn) throws Exception {
+        Connection con = null;
+        try {
+            con = JDBCHelper.createConnection();
+            runScript(con, lesFilFraWorkingDir(sqlScriptNavn));
+            con.commit();
+        } finally {
+            if (con != null) {
+                con.close();
+            }
+        }
+    }
 
-   /**
-    * Leser en fil fra classpath og returnerer den som en String
-    *
-    * @param filnavn Navnet på filene som skal leses fra classpath
-    * @return filens innhold i en java.lang.String
-    */
-   public static String lesFilFraClasspath(String filnavn) {
-       InputStream inputStream = null;
-       BufferedReader br = null;
-       try {
-           ClassLoader classLoader = SqlExecutor.class.getClassLoader();
-           StringBuilder tmpScript = new StringBuilder();
-           inputStream = classLoader.getResourceAsStream(filnavn.trim());
-           if (inputStream == null) {
-               throw new OperationalException("Finner ikke filen " + filnavn + " i classpath");
-           }
-
-           try {
-               br = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
-               String line;
-
-               line = br.readLine();
-               while (line != null) {
-                   tmpScript.append(line).append("\n");
-                   line = br.readLine();
-               }
-           } catch (IOException ioe) {
-               logger.error("Under lesing av sqlscript " + ioe.getMessage(), ioe);
-           }
-
-           return tmpScript.toString();
-       } finally {
-           if (br != null) {
-               try {
-                   br.close();
-               } catch (IOException e) {
-                   logger.error(e);
-               }
-           }
-           if (inputStream != null) {
-               try {
-                   inputStream.close();
-               } catch (IOException e) {
-                   logger.error(e);
-               }
-           }
-       }
-   }
-
-   /**
-    * Leser en fil fra classpath og returnerer den som en String
-    *
-    * @param filnavn Navnet på filene som skal leses fra classpath
-    * @return filens innhold i en java.lang.String
-    */
-   public static String lesFilFraWorkingDir(String filnavn) {
-      InputStreamReader inputStream = null;
-      BufferedReader br = null;
-      StringBuilder tmpScript = new StringBuilder();
-      try {
-          try {
-              inputStream = new FileReader(filnavn.trim());
-          } catch( FileNotFoundException e ) {
-              throw new OperationalException("Finner ikke filen " + filnavn);
-          }
-          br = new BufferedReader(inputStream);
-          String line;
-          try {
-             line = br.readLine();
-             while( line != null ) {
-                tmpScript.append(line).append("\n");
-                line = br.readLine();
-             }
-          } catch (IOException ioe) {
-              logger.error("Under lesing av sqlscript " + ioe.getMessage(), ioe);
-          }
-          return tmpScript.toString();
-
-      } finally {
-          if (br != null) {
-              try {
-                  br.close();
-              } catch (IOException e) {
-                  logger.error(e);
-              }
-          }
-          if (inputStream != null) {
-              try {
-                  inputStream.close();
-              } catch (IOException e) {
-                  logger.error(e);
-              }
-          }
-      }
-   }
-
-
-   /**
-    * Kjører ett sql script på anngit database kobling.
-    * SqlScript statements som er ommgitt av {} skal kjøres som et prepared statement.
-    * Den som kaller denne metoden må passe på og stenge den gitte connectionen selv,
-    * alle statements blir stengt.
-    *
-    * @param connection database koblingen skriptet skal kjøre på.
-    * @param sqlScript  scriptet som skal kjøres.
-    * @return resultSet hvis det er kalt en stored procedure ommgitt av {} som gir resultatsett, gir flere linjer resultatsett blir disse lagt sammen i den rekkefølgen de er laget.
-    */
-   public java.sql.ResultSet[] runScript(Connection connection, String sqlScript) throws Exception {
-      if( connection == null ) {
-         throw new ConfigurationException("Kan ikke kjøre databasescript med connection = null");
-      }
-      if( sqlScript == null ) {
-         throw new ConfigurationException("Det må angis ett sqlscript, sqlSript = null.");
-      }
-
-       List<? extends Expression> expressions = SQLStatementParser.parseExpressions(sqlScript);
-
-       return runScript(connection, expressions);
-   }
-
-   public java.sql.ResultSet[] runScript(Connection connection, List<? extends Expression> scriptLines) throws Exception {
-      List<java.sql.ResultSet> rsList = new ArrayList<java.sql.ResultSet>();
-      boolean feilet = false;
-      int antallFeil = 0;
-      int antallWarnings = 0;
-      int antallStatements = 0;
-
-      //Kjøre en og en linje i skriptet.
-       java.sql.Statement statement = null;
-      try {
-         statement = connection.createStatement();
-
-         for( Iterator<? extends Expression> iterator = scriptLines.iterator(); iterator.hasNext(); ) {
-             Expression scriptLine = iterator.next();
-
-            if( scriptLine instanceof Comment) {
-               logger.debug("Comment: " + ((Comment) scriptLine).getText());
-               continue; // gjør ikke noe mer for kommentarer
+    /**
+     * Leser en fil fra classpath og returnerer den som en String
+     *
+     * @param filnavn Navnet på filene som skal leses fra classpath
+     * @return filens innhold i en java.lang.String
+     */
+    public static String lesFilFraClasspath(String filnavn) {
+        InputStream inputStream = null;
+        BufferedReader br = null;
+        try {
+            ClassLoader classLoader = SqlExecutor.class.getClassLoader();
+            StringBuilder tmpScript = new StringBuilder();
+            inputStream = classLoader.getResourceAsStream(filnavn.trim());
+            if (inputStream == null) {
+                throw new OperationalException("Finner ikke filen " + filnavn + " i classpath");
             }
 
-            if (scriptLine instanceof Statement) {
-                Statement sqlStatement = (Statement) scriptLine;
-                antallStatements++;
+            try {
+                br = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
+                String line;
 
-                if (sqlStatement.getSql().startsWith("{")) {
-                    callCallable(sqlStatement.getSql(), connection, rsList);
-                } else {
-                    try {
-                        statement.executeUpdate(sqlStatement.getSql());
-                        logger.debug("Executed : " + sqlStatement.getSql());
-                    } catch( SQLException e ) {
-                        if (isWarning(e)) {
-                            logger.warn("Warning: Error executing line#" + scriptLine.getLineNumber() + ". Oracle error: " + e.getMessage());
-                            antallWarnings++;
+                line = br.readLine();
+                while (line != null) {
+                    tmpScript.append(line).append("\n");
+                    line = br.readLine();
+                }
+            } catch (IOException ioe) {
+                logger.error("Under lesing av sqlscript " + ioe.getMessage(), ioe);
+            }
 
-                            if( failOnWarning ) {
-                                throw new Exception("Feil under kjøring av script.", e);
+            return tmpScript.toString();
+        } finally {
+            if (br != null) {
+                try {
+                    br.close();
+                } catch (IOException e) {
+                    logger.error(e);
+                }
+            }
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                } catch (IOException e) {
+                    logger.error(e);
+                }
+            }
+        }
+    }
+
+    /**
+     * Leser en fil fra classpath og returnerer den som en String
+     *
+     * @param filnavn Navnet på filene som skal leses fra classpath
+     * @return filens innhold i en java.lang.String
+     */
+    public static String lesFilFraWorkingDir(String filnavn) {
+        InputStreamReader inputStream = null;
+        BufferedReader br = null;
+        StringBuilder tmpScript = new StringBuilder();
+        try {
+            try {
+                inputStream = new FileReader(filnavn.trim());
+            } catch (FileNotFoundException e) {
+                throw new OperationalException("Finner ikke filen " + filnavn);
+            }
+            br = new BufferedReader(inputStream);
+            String line;
+            try {
+                line = br.readLine();
+                while (line != null) {
+                    tmpScript.append(line).append("\n");
+                    line = br.readLine();
+                }
+            } catch (IOException ioe) {
+                logger.error("Under lesing av sqlscript " + ioe.getMessage(), ioe);
+            }
+            return tmpScript.toString();
+
+        } finally {
+            if (br != null) {
+                try {
+                    br.close();
+                } catch (IOException e) {
+                    logger.error(e);
+                }
+            }
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                } catch (IOException e) {
+                    logger.error(e);
+                }
+            }
+        }
+    }
+
+
+    /**
+     * Kjører ett sql script på anngit database kobling.
+     * SqlScript statements som er ommgitt av {} skal kjøres som et prepared statement.
+     * Den som kaller denne metoden må passe på og stenge den gitte connectionen selv,
+     * alle statements blir stengt.
+     * Den som kaller må også passe på å committe.
+     *
+     * @param connection database koblingen skriptet skal kjøre på.
+     * @param sqlScript  scriptet som skal kjøres.
+     * @return resultSet hvis det er kalt en stored procedure ommgitt av {} som gir resultatsett, gir flere linjer resultatsett blir disse lagt sammen i den rekkefølgen de er laget.
+     */
+    public java.sql.ResultSet[] runScript(Connection connection, String sqlScript) throws Exception {
+        if (connection == null) {
+            throw new ConfigurationException("Kan ikke kjøre databasescript med connection = null");
+        }
+        if (sqlScript == null) {
+            throw new ConfigurationException("Det må angis ett sqlscript, sqlSript = null.");
+        }
+
+        List<? extends Expression> expressions = SQLStatementParser.parseExpressions(sqlScript);
+
+        return runScript(connection, expressions);
+    }
+
+    public java.sql.ResultSet[] runScript(Connection connection, List<? extends Expression> scriptLines) throws Exception {
+        List<java.sql.ResultSet> rsList = new ArrayList<java.sql.ResultSet>();
+        boolean feilet = false;
+        int antallFeil = 0;
+        int antallWarnings = 0;
+        int antallStatements = 0;
+
+        //Kjøre en og en linje i skriptet.
+        java.sql.Statement statement = null;
+        try {
+            statement = connection.createStatement();
+
+            for (Iterator<? extends Expression> iterator = scriptLines.iterator(); iterator.hasNext(); ) {
+                Expression scriptLine = iterator.next();
+
+                if (scriptLine instanceof Comment) {
+                    logger.debug("Comment: " + ((Comment) scriptLine).getText());
+                    continue; // gjør ikke noe mer for kommentarer
+                }
+
+                if (scriptLine instanceof Statement) {
+                    Statement sqlStatement = (Statement) scriptLine;
+                    antallStatements++;
+
+                    if (sqlStatement.getSql().startsWith("{")) {
+                        callCallable(sqlStatement.getSql(), connection, rsList);
+                    } else {
+                        try {
+                            statement.executeUpdate(sqlStatement.getSql());
+                            logger.debug("Executed : " + sqlStatement.getSql());
+                        } catch (SQLException e) {
+                            if (isWarning(e)) {
+                                logger.warn("Warning: Error executing line#" + scriptLine.getLineNumber() + ". Oracle error: " + e.getMessage());
+                                antallWarnings++;
+
+                                if (failOnWarning) {
+                                    throw new Exception("Feil under kjøring av script.", e);
+                                }
+                            } else {
+                                logger.error("Error: Error executing line#" + scriptLine.getLineNumber() + ". Oracle error: " + e.getMessage());
+                                feilet = true;
+                                antallFeil++;
+                                if (failOnError) {
+                                    throw new Exception("Feil under kjøring av script.", e);
+                                }
                             }
-                        } else {
-                            logger.error("Error: Error executing line#" + scriptLine.getLineNumber() + ". Oracle error: " + e.getMessage());
-                            feilet = true;
-                            antallFeil++;
-                            if( failOnError ) {
-                                throw new Exception("Feil under kjøring av script.", e);
-                            }
+                            logger.debug("Errors while executing : " + sqlStatement.getSql());
                         }
-                        logger.debug("Errors while executing : " + sqlStatement.getSql());
                     }
                 }
             }
-         }
-      } finally {
-         //forsikre seg at de er stengt ved feil. Ok og kalle close på closed connection.
-         if( statement != null ) {
-            JDBCHelper.close(statement);
-         }
-      }
-      if( feilet ) {
-         logger.error(String.format("Script had errors! Statements: %d. Warnings: %d, errors: %d.", antallStatements, antallWarnings, antallFeil));
-      } else {
-         logger.info(String.format("Script completed. Statements: %d. Warnings: %d.", antallStatements, antallWarnings));
-      }
-      return rsList.toArray(new java.sql.ResultSet[rsList.size()]);
-   }
+        } finally {
+            //forsikre seg at de er stengt ved feil. Ok og kalle close på closed connection.
+            if (statement != null) {
+                JDBCHelper.close(statement);
+            }
+        }
+        if (feilet) {
+            logger.error(String.format("Script had errors! Statements: %d. Warnings: %d, errors: %d.", antallStatements, antallWarnings, antallFeil));
+        } else {
+            logger.info(String.format("Script completed. Statements: %d. Warnings: %d.", antallStatements, antallWarnings));
+        }
+        return rsList.toArray(new java.sql.ResultSet[rsList.size()]);
+    }
 
     static boolean isWarning(SQLException e) {
         String msg = e.getMessage();
@@ -253,21 +255,21 @@ public class SqlExecutor {
     }
 
     private static CallableStatement callCallable(String scriptLine, Connection connection, List<java.sql.ResultSet> rsList) throws SQLException {
-      //prøver å ta hensyn til at det kan returneres flere Resultset fra ett storedProcedure kall.
-      logger.info("Procedure: " + scriptLine);
-      CallableStatement callablStatement = connection.prepareCall(scriptLine);
-      boolean isResultset = callablStatement.execute();
-      if( isResultset ) {
-          java.sql.ResultSet rs = callablStatement.getResultSet();
-         rsList.add(rs);
-      }
-      while( callablStatement.getMoreResults() ) {
-          java.sql.ResultSet rs = callablStatement.getResultSet();
-         rsList.add(rs);
-      }
-      JDBCHelper.close(callablStatement);
-      return callablStatement;
-   }
+        //prøver å ta hensyn til at det kan returneres flere Resultset fra ett storedProcedure kall.
+        logger.info("Procedure: " + scriptLine);
+        CallableStatement callablStatement = connection.prepareCall(scriptLine);
+        boolean isResultset = callablStatement.execute();
+        if (isResultset) {
+            java.sql.ResultSet rs = callablStatement.getResultSet();
+            rsList.add(rs);
+        }
+        while (callablStatement.getMoreResults()) {
+            java.sql.ResultSet rs = callablStatement.getResultSet();
+            rsList.add(rs);
+        }
+        JDBCHelper.close(callablStatement);
+        return callablStatement;
+    }
 
 
     /**
@@ -283,9 +285,9 @@ public class SqlExecutor {
      * @param args navn på filen som skal lastes.
      */
     public static void main(String[] args) throws Exception {
-      if( args == null || args.length < 1 ) {
-         throw new OperationalException("Scriptfilen(e) som skal kjøres må være anngitt som parameter.");
-      }
+        if (args == null || args.length < 1) {
+            throw new OperationalException("Scriptfilen(e) som skal kjøres må være anngitt som parameter.");
+        }
 
         final SqlExecutor executor = new SqlExecutor();
         executor.failOnError = "true".equals(System.getProperty("FailOnError", "true"));
@@ -296,7 +298,6 @@ public class SqlExecutor {
             executor.runScript(arg);
         }
     }
-
 
 
 }

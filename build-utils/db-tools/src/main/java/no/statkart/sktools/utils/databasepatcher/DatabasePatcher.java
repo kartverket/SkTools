@@ -429,6 +429,7 @@ public class DatabasePatcher {
          if( isNewPatch ) {
             logger.info("Utfører patchblokk: " + p + ((p.kommentar == null) ? "" : " " + p.kommentar));
             sqlExecutor.runScript(con, patchBlock);
+            con.commit();
             updatePatchInfo(con, p);
          } else {
              if (p.patchtype != PatchtypeKode.ALWAYS) {
@@ -437,6 +438,7 @@ public class DatabasePatcher {
                  logger.info("Utfører patchblokk: " + p + ((p.kommentar == null) ? "" : " " + p.kommentar));
              }
              sqlExecutor.runScript(con, patchBlock);
+             con.commit();
          }
       } catch( Exception e ) {
          throw new RuntimeException(e.getMessage(), e);
@@ -681,6 +683,7 @@ public class DatabasePatcher {
 
                  stmt.executeUpdate();
                  JDBCHelper.close(rs, stmt);
+                 con.commit();
              } else {
                  throw new NotFoundException("Fant ikke versjon for komponent: " + component);
              }
