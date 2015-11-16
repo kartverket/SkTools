@@ -45,8 +45,6 @@ class WeblogicDeployTask extends AbstractWeblogicDeployTask {
                 user: getUsername(),
                 password: getPassword(),
 
-                timeout: getTimeout(),
-
                 failonerror: getFailOnError(),
                 verbose: getVerbose(),
         ]
