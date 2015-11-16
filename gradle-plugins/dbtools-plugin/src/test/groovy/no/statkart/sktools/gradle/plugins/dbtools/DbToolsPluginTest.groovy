@@ -19,7 +19,6 @@ import org.testng.annotations.Test
  */
 class DbToolsPluginTest {
 
-
     /**
      * Tester registrering av plugin via navn
      */
@@ -29,7 +28,6 @@ class DbToolsPluginTest {
 
         Assert.assertTrue(testCase.project.convention.plugins.db instanceof DbtoolsConvention)
     }
-
 
     /**
      * Tester og demonstrerer angivelse av credentials.
@@ -66,11 +64,10 @@ class DbToolsPluginTest {
         Assert.assertEquals(convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].username, 'brukernavn')
         Assert.assertEquals(convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].password, 'passord')
 
-
         //setter credentials på toolsetet
         testCase.configureProject {
             configureDatabasePlugin {
-                toolset(type:'hsqldb', name:'coolDb') {
+                toolset(type: 'hsqldb', name: 'coolDb') {
                     credentials.username = 'brukernavn2'
                     credentials.password = 'passord2'
                 }
@@ -84,7 +81,6 @@ class DbToolsPluginTest {
         Assert.assertEquals(convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].username, 'brukernavn2')
         Assert.assertEquals(convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].password, 'passord2')
 
-
         //setter passord på task
         testCase.project.tasks.'coolDbPleaseAuthenticateMe'.password = 'passord3'
         //setter default brukernavn via project properties
@@ -94,10 +90,8 @@ class DbToolsPluginTest {
         Assert.assertEquals(convention.dbToolSets.coolDb.credentials.username, 'brukernavn2', "Forventet samme brukernavn")
         Assert.assertEquals(convention.dbToolSets.coolDb.credentials.password, 'passord2', "Forventet samme passord")
         //sjekker at credentials blir bruk som en anatomisk enhet
-        Assert.assertEquals(convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].username, null) //fungerer kun når Console ikke finnes
+        Assert.assertEquals(convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].username, null /*fungerer kun når Console ikke finnes*/)
         Assert.assertEquals(convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].password, 'passord3')
-
-
 
         //clearer credentials på task
         testCase.project.tasks.'coolDbPleaseAuthenticateMe'.credentials.clear()
@@ -106,8 +100,7 @@ class DbToolsPluginTest {
         Assert.assertEquals(convention.dbToolSets.coolDb.credentials.password, 'passord2', "Forventet samme passord")
         //sjekker at credentials blir hentet ifra toolsetet igjen
         Assert.assertEquals(convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].username, 'brukernavn2', "Forventet conventional verdi")
-        Assert.assertEquals(convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].password, 'passord2',  "Forventet conventional verdi")
-
+        Assert.assertEquals(convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].password, 'passord2', "Forventet conventional verdi")
 
         //setter credentials  på task
         testCase.project.tasks.'coolDbPleaseAuthenticateMe'.username = 'brukernavn4'
@@ -116,9 +109,38 @@ class DbToolsPluginTest {
         Assert.assertEquals(convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].credentials.username, 'brukernavn4', "Forventet oppdatert brukernavn")
         Assert.assertEquals(convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].credentials.password, 'passord4', "Forventet  oppdatert passord")
         Assert.assertEquals(convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].username, 'brukernavn4', "Forventet oppdatert verdi")
-        Assert.assertEquals(convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].password, 'passord4',  "Forventet oppdatert verdi")
+        Assert.assertEquals(convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].password, 'passord4', "Forventet oppdatert verdi")
     }
 
+    /**
+     * Regression test.
+     * Verifiserer at configuration ikke blir resolvet i initialiserings-fasen.
+     */
+    @Test
+    void configurationInUnresolvedState() {
+        final ProjectHelper testCase = DbToolsProjectBuilder.builder().applyDbUtilsPlugin().build();
+        testCase.createNewFileWithDirsRelativeToProject('src/hsql/PleaseAuthenticateMe.sql')
+        testCase.createNewFileWithDirsRelativeToProject('lib/testfile-2.3.3.jar')
+
+        Assert.assertEquals(testCase.project.configurations.dbTools.state.toString(), "UNRESOLVED")
+
+        testCase.configureProject {
+            repositories {
+                flatDir dirs: "${testCase.project.rootProject.projectDir}/lib"
+            }
+            configureDatabasePlugin {
+                useDrivers 'test:testfile:2.3.3@jar'
+
+                toolset(name: 'coolDb', type: 'hsqldb', prefix: 'coolDb') {
+                    url = "jdbc:hsqldb:mem:${this.class.simpleName}TestApplyCredentials"
+                    driver = 'org.hsqldb.jdbcDriver'
+                }
+            }
+        }
+
+        Assert.assertTrue(testCase.project.configurations.dbTools.files.contains(testCase.project.file('lib/testfile-2.3.3.jar')))
+        Assert.assertEquals(testCase.project.configurations.dbTools.state.toString(), "UNRESOLVED")
+    }
 
     /**
      * Tester deklarering av import task for oracle.
@@ -156,7 +178,6 @@ class DbToolsPluginTest {
         }
     }
 
-    
     /**
      * Tester deklarering av import task for oracle.
      * @see OracleExportTask
@@ -192,7 +213,6 @@ class DbToolsPluginTest {
             }
         }
     }
-
 
     /**
      * Tester deklarering av {@link PatchTask} task
@@ -294,8 +314,6 @@ class DbToolsPluginTest {
 
     }
 
-
-
     /**
      * Tester deklarering av {@link SyncPatchTask} task
      * @since 1.3
@@ -305,14 +323,14 @@ class DbToolsPluginTest {
         final ProjectHelper testCase = DbToolsProjectBuilder.builder().applyDbUtilsPlugin().build();
         testCase.configureProject {
             configureDatabasePlugin {
-                toolset(name:'db1', type:'oracle') {
+                toolset(name: 'db1', type: 'oracle') {
                     properties = [  //deklarering via felles properties for toolset
                                     username: 'brukernavn',
                                     password: 'passord',
                     ]
 
                     patch {
-                        syncPatchTask('TestSchema', sqlFile:"foo.sql", description: 'Task med verdier ifra konfigurasjon og convention') {
+                        syncPatchTask('TestSchema', sqlFile: "foo.sql", description: 'Task med verdier ifra konfigurasjon og convention') {
                             failOnError = false
                             patchTypes = ['RERUN']
                         }
@@ -353,8 +371,6 @@ class DbToolsPluginTest {
 
     }
 
-
-
     /**
      * Tester deklarering av {@link DefineLatestPatchVersionTask} task
      * @since 1.3
@@ -364,9 +380,9 @@ class DbToolsPluginTest {
         final ProjectHelper testCase = DbToolsProjectBuilder.builder().applyDbUtilsPlugin().build();
         testCase.configureProject {
             configureDatabasePlugin {
-                toolset(name:'db1', type:'oracle') {
+                toolset(name: 'db1', type: 'oracle') {
                     patch {
-                        defineLatestPatchVersionTask('AssignLatestPatchlevel', sqlFile:"foo.sql", description: 'Task med verdier ifra konfigurasjon og convention')
+                        defineLatestPatchVersionTask('AssignLatestPatchlevel', sqlFile: "foo.sql", description: 'Task med verdier ifra konfigurasjon og convention')
                     }
                 }
             }
@@ -393,7 +409,6 @@ class DbToolsPluginTest {
         }
 
     }
-
 
     /**
      * @since 1.3 - SKTOOLS-88

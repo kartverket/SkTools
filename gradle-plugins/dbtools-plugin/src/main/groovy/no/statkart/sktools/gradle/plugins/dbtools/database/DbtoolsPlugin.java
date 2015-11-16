@@ -13,7 +13,8 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.Dependency;
+import org.gradle.api.execution.TaskExecutionGraph;
+import org.gradle.api.execution.TaskExecutionGraphListener;
 import org.gradle.api.internal.ConventionTask;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.plugins.JavaBasePlugin;
@@ -80,8 +81,7 @@ public class DbtoolsPlugin implements Plugin<Project> {
                 registerDrivers(project);
             }
         });
-        loadDrivers(configuration);
-
+        loadDrivers(configuration, project);
     }
 
     /**
@@ -118,6 +118,7 @@ public class DbtoolsPlugin implements Plugin<Project> {
         checkSQLTasks.setGroup(JavaBasePlugin.VERIFICATION_GROUP);
         checkSQLTasks.doLast(new Action<Task>() {
             final Logger logger = project.getLogger();
+
             @Override
             public void execute(Task task) {
                 task.getProject().getTasks().withType(AbstractSQLTask.class, new Action<AbstractSQLTask>() {
@@ -191,15 +192,17 @@ public class DbtoolsPlugin implements Plugin<Project> {
         }
     }
 
-    // Konfigurasjon skal IKKE referereres via navn i konfigurasjonsfasen (Gradle 3.x)
-    private void loadDrivers(final Configuration configuration) {
-        //GroovyCastException: Cannot cast object 'org.gradle.internal.classloader.MutableURLClassLoader
-        final ClassLoader groovyClassloader = GroovyObject.class.getClassLoader();
-        configuration.getDependencies().all(new Action<Dependency>() {
+    private void loadDrivers(final Configuration configuration, final Project project) {
+        // Konfigurasjon skal IKKE resolves i konfigurasjonsfasen (Gradle 3.x)
+        // - resolver configuration etter at prosjektet er initialisert
+        project.getGradle().getTaskGraph().addTaskExecutionGraphListener(new TaskExecutionGraphListener() {
+            //GroovyCastException: Cannot cast object 'org.gradle.internal.classloader.MutableURLClassLoader
+            final ClassLoader groovyClassloader = GroovyObject.class.getClassLoader();
             final MethodClosure addURLClosure = new MethodClosure(groovyClassloader, "addURL");
+
             @Override
-            public void execute(Dependency dependency) {
-                for (File file : configuration.files(dependency)) {
+            public void graphPopulated(TaskExecutionGraph taskExecutionGraph) {
+                for (File file : configuration.getFiles()) {
                     //For å kunne benytte jdbc funksjonalitet, må jdbc klasser være lastet inn i classloader til groovy.
                     try {
                         addURLClosure.call(file.toURI().toURL());
