@@ -90,6 +90,30 @@ class ProjectHelper {
         }
     }
 
+    File createNewFileWithDirsRelativeToProject(String path, String... texts) {
+        File file = project.file(path)
+        createFile(file, texts)
+    }
+
+    static File createTempFile(String filetype = '.txt', File dir = null, String... texts) {
+        File file = File.createTempFile('test', filetype, dir)
+        file.deleteOnExit()
+        createFile(file, texts)
+    }
+
+    static File createFile(File file, String... texts) {
+        file.parentFile.mkdirs()
+        file.createNewFile()
+        file.withPrintWriter { def writer ->
+            for (String text : texts) {
+                writer.println text
+            }
+            writer.flush()
+            return null
+        }
+        return file
+    }
+
     /**
      * Setter properties på prosjektet.
      * Dersom prosjektet ikke allerede har propertyen, så legges den til ext.properties

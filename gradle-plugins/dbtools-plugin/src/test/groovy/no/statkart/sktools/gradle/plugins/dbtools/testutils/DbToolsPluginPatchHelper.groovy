@@ -1,13 +1,15 @@
 package no.statkart.sktools.gradle.plugins.dbtools.testutils
 
+import no.statkart.sktools.gradle.testutils.ProjectHelper
+
 /**
  * @since 1.3
  * @author Leif Lislegård
  */
-class DbToolsPluginPatchTestContext<T extends DbToolsPluginPatchTestContext> extends DbToolsPluginTestContext<T> {
+class DbToolsPluginPatchHelper {
 
     static File createSimplePatchFile(File dir = null) {
-        createTempFile(FILE_TYPE.Patch, dir, '''
+        ProjectHelper.createTempFile(".patch.sql", dir, '''
 
 --kommentar
 

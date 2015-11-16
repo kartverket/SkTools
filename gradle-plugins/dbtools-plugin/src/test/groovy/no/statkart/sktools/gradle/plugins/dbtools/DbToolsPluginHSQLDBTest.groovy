@@ -1,6 +1,10 @@
 package no.statkart.sktools.gradle.plugins.dbtools
 
-import no.statkart.sktools.gradle.plugins.dbtools.testutils.DbToolsPluginPatchTestContext
+import com.google.common.base.Preconditions
+import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsConvention
+import no.statkart.sktools.gradle.plugins.dbtools.testutils.DbToolsPluginPatchHelper
+import no.statkart.sktools.gradle.testutils.ProjectHelper
+import no.statkart.sktools.gradle.testutils.builder.DbToolsProjectBuilder
 import org.testng.annotations.Test
 
 import org.testng.Assert
@@ -36,9 +40,9 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
      */
     @Test
     void testDynamicCredentials() {
-        Assert.assertTrue sql.connection.isValid(0)
+        Preconditions.checkState(sql.connection.isValid(0))
 
-        final def testCase = new DbToolsPluginPatchTestContext()
+        final ProjectHelper testCase = DbToolsProjectBuilder.builder().applyDbUtilsPlugin().build();
 
         // STEG 1 - oppretter sql-filer relativt til prosjekt
 
@@ -61,22 +65,27 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
         )
 
 
-        testCase.configureDatabasePlugin {
-            toolset( type:'hsqldb', prefix:'Prefix_', name:'hsql' ) {
-                sqlTask('CreateSchema', sqlFile: createShemaFile)
-                sqlTask('CreateSchema2', sqlFile: createShema2File)
+        testCase.configureProject {
+            configureDatabasePlugin {
+                toolset( type:'hsqldb', prefix:'Prefix_', name:'hsql' ) {
+                    sqlTask('CreateSchema', sqlFile: createShemaFile)
+                    sqlTask('CreateSchema2', sqlFile: createShema2File)
 
-                url = sql.connection.properties.URL
-                driver = jdbcDriverClassString
+                    url = sql.connection.properties.URL
+                    driver = jdbcDriverClassString
 
-                credentials.username = defaultCredentials.username
-                credentials.password = defaultCredentials.password
+                    credentials.username = defaultCredentials.username
+                    credentials.password = defaultCredentials.password
+                }
             }
+
         }
 
 
+        final DbtoolsConvention convention = testCase.project.convention.plugins.db
+
         // STEG 3 - credentials ihht konfig
-        def credentials = testCase.convention.dbToolSets['hsql'].credentials
+        def credentials = convention.dbToolSets['hsql'].credentials
         Assert.assertEquals credentials.username, defaultCredentials.username
         Assert.assertEquals credentials.password, defaultCredentials.password
 
@@ -140,14 +149,13 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
     @Test
     void testMultipleDatabases() {
 
-        def user1 = defaultCredentials
-        def user2 = defineDatabaseUser('USER2', '')
+        final def user1 = defaultCredentials
+        final def user2 = defineDatabaseUser('USER2', '')
 
-        Assert.assertTrue getSql(user1).connection.isValid(0)
-        Assert.assertTrue getSql(user2).connection.isValid(0)
+        Preconditions.checkState(getSql(user1).connection.isValid(0))
+        Preconditions.checkState(getSql(user2).connection.isValid(0))
 
-
-        final def testCase = new DbToolsPluginPatchTestContext()
+        final ProjectHelper testCase = DbToolsProjectBuilder.builder().applyDbUtilsPlugin().build();
 
 
         // STEG 1 - oppretter sql-filer relativt til prosjekt
@@ -172,24 +180,26 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
 
 
         // STEG 2 - konfigurering av plugin
-        testCase.configureDatabasePlugin {
-            toolset( type:'hsqldb', prefix:'DB1', name:'hsql' ) {
-                sqlTask('CreateSchema', sqlFile: createShemaFile)
+        testCase.configureProject {
+            configureDatabasePlugin {
+                toolset( type:'hsqldb', prefix:'DB1', name:'hsql' ) {
+                    sqlTask('CreateSchema', sqlFile: createShemaFile)
 
-                url = "${getSql(user1).connection.properties.URL}"
-                driver = jdbcDriverClassString
+                    url = "${getSql(user1).connection.properties.URL}"
+                    driver = jdbcDriverClassString
 
-                credentials.username = user1.username
-                credentials.password = user1.password
-            }
-            toolset( type:'hsqldb', prefix:'DB2', name:'hsql' ) {
-                sqlTask('CreateSchema2', sqlFile: createShema2File)
+                    credentials.username = user1.username
+                    credentials.password = user1.password
+                }
+                toolset( type:'hsqldb', prefix:'DB2', name:'hsql' ) {
+                    sqlTask('CreateSchema2', sqlFile: createShema2File)
 
-                url = "${getSql(user2).connection.properties.URL}"
-                driver = jdbcDriverClassString
+                    url = "${getSql(user2).connection.properties.URL}"
+                    driver = jdbcDriverClassString
 
-                credentials.username = user2.username
-                credentials.password = user2.password
+                    credentials.username = user2.username
+                    credentials.password = user2.password
+                }
             }
         }
 
@@ -234,22 +244,24 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
      */
     @Test
     void testPatchStandardTasks() {
-        final def testCase = new DbToolsPluginPatchTestContext()
+        final ProjectHelper testCase = DbToolsProjectBuilder.builder().applyDbUtilsPlugin().build();
 
-        testCase.configureDatabasePlugin {
-            toolset(name: 'Prefix', type: 'hsqldb', prefix: 'Prefix') {
+        testCase.configureProject {
+            configureDatabasePlugin {
+                toolset(name: 'Prefix', type: 'hsqldb', prefix: 'Prefix') {
 
-                credentials.username = defaultCredentials.username
-                credentials.password = defaultCredentials.password
+                    credentials.username = defaultCredentials.username
+                    credentials.password = defaultCredentials.password
 
 
-                url = sql.connection.properties.URL
-                driver = jdbcDriverClassString
+                    url = sql.connection.properties.URL
+                    driver = jdbcDriverClassString
 
-                patch {
-                    //tom konfigurasjon
+                    patch {
+                        //tom konfigurasjon
+                    }
+
                 }
-
             }
         }
 
@@ -267,25 +279,27 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
      */
     @Test
     void testPatchDatabase() {
-        final def testCase = new DbToolsPluginPatchTestContext()
+        final ProjectHelper testCase = DbToolsProjectBuilder.builder().applyDbUtilsPlugin().build();
 
         // STEG 1 - setter opp testmaterie
-        File patchFile = testCase.createSimplePatchFile()
+        File patchFile = DbToolsPluginPatchHelper.createSimplePatchFile()
 
         // STEG 2 - konfigurering av plugin
-        testCase.configureDatabasePlugin {
-            toolset(name: 'Prefix', type: 'hsqldb', prefix: 'Prefix') {
+        testCase.configureProject {
+            configureDatabasePlugin {
+                toolset(name: 'Prefix', type: 'hsqldb', prefix: 'Prefix') {
 
-                credentials.username = defaultCredentials.username
-                credentials.password = defaultCredentials.password
+                    credentials.username = defaultCredentials.username
+                    credentials.password = defaultCredentials.password
 
-                url = sql.connection.properties.URL
-                driver = jdbcDriverClassString
+                    url = sql.connection.properties.URL
+                    driver = jdbcDriverClassString
 
-                patch {
-                    patchTask('TestSchema', sqlFile:patchFile)
+                    patch {
+                        patchTask('TestSchema', sqlFile:patchFile)
+                    }
+
                 }
-
             }
         }
 

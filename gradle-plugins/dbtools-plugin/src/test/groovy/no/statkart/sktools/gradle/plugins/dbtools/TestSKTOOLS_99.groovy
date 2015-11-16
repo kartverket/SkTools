@@ -1,14 +1,17 @@
 package no.statkart.sktools.gradle.plugins.dbtools
 
+import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsConvention
+import no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractDatabaseConvention
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.PatchConfiguration
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.SequenceTask
-import no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractDatabaseConvention
-import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsConvention
-import no.statkart.sktools.gradle.plugins.dbtools.testutils.DbToolsPluginTestContext
+import no.statkart.sktools.gradle.testutils.ProjectHelper
+import no.statkart.sktools.gradle.testutils.builder.DbToolsProjectBuilder
 import org.testng.annotations.Test
 
+import static org.testng.Assert.assertNotNull
+
 /**
- * SKTOOLS-99: tester bruk av {@code taskSequence(..)} og {@link SequenceTask}
+ * SKTOOLS-99: tester bruk av {@code taskSequence ( .. )} og {@link SequenceTask}
  *
  * @since 1.3 - ny grunnbok sprint 30
  * @author Leif Lislegård
@@ -26,11 +29,8 @@ class TestSKTOOLS_99 {
      */
     @Test
     void testTaskSequenceOnProject() {
-
-        final def testCase = new DbToolsPluginTestContext()
-
+        final ProjectHelper testCase = DbToolsProjectBuilder.builder().applyDbUtilsPlugin().build();
         testCase.configureProject {
-
             taskSequence('ProjectTaskA') {
                 dependsOn taskSequence('ProjectTaskAA') {
                 }
@@ -44,16 +44,15 @@ class TestSKTOOLS_99 {
             taskSequence('ProjectTaskC') {
                 dependsOn taskSequence('ProjectTaskCC')
             }
-
         }
 
-        testCase.assertProjectContainsTask('ProjectTaskA', 'Task definert av taskSequence(<name>, <closure>)')
-        testCase.assertProjectContainsTask('ProjectTaskAA', 'SubTask definert av taskSequence(<name>, <closure>)')
+        assertNotNull(testCase.project.tasks.findByName('ProjectTaskA'), 'Task definert av taskSequence(<name>, <closure>)')
+        assertNotNull(testCase.project.tasks.findByName('ProjectTaskAA'), 'SubTask definert av taskSequence(<name>, <closure>)')
 
-        testCase.assertProjectContainsTask('ProjectTaskB', 'Task definert av taskSequence(<name>, <params>, <closure>)')
-        testCase.assertProjectContainsTask('ProjectTaskBB', 'SubTask definert av taskSequence(<name>, <params>, <closure>)')
+        assertNotNull(testCase.project.tasks.findByName('ProjectTaskB'), 'Task definert av taskSequence(<name>, <params>, <closure>)')
+        assertNotNull(testCase.project.tasks.findByName('ProjectTaskBB'), 'SubTask definert av taskSequence(<name>, <params>, <closure>)')
 
-        testCase.assertProjectContainsTask('ProjectTaskCC', 'SubTask definert av taskSequence(<name>)')
+        assertNotNull(testCase.project.tasks.findByName('ProjectTaskCC'), 'SubTask definert av taskSequence(<name>)')
     }
 
     /**
@@ -68,34 +67,35 @@ class TestSKTOOLS_99 {
     @Test
     void testTaskSequenceOnDatabaseConvention() {
 
-        final def testCase = new DbToolsPluginTestContext()
+        final ProjectHelper testCase = DbToolsProjectBuilder.builder().applyDbUtilsPlugin().build();
+        testCase.configureProject {
+            configureDatabasePlugin {
+                toolset(name: 'testToolset', type: 'hsqldb', prefix: 'test') {
 
-        testCase.configureDatabasePlugin {
-            toolset(name:'testToolset', type:'hsqldb', prefix:'test') {
-
-                taskSequence('ToolsetTaskB', description: 'Task defined on toolset') {
-                    dependsOn taskSequence('ToolsetTaskBB', description: 'Task defined on toolset') {
+                    taskSequence('ToolsetTaskB', description: 'Task defined on toolset') {
+                        dependsOn taskSequence('ToolsetTaskBB', description: 'Task defined on toolset') {
+                        }
                     }
-                }
-                taskSequence('ToolsetTaskA') {
-                    dependsOn taskSequence('ToolsetTaskAA') {
+                    taskSequence('ToolsetTaskA') {
+                        dependsOn taskSequence('ToolsetTaskAA') {
+                        }
                     }
-                }
 
-                taskSequence('ToolsetTaskC') {
-                    dependsOn taskSequence('ToolsetTaskCC')
-                }
+                    taskSequence('ToolsetTaskC') {
+                        dependsOn taskSequence('ToolsetTaskCC')
+                    }
 
+                }
             }
         }
 
-        testCase.assertProjectContainsTask('testToolsetTaskA', 'Task definert av taskSequence(<name>, <closure>)')
-        testCase.assertProjectContainsTask('testToolsetTaskAA', 'SubTask definert av taskSequence(<name>, <closure>)')
+        assertNotNull(testCase.project.tasks.findByName('testToolsetTaskA'), 'Task definert av taskSequence(<name>, <closure>)')
+        assertNotNull(testCase.project.tasks.findByName('testToolsetTaskAA'), 'SubTask definert av taskSequence(<name>, <closure>)')
 
-        testCase.assertProjectContainsTask('testToolsetTaskB', 'Task definert av taskSequence(<name>, <params>, <closure>)')
-        testCase.assertProjectContainsTask('testToolsetTaskBB', 'SubTask definert av taskSequence(<name>, <params>, <closure>)')
+        assertNotNull(testCase.project.tasks.findByName('testToolsetTaskB'), 'Task definert av taskSequence(<name>, <params>, <closure>)')
+        assertNotNull(testCase.project.tasks.findByName('testToolsetTaskBB'), 'SubTask definert av taskSequence(<name>, <params>, <closure>)')
 
-        testCase.assertProjectContainsTask('testToolsetTaskCC', 'SubTask definert av taskSequence(<name>')
+        assertNotNull(testCase.project.tasks.findByName('testToolsetTaskCC'), 'SubTask definert av taskSequence(<name>)')
     }
 
     /**
@@ -110,35 +110,37 @@ class TestSKTOOLS_99 {
     @Test
     void testTaskSequenceOnPatchConfiguration() {
 
-        final def testCase = new DbToolsPluginTestContext()
+        final ProjectHelper testCase = DbToolsProjectBuilder.builder().applyDbUtilsPlugin().build();
+        testCase.configureProject {
+            configureDatabasePlugin {
+                toolset(name: 'testToolset', type: 'hsqldb', prefix: 'test') {
 
-        testCase.configureDatabasePlugin {
-            toolset(name:'testToolset', type:'hsqldb', prefix:'test') {
-
-                patch {
-                    taskSequence('ToolsetTaskB', description: 'Task defined on toolset') {
-                        dependsOn taskSequence('ToolsetTaskBB', description: 'Task defined on toolset') {
+                    patch {
+                        taskSequence('ToolsetTaskB', description: 'Task defined on toolset') {
+                            dependsOn taskSequence('ToolsetTaskBB', description: 'Task defined on toolset') {
+                            }
                         }
-                    }
-                    taskSequence('ToolsetTaskA') {
-                        dependsOn taskSequence('ToolsetTaskAA') {
+                        taskSequence('ToolsetTaskA') {
+                            dependsOn taskSequence('ToolsetTaskAA') {
+                            }
                         }
-                    }
 
-                    taskSequence('ToolsetTaskC') {
-                        dependsOn taskSequence('ToolsetTaskCC')
+                        taskSequence('ToolsetTaskC') {
+                            dependsOn taskSequence('ToolsetTaskCC')
+                        }
                     }
                 }
             }
         }
 
-        testCase.assertProjectContainsTask('testToolsetTaskA', 'Task definert av taskSequence(<name>, <closure>)')
-        testCase.assertProjectContainsTask('testToolsetTaskAA', 'SubTask definert av taskSequence(<name>, <closure>)')
+        assertNotNull(testCase.project.tasks.findByName('testToolsetTaskA'), 'Task definert av taskSequence(<name>, <closure>)')
+        assertNotNull(testCase.project.tasks.findByName('testToolsetTaskAA'), 'SubTask definert av taskSequence(<name>, <closure>)')
 
-        testCase.assertProjectContainsTask('testToolsetTaskB', 'Task definert av taskSequence(<name>, <params>, <closure>)')
-        testCase.assertProjectContainsTask('testToolsetTaskBB', 'SubTask definert av taskSequence(<name>, <params>, <closure>)')
+        assertNotNull(testCase.project.tasks.findByName('testToolsetTaskB'), 'Task definert av taskSequence(<name>, <params>, <closure>)')
+        assertNotNull(testCase.project.tasks.findByName('testToolsetTaskBB'), 'SubTask definert av taskSequence(<name>, <params>, <closure>)')
 
-        testCase.assertProjectContainsTask('testToolsetTaskCC', 'SubTask definert av taskSequence(<name>)')
+        assertNotNull(testCase.project.tasks.findByName('testToolsetTaskCC'), 'SubTask definert av taskSequence(<name>)')
+
     }
 
 }
