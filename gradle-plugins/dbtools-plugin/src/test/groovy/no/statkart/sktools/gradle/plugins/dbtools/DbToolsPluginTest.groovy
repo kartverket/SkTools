@@ -138,8 +138,8 @@ class DbToolsPluginTest {
             }
         }
 
-        Assert.assertTrue(testCase.project.configurations.dbTools.files.contains(testCase.project.file('lib/testfile-2.3.3.jar')))
         Assert.assertEquals(testCase.project.configurations.dbTools.state.toString(), "UNRESOLVED")
+        Assert.assertTrue(testCase.project.configurations.dbTools.files.contains(testCase.project.file('lib/testfile-2.3.3.jar')))
     }
 
     /**
