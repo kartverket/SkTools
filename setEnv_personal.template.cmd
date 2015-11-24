@@ -18,16 +18,12 @@ set GRADLE_HOME=C:\bin\gradle\gradle-2.1
 : *******************************************************************************************************************
 set WEBLOGIC_HOME=C:\bin\bea1035
 set WEBLOGIC_VERSION=10.3.5
-: LOCALHOSTNAME bestemmer gyldig hostname for bruk med sertifikater (default til %COMPUTERNAME%.statkart.no)
-set LOCALHOSTNAME=%COMPUTERNAME%.statkart.no
 
 : *******************************************************************************************************************
 : * Weblogic Setup - 10.3.6
 : *******************************************************************************************************************
 set WEBLOGIC_HOME=C:\bea1036
 set WEBLOGIC_VERSION=10.3.6
-: LOCALHOSTNAME bestemmer gyldig hostname for bruk med sertifikater (default til %COMPUTERNAME%.statkart.no)
-set LOCALHOSTNAME=%COMPUTERNAME%.statkart.no
 
 
 : *******************************************************************************************************************

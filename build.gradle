@@ -427,7 +427,7 @@ buildscript {
     }
 
     if (!project.hasProperty('LOCALHOSTNAME')) {
-        project.ext.setProperty('LOCALHOSTNAME', '${COMPUTERNAME}.statkart.no')
+        project.ext.setProperty('LOCALHOSTNAME', java.net.InetAddress.getLocalHost().getHostName() + '.statkart.no')
     }
 
     ext.MAVEN_REPO = rootProject.properties.get('MAVEN_REPO', System.getenv('MAVEN_REPO'))
