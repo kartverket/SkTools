@@ -3,7 +3,7 @@
 apply plugin: 'ear'
 
 
-project.ext.set('app_url', properties.get('wls.deploy.adminurl', "http://${project.HOSTNAME}:7001"))
+project.ext.set('app_url', properties.get('wls.deploy.adminurl', "http://${java.net.InetAddress.localHost.hostName}:7001"))
 def appName = 'webstart-plugin-demo'
 
 //legger til action etter at prosjektet er evaluert. Dette da for å få satt riktig navn/versjon på warfiler definert i konfigurasjonen her.

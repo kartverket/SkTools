@@ -269,8 +269,8 @@ allprojects {
                         'Specification-Version': gradle.startParameter.projectProperties.get('sktools_versjon', "${sktools_versjon}").replace('-SNAPSHOT', ''),
 
                         //misc build info
-                        'Build-By': "${System.getenv('USERNAME')}",
-                        'Build-Machine': "${System.getenv('COMPUTERNAME')}",
+                        'Build-By'     : System.getProperty('user.name'),
+                        'Build-Machine': java.net.InetAddress.localHost.hostName,
                         'Build-Repo': MAVEN_REPO,
                         'Build-Gradle': gradle.gradleVersion,
 
@@ -416,7 +416,6 @@ buildscript {
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     [
             'JAVA_HOME',
-            'COMPUTERNAME',
             'LOCALHOSTNAME',
             'WEBLOGIC_HOME',
             'WEBLOGIC_VERSION',
@@ -427,7 +426,7 @@ buildscript {
     }
 
     if (!project.hasProperty('LOCALHOSTNAME')) {
-        project.ext.setProperty('LOCALHOSTNAME', java.net.InetAddress.getLocalHost().getHostName() + '.statkart.no')
+        project.ext.setProperty('LOCALHOSTNAME', java.net.InetAddress.localHost.hostName + '.statkart.no')
     }
 
     ext.MAVEN_REPO = rootProject.properties.get('MAVEN_REPO', System.getenv('MAVEN_REPO'))

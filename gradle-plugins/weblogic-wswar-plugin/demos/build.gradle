@@ -30,7 +30,7 @@ buildscript {
     if (version == Project.DEFAULT_VERSION) { version = '1.3-SNAPSHOT'; logger.warn "No -Psktools_versjon= defined. Defaulting to \"${version}\""} //nb - dersom ikke default version er satt riktig så blir kjøring ifra demo-katalog feil..
 
     // Variables to grab from environment + defaults
-    ['WEBLOGIC_HOME', 'COMPUTERNAME', 'MAVEN_REPO'].each { val ->
+    ['WEBLOGIC_HOME', 'MAVEN_REPO'].each { val ->
         if (!rootProject.ext.has(val) && System.getenv(val) != null) {
             rootProject.ext.set(val, System.getenv(val))
         }
