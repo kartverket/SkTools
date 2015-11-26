@@ -9,12 +9,12 @@ allprojects {
 apply from:'rootproject.gradle'
 
 
-assert GradleVersion.version('1.0').compareTo(GradleVersion.current()) <= 0 //lowest gradle version supported
+assert GradleVersion.version('2.1').compareTo(GradleVersion.current()) <= 0 //lowest gradle version supported
 
 //innkobling av plugin jar filer for gradle byggesystem
 buildscript {
     if (rootProject.ext.has('sktools_versjon')) version = rootProject.ext.get('sktools_versjon')
-    if (version == Project.DEFAULT_VERSION) { version = '1.3-SNAPSHOT'; logger.warn "No -Psktools_versjon= defined. Defaulting to \"${version}\""} //nb - dersom ikke default version er satt riktig så blir kjøring ifra demo-katalog feil..
+    if (version == Project.DEFAULT_VERSION) { version = '1.4-SNAPSHOT'; logger.warn "No -Psktools_versjon= defined. Defaulting to \"${version}\""} //nb - dersom ikke default version er satt riktig så blir kjøring ifra demo-katalog feil..
 
     // Variables to grab from environment + defaults
     ['MAVEN_REPO', 'JAVA_HOME'].each { val ->

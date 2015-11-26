@@ -1,4 +1,4 @@
-assert GradleVersion.version('1.2').compareTo(GradleVersion.current()) <= 0 //lowest gradle version supported
+assert GradleVersion.version('2.1').compareTo(GradleVersion.current()) <= 0 //lowest gradle version supported
 
 task runDemos() {
     description = 'Eksekverer demoer for alle prosjekter som finnes i subkataloger'
