@@ -14,7 +14,7 @@ dependencies {
 def demosExecuted = 0
 
 //task som eksekverer alle demo-prosjekter som evt måtte finnes
-final def testAllDemos = task('testDemos') {
+final def testAllDemos = task('testDemos', description: 'Eksekverer demoer for hvert plugin') {
     mustRunAfter project.tasks.test
     doLast {
         logger.lifecycle "\n...${demosExecuted} demos executed!"
@@ -22,25 +22,10 @@ final def testAllDemos = task('testDemos') {
 }
 
 Closure setUpDemoTestingFor = { final Project pluginProject, final File demoDir ->
-        def cleanDemoTask = pluginProject.task('cleanDemos', type: GradleBuild) {
-            println "pluginProject: ${pluginProject.path} dir: ${demoDir}"
+        //gradle 2.8 liker dårlig to GradleBuild invokasjoner i samme dir.
+        Task runDemoTask = pluginProject.task('runDemo', type: GradleBuild) {
             dir = demoDir
-            tasks = ['clean']
-            dependsOn rootProject.getTasksByName('install', true) // Vi må installere alle artefakter før demoer kjøres
-
-            doFirst {
-                logger.quiet '################################################################################'
-                logger.quiet "## cleaning demo in ${rootProject.relativePath(dir)}"
-            }
-            doLast {
-                logger.quiet "\n  ...end of clean ${name}"
-                logger.quiet '################################################################################\n\n'
-            }
-        }
-
-        def runDemoTask = pluginProject.task('runDemo', type: GradleBuild, dependsOn: cleanDemoTask) {
-            dir = demoDir
-            tasks = ['runDemo']
+            tasks = ['clean', 'runDemo']
             pluginProject.test.dependsOn it //part of test
 
             doFirst {
@@ -54,7 +39,7 @@ Closure setUpDemoTestingFor = { final Project pluginProject, final File demoDir 
             }
         }
 
-        [cleanDemoTask, runDemoTask].each { def task ->
+        [runDemoTask].each { Task task ->
             task.startParameter.projectProperties = [sktools_versjon: "${pluginProject.version}", MAVEN_REPO: MAVEN_REPO, WEBLOGIC_HOME: WEBLOGIC_HOME]
             task.startParameter.systemPropertiesArgs = [noMavenBootstrap: 'true'];
             task.startParameter.offline = true;

@@ -26,7 +26,6 @@ buildscript {
     repositories {
         //bruker lokale filer her da dette er et demo prosjekt...
         mavenLocal()
-
         maven { name = 'public'; url = MAVEN_REPO }
     }
 
@@ -39,13 +38,16 @@ buildscript {
         }
     }
 
-//    println "Using artifacts \n\t" + configurations.classpath.files.join("\n\t")
+}
 
+def clean = task('clean')<<{
+    logger.info "Cleaning project ${project.projectDir}"
 }
 
 allprojects {
     setVersion(rootProject.version)
+    tasks.matching { 'runDemo' == it.name }.each {
+        it.mustRunAfter clean
+    }
 }
-task clean<<{
-    logger.info "Cleaning project ${project.projectDir}"
-}
+

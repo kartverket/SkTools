@@ -23,10 +23,8 @@ buildscript {
 
     //repository for plugin + jar filer for byggesystem
     repositories {
-
         //bruker lokale filer her da dette er et demo prosjekt...
         mavenLocal()
-
         maven { name = 'public'; url = MAVEN_REPO }
     }
 
@@ -43,9 +41,13 @@ buildscript {
 
 }
 
+def clean = task('clean')<<{
+    logger.info "Cleaning project ${project.projectDir}"
+}
+
 allprojects {
     setVersion(rootProject.version)
-}
-task clean<<{
-    logger.info "Cleaning project ${project.projectDir}"
+    tasks.matching { 'runDemo' == it.name }.each {
+        it.mustRunAfter clean
+    }
 }

@@ -28,9 +28,7 @@ buildscript {
     repositories {
         //bruker kun lokale filer her da dette er et demo prosjekt...
         mavenLocal()
-
 //        maven { name = 'public'; url = MAVEN_REPO }
-
     }
 
     dependencies {
@@ -41,7 +39,11 @@ buildscript {
 
 allprojects {
     setVersion(rootProject.version)
+    tasks.matching { 'runDemo' == it.name }.each {
+        it.mustRunAfter clean
+    }
 }
+
 tasks.clean.doFirst {
     logger.info "Cleaning project ${project.projectDir}"
 }

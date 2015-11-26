@@ -26,29 +26,24 @@ buildscript {
     }
 }
 
+
+def clean = task('clean') << {
+    logger.info "Cleaning project ${project.projectDir}"
+}
+
+subprojects {
+    task('clean') //noOp
+}
+
 allprojects {
     setVersion(rootProject.version)
+    tasks.matching { 'runDemo' == it.name }.each {
+        it.mustRunAfter clean
+    }
 
     repositories {
         mavenLocal()
         maven { name = 'public'; url = "${rootProject.MAVEN_REPO}" }
     }
-}
 
-
-
-//intellij
-allprojects {
-    apply plugin: 'java'    //trenger denne for at scopes.PROVIDED.plus skal fungere i idea plugin konfigurasjon
-    apply plugin: 'idea'
-}
-
-
-project.idea.module {
-    //legger til denne for innkobling av dokumentasjon i Intellij osv
-    scopes.PROVIDED.plus += buildscript.configurations.classpath
-}
-
-tasks.clean.doFirst {
-    logger.info "Cleaning project ${project.projectDir}"
 }
