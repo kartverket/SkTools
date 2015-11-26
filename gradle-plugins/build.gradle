@@ -15,56 +15,71 @@ dependencies {
 
 
 
-//closure som collecter alle demo-prosjekter som evt måtte finnes
-groovy.lang.Closure findDemoDirs = { project ->
-    return project.childProjects.values().collectMany { Project childProject ->
-        File demoDir = childProject.file("demos")
-        if (!demoDir.exists()) println "..no demo found for ${childProject.getPath()}"
-        return demoDir.exists() ? [[demoDir, childProject]] : []
+//task som eksekverer alle demo-prosjekter som evt måtte finnes
+final def testAllDemos = task('testDemos') {
+    project.tasks.test.dependsOn it //part of test
+    doLast {
+        logger.lifecycle "\n...${demosExecuted} demos executed!"
     }
 }
 
+def demosExecuted = 0
+Closure setUpDemoTestingFor = { final Project pluginProject, final File demoDir ->
+        def cleanDemoTask = pluginProject.task("cleanDemos", type: GradleBuild) {
+            dir = demoDir
+            tasks = ['clean']
+            dependsOn rootProject.getTasksByName('install', true) // Vi må installere alle artefakter før demoer kjøres
 
-//task som eksekverer alle demo-prosjekter som evt måtte finnes
-task('testDemos') {
-    project.tasks['test'].dependsOn it //part of test
-
-    final demoDirData = findDemoDirs(project)
-
-    demoDirData.eachWithIndex { def values, int demoCount ->
-
-        def demoTask = project.task("cleanDemo$demoCount", type: GradleBuild) {
-            tasks = ['clean', 'runDemo']
             doFirst {
-                println('################################################################################');
-                println '## starting demo in ' + project.relativePath(dir)
+                logger.quiet '################################################################################'
+                logger.quiet "## cleaning demo in ${rootProject.relativePath(dir)}"
             }
             doLast {
-                println "\n  ...end of demo ${name}"
-                println('################################################################################\n\n');
+                logger.quiet "\n  ...end of clean ${name}"
+                logger.quiet '################################################################################\n\n'
             }
         }
 
-        [demoTask].each { def task ->
-            task.dir = values[0]
-            task.startParameter.projectProperties = [sktools_versjon: "${values[1].version}", MAVEN_REPO: MAVEN_REPO, WEBLOGIC_HOME: WEBLOGIC_HOME]
+        def runDemoTask = pluginProject.task("runDemo", type: GradleBuild, dependsOn: cleanDemoTask) {
+            dir = demoDir
+            tasks = ['runDemo']
+            mustRunAfter pluginProject.tasks.test //kjøring av tester før kjøring av demos
+
+            doFirst {
+                logger.quiet '################################################################################'
+                logger.quiet "## executing demo in ${rootProject.relativePath(dir)}"
+                demosExecuted++
+            }
+            doLast {
+                logger.quiet "\n  ...end of demo ${name}"
+                logger.quiet '################################################################################\n\n'
+            }
+        }
+
+        [cleanDemoTask, runDemoTask].each { def task ->
+            task.startParameter.projectProperties = [sktools_versjon: "${pluginProject.version}", MAVEN_REPO: MAVEN_REPO, WEBLOGIC_HOME: WEBLOGIC_HOME]
             task.startParameter.systemPropertiesArgs = [noMavenBootstrap: 'true'];
             task.outputs.upToDateWhen { false } //always run this...
         }
 
-        gradle.projectsEvaluated {
-            // Vi må installere alle artefakter før demoer kjøres
-            demoTask.dependsOn rootProject.getTasksByName('install', true)
+        return runDemoTask
+}
 
-            // kjøring av tester før kjøring av demos
-            demoTask.dependsOn project.subprojects.collectNested { it.getTasksByName('test', true) }
+evaluationDependsOnChildren()
+subprojects { Project childProject ->
+    File demoDir = childProject.file("demos")
+    if (demoDir.exists()) {
+        logger.quiet "..demo found for ${childProject.getPath()}"
 
-            //dependsOn demoTask
-            dependsOn demoTask
+        childProject.task('testDemos') {
+            dependsOn setUpDemoTestingFor(childProject, demoDir)
+            childProject.tasks.test.dependsOn it //part of test
         }
-    }
-    
-    doLast {
-        println "\n...${demoDirData.size()} demos executed!"
+
+        testAllDemos.dependsOn childProject.tasks.testDemos
+    } else {
+        logger.warn "..no demo found for ${childProject.getPath()}"
     }
 }
+
+
