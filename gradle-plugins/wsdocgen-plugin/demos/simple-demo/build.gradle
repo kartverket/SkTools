@@ -19,14 +19,14 @@ task runDemo() {
 
 }
 
-task testPackWsdoc(dependsOn:'packWsdoc') << {
+task('testPackWsdoc', dependsOn: tasks.packWsdoc) << {
     assert project.zipTree(packWsdoc.archivePath).matching { include '**/TestService.html' }.files.size() == 1
 }
 
-task testGenWsdoc(dependsOn:'genWsdoc') << {
+task('testGenWsdoc', dependsOn: tasks.genWsdoc) << {
     assert file('build/main/docs/wsdoc/TestService.html').exists()
 }
 
-task testClean(dependsOn:['testGenWsdoc', 'clean']) << {
+task('testClean', dependsOn:[tasks.testGenWsdoc, tasks.clean]) << {
     logger.quiet 'todo'
 }

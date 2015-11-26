@@ -10,13 +10,12 @@ task runDemo() {
     dependsOn 'testFilterResourcesAsSourceFolders'
 }
 
-tasks.clean.dependsOn('cleanIdea')
+tasks.clean.dependsOn tasks.cleanIdea
 tasks.clean.doLast {
-    project.delete('gen')
-    project.delete('src')
+    project.delete 'gen', 'src'
 }
 
-task testFilterResourcesAsSourceFolders(dependsOn:['ideaModule']) << {
+task('testFilterResourcesAsSourceFolders', dependsOn: tasks.ideaModule) << {
     file("${project.name}.iml").text.with { fileContents ->
         [
                 '$MODULE_DIR$/gen/main/resources',

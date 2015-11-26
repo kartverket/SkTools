@@ -5,8 +5,8 @@ sourceCompatibility = '1.6'
 targetCompatibility = '1.6'
 
 /**
- * Tester at filer blir maksert vekk
- * Tester at Perforce blir koblet inn som vcs
+ * Tester at filer maskeres bort
+ * Tester at Perforce kobles inn som vcs
  */
 ideaExtensions {
     ignoreMasks += '*.tmp'
@@ -16,15 +16,15 @@ ideaExtensions {
 }
 
 
-tasks.idea.dependsOn task('genSpamfiler') {
+task('genSpamfiler') {
     project.file('config').mkdirs()
     project.file('config/myconfig.tmp').createNewFile()
     project.file('config/myconfig2.properties').createNewFile()
     project.file('gradle.log').createNewFile()
-
+    tasks.idea.dependsOn it
 }
 
-tasks.clean.dependsOn 'cleanIdea' //cleans out generated idea files
+tasks.clean.dependsOn tasks.cleanIdea //cleans out generated idea files
 
 task runDemo() {
     dependsOn 'testMasks'
@@ -34,18 +34,18 @@ task runDemo() {
 }
 
 
-task testMasks(dependsOn:'idea') << {
+task('testMasks', dependsOn: tasks.idea) << {
     assert file("${project.name}.iws").text.contains('mask="*.tmp"')
 }
 
-task testVCS(dependsOn:'idea') << {
+task('testVCS', dependsOn: tasks.idea) << {
     assert file("${project.name}.ipr").text.contains('vcs="Perforce"')
 }
 
-task testInspections(dependsOn:'idea') << {
+task('testInspections', dependsOn: tasks.idea) << {
     assert file("${project.name}.ipr").text.contains('"SKTools Default"')
 }
 
-task testCodeStyle(dependsOn:'idea') << {
+task('testCodeStyle', dependsOn: tasks.idea) << {
     assert file("${project.name}.ipr").text.contains('"XML_ATTRIBUTE_WRAP"')
 }

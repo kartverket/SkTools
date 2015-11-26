@@ -41,12 +41,10 @@ afterEvaluate {
  * Diverse tasker som tester og demonstrerer implementasjonen
  ******************************************************************************************************************** */
 
-project.task('listSourceFiles') {
-    doLast {
-        logger.quiet 'task.source() : {}', project.tasks.compileWeblogicJava.getSource()
-        project.tasks.compileWeblogicJava.getSource().files.each {
-            logger.quiet "source += ${it}"
-        }
+task('listSourceFiles') << {
+    logger.quiet "task.source() : ${project.tasks.compileWeblogicJava.source}"
+    project.tasks.compileWeblogicJava.source.files.each {
+        logger.quiet "source += ${it}"
     }
 }
 

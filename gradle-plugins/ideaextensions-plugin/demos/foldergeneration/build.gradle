@@ -25,14 +25,14 @@ task runDemo() {
     dependsOn 'testSourceFolderDefs'
 }
 
-tasks.clean.dependsOn('cleanIdea')
+tasks.clean.dependsOn tasks.cleanIdea
 tasks.clean.doLast {
     logger.quiet("..deleting {}", project.file('src'))
     project.delete('src')
 }
 
 //tester at iml filen inneholder folders for main og test sourceSet  [SKIF-178]
-task testSourceFolderDefs(dependsOn:'idea') << {
+task('testSourceFolderDefs', dependsOn: tasks.idea) << {
     file("${project.name}.iml").text.with { fileContents ->
         [
                 'src/main/java',
@@ -51,7 +51,7 @@ task testSourceFolderDefs(dependsOn:'idea') << {
 }
 
 //tester at mapper blir generert opp ihht sourceSet  [SKIF-178]
-task testFolderGeneration(dependsOn:'idea') << {
+task('testFolderGeneration', dependsOn: tasks.idea) << {
     [
             'src/main/java',
             'src/main2/java',

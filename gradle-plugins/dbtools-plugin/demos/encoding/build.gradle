@@ -38,7 +38,7 @@ configureDatabasePlugin {
  * Diverse tasker som tester og demonstrerer implementasjonen
  ******************************************************************************************************************** */
 
-task runDemo(dependsOn: ['clean']) {
+task runDemo(dependsOn: tasks.clean) {
     description = 'Kjører en enkel demo for å teste funksjonaliteten'
 
     Assert.that('createTable', 'insertData').describedAs('spesialtegnPersisteresRiktig').leadsTo(project).withState {
