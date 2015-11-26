@@ -15,7 +15,7 @@ def demosExecuted = 0
 
 //task som eksekverer alle demo-prosjekter som evt måtte finnes
 final def testAllDemos = task('testDemos') {
-    mustRunAfter project.tasks.test //part of test
+    mustRunAfter project.tasks.test
     doLast {
         logger.lifecycle "\n...${demosExecuted} demos executed!"
     }
@@ -41,6 +41,7 @@ Closure setUpDemoTestingFor = { final Project pluginProject, final File demoDir 
         def runDemoTask = pluginProject.task('runDemo', type: GradleBuild, dependsOn: cleanDemoTask) {
             dir = demoDir
             tasks = ['runDemo']
+            pluginProject.test.dependsOn it //part of test
 
             doFirst {
                 logger.quiet '################################################################################'
@@ -56,6 +57,7 @@ Closure setUpDemoTestingFor = { final Project pluginProject, final File demoDir 
         [cleanDemoTask, runDemoTask].each { def task ->
             task.startParameter.projectProperties = [sktools_versjon: "${pluginProject.version}", MAVEN_REPO: MAVEN_REPO, WEBLOGIC_HOME: WEBLOGIC_HOME]
             task.startParameter.systemPropertiesArgs = [noMavenBootstrap: 'true'];
+            task.startParameter.offline = true;
             task.outputs.upToDateWhen { false } //always run this...
             task.shouldRunAfter pluginProject.tasks.test //kjøring av (optional) test før kjøring av demos
         }
@@ -71,10 +73,8 @@ subprojects { Project childProject ->
 
         childProject.task('testDemos') {
             dependsOn setUpDemoTestingFor(childProject, demoDir)
-            mustRunAfter childProject.tasks.test //part of test
+            testAllDemos.mustRunAfter it
         }
-
-        testAllDemos.dependsOn childProject.tasks.testDemos
     } else {
         logger.warn "..no demo found for ${childProject.getPath()}"
     }
