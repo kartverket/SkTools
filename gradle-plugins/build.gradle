@@ -6,26 +6,24 @@ group = 'no.statkart.sktools.gradle'
 
 
 dependencies {
-
-    //'samlepom' av samtlige plugins [SKIF-154]
-    project.childProjects.values().each {
-        runtime it
-    }
+    //'samlepom' av samtlige plugins [SKTOOLS-13]
+    runtime project.childProjects.values()
 }
 
 
+def demosExecuted = 0
 
 //task som eksekverer alle demo-prosjekter som evt måtte finnes
 final def testAllDemos = task('testDemos') {
-    project.tasks.test.dependsOn it //part of test
+    mustRunAfter project.tasks.test //part of test
     doLast {
         logger.lifecycle "\n...${demosExecuted} demos executed!"
     }
 }
 
-def demosExecuted = 0
 Closure setUpDemoTestingFor = { final Project pluginProject, final File demoDir ->
-        def cleanDemoTask = pluginProject.task("cleanDemos", type: GradleBuild) {
+        def cleanDemoTask = pluginProject.task('cleanDemos', type: GradleBuild) {
+            println "pluginProject: ${pluginProject.path} dir: ${demoDir}"
             dir = demoDir
             tasks = ['clean']
             dependsOn rootProject.getTasksByName('install', true) // Vi må installere alle artefakter før demoer kjøres
@@ -40,10 +38,9 @@ Closure setUpDemoTestingFor = { final Project pluginProject, final File demoDir 
             }
         }
 
-        def runDemoTask = pluginProject.task("runDemo", type: GradleBuild, dependsOn: cleanDemoTask) {
+        def runDemoTask = pluginProject.task('runDemo', type: GradleBuild, dependsOn: cleanDemoTask) {
             dir = demoDir
             tasks = ['runDemo']
-            mustRunAfter pluginProject.tasks.test //kjøring av tester før kjøring av demos
 
             doFirst {
                 logger.quiet '################################################################################'
@@ -60,6 +57,7 @@ Closure setUpDemoTestingFor = { final Project pluginProject, final File demoDir 
             task.startParameter.projectProperties = [sktools_versjon: "${pluginProject.version}", MAVEN_REPO: MAVEN_REPO, WEBLOGIC_HOME: WEBLOGIC_HOME]
             task.startParameter.systemPropertiesArgs = [noMavenBootstrap: 'true'];
             task.outputs.upToDateWhen { false } //always run this...
+            task.shouldRunAfter pluginProject.tasks.test //kjøring av (optional) test før kjøring av demos
         }
 
         return runDemoTask
@@ -73,7 +71,7 @@ subprojects { Project childProject ->
 
         childProject.task('testDemos') {
             dependsOn setUpDemoTestingFor(childProject, demoDir)
-            childProject.tasks.test.dependsOn it //part of test
+            mustRunAfter childProject.tasks.test //part of test
         }
 
         testAllDemos.dependsOn childProject.tasks.testDemos
