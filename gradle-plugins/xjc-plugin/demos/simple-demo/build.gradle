@@ -86,7 +86,7 @@ task runDemo() {
 
 void createDirtySchema(def path) {
     project.file("${path}/other.xsd").with { File file ->
-        println "Creating file ${project.relativePath(file)}"
+        project.logger.quiet "Creating file ${project.relativePath(file)}"
         file.parentFile.mkdirs()
         file.createNewFile()
         file.withPrintWriter { writer ->
@@ -163,6 +163,11 @@ class Assert {
         previousTask = task
         this
     }
+
+    private void println(def message) {
+        project.logger.quiet(message)
+    }
+
 
     //convenience methods and asserts....
 

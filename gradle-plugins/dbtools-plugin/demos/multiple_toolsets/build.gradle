@@ -51,7 +51,7 @@ task dbInit() {
 
     doLast {
         tasks.each {
-            println "${name} -> ${it.path}"
+            logger.quiet "${name} -> ${it.path}"
             it.execute()
         }
     }
@@ -106,12 +106,12 @@ class Assert {
             prep.reverseEach { Closure beforeAsserts -> doFirst { beforeAsserts.setDelegate(this); beforeAsserts.run()}}
             doLast { check.setDelegate(this); check.run() }
             doFirst {
-                println('--------------------------------------------------------------------------------');
-                println "Testing use case: ${taskName} tasks=${taskNames}\n\n\n"
+                toConsole('--------------------------------------------------------------------------------');
+                toConsole("Testing use case: ${taskName} tasks=${taskNames}\n\n\n");
             }
             doLast {
-                println "\n  ...end of test case: ${taskName}"
-                println('--------------------------------------------------------------------------------\n\n');
+                toConsole "\n  ...end of test case: ${taskName}"
+                toConsole('--------------------------------------------------------------------------------\n\n');
             }
             outputs.upToDateWhen { false } //always run this...
         }
@@ -141,6 +141,11 @@ class Assert {
         sql.eachRow("select count(*) from BRUKER1.TABLE1") {
             assert it[0] == 0
         }
+    }
+
+
+    private void toConsole(def message) {
+        project.logger.quiet(message)
     }
 
 

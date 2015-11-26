@@ -53,11 +53,12 @@ task runDemo(dependsOn: ['clean', ':echo-client:clean']) {
     final File resourceFile = project.project(':echo-client').file('src/main/SKIF-209/addedResource.txt')
 
     Assert.that('war').describedAs('warAssemblesClient').prep {
-        println "Tømmer cache katalog..."
+        project.logger.quiet "Tømmer cache katalog..."
         project.rootProject.delete('.cache')
 
-        println "Sletter genererte filer"
+        project.logger.quiet "Sletter genererte filer"
         project.project(':echo-client').delete('src/main/SKIF-209')
+        project.logger.info("Innhold i 'src/main/SKIF-209': {}", project.project(':echo-client').files('src/main/SKIF-209').asFileTree.files)
 //        project.project(':echo-client').delete('build/resources/main')
 
     }.leadsTo(project).withState {
@@ -69,7 +70,7 @@ task runDemo(dependsOn: ['clean', ':echo-client:clean']) {
 
 
     Assert.that('war').describedAs('warAssemblesUpdatedClient').prep {
-        println "Legger til genererte filer..."
+        project.logger.quiet "Legger til genererte filer..."
         resourceFile.parentFile.mkdirs()
         resourceFile.createNewFile()
 
@@ -119,12 +120,12 @@ class Assert {
             prep.reverseEach { Closure beforeAsserts -> doFirst { beforeAsserts.setDelegate(this); beforeAsserts.run()}}
             doLast { check.setDelegate(this); check.run() }
             doFirst {
-                println('--------------------------------------------------------------------------------');
-                println "Testing use case: ${taskName} tasks=${taskNames}\n\n\n"
+                toConsole('--------------------------------------------------------------------------------');
+                toConsole("Testing use case: ${taskName} tasks=${taskNames}\n\n\n");
             }
             doLast {
-                println "\n  ...end of test case: ${taskName}"
-                println('--------------------------------------------------------------------------------\n\n');
+                toConsole "\n  ...end of test case: ${taskName}"
+                toConsole('--------------------------------------------------------------------------------\n\n');
             }
             outputs.upToDateWhen { false } //always run this...
         }
@@ -133,6 +134,11 @@ class Assert {
         if (previousTask) task.dependsOn previousTask //ordered execution of asserts...
         previousTask = task
         this
+    }
+
+
+    private void toConsole(def message) {
+        project.logger.quiet(message)
     }
 
     //convenience methods and asserts....
@@ -149,6 +155,7 @@ class Assert {
     }
 
     void assertWarEchoClientResources(String filePattern, int expectedCount) {
+        project.logger.info "inspecting archive {}", project.tasks.war.archivePath
         FileTree warTree = project.zipTree(project.tasks.war.archivePath)
 
         ['signed/echo-client*.jar', 'unsigned/echo-client*.jar'].each { String pattern ->
@@ -159,8 +166,8 @@ class Assert {
         }
     }
 
-    static void assertSourceFileEchoClientResource(File sourceFile, int expectedCount) {
-        println "asserting ${sourceFile} exists. Expected: ${expectedCount.asBoolean()}, actual: ${sourceFile.exists()}"
+    void assertSourceFileEchoClientResource(File sourceFile, int expectedCount) {
+        toConsole "asserting ${sourceFile} exists. Expected: ${expectedCount.asBoolean()}, actual: ${sourceFile.exists()}"
         assert !sourceFile.exists() == !expectedCount //xnor expression
     }
 

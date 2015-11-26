@@ -106,6 +106,6 @@ task testGenWebstart(dependsOn: 'war') << {
 }
 
 task testClean(dependsOn: ['testGenWebstart', 'clean']) << {
-    println 'todo'
+    logger.quiet 'todo'
 }
 

@@ -141,7 +141,7 @@ task runDemo() {
 
 
     Assert.that('clean').describedAs('teardown').leadsTo(project).withState {
-        println 'Shutting down running HSQLDB instance...'
+        logger.quiet 'Shutting down running HSQLDB instance...'
         tearDownDatabase()
     }
 
@@ -182,12 +182,12 @@ class Assert {
             prep.reverseEach { Closure beforeAsserts -> doFirst { beforeAsserts.setDelegate(this); beforeAsserts.run()}}
             doLast { check.setDelegate(this); check.run() }
             doFirst {
-                println('--------------------------------------------------------------------------------');
-                println "Testing use case: ${taskName} tasks=${taskNames}\n\n\n"
+                toConsole('--------------------------------------------------------------------------------');
+                toConsole("Testing use case: ${taskName} tasks=${taskNames}\n\n\n");
             }
             doLast {
-                println "\n  ...end of test case: ${taskName}"
-                println('--------------------------------------------------------------------------------\n\n');
+                toConsole("\n  ...end of test case: ${taskName}");
+                toConsole('--------------------------------------------------------------------------------\n\n');
             }
             outputs.upToDateWhen { false } //always run this...
         }
@@ -249,13 +249,13 @@ class Assert {
         try {
             def sqlString = "select * from PATCHINFO"
             if (component != null)  sqlString += " where component='${component}'"
-            println "Utskrift av PATCHINFO component=${component}:\n\n"
+            toConsole "Utskrift av PATCHINFO component=${component}:\n\n"
 
             if (sql.rows(sqlString).isEmpty()) {
-                println "\t<empty>"
+                toConsole "\t<empty>"
             } else {
                 sql.eachRow(sqlString) {
-                    println it
+                    toConsole it
                 }
             }
 
@@ -266,7 +266,7 @@ class Assert {
 
 
     void tearDownDatabase() {
-        println "Tar ned database ${project.convention.plugins.db.dbToolSets['sa'].url}"
+        toConsole "Tar ned database ${project.convention.plugins.db.dbToolSets['sa'].url}"
         try {
             sqlSA().execute('SHUTDOWN;')
         } catch (java.sql.SQLException e) {
@@ -280,7 +280,7 @@ class Assert {
                 '-database.0', 'mem:test', '-dbname.0', "testPatching${project.version}" //definisjon for database med navn "test"
         ]
 
-        println "Starter opp database via kommando: \n\t${cmd.join(' ')}"
+        toConsole "Starter opp database via kommando: \n\t${cmd.join(' ')}"
         def process = cmd.execute()
 
         process.in.close()
@@ -289,6 +289,11 @@ class Assert {
 
 //        System.console().readLine('pause for debug..')
     }
+
+    private void toConsole(def message) {
+        project.logger.quiet(message)
+    }
+
 
 }
 

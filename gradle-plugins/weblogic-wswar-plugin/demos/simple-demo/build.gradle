@@ -43,9 +43,9 @@ afterEvaluate {
 
 project.task('listSourceFiles') {
     doLast {
-        println 'task.source() : ' + project.tasks.compileWeblogicJava.getSource()
+        logger.quiet 'task.source() : {}', project.tasks.compileWeblogicJava.getSource()
         project.tasks.compileWeblogicJava.getSource().files.each {
-            println "source += ${it}"
+            logger.quiet "source += ${it}"
         }
     }
 }
@@ -109,12 +109,12 @@ class Assert {
             prep.reverseEach { Closure beforeAsserts -> doFirst { beforeAsserts.setDelegate(this); beforeAsserts.run()}}
             doLast { check.setDelegate(this); check.run() }
             doFirst {
-                println('--------------------------------------------------------------------------------');
-                println "Testing use case: ${taskName} tasks=${taskNames}\n\n\n"
+                toConsole('--------------------------------------------------------------------------------');
+                toConsole("Testing use case: ${taskName} tasks=${taskNames}\n\n\n");
             }
             doLast {
-                println "\n  ...end of test case: ${taskName}"
-                println('--------------------------------------------------------------------------------\n\n');
+                toConsole "\n  ...end of test case: ${taskName}"
+                toConsole('--------------------------------------------------------------------------------\n\n');
             }
             outputs.upToDateWhen { false } //always run this...
         }
@@ -124,6 +124,11 @@ class Assert {
         previousTask = task
         this
     }
+
+    private void toConsole(def message) {
+        project.logger.quiet(message)
+    }
+
 
     //convenience methods and asserts....
 

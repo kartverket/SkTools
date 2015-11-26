@@ -26,8 +26,8 @@ afterEvaluate {
             ["${warFileName}" : "${project.name}/${path}"]
     }
 
-    println "configured warMap ->"
-    warMap.each {key, value -> println "  ${key} -> ${project.app_url}/${value}"}
+    logger.quiet "configured warMap ->"
+    warMap.each {key, value -> logger.quiet "  ${key} -> ${project.app_url}/${value}"}
 
     ear {
         appDirName 'src/main/application' //default -

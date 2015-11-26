@@ -39,8 +39,8 @@ afterEvaluate {
 task runDemo() {
 
     //SKTOOLS-56: viser tempdir konfigurasjon
-    println "Java tempdir for gradle prosjekt: ${System.getProperty('java.io.tmpdir')}"
-    println "genWeblogicWsClient.temporaryDir: ${genWeblogicWsClient.temporaryDir}"
+    logger.quiet("Java tempdir for gradle prosjekt: {}", System.getProperty('java.io.tmpdir'))
+    logger.quiet("genWeblogicWsClient.temporaryDir: {}", genWeblogicWsClient.temporaryDir)
 
     Assert.that('clean', 'genWeblogicWsClient').describedAs('weblogicWsClientGeneratesResources').leadsTo(project).withState {
         assertGenWeblogicWsClient()
@@ -102,12 +102,12 @@ class Assert {
             }
             doLast { check.setDelegate(this); check.run() }
             doFirst {
-                println('--------------------------------------------------------------------------------');
-                println "Testing use case: ${taskName} tasks=${taskNames}\n\n\n"
+                toConsole('--------------------------------------------------------------------------------');
+                toConsole("Testing use case: ${taskName} tasks=${taskNames}\n\n\n");
             }
             doLast {
-                println "\n  ...end of test case: ${taskName}"
-                println('--------------------------------------------------------------------------------\n\n');
+                toConsole "\n  ...end of test case: ${taskName}"
+                toConsole('--------------------------------------------------------------------------------\n\n');
             }
             outputs.upToDateWhen { false } //always run this...
         }
@@ -116,6 +116,11 @@ class Assert {
         if (previousTask) task.dependsOn previousTask //ordered execution of asserts...
         previousTask = task
         this
+    }
+
+
+    private void toConsole(def message) {
+        project.logger.quiet(message)
     }
 
     //convenience methods and asserts....

@@ -43,12 +43,12 @@ task runDemo(dependsOn: ['clean']) {
 
     Assert.that('createTable', 'insertData').describedAs('spesialtegnPersisteresRiktig').leadsTo(project).withState {
 
-        println 'Verifiserer data med riktig tegnsett i databasen...'
+        logger.quiet('Verifiserer data med riktig tegnsett i databasen...')
         def convention = project.convention.plugins.db.dbToolSets['UTF8']
         def sql = groovy.sql.Sql.newInstance(convention.url, convention.credentials.username, convention.credentials.password, convention.driver)
         sql.eachRow("select ID, TEXT from TABLE1") {
-            println "..asserting row ${it[0]}, text=${it[1]}"
-//            println it[1].bytes.collect {"$it"}
+            logger.quiet("..asserting row {}, text={}", it[0], it[1])
+//            logger.quiet it[1].bytes.collect {"$it"}
             assert norskeTegn.equals(it[1])  // comparing strings
         }
     }
@@ -89,12 +89,12 @@ class Assert {
             prep.reverseEach { Closure beforeAsserts -> doFirst { beforeAsserts.setDelegate(this); beforeAsserts.run()}}
             doLast { check.setDelegate(this); check.run() }
             doFirst {
-                println('--------------------------------------------------------------------------------');
-                println "Testing use case: ${taskName} tasks=${taskNames}\n\n\n"
+                toConsole('--------------------------------------------------------------------------------');
+                toConsole("Testing use case: ${taskName} tasks=${taskNames}\n\n\n");
             }
             doLast {
-                println "\n  ...end of test case: ${taskName}"
-                println('--------------------------------------------------------------------------------\n\n');
+                toConsole "\n  ...end of test case: ${taskName}"
+                toConsole('--------------------------------------------------------------------------------\n\n');
             }
             outputs.upToDateWhen { false } //always run this...
         }
@@ -103,6 +103,10 @@ class Assert {
         if (previousTask) task.dependsOn previousTask //ordered execution of asserts...
         previousTask = task
         this
+    }
+
+    private void toConsole(def message) {
+        project.logger.quiet(message)
     }
 
     //convenience methods and asserts....

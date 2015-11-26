@@ -27,7 +27,7 @@ task runDemo() {
 
 tasks.clean.dependsOn('cleanIdea')
 tasks.clean.doLast {
-    println "..deleting ${project.file('src')}"
+    logger.quiet("..deleting {}", project.file('src'))
     project.delete('src')
 }
 
