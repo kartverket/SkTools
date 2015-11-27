@@ -1,7 +1,5 @@
 package no.statkart.sktools.gradle.plugins.ideaextensions
 
-import groovy.util.slurpersupport.GPathResult
-import no.statkart.sktools.gradle.plugins.ideaextensions.util.FileUtil
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPluginConvention
@@ -36,13 +34,18 @@ class IdeaExtensionsPlugin implements Plugin<Project> {
 
         if (project.parent == null) { //root
             project.idea.project.ipr.withXml { provider ->
-                Node rootNode = provider.asNode()
+                final Node rootNode = provider.asNode()
 
-                addIgnoreMasksAndPaths(rootNode, extension)
                 addGradle(rootNode, extension)
                 addVcsMappings(rootNode, extension)
                 addInspectionProfile(rootNode, extension)
                 addCodeStyle(rootNode, extension)
+            }
+
+            project.idea.workspace.iws.withXml { provider ->
+                final Node rootNode = provider.asNode()
+
+                addIgnoreMasksAndPaths(rootNode, extension)
             }
 
         } else { //ikke root
@@ -52,14 +55,14 @@ class IdeaExtensionsPlugin implements Plugin<Project> {
                     it.project.getConvention().getPlugin(JavaPluginConvention.class).sourceSets.each {
                         it.getAllSource().srcDirs.each {
                             if (!it.exists()) {
-                                println "..creating folder ${project.relativePath(it)}"
+                                project.logger.quiet("..creating folder {}", project.relativePath(it));
                                 project.mkdir(it)
                             }
                         }
                         //oppretter også mapper for generert kode (introdusert i SKIF-173)
                         it.getOutput().getDirs().each {
                             if (!it.exists()) {
-                                println "..creating folder ${project.relativePath(it)} (output)"
+                                project.logger.quiet("..creating folder {} (output)", project.relativePath(it));
                                 project.mkdir(it)
                             }
                         }
@@ -76,21 +79,29 @@ class IdeaExtensionsPlugin implements Plugin<Project> {
      */
     static def addIgnoreMasksAndPaths(Node rootNode, IdeaExtensionsPluginExtension convention) {
         rootNode.component.grep { it.@name == 'ChangeListManager' }.each { Node component ->
-            component.ignored.each { it.replaceNode {} }
+            component.ignored.each {
+                component.remove(it) //tar bort alle tidligere ignores
+            }
 
             convention.ignoreMasks.each { mask ->
-                component.appendNode { ignored(mask: mask) }
+                Node node = NodeBuilder.newInstance().ignored(mask: mask)
+                convention.project.logger.info("Adding node '{}'", node);
+                component.append(node)
             }
 
             convention.ignorePaths.each { path ->
-                String relPath = FileUtil.relativeTo(project.projectDir, path).replaceAll('\\\\', '/') + '/'
-                component.appendNode { ignored(path: relPath) }
+                String relPath = convention.project.relativePath(path).replaceAll('\\\\', '/') + '/'
+                Node node = NodeBuilder.newInstance().ignored(path: relPath)
+                convention.project.logger.info("Adding node '{}'", node);
+                component.append(node)
             }
 
             //legger også til ignore for alle build-kataloger
-            project.getSubprojects().each { subproject ->
-                String path = FileUtil.relativeTo(project.projectDir, subproject.buildDir).replaceAll('\\\\', '/') + '/'
-                component.appendNode { ignored(path: path) }
+            convention.project.getSubprojects().each { subproject ->
+                String relPath = convention.project.relativePath(subproject.buildDir).replaceAll('\\\\', '/') + '/'
+                Node node = NodeBuilder.newInstance().ignored(path: relPath)
+                convention.project.logger.info("Adding node '{}'", node);
+                component.append(node)
             }
         }
     }

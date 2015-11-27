@@ -39,17 +39,16 @@ class IdeaExtensionPluginTest {
     }
 
     /**
-     * Tester angivelse xml for inspection profiles
-     * @since 1.3
+     * Tester angivelse av ignore paths
      */
     @Test
-    void testAddInspectionProfileCleanIdea12() {
+    void testAddIgnorePaths() {
         final def testCase = new InspectionProfileTestContext()
-        testCase.ideaIprTemplate = testCase.IDEA_IPR_EMPTY_XML
+        testCase.templateXml = testCase.IDEA_IPR_EMPTY_XML
         testCase.addInspectionProfileFile(testCase.INSPECTION_PROFILE_1_XML)
         testCase.addInspectionProfileFile(testCase.INSPECTION_PROFILE_2_XML)
 
-        def rootNode = new XmlParser().parseText(testCase.ideaIprTemplate)
+        def rootNode = new XmlParser().parseText(testCase.templateXml)
 
         IdeaExtensionsPlugin.addInspectionProfile(rootNode, testCase.extension)
         assert rootNode.component.findAll { it.@name == "InspectionProjectProfileManager" }.size() == 1 //forventet kun ett element
@@ -59,17 +58,39 @@ class IdeaExtensionPluginTest {
     }
 
     /**
+     * Tester angivelse xml for inspection profiles
+     * @since 1.3
+     */
+    @Test
+    void testAddInspectionProfileCleanIdea12() {
+        final def testCase = new IdeaTestContext()
+        testCase.templateXml = testCase.IDEA_IWS_EMPTY_XML
+
+        def rootNode = new XmlParser().parseText(testCase.templateXml)
+        testCase.extension.ignorePaths = ["dir1", "sub/dir2"]
+
+        IdeaExtensionsPlugin.addIgnoreMasksAndPaths(rootNode, testCase.extension)
+        assert rootNode.component.findAll { it.@name == "ChangeListManager" }.size() == 1 //forventet kun ett element
+
+        Node changeListManager = rootNode.component.findAll { it.@name == "ChangeListManager" }[0]
+        def ignoredPathNodes = changeListManager.ignored.findAll { it.@path != null }
+        Assert.assertEquals(ignoredPathNodes.size(), 2, "ignore paths")
+        Assert.assertEquals(ignoredPathNodes[0].@path, "dir1/")
+        Assert.assertEquals(ignoredPathNodes[1].@path, "sub/dir2/")
+    }
+
+    /**
      * SKTOOLS-142: Tester angivelse xml for inspection profiles
      * @since 2.0
      */
     @Test
     void testAddInspectionProfileCleanIdea14() {
         final def testCase = new InspectionProfileTestContext()
-        testCase.ideaIprTemplate = testCase.IDEA_IPR_EMPTY_XML
+        testCase.templateXml = testCase.IDEA_IPR_EMPTY_XML
         testCase.addInspectionProfileFile(testCase.INSPECTION_PROFILE_1_XML)
         testCase.addInspectionProfileFile(testCase.INSPECTION_PROFILE_2_XML)
 
-        def rootNode = new XmlParser().parseText(testCase.ideaIprTemplate)
+        def rootNode = new XmlParser().parseText(testCase.templateXml)
 
         IdeaExtensionsPlugin.addInspectionProfile(rootNode, testCase.extension)
         assert rootNode.component.findAll { it.@name == "InspectionProjectProfileManager" }.size() == 1 //forventet kun ett element
@@ -85,11 +106,11 @@ class IdeaExtensionPluginTest {
     @Test
     void testAddInspectionProfileMerge() {
         final def testContext = new InspectionProfileTestContext()
-        testContext.ideaIprTemplate = IDEA_TEMPLATE_WITH_INSPECTIONS_XML
+        testContext.templateXml = IDEA_TEMPLATE_WITH_INSPECTIONS_XML
         testContext.addInspectionProfileFile(buildInspectionProfile(INSPECTION_PROFILE_1_NAME, 'invalidBooleanValue'))
         testContext.addInspectionProfileFile(INSPECTION_PROFILE_2_XML)
 
-        def rootNode = new XmlParser().parseText(testContext.ideaIprTemplate)
+        def rootNode = new XmlParser().parseText(testContext.templateXml)
 
         IdeaExtensionsPlugin.addInspectionProfile(rootNode, testContext.extension)
         assert rootNode.component.findAll { it.@name == "InspectionProjectProfileManager" }.size() == 1 //forventet kun ett element
@@ -108,9 +129,9 @@ class IdeaExtensionPluginTest {
     @Test
     void testAddGradleClean() {
         final def testContext = new GradleTestContext()
-        testContext.ideaIprTemplate = testContext.IDEA_IPR_EMPTY_XML
+        testContext.templateXml = testContext.IDEA_IPR_EMPTY_XML
 
-        def rootNode = new XmlParser().parseText(testContext.ideaIprTemplate)
+        def rootNode = new XmlParser().parseText(testContext.templateXml)
         Assert.assertEquals(rootNode.component.findAll { it.@name == "GradleSettings" }.size(), 0, "forventet ingen elementer")
 
         IdeaExtensionsPlugin.addGradle(rootNode, testContext.extension)
@@ -124,9 +145,9 @@ class IdeaExtensionPluginTest {
     @Test
     void testGradleMerge() {
         final def testContext = new GradleTestContext()
-        testContext.ideaIprTemplate = testContext.IDEA_TEMPLATE_WITH_GRADLE_XML
+        testContext.templateXml = testContext.IDEA_TEMPLATE_WITH_GRADLE_XML
 
-        def rootNode = new XmlParser().parseText(testContext.ideaIprTemplate)
+        def rootNode = new XmlParser().parseText(testContext.templateXml)
 
         Assert.assertEquals(rootNode.component.findAll { it.@name == "GradleSettings" }.size(), 1)
         Assert.assertNotNull(rootNode.component.find { it.@name == "GradleSettings" }.option.find { it.@name == "gradleHome" }, "forventet at option finnes")

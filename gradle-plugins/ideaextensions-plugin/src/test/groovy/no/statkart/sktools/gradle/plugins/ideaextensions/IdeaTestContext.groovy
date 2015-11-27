@@ -9,11 +9,12 @@ import org.gradle.testfixtures.ProjectBuilder
  */
 class IdeaTestContext<T extends IdeaTestContext> {
 
-    static String IDEA_IPR_EMPTY_XML = buildIdeaIprTemplate()
+    static final String IDEA_IPR_EMPTY_XML = buildIdeaIprTemplate()
+    static final String IDEA_IWS_EMPTY_XML = buildIdeaIwsTemplate()
 
     final Project project
     final IdeaExtensionsPluginExtension extension
-    protected String ideaIprTemplate
+    protected String templateXml
 
 
     IdeaTestContext() {
@@ -24,8 +25,8 @@ class IdeaTestContext<T extends IdeaTestContext> {
         extension = project.extensions.getByName(IdeaExtensionsPlugin.EXTENSION_NAME)
     }
 
-    T setIdeaIprTemplate(String xml) {
-        ideaIprTemplate = xml
+    T setTemplateXml(String xml) {
+        templateXml = xml
         return (T) this
     }
 
@@ -48,5 +49,20 @@ class IdeaTestContext<T extends IdeaTestContext> {
 </project>
 """
     }
+
+
+    static String buildIdeaIwsTemplate(String... components) {
+        """
+<project version="4">
+  <component name="ChangeListManager">
+    <ignored path=".idea/workspace.xml" />
+  </component>
+  <component name="RunManager" selected="">
+  </component>
+  ${components.join('\n\n')}
+</project>
+"""
+    }
+
 
 }

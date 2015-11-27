@@ -10,6 +10,7 @@ targetCompatibility = '1.6'
  */
 ideaExtensions {
     ignoreMasks += '*.tmp'
+    ignorePaths += '.gradle'
     vcs 'Perforce'
     inspectionProfile = 'inspections.xml'
     codeStyle = 'codestyle.xml'
@@ -25,6 +26,7 @@ task('genSpamfiler') {
 }
 
 tasks.clean.dependsOn tasks.cleanIdea //cleans out generated idea files
+tasks.clean.dependsOn tasks.cleanIdeaWorkspace //cleans out generated idea files
 
 task runDemo() {
     dependsOn 'testMasks'

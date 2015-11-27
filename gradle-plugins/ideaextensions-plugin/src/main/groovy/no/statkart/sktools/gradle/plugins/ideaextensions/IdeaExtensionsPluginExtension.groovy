@@ -20,7 +20,7 @@ class IdeaExtensionsPluginExtension {
     }
 
     Set<String> ignoreMasks = ['*.iws', '*.ipr', '*.iml', '*.log']
-    Set<File> ignorePaths = []
+    Set<Object> ignorePaths = []
 
     /**
      * Gyldige verdier og VCS systemer som intellij kjenner til som default er:
