@@ -28,7 +28,6 @@ class IdeaExtensionPluginTest {
 
         assert project.ideaExtensions != null
         Assert.assertTrue(project.ideaExtensions instanceof IdeaExtensionsPluginExtension)
-
     }
 
     /**
@@ -53,12 +52,10 @@ class IdeaExtensionPluginTest {
         def rootNode = testCase.buildIdeaTemplateNode()
 
         IdeaExtensionsPlugin.addInspectionProfile(rootNode, testCase.extension)
-
         assert rootNode.component.findAll { it.@name == "InspectionProjectProfileManager" }.size() == 1 //forventet kun ett element
 
         Node managerNode = rootNode.component.findAll { it.@name == "InspectionProjectProfileManager" }[0]
-
-        assert managerNode.profiles.profile.size() == 2; // forventer to profiler
+        Assert.assertEquals(managerNode.profiles.profile.size(), 2, "forventer to profiler")
     }
 
     /**
@@ -75,12 +72,10 @@ class IdeaExtensionPluginTest {
         def rootNode = testCase.buildIdeaTemplateNode()
 
         IdeaExtensionsPlugin.addInspectionProfile(rootNode, testCase.extension)
-
         assert rootNode.component.findAll { it.@name == "InspectionProjectProfileManager" }.size() == 1 //forventet kun ett element
 
         Node managerNode = rootNode.component.findAll { it.@name == "InspectionProjectProfileManager" }[0]
-
-        assert managerNode.profile.size() == 2; // forventer to profiler
+        Assert.assertEquals(managerNode.profile.size(), 2, "forventer to profiler")
     }
 
     /**
@@ -97,16 +92,12 @@ class IdeaExtensionPluginTest {
         def rootNode = testContext.buildIdeaTemplateNode()
 
         IdeaExtensionsPlugin.addInspectionProfile(rootNode, testContext.extension)
-
         assert rootNode.component.findAll { it.@name == "InspectionProjectProfileManager" }.size() == 1 //forventet kun ett element
 
         Node managerNode = rootNode.component.findAll { it.@name == "InspectionProjectProfileManager" }[0]
-
-        assert managerNode.profiles.profile.size() == 2; // forventer to profiler
-
-        assert managerNode.profiles.profile[0].option.find {it.@name == 'myName'}.@value == INSPECTION_PROFILE_1_NAME
-        assert managerNode.profiles.profile[0].option.find {it.@name == 'myLocal'}.@value == 'invalidBooleanValue'
-
+        Assert.assertEquals(managerNode.profiles.profile.size(), 2, "forventer to profiler")
+        Assert.assertEquals(managerNode.profiles.profile[0].option.find {it.@name == 'myName'}.@value, INSPECTION_PROFILE_1_NAME)
+        Assert.assertEquals(managerNode.profiles.profile[0].option.find {it.@name == 'myLocal'}.@value, 'invalidBooleanValue')
     }
 
 
@@ -120,13 +111,10 @@ class IdeaExtensionPluginTest {
         testContext.ideaTemplate = testContext.IDEA_TEMPLATE_EMPTY_XML
 
         def rootNode = testContext.buildIdeaTemplateNode()
-
-        assert rootNode.component.findAll { it.@name == "GradleSettings" }.size() == 0 //forventet ingen elementer
+        Assert.assertEquals(rootNode.component.findAll { it.@name == "GradleSettings" }.size(), 0, "forventet ingen elementer")
 
         IdeaExtensionsPlugin.addGradle(rootNode, testContext.extension)
-
-        assert rootNode.component.findAll { it.@name == "GradleSettings" }.size() == 1 //forventet ett element
-
+        Assert.assertEquals(rootNode.component.findAll { it.@name == "GradleSettings" }.size(), 1, "forventet ett element")
     }
 
     /**
@@ -140,18 +128,17 @@ class IdeaExtensionPluginTest {
 
         def rootNode = testContext.buildIdeaTemplateNode()
 
-        assert rootNode.component.findAll { it.@name == "GradleSettings" }.size() == 1 //forventet ett element
-        assert rootNode.component.find { it.@name == "GradleSettings" }.option.find { it.@name == "gradleHome" }  //forventet at option finnes
-        assert rootNode.component.find { it.@name == "GradleSettings" }.option.find { it.@name == "gradleHome" }.@value == testContext.GRADLE_SETTINGS_1_GRADLE_HOME
+        Assert.assertEquals(rootNode.component.findAll { it.@name == "GradleSettings" }.size(), 1)
+        Assert.assertNotNull(rootNode.component.find { it.@name == "GradleSettings" }.option.find { it.@name == "gradleHome" }, "forventet at option finnes")
+        Assert.assertEquals(rootNode.component.find { it.@name == "GradleSettings" }.option.find { it.@name == "gradleHome" }.@value, testContext.GRADLE_SETTINGS_1_GRADLE_HOME)
 
         IdeaExtensionsPlugin.addGradle(rootNode, testContext.extension)
-        assert rootNode.component.findAll { it.@name == "GradleSettings" }.size() == 1 //forventet ett element
-        assert rootNode.component.find { it.@name == "GradleSettings" }.option.find { it.@name == "gradleHome" }  //forventet at option finnes
-        assert rootNode.component.find { it.@name == "GradleSettings" }.option.find { it.@name == "gradleHome" }.@value == testContext.project.gradle.gradleHomeDir
-
+        Assert.assertEquals(rootNode.component.findAll { it.@name == "GradleSettings" }.size(), 1)
+        Assert.assertNotNull(rootNode.component.find { it.@name == "GradleSettings" }.option.find { it.@name == "gradleHome" }, "forventet at option finnes")
+        Assert.assertEquals(rootNode.component.find { it.@name == "GradleSettings" }.option.find { it.@name == "gradleHome" }.@value, testContext.project.gradle.gradleHomeDir)
 
         IdeaExtensionsPlugin.addGradle(rootNode, testContext.extension)
-        assert rootNode.component.findAll { it.@name == "GradleSettings" }.size() == 1 //forventet ett element
-
+        Assert.assertEquals(rootNode.component.findAll { it.@name == "GradleSettings" }.size(), 1, "ikke flere elementer av denne typen")
     }
+
 }
