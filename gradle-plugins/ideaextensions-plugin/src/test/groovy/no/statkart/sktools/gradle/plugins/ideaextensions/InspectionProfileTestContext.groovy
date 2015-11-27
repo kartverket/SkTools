@@ -37,7 +37,7 @@ class InspectionProfileTestContext extends IdeaTestContext<InspectionProfileTest
 
 
     static String buildInspectionSettings(String... profiles) {
-        buildIdeaTemplate("""
+        buildIdeaIprTemplate("""
           <component name="InspectionProjectProfileManager">
             <profiles>
             ${profiles.join('\n\n')}

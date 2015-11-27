@@ -9,11 +9,11 @@ import org.gradle.testfixtures.ProjectBuilder
  */
 class IdeaTestContext<T extends IdeaTestContext> {
 
-    static String IDEA_TEMPLATE_EMPTY_XML = buildIdeaTemplate()
+    static String IDEA_IPR_EMPTY_XML = buildIdeaIprTemplate()
 
     final Project project
     final IdeaExtensionsPluginExtension extension
-    protected String ideaTemplate
+    protected String ideaIprTemplate
 
 
     IdeaTestContext() {
@@ -24,8 +24,8 @@ class IdeaTestContext<T extends IdeaTestContext> {
         extension = project.extensions.getByName(IdeaExtensionsPlugin.EXTENSION_NAME)
     }
 
-    T setIdeaTemplate(String xml) {
-        ideaTemplate = xml
+    T setIdeaIprTemplate(String xml) {
+        ideaIprTemplate = xml
         return (T) this
     }
 
@@ -33,12 +33,9 @@ class IdeaTestContext<T extends IdeaTestContext> {
         return extension
     }
 
-    Node buildIdeaTemplateNode() {
-        new XmlParser().parseText(ideaTemplate)
-    }
 
 
-    static String buildIdeaTemplate(String... components) {
+    static String buildIdeaIprTemplate(String... components) {
         """
 <project version="4">
   <component name="CompilerConfiguration">
