@@ -88,11 +88,11 @@ class OracleImportTask extends ConventionTask {
             command += "PARALLEL=${getParallel()}"
         }
 
-        def impdb = Runtime.runtime.exec(command as String[], null, getProject().getProjectDir())
-
         logger.lifecycle('Kaller impdp.exe med bruker ' + getUsername() + ', tns ' + getTns());
 
         logger.info 'Executing command: \n' + command.join(' ').replace(getPassword(), getPassword().replaceAll(/./, "*"))
+
+        def impdb = Runtime.runtime.exec(command as String[], null, getProject().getProjectDir())
 
         def running = true
         def bufferPrinter = {buffer ->

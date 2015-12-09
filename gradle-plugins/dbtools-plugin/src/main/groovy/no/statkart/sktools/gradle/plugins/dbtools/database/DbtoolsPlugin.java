@@ -162,10 +162,10 @@ public class DbtoolsPlugin implements Plugin<Project> {
             final Action<ConventionTask> setParallel = new Action<ConventionTask>() {
                 @Override
                 public void execute(ConventionTask task) {
-                    task.getConventionMapping().map("parallel", new Callable<String>() {
+                    task.getConventionMapping().map("parallel", new Callable<Integer>() {
                         @Override
-                        public String call() throws Exception {
-                            return systemPropertiesArgs.get("parallel");
+                        public Integer call() throws Exception {
+                            return Integer.valueOf(systemPropertiesArgs.get("parallel"));
                         }
                     });
                 }
