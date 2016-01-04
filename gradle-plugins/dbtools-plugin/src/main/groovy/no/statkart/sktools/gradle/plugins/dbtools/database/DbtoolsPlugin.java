@@ -21,13 +21,8 @@ import org.gradle.api.plugins.JavaBasePlugin;
 
 import java.io.File;
 import java.net.MalformedURLException;
-import java.sql.Driver;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Callable;
 
 /**
@@ -59,8 +54,6 @@ public class DbtoolsPlugin implements Plugin<Project> {
     public static final String DBTOOLS_CONFIGURATION = "dbTools";
     public static final String CHECK_TASK_NAME = "check";
 
-    private static final Set<String> loadedDrivers = new HashSet<String>();
-
     public DbtoolsConvention dbtoolsConvention;
 
 
@@ -78,7 +71,6 @@ public class DbtoolsPlugin implements Plugin<Project> {
             @Override
             public void execute(Project project) {
                 assignConventionalValues(project);
-                registerDrivers(project);
             }
         });
         loadDrivers(configuration, project);
@@ -214,31 +206,5 @@ public class DbtoolsPlugin implements Plugin<Project> {
         });
     }
 
-    private void registerDrivers(Project project) {
-        for (AbstractDatabaseConvention databaseConvention : dbtoolsConvention.dbToolSets.values()) {
-            String driverAsString = databaseConvention.driver;
-            if (!loadedDrivers.contains(driverAsString)) {
-                project.getLogger().info("Registring jdbc-driver: {}", driverAsString);
-                try {
-                    Class<?> driver = GroovyObject.class.getClassLoader().loadClass(driverAsString);
-
-                    // You might need one or both of these as well
-                    Driver instance = (Driver) driver.newInstance();
-                    DriverManager.registerDriver(instance);
-
-                    loadedDrivers.add(driverAsString);
-                } catch (ClassNotFoundException e) {
-                    project.getLogger().error("Class not found: {}", driverAsString);
-                } catch (SQLException e) {
-                    project.getLogger().error("Unknown error occured", e);
-                } catch (InstantiationException e) {
-                    project.getLogger().error("Unknown error occured", e);
-                } catch (IllegalAccessException e) {
-                    project.getLogger().error("Unknown error occured", e);
-                }
-
-            }
-        }
-    }
 
 }
