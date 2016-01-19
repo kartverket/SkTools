@@ -187,6 +187,7 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
         task.conventionMapping('schemaMapping', { getSchemaMapping() })
         task.conventionMapping('logfile', { "${getUsername()}.import.${getDateString()}.LOG" })
         task.conventionMapping('tableExistsAction', { 'REPLACE' })
+        task.conventionMapping('transform', { 'SEGMENT_ATTRIBUTES:n,OID:n:TYPE' })
 
         task.conventionMapping('username', { getUsername() })
         task.conventionMapping('password', { getPassword() })

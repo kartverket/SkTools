@@ -174,6 +174,7 @@ class DbToolsPluginTest {
             testCase.project.tasks[taskName].with { OracleImportTask task ->
                 Assert.assertEquals(task.username, 'brukernavn', "Forventet brukernavn")
                 Assert.assertEquals(task.password, 'passord', "Forventet passord")
+                Assert.assertEquals(task.transform, 'SEGMENT_ATTRIBUTES:n,OID:n:TYPE', "Forventet transform")
             }
         }
     }

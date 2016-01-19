@@ -59,6 +59,8 @@ class OracleImportTask extends ConventionTask {
     @Input
     String tns
 
+    @Input
+    String transform
 
 
 
@@ -75,7 +77,7 @@ class OracleImportTask extends ConventionTask {
                 "DUMPFILE=${getDumpfile()}",
                 "LOGFILE=${getLogfile()}",
                 "TABLE_EXISTS_ACTION=${getTableExistsAction()}",
-                'TRANSFORM=SEGMENT_ATTRIBUTES:n'
+                "TRANSFORM=${getTransform()}"
         ]
 
         if (getExclude() != null && !getExclude().isEmpty()) {
