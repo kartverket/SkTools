@@ -18,4 +18,9 @@ public abstract class AbstractExpression implements Expression {
     public void setLineNumber(int lineNumber) {
         this.lineNumber = lineNumber;
     }
+
+    @Override
+    public String toString() {
+        return "line " + lineNumber + "\ttype: " + getClass().getSimpleName();
+    }
 }

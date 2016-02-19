@@ -37,7 +37,8 @@ project.ext.libraries = [
         log4j: "log4j:log4j:${libVersion('log4j', '1.2.17')}@jar",
 
         // Testing
-        testng: 'org.testng:testng:6.8.8@jar',
+        assertj: 'org.assertj:assertj-core:2.2.0', /* AssertJ 2.x for Java 7, 3.x for Java8 */
+        testng: 'org.testng:testng:6.9.10@jar',
         hsqldb: 'org.hsqldb:hsqldb:2.2.8',
 ]
 
@@ -144,6 +145,7 @@ subprojects { Project project ->
 
         // appropriately inject common dependencies into each sub-project
         dependencies {
+            testCompile libraries.assertj
             testCompile libraries.testng
         }
 
