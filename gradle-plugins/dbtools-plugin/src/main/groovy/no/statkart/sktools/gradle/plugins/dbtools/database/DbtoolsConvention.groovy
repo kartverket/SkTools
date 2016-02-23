@@ -172,10 +172,10 @@ configureDatabasePlugin {
         return convention
     }
 
-    protected Task taskSequence(String verb, Closure config = null) {
+    public Task taskSequence(String verb, Closure config = null) {
         return taskSequence([:], verb, config)
     }
-    protected Task taskSequence(Map params, String verb, Closure config = null) {
+    public Task taskSequence(Map params, String verb, Closure config = null) {
         params['type'] = SequenceTask.class
         return project.task(params, verb, config)
     }

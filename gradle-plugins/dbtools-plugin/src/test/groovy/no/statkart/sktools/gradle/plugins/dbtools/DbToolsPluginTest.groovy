@@ -12,6 +12,8 @@ import org.gradle.api.Task
 import org.testng.Assert
 import org.testng.annotations.Test
 
+import static org.assertj.core.api.Assertions.assertThat
+
 /**
  * Test av {@link no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsPlugin} m.t.p. gradle mekanikker.
  *
@@ -432,4 +434,26 @@ class DbToolsPluginTest {
         info.execute()
     }
 
+
+    /**
+     * Verifiserer at taskSequence syntax fungerer på project
+     * @since 1.4
+     */
+    @Test
+    void taskSequenceIsExtendedToProject() {
+        final ProjectHelper testCase = DbToolsProjectBuilder.builder().applyDbUtilsPlugin().build();
+        testCase.configureProject {
+            taskSequence('nestedTask') {
+                dependsOn task('task1')
+                dependsOn task('task2')
+            }
+        }
+
+        assertThat(testCase.project.tasks.findByName('nestedTask')).describedAs("Forventet task").isNotNull()
+        assertThat(testCase.project.tasks.findByName('task1')).describedAs("Forventet task").isNotNull()
+        assertThat(testCase.project.tasks.findByName('task2')).describedAs("Forventet task").isNotNull()
+
+        assertThat(testCase.project.tasks.findByName('nestedTask').dependsOn).describedAs("dependencies")
+                .contains(testCase.project.tasks.'task1', testCase.project.tasks.'task2')
+    }
 }

@@ -26,35 +26,38 @@ configureDatabasePlugin {
         }
 
 
-        taskSequence('taskSequenceZXY', description: 'Transitive task dependencies executed in sequence') {
-            dependsOn tasks['doZ']
-            dependsOn tasks['doX']
-            dependsOn tasks['doY']
-
-            doFirst {
-                def expectedSequence = [tasks['z'], tasks['x'], tasks['y']]
-                assert gradle.taskGraph.allTasks.findAll {expectedSequence.contains(it)} == expectedSequence //SKTOOLS-152
-            }
-        }
-
         taskSequence('doMCA', description: 'nested sequence task') {
             dependsOn tasks['m']
             dependsOn tasks['c']
             dependsOn tasks['doA']
         }
+    }
 
-        taskSequence('taskSequenceYMCA', description: 'Transitive task dependencies executed in sequence') {
-            dependsOn tasks['doY']
-            dependsOn tasks['doMCA']
 
-            doFirst {
-                def expectedSequence = [tasks['y'], tasks['m'], tasks['c'], tasks['a']]
-                assert gradle.taskGraph.allTasks.findAll {expectedSequence.contains(it)} == expectedSequence //SKTOOLS-152
-            }
+    taskSequence('taskSequenceYMCA', description: 'Transitive task dependencies executed in sequence') {
+        dependsOn dbToolSets.main.tasks['doY']
+        dependsOn dbToolSets.main.tasks['doMCA']
+
+        doFirst {
+            def expectedSequence = [tasks['y'], tasks['m'], tasks['c'], tasks['a']]
+            assert gradle.taskGraph.allTasks.findAll {expectedSequence.contains(it)} == expectedSequence //SKTOOLS-152
         }
     }
 
 }
+
+taskSequence('taskSequenceZXY', description: 'Transitive task dependencies executed in sequence') {
+    dependsOn dbToolSets.main.tasks['doZ']
+    dependsOn dbToolSets.main.tasks['doX']
+    dependsOn dbToolSets.main.tasks['doY']
+
+    doFirst {
+        def expectedSequence = [tasks['z'], tasks['x'], tasks['y']]
+        assert gradle.taskGraph.allTasks.findAll {expectedSequence.contains(it)} == expectedSequence //SKTOOLS-152
+    }
+}
+
+
 
 
 task runDemo() {
