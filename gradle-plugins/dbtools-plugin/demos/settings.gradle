@@ -5,6 +5,7 @@ include ':properties'
 include ':patch'
 include ':patch:multimodule'
 include ':exhaustion'
+include ':task_ordering'
 
 rootProject.name = 'dbtools-plugin-demos'
 

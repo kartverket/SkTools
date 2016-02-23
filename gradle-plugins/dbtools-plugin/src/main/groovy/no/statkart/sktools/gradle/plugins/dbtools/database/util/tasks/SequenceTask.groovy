@@ -1,40 +1,113 @@
 package no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks
 
+import no.statkart.sktools.gradle.plugins.dbtools.database.util.SQLTask
 import org.gradle.api.DefaultTask
 import org.gradle.api.Task
-import org.gradle.api.specs.Spec
 import org.gradle.api.internal.TaskInternal
+import org.gradle.api.specs.Spec
 import org.gradle.api.tasks.TaskDependency
 
 /**
  * Workaround i gradle da gradle 1.0 ikke har noen støtte for å deklarere rekkefølge på tasker.
  *
- * Algoritmen legger til et nytt lag av tasker med navn i stigende rekkefølge.
- * Dette da gradle eksekverer disse i stigende rekkefølge (ved ikke rekursive avhengigheter)
+ * Algoritmen setter {@link Task#mustRunAfter} for å instrumentere ønsket eksekverings-rekkefølge i Gradle
+ * basert på sekvenser.
+ *
+ * SKTOOLS-152:
+ * Det er at krav om at sekvenser ikke danner nye sykler da Gradle baseres på en DAG (Directed Acyclic Graph) av tasker.
  *
  * @author Leif Lislegård
  * @since 1.2
  */
 class SequenceTask extends DefaultTask {
 
-    private int idx = 0
+    List<Object> dependsOnList = new ArrayList<>()
 
     public boolean propagateOnlyIf = true
 
     @Override
     Task dependsOn(Object... paths) {
-        def wrapperTask = project.task(String.format('%s_step%02d', name, ++idx))
-        wrapperTask.dependsOn(paths)
-        return super.dependsOn(wrapperTask)
+        Collections.addAll(dependsOnList, paths)
+        return super.dependsOn(paths)
     }
 
     SequenceTask() {
-        TaskInternal thisTask = this
+        final SequenceTask thisTask = this
         project.gradle.taskGraph.whenReady { def taskGraph ->
             if (propagateOnlyIf && taskGraph.hasTask(thisTask)) {
                 propagateOnlyIf(thisTask)
             }
         }
+        project.gradle.projectsEvaluated {
+            final LinkedHashSet sequence = []
+            final Context context = new Context(thisTask)
+            this.dependsOnList.each { Object child ->
+                Task childTask
+                if (child instanceof Task) {
+                    childTask = child
+                } else if (child instanceof CharSequence) {
+                    childTask = project.tasks.getByPath(child.toString())
+                }
+
+
+                if (childTask != null) {
+                    def mySequence = new ArrayList(sequence)
+
+                    logger.info "...modding $childTask mustRunAfter ${mySequence}"
+                    childTask.mustRunAfter(sequence.clone())
+
+                    processChildrenOf(childTask, mySequence, context)
+                }
+
+                sequence << child
+            }
+        }
+    }
+
+    class Context {
+        final Stack<Task> stack
+        final LinkedHashSet processedChildren = []
+
+        public Context(Task root) {
+            stack = [root] as Stack
+        }
+
+        public String toString() {
+            stack.collect{it.path}.join(' -> ')
+        }
+    }
+
+    /**
+     * @param parent
+     * @param runAfter
+     */
+    void processChildrenOf(Task parent, List runAfter, Context context) {
+        def children = parent.taskDependencies.getDependencies(parent)
+        context.stack.push(parent)
+        for (Task task : children) {
+            if (!runAfter.isEmpty()) {
+                if (children.isEmpty() || task instanceof SQLTask) {
+                    if (runAfter.contains(task)) {
+                        logger.error "CYCLE DETECTED ${context}\n on ${task.path} mustRunAfter ${runAfter}\n"
+                    }
+                    logger.info "...modding $task mustRunAfter ${runAfter} due to ${context}"
+                    task.mustRunAfter(runAfter)
+                }
+            }
+
+            processChildrenOf(task, runAfter, context)
+        }
+        context.stack.pop()
+        context.processedChildren << parent
+    }
+
+    static Collection findChildrenOfTask(Task task) {
+        List children = []
+        for (Task child : task.taskDependencies.getDependencies(task)) {
+            children.add(child);
+            children.addAll(findChildrenOfTask(child))
+        }
+        return children
     }
 
     /**

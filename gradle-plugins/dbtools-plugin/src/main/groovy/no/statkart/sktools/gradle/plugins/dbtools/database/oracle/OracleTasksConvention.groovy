@@ -1,14 +1,13 @@
 package no.statkart.sktools.gradle.plugins.dbtools.database.oracle
 
-import org.gradle.api.Project
-
-import org.gradle.api.InvalidUserDataException
+import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsConvention
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractDatabaseConvention
+import org.gradle.api.GradleException
+import org.gradle.api.InvalidUserDataException
 import org.gradle.api.Task
 import org.gradle.api.plugins.ExtraPropertiesExtension
-import org.gradle.api.GradleException
-import org.gradle.util.ConfigureUtil
-import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsConvention
+
+import static org.gradle.api.Task.TASK_TYPE
 
 /**
  * Convention object for Oracle database tools
@@ -25,11 +24,10 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
         super(dbtoolsConvention, propertyPrefix, name, 'oracle.jdbc.OracleDriver')
 
         ExtraPropertiesExtension ext = project.getExtensions().getExtraProperties()
-        
+
         url = project.properties[propertyPrefix + 'db_jdbc_url']
         driver = ext.getProperties().get(propertyPrefix + 'db_jdbc_driver', this.driver)
 
-        
         // setter konvensjonelle verdier
         project.afterEvaluate {
 
@@ -55,7 +53,7 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
             addPropertyIfNotExist('db_oradata02', property('db_oradata') ?: 'G:\\Oradata')
             addPropertyIfNotExist('db_oradata03', property('db_oradata') ?: 'J:\\Oradata')
             (4..9).each { int i ->
-                addPropertyIfNotExist("db_oradata0${i}", property("db_oradata0${i-3}"))
+                addPropertyIfNotExist("db_oradata0${i}", property("db_oradata0${i - 3}"))
             }
 
             // schemas defaulter til brukernavn
@@ -63,7 +61,6 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
 
             // dumpfile
             addPropertyIfNotExist('dumpfile', "${schemas[0]}_${dateString}.DMP")
-
 
 
         }
@@ -85,11 +82,10 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
             addPropertyIfNotExist("${propertyPrefix}db_oradata02", property('db_oradata') ?: 'G:\\Oradata')
             addPropertyIfNotExist("${propertyPrefix}db_oradata03", property('db_oradata') ?: 'J:\\Oradata')
             (4..9).each {
-                addPropertyIfNotExist("${propertyPrefix}db_oradata0${it}", property("${propertyPrefix}db_oradata0${it-3}"))
+                addPropertyIfNotExist("${propertyPrefix}db_oradata0${it}", property("${propertyPrefix}db_oradata0${it - 3}"))
             }
 
         }
-
 
 
     }
@@ -105,15 +101,19 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
     public String getUsername() {
         return credentials.username
     }
+
     public String getPassword() {
         return credentials.password
     }
+
     public String getHost() {
         return property('db_host')
     }
+
     public String getPort() {
         return property('db_port')
     }
+
     public String getSid() {
         return property('db_sid')
     }
@@ -130,6 +130,7 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
         }
         return tns
     }
+
     public String getDirectory() {
         if (this.properties.containsKey('directory')) {
             return property('directory')
@@ -137,6 +138,7 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
             throw new InvalidUserDataException("property 'directory' not set!")
         }
     }
+
     public Collection<String> getSchemas() {
         if (this.properties.containsKey('schemas')) {
             return property('schemas')
@@ -171,13 +173,12 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
     }
 
 
-
-
     public OracleImportTask importTask(Closure closure = null) {
         return importTask([:], closure);
     }
+
     public OracleImportTask importTask(Map params, Closure closure = null) {
-        params.put('type', OracleImportTask.class.name)
+        params.put(TASK_TYPE, OracleImportTask.class)
         OracleImportTask task = (OracleImportTask) task(params, 'Import', closure)
 
 
@@ -195,13 +196,14 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
 
         return task
     }
-    
+
 
     public OracleExportTask exportTask(Closure closure = null) {
         return exportTask([:], closure);
     }
+
     public OracleExportTask exportTask(Map params, Closure closure = null) {
-        params.put('type', OracleExportTask.class.name)
+        params.put(TASK_TYPE, OracleExportTask.class)
         OracleExportTask task = (OracleExportTask) task(params, 'Export', closure)
 
         task.conventionMapping('directory', { getDirectory() })
@@ -225,25 +227,21 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
             throw new GradleException('name parameter not supplied for task!')
         }
 
-        if (!params.containsKey('type')) {
-            throw new GradleException('type parameter not supplied for task!')
+        if (params.containsKey(TASK_TYPE)) {
+            Object type = params.get(TASK_TYPE)
+            if (!type instanceof Class) {
+                String typeAsString = String.valueOf(type)
+                try {
+                    Class taskType = Class.forName(typeAsString.startsWith(this.class.package.name) ? type : "${this.class.package.name}.${typeAsString}", true, this.class.getClassLoader())
+                    params.put(TASK_TYPE, taskType)
+                } catch (ClassNotFoundException cnfe) {
+                    throw new Exception("Unknown task type: ${type}", cnfe);
+                }
+            }
         }
-        String type = params['type']
-        params.remove('type')
-
         String taskName = "${prefix}${name}"
-        Class taskType = null
-        try {
-            taskType = Class.forName(type.startsWith(this.class.package.name) ? type : "${this.class.package.name}.${type}", true, this.class.getClassLoader())
-        } catch (ClassNotFoundException cnfe) {
-            throw new Exception("Unknown task type: ${type}", cnfe);
-        }
-
-        Task task = project.task(type:taskType, taskName);
+        Task task = project.task(params, taskName, closure);
         task.group = "Database"
-
-        ConfigureUtil.configureByMap(params, task)
-        ConfigureUtil.configure(closure, task, false);
 
         getTasks().addTask(name, task)
         return task;
