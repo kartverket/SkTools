@@ -12,12 +12,19 @@ rootProject.name = 'dbtools-plugin-demos'
 
 
 //automatisk re-compile og install av siste versjon av plugin til lokal maven (spesifikt for demo-prosjekt)
-gradle.projectsLoaded { Gradle g ->
-    final File projectDir = g.rootProject.file('../../..')
+gradle.projectsLoaded {
+    final File projectDir = gradle.rootProject.file('../../..')
+
+    gradle.allprojects { project ->
+        tasks.withType(GradleBuild) { gradleBuild ->
+            gradleBuild.startParameter.systemPropertiesArgs = [noMavenBootstrap: 'true']
+            gradleBuild.startParameter.projectProperties = [sktools_versjon: "${project.version}"]
+        }
+    }
 
     //dersom ikke nested bygg..
-    if (g.startParameter.systemPropertiesArgs['noMavenBootstrap']) {
-        logger.info "Skipping maven install due to -DnoMavenBootstrap=${g.startParameter.systemPropertiesArgs['noMavenBootstrap']}"
+    if (gradle.startParameter.systemPropertiesArgs['noMavenBootstrap']) {
+        logger.info "Skipping maven install due to -DnoMavenBootstrap=${gradle.startParameter.systemPropertiesArgs['noMavenBootstrap']}"
     } else {
         logger.quiet 'Asserting project is up to date. Forking install on plugin-project. TIP: feature can be disabled with param -DnoMavenBootstrap=true'
 
