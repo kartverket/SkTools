@@ -7,7 +7,7 @@ import org.gradle.api.tasks.SourceSet
  * Konfigurasjon for en xjc eksekvering.
  * <br />
  *
- * Dersom en ønsker å legge ved kildekode for custom implementasjon så benyttes {@link XjcSourceDirectorySet#getJava() }
+ * Dersom en ønsker å legge ved kildekode for custom implementasjon så benyttes {@link SourceSet#java}
  *
  * @author Leif Lislegård
  */

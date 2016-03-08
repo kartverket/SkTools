@@ -84,12 +84,13 @@ class XjcPlugin implements Plugin<ProjectInternal> {
                                 configuration,
                         );
 
-                        Task compileTask = createCompileXjcTaskForSchema(xjcSchema, xjcTask, buildOutputDir).dependsOn(
+                        AbstractCompile compileTask = createCompileXjcTaskForSchema(xjcSchema, xjcTask, buildOutputDir).dependsOn(
                                 project.getConfigurations().getByName(sourceSet.getCompileConfigurationName()),
                         )
 
                         sourceSet.compiledBy(compileTask); //SKTOOLS-48
 
+                        compileTask.source(sourceSet.getJava()) //for evt ListAdapter implementasjon osv
                         project.tasks[sourceSet.getCompileJavaTaskName()].dependsOn(compileTask); //javaCompile depends on this to be compiled
 
                         //legger til output til classpath
@@ -139,7 +140,6 @@ class XjcPlugin implements Plugin<ProjectInternal> {
 
                         compile.setDescription("Compiles the XCJ generated schema files");
                         compile.setSource(xjcTask);
-                        compile.source(xjcSchema.getJava());  //for evt ListAdapter implementasjon osv
                         compile.setDestinationDir(buildOutputDir);
                         compile.setClasspath(xjcCompileClasspath);
 
