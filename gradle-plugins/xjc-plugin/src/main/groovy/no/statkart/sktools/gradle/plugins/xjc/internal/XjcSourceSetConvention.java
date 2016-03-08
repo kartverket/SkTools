@@ -9,10 +9,10 @@ import org.gradle.util.ConfigureUtil;
  * @since 1.2
  * @author Leif Lislegård
  */
-public class XjcSourceSetExtension {
+public class XjcSourceSetConvention {
     final private XjcSchemaContainer xjcSchemas;
 
-    XjcSourceSetExtension(XjcSchemaContainer xjcSchemas) {
+    XjcSourceSetConvention(XjcSchemaContainer xjcSchemas) {
         this.xjcSchemas = xjcSchemas;
     }
 
@@ -21,7 +21,7 @@ public class XjcSourceSetExtension {
     }
 
     //for configuration
-    public XjcSourceSetExtension xjc(Closure configureClosure) {
+    public XjcSourceSetConvention xjc(Closure configureClosure) {
         ConfigureUtil.configure(configureClosure, getXjc());
         return this;
     }

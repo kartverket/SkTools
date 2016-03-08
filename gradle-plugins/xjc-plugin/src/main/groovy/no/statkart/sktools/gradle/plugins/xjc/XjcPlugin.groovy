@@ -1,7 +1,7 @@
 package no.statkart.sktools.gradle.plugins.xjc
 
 import no.statkart.sktools.gradle.plugins.xjc.internal.XjcSchemaContainer
-import no.statkart.sktools.gradle.plugins.xjc.internal.XjcSourceSetExtension
+import no.statkart.sktools.gradle.plugins.xjc.internal.XjcSourceSetConvention
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -23,7 +23,7 @@ import org.gradle.api.file.ConfigurableFileCollection
  * Genererer JAXB java klasser basert på <code>*.xsd<code> filer. <br />
  * Pluginen baserer seg på {@code JavaBasePlugin} og integrerer seg med deklarerte {@link SourceSet}.
  *
- * For hvert {@code SourceSet} plugges det inn mulighet for ekstra konfigurasjon. Se {@link no.statkart.sktools.gradle.plugins.xjc.internal.XjcSourceSetExtension }
+ * For hvert {@code SourceSet} plugges det inn mulighet for ekstra konfigurasjon. Se {@link XjcSourceSetConvention }
  *
  * Se dokumentasjon for <i>xjc-plugins</i> modul for bruk av utvidelser.
  * <ul>
@@ -63,17 +63,17 @@ class XjcPlugin implements Plugin<ProjectInternal> {
 
         javaConvention.getSourceSets().all(new Action<SourceSet>() {
             public void execute(final SourceSet sourceSet) {
-                final XjcSchemaContainer xjcSchemaContainer = new XjcSchemaContainer(sourceSet, project.getFileResolver());
+                final XjcSchemaContainer xjcSchemas = new XjcSchemaContainer(sourceSet, project.getFileResolver());
 
                 //hekter inn utvidelser på source settet
-                ((HasConvention) sourceSet).getConvention().getPlugins().put(CONVENTION_NAME, new XjcSourceSetExtension(xjcSchemaContainer));
+                ((HasConvention) sourceSet).getConvention().getPlugins().put(CONVENTION_NAME, new XjcSourceSetConvention(xjcSchemas));
 
                 //hekter inn generert resultat og legger dette compile classpath
                 final FileCollection xjcCompileClasspath = sourceSet.getCompileClasspath();
                 final ConfigurableFileCollection xjcOutputClasses = project.files();
                 sourceSet.setCompileClasspath( xjcCompileClasspath.plus(xjcOutputClasses) ); //SKTOOLS-129: ikke compile output på compile classpath for xjc.. (ellers vil ikke task bli up-to-date)
 
-                xjcSchemaContainer.all(new Action<XjcSourceDirectorySet>() {
+                xjcSchemas.all(new Action<XjcSourceDirectorySet>() {
                     void execute(XjcSourceDirectorySet xjcSchema) {
                         //setter ingen default plassering av kildefiler for sourceSet - dette må eksplisitt deklareres i konfigurasjon
 
