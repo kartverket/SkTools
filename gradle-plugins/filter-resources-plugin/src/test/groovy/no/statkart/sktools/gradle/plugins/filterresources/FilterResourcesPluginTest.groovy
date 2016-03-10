@@ -5,7 +5,6 @@ import no.statkart.sktools.gradle.testutils.builder.FilterResourcesProjectBuilde
 import no.statkart.sktools.gradle.testutils.filewriter.FilterPropertiesTestutilFilewriter
 import org.gradle.api.Project
 import org.gradle.api.plugins.BasePlugin
-import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.tasks.SourceSet
 import org.gradle.testfixtures.ProjectBuilder
 import org.testng.Assert
@@ -297,58 +296,6 @@ class FilterResourcesPluginTest {
         assert !project.sourceSets.test.resources.contains(projectHelper.assertFileExists("src/test/resources/file2.txt"))
     }
 
-    /**
-     * SKIF-173
-     *
-     * Demonstrerer arving av {@link org.gradle.api.tasks.SourceSet}
-     */
-    @Test
-    void testExtendingSourceSets() {
-        ProjectHelper projectHelper = FilterResourcesProjectBuilder.builder().applyJavaPlugin().applyFilterResourcesPlugin().build()
-
-        //skriver noen filer til disk
-        use(FilterPropertiesTestutilFilewriter) {
-            projectHelper.writeCustomFile('src/main/java/file1.txt') { "file1.txt.version=@version@"}
-            projectHelper.writeCustomFile('src/main/java/file2.doc') { "file2.doc.version=@version@"}
-            projectHelper.writeCustomFile('src/main/java/file3.java') { 'class file3 { String version = "@version@"; }'}
-        }
-
-        //definerer to source set med filtrerte ressurser
-        projectHelper.configureProject {
-            sourceSets {
-                main {
-                    filterResources {
-                        srcDir 'src/main/java'
-                        exclude '*.java'
-                        exclude '*.doc'
-                    }
-                }
-                test {
-                    resources {
-                        source main.filterResources    //litt tullete, men allikevel - test resources er samme som ufiltrerte main resources
-                    }
-                }
-            }
-        }
-
-
-        //eksekverer
-        projectHelper.initializeProject()
-        projectHelper.executeTask("build")
-        projectHelper.assertTaskExecutedNotSkipped(FilterResourcesPlugin.FILTER_MAIN_RESOURCES_TASK_NAME)
-        projectHelper.assertTaskExecutedNotSkipped(JavaPlugin.PROCESS_TEST_RESOURCES_TASK_NAME)
-
-
-        //tester resultat
-        projectHelper.assertFileExists("gen/main/resources/file1.txt") {!it.text.contains('@version@') }
-        projectHelper.assertFileNotExists("gen/main/resources/file2.doc")
-
-        projectHelper.assertFileExists("build/classes/main/file3.class") {it.text.contains('@version@') }
-
-        projectHelper.assertFileExists("build/resources/test/file1.txt") {it.text.contains('@version@') }
-        projectHelper.assertFileNotExists("build/resources/test/file2.doc")
-
-    }
 
 
     /**

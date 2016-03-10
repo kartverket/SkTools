@@ -12,12 +12,12 @@ import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.SourceSet;
-import org.gradle.language.jvm.tasks.ProcessResources;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Callable;
+
+import static no.statkart.sktools.gradle.plugins.filterresources.FilterResourcesSourceSetConvention.FILTER_RESOURCES_TASK_NAME_PATTERN;
 
 /**
  * SKTOOLS-44: Plugin kun for filtrering av resourceSets
@@ -29,12 +29,15 @@ public class FilterResourcesPlugin implements Plugin<ProjectInternal> {
 
     public final static String CONVENTION_NAME = "filterProperties";
 
+    /**
+     * Ihht {@link FilterResourcesSourceSetConvention}
+     */
     public final static String FILTER_MAIN_RESOURCES_TASK_NAME = "filterResources";
 
     /**
-     * Ihht {@link FilterResourcesSourceSet#FILTER_RESOURCES_TASK_NAME_PATTERN}
+     * Ihht {@link FilterResourcesSourceSetConvention}
      */
-    public final static String FILTER_TEST_RESOURCES_TASK_NAME = "filterTestResources";
+    public final static String FILTER_TEST_RESOURCES_TASK_NAME = String.format(FILTER_RESOURCES_TASK_NAME_PATTERN, "Test");
 
 
     @Override
@@ -71,53 +74,42 @@ public class FilterResourcesPlugin implements Plugin<ProjectInternal> {
         //for hvert source sett som finnes/blir lagt til
         project.getConvention().getPlugin(JavaPluginConvention.class).getSourceSets().all(new Action<SourceSet>() {
             public void execute(final SourceSet sourceSet) {
-                //oppretter source set-utvidelse for filtrerte ressurser
-                final DefaultFilterResourcesSourceSet filterResourcesSourceSet = new DefaultFilterResourcesSourceSet(sourceSet.getName(), project.getFileResolver());
-                final DefaultFilterResourcesSourceSetOutput filterResourcesSourceSetOutput = new DefaultFilterResourcesSourceSetOutput(sourceSet, project);
-
-                //hekter inn utvidelser på source settet
-                ((HasConvention) sourceSet).getConvention().getPlugins().put(CONVENTION_NAME, filterResourcesSourceSet); // SKIF-173
-                ((HasConvention) sourceSet.getOutput()).getConvention().getPlugins().put(CONVENTION_NAME, filterResourcesSourceSetOutput); // SKIF-173
-
-                filterResourcesSourceSet.getFilterResources().srcDir(String.format("src/%s/filterResources", sourceSet.getName()));
-
-                //trekker ifra evt filer som evt også befinner seg i 'resources'
-                sourceSet.getResources().getFilter().exclude(new Spec<FileTreeElement>() {
-                    public boolean isSatisfiedBy(FileTreeElement element) {
-                        return filterResourcesSourceSet.getFilterResources().contains(element.getFile());
-                    }
-                });
-
-
-                final String filterResourcesTaskName = filterResourcesSourceSet.getFilterResourcesTaskName();
-
-                //hekter inn task for filtering
-                project.getTasks().getByName(sourceSet.getProcessResourcesTaskName()).dependsOn(filterResourcesTaskName);
-
-                //legger til clean
-                project.getTasks().getByName(BasePlugin.CLEAN_TASK_NAME).doFirst(new Action<Task>() {
-                    public void execute(Task cleanTask) {
-                        cleanTask.getLogger().info("Deleting directory " + filterResourcesSourceSetOutput.getFilterResourcesOutputDir());
-                        cleanTask.getProject().delete(filterResourcesSourceSetOutput.getFilterResourcesOutputDir());
-                    }
-                });
 
 
                 //oppretter copy task for filtrering...
-                final ProcessResources filterResourcesTask = project.getTasks().create(filterResourcesTaskName, ProcessResources.class);
+                final FilterResourcesTask filterResourcesTask;
+                filterResourcesTask = project.getTasks().create(FilterResourcesSourceSetConvention.getFilterResourcesTaskName(sourceSet), FilterResourcesTask.class);
                 filterResourcesTask.setDescription(String.format("Filters the %s resources for filtering.", sourceSet.getName()));
 
                 filterResourcesTask.setFileMode(0755);  //SKTOOLS-123 no read only generated files i linux
                 filterResourcesTask.setDirMode(0755); //SKTOOLS-123 no read only generated files i linux
 
-                filterResourcesTask.from(new Callable<Object>() {
-                    public Object call() throws Exception {
-                        return filterResourcesSourceSet.getFilterResources();
+                //oppretter source set-utvidelse for filtrerte ressurser
+                final FilterResourcesSourceSetConvention sourceSetConvention = new FilterResourcesSourceSetConvention(sourceSet, filterResourcesTask);
+                final FilterResourcesSourceSetOutputConvention sourceSetOutputConvention = new FilterResourcesSourceSetOutputConvention(filterResourcesTask, sourceSet, project);
+
+                //hekter inn utvidelser på source settet
+                ((HasConvention) sourceSet).getConvention().getPlugins().put(CONVENTION_NAME, sourceSetConvention); // SKIF-173
+                ((HasConvention) sourceSet.getOutput()).getConvention().getPlugins().put(CONVENTION_NAME, sourceSetOutputConvention); // SKIF-173
+
+                filterResourcesTask.srcDir(String.format("src/%s/filterResources", sourceSet.getName()));
+
+                //trekker ifra evt filer som evt også befinner seg i 'resources'
+                sourceSet.getResources().getFilter().exclude(new Spec<FileTreeElement>() {
+                    public boolean isSatisfiedBy(FileTreeElement element) {
+                        return filterResourcesTask.getSource().contains(element.getFile());
                     }
                 });
-                filterResourcesTask.into(new Callable<Object>() {
-                    public Object call() throws Exception {
-                        return filterResourcesSourceSetOutput.getFilterResourcesOutputDir();
+
+
+                //hekter inn task for filtering
+                project.getTasks().getByName(sourceSet.getProcessResourcesTaskName()).dependsOn(sourceSetConvention.getFilterResourcesTaskName());
+
+                //legger til clean
+                project.getTasks().getByName(BasePlugin.CLEAN_TASK_NAME).doFirst(new Action<Task>() {
+                    public void execute(Task cleanTask) {
+                        cleanTask.getLogger().info("Deleting directory " + filterResourcesTask.getDestinationDir());
+                        cleanTask.getProject().delete(filterResourcesTask.getDestinationDir());
                     }
                 });
 
@@ -125,12 +117,12 @@ public class FilterResourcesPlugin implements Plugin<ProjectInternal> {
                 project.afterEvaluate(new Action<Object>() {
                     public void execute(Object o) {
                         //default verdier for filterResoruces source set
-                        if (filterResourcesSourceSetOutput.filteredResourcesDir == null) {
-                            filterResourcesSourceSetOutput.filterResourcesOutput(String.format("gen/%s/resources", sourceSet.getName()));
+                        if (sourceSetOutputConvention.getFilterResourcesOutputDir() == null) {
+                            sourceSetOutputConvention.filterResourcesOutput(String.format("gen/%s/resources", sourceSet.getName()));
                         }
 
                         //registrerer builtBy
-                        sourceSet.getOutput().dir(Collections.<String, Object>singletonMap("builtBy", filterResourcesSourceSet.getFilterResourcesTaskName()), filterResourcesSourceSetOutput.getFilterResourcesOutputDir());
+                        sourceSet.getOutput().dir(Collections.<String, Object>singletonMap("builtBy", sourceSetConvention.getFilterResourcesTaskName()), filterResourcesTask.getDestinationDir());
 
                         //registrerre properties til task
                         Map<String, Object> filterProperties = convention.getProperties();
