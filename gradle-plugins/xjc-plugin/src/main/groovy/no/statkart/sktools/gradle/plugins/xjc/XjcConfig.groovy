@@ -1,7 +1,12 @@
 package no.statkart.sktools.gradle.plugins.xjc
 
+import org.apache.commons.lang.StringUtils
+import org.gradle.api.file.FileTree
+import org.gradle.api.logging.Logger
+import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.SourceSet
+import org.gradle.util.ConfigureUtil
 
 /**
  * Konfigurasjon for en xjc eksekvering.
@@ -12,6 +17,8 @@ import org.gradle.api.tasks.SourceSet
  * @author Leif Lislegård
  */
 class XjcConfig implements Serializable {
+    static final Logger logger = Logging.getLogger(XjcConfig.class)
+
     private static final long serialVersionUID = 1L; //SKTOOLS-130: remove Serializable in sktools version 2.1
 
     /*
@@ -23,18 +30,22 @@ class XjcConfig implements Serializable {
      */
     static final String GRUNNBOK_DOC = 'grunnbok_doc';
 
+    public final String name;
 
     public String genOutputPath //SKTOOLS-10: mulighet for konfigurering av path
     public transient String genTaskName, compileTaskName, hookTaskName  //SKTOOLS-10: mulighet for konfigurering av navn
 
-    protected transient final XjcSourceDirectorySet source;
+    public final transient XjcSourceDirectorySet source;
 
     protected Collection<String> includes;
-    @Input //SKTOOLS-128: annoterer properties som er input felter
+    @Input
+    //SKTOOLS-128: annoterer properties som er input felter
     protected Map<String, Map> xjcOptions = [:] as HashMap
 
 
-    XjcConfig(XjcSourceDirectorySet schema, SourceSet sourceSet) {
+    XjcConfig(SourceSet sourceSet, String name, XjcSourceDirectorySet schema) {
+        this.name = sourceSet.getName() + StringUtils.capitalize(name);
+
         this.source = schema
         this.genOutputPath = String.format("gen/%s/xjc/%s", sourceSet.getName(), schema.getName())
 
@@ -44,7 +55,6 @@ class XjcConfig implements Serializable {
     }
 
 
-
     XjcConfig includes(String... patterns) {
         if (includes == null) {
             includes = new ArrayList<String>();
@@ -52,7 +62,6 @@ class XjcConfig implements Serializable {
         includes.addAll(patterns);
         return this
     }
-
 
     //todo: endre default fqn i en versjon etter 1.0?
     //metode for deklarativ konfigurasjon
@@ -119,10 +128,36 @@ class XjcConfig implements Serializable {
     }
 
     XjcConfig configure(Closure closure) {
-        closure.setDelegate(this)
-        closure.resolveStrategy = Closure.DELEGATE_FIRST
-        closure.run()
-        return this
+        return ConfigureUtil.configure(closure, this);
+    }
+
+    XjcConfig config(Closure closure) {
+        logger.warn("WARNING: .config closure in XjcConfig is deprecated and is to be removed!")
+        return configure(closure);
+    }
+
+    //bakoverkompabilitet der koden refererer til .config
+    //dette kan trolig tas vekk ved neste korsvei
+    public XjcConfig getConfig() {
+        logger.warn("WARNING: .config attribute in XjcConfig is deprecated and is to be removed!")
+        return this;
+    }
+
+
+    public FileTree srcDir(Object srcDir) {
+        return source.srcDir(srcDir);
+    }
+
+    public FileTree srcDirs(Object... srcDirs) {
+        return source.srcDirs(srcDirs);
+    }
+
+    public FileTree setSrcDirs(Iterable<?> srcPaths) {
+        return source.setSrcDirs(srcPaths);
+    }
+
+    public FileTree source(FileTree src) {
+        return source.source(src);
     }
 
 }

@@ -1,10 +1,7 @@
 package no.statkart.sktools.gradle.plugins.xjc.internal;
 
 import groovy.lang.Closure;
-
-import java.util.*;
-
-import groovy.lang.GroovyObjectSupport;
+import no.statkart.sktools.gradle.plugins.xjc.XjcConfig;
 import no.statkart.sktools.gradle.plugins.xjc.XjcSourceDirectorySet;
 import org.apache.commons.lang.StringUtils;
 import org.gradle.api.Action;
@@ -13,48 +10,53 @@ import org.gradle.api.internal.file.FileResolver;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.util.ConfigureUtil;
 
+import java.util.AbstractList;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
- * @since 1.2
  * @author Leif Lislegård
+ * @since 1.2
  */
-public class XjcSchemaContainer extends AbstractList<XjcSourceDirectorySet> {
-    private final List<XjcSourceDirectorySet> store = new ArrayList<XjcSourceDirectorySet>();
+public class XjcSchemaContainer extends AbstractList<XjcConfig> {
+    private final List<XjcConfig> store = new ArrayList<XjcConfig>();
     private final SourceSet sourceSet;
     private final FileResolver fileResolver;
 
-    private final List<Action<XjcSourceDirectorySet>> configActions = new ArrayList<Action<XjcSourceDirectorySet>>();
+    private final List<Action<XjcConfig>> configActions = new ArrayList<Action<XjcConfig>>();
 
-    XjcSchemaContainer(SourceSet sourceSet, FileResolver fileResolver) {
+    public XjcSchemaContainer(SourceSet sourceSet, FileResolver fileResolver) {
         this.sourceSet = sourceSet;
         this.fileResolver = fileResolver;
     }
 
-    protected XjcSourceDirectorySet create(String name) throws InvalidUserDataException {
+    protected XjcConfig create(String name) throws InvalidUserDataException {
         String schemaName = sourceSet.getName() + StringUtils.capitalize(name);
-        return new XjcSourceDirectorySet(schemaName, sourceSet, fileResolver);
+        XjcSourceDirectorySet sourceDirectorySet = new XjcSourceDirectorySet(schemaName, fileResolver);
+        return new XjcConfig(sourceSet, schemaName, sourceDirectorySet);
     }
 
-    protected XjcSourceDirectorySet create(String name, Closure configureClosure) throws InvalidUserDataException {
-        XjcSourceDirectorySet xjcSchema = create(name);
+    protected XjcConfig create(String name, Closure configureClosure) throws InvalidUserDataException {
+        XjcConfig xjcSchema = create(name);
         ConfigureUtil.configure(configureClosure, xjcSchema);
         return xjcSchema;
     }
 
 
-    public boolean add(XjcSourceDirectorySet xjcSchema) {
-        for (Action<XjcSourceDirectorySet> action : configActions) {
+    public boolean add(XjcConfig xjcSchema) {
+        for (Action<XjcConfig> action : configActions) {
             action.execute(xjcSchema);
         }
         return store.add(xjcSchema);
     }
 
     //besørger optional lik struktur som for konfigurering
-    public List<XjcSourceDirectorySet> getSchemas() {
+    public List<XjcConfig> getSchemas() {
         return this;
     }
 
     //call back funksjon for dynamisk konfigurasjon
-    public void all(Action<XjcSourceDirectorySet> action) {
+    public void all(Action<XjcConfig> action) {
         configActions.add(action);
         if (size() > 0) {
             throw new IllegalStateException("Elements needs to be added before any actions!"); //no handling of this state
@@ -62,9 +64,9 @@ public class XjcSchemaContainer extends AbstractList<XjcSourceDirectorySet> {
     }
 
     //for configuration
-    public XjcSourceDirectorySet schema(Closure configureClosure) {
+    public XjcConfig schema(Closure configureClosure) {
         String schemaName = String.format("%dSchema", size());
-        XjcSourceDirectorySet schema = create(schemaName, configureClosure);
+        XjcConfig schema = create(schemaName, configureClosure);
         add(schema);
         return schema;
     }
@@ -73,7 +75,7 @@ public class XjcSchemaContainer extends AbstractList<XjcSourceDirectorySet> {
     // List implementation specific methods ...
 
     @Override
-    public XjcSourceDirectorySet get(int index) {
+    public XjcConfig get(int index) {
         return store.get(index);
     }
 

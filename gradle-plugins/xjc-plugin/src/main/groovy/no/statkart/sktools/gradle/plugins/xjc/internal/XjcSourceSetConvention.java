@@ -6,13 +6,13 @@ import org.gradle.util.ConfigureUtil;
 /**
  * Vedhengsklasse til {@link org.gradle.api.tasks.SourceSet SourceSet}
  *
- * @since 1.2
  * @author Leif Lislegård
+ * @since 1.2
  */
 public class XjcSourceSetConvention {
     final private XjcSchemaContainer xjcSchemas;
 
-    XjcSourceSetConvention(XjcSchemaContainer xjcSchemas) {
+    public XjcSourceSetConvention(XjcSchemaContainer xjcSchemas) {
         this.xjcSchemas = xjcSchemas;
     }
 

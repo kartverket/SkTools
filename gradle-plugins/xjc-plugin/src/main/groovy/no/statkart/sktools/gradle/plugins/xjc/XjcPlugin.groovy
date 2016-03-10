@@ -2,22 +2,22 @@ package no.statkart.sktools.gradle.plugins.xjc
 
 import no.statkart.sktools.gradle.plugins.xjc.internal.XjcSchemaContainer
 import no.statkart.sktools.gradle.plugins.xjc.internal.XjcSourceSetConvention
+import org.gradle.api.Action
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.Dependency
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
+import org.gradle.api.internal.HasConvention
+import org.gradle.api.internal.project.ProjectInternal
+import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSet
-import java.util.concurrent.Callable
-import org.gradle.api.Action
-import org.gradle.api.internal.project.ProjectInternal
-import org.gradle.api.internal.HasConvention
 import org.gradle.api.tasks.compile.AbstractCompile
-import org.gradle.api.plugins.JavaBasePlugin
-import org.gradle.api.file.ConfigurableFileCollection
 
+import java.util.concurrent.Callable
 
 /**
  * Genererer JAXB java klasser basert på <code>*.xsd<code> filer. <br />
@@ -46,7 +46,7 @@ class XjcPlugin implements Plugin<ProjectInternal> {
         project.apply plugin: JavaBasePlugin.class
 
         final Configuration configuration = createConfiguration(project);
-        final SourceSet sourceSet = configureSourceSets(project, configuration)
+        configureSourceSets(project, configuration)
 
         configureJaxbXjcDependencies(project);
     }
@@ -71,20 +71,22 @@ class XjcPlugin implements Plugin<ProjectInternal> {
                 //hekter inn generert resultat og legger dette compile classpath
                 final FileCollection xjcCompileClasspath = sourceSet.getCompileClasspath();
                 final ConfigurableFileCollection xjcOutputClasses = project.files();
-                sourceSet.setCompileClasspath( xjcCompileClasspath.plus(xjcOutputClasses) ); //SKTOOLS-129: ikke compile output på compile classpath for xjc.. (ellers vil ikke task bli up-to-date)
+                sourceSet.setCompileClasspath(xjcCompileClasspath.plus(xjcOutputClasses));
+                //SKTOOLS-129: ikke compile output på compile classpath for xjc.. (ellers vil ikke task bli up-to-date)
 
-                xjcSchemas.all(new Action<XjcSourceDirectorySet>() {
-                    void execute(XjcSourceDirectorySet xjcSchema) {
+                xjcSchemas.all(new Action<XjcConfig>() {
+                    void execute(XjcConfig xjcConfig) {
+                        XjcSourceDirectorySet xjcSchema = xjcConfig.source;
                         //setter ingen default plassering av kildefiler for sourceSet - dette må eksplisitt deklareres i konfigurasjon
 
-                        final File genOutputDir = project.file(xjcSchema.config.genOutputPath)
+                        final File genOutputDir = project.file(xjcConfig.genOutputPath)
                         final File buildOutputDir = project.file("${project.getBuildDir()}/classes/${xjcSchema.getName()}")
 
-                        Task xjcTask = createXjcTaskForSourceSet(xjcSchema, genOutputDir).dependsOn(
+                        Task xjcTask = createXjcTaskForSourceSet(xjcConfig, genOutputDir).dependsOn(
                                 configuration,
                         );
 
-                        AbstractCompile compileTask = createCompileXjcTaskForSchema(xjcSchema, xjcTask, buildOutputDir).dependsOn(
+                        AbstractCompile compileTask = createCompileXjcTaskForSchema(xjcConfig, xjcTask, buildOutputDir).dependsOn(
                                 project.getConfigurations().getByName(sourceSet.getCompileConfigurationName()),
                         )
 
@@ -110,18 +112,18 @@ class XjcPlugin implements Plugin<ProjectInternal> {
                     }
 
 
-                    private XjcTask createXjcTaskForSourceSet(XjcSourceDirectorySet xjcSchema, File genOutputDir) {
-                        final String taskName = xjcSchema.config.genTaskName;
+                    private XjcTask createXjcTaskForSourceSet(final XjcConfig config, File genOutputDir) {
+                        final String taskName = config.genTaskName;
                         XjcTask task = (XjcTask) project.task(type: XjcTask.class, taskName);
                         task.getConventionMapping().with {
                             map("source", new Callable() {
                                 public Object call() {
-                                    return xjcSchema;
+                                    return config.source;
                                 }
                             });
                             map("config", new Callable() {
                                 public Object call() {
-                                    return xjcSchema.getConfig();
+                                    return config;
                                 }
                             });
                             map("outputDirectory", new Callable() {
@@ -133,8 +135,9 @@ class XjcPlugin implements Plugin<ProjectInternal> {
                         return task
                     }
 
-                    private AbstractCompile createCompileXjcTaskForSchema(XjcSourceDirectorySet xjcSchema, Task xjcTask, File buildOutputDir) {
-                        final AbstractCompile compile = (AbstractCompile) project.tasks.create(xjcSchema.config.compileTaskName, XjcCompile.class);
+                    private AbstractCompile createCompileXjcTaskForSchema(
+                            final XjcConfig config, Task xjcTask, File buildOutputDir) {
+                        final AbstractCompile compile = (AbstractCompile) project.tasks.create(config.compileTaskName, XjcCompile.class);
 
                         javaBasePlugin.configureForSourceSet(sourceSet, compile);
 
