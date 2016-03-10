@@ -2,11 +2,11 @@ package no.statkart.sktools.gradle.plugins.xjc.internal;
 
 import groovy.lang.Closure;
 import no.statkart.sktools.gradle.plugins.xjc.XjcConfig;
-import no.statkart.sktools.gradle.plugins.xjc.XjcSourceDirectorySet;
 import org.apache.commons.lang.StringUtils;
 import org.gradle.api.Action;
 import org.gradle.api.InvalidUserDataException;
-import org.gradle.api.internal.file.FileResolver;
+import org.gradle.api.Project;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.util.ConfigureUtil;
 
@@ -21,19 +21,19 @@ import java.util.List;
 public class XjcSchemaContainer extends AbstractList<XjcConfig> {
     private final List<XjcConfig> store = new ArrayList<XjcConfig>();
     private final SourceSet sourceSet;
-    private final FileResolver fileResolver;
+    private final Project project;
 
     private final List<Action<XjcConfig>> configActions = new ArrayList<Action<XjcConfig>>();
 
-    public XjcSchemaContainer(SourceSet sourceSet, FileResolver fileResolver) {
+    public XjcSchemaContainer(SourceSet sourceSet, Project project) {
         this.sourceSet = sourceSet;
-        this.fileResolver = fileResolver;
+        this.project = project;
     }
 
     protected XjcConfig create(String name) throws InvalidUserDataException {
         String schemaName = sourceSet.getName() + StringUtils.capitalize(name);
-        XjcSourceDirectorySet sourceDirectorySet = new XjcSourceDirectorySet(schemaName, fileResolver);
-        return new XjcConfig(sourceSet, schemaName, sourceDirectorySet);
+        ConfigurableFileCollection sourceFiles = project.files();
+        return new XjcConfig(sourceSet, schemaName, sourceFiles);
     }
 
     protected XjcConfig create(String name, Closure configureClosure) throws InvalidUserDataException {

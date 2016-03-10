@@ -63,7 +63,7 @@ class XjcPlugin implements Plugin<ProjectInternal> {
 
         javaConvention.getSourceSets().all(new Action<SourceSet>() {
             public void execute(final SourceSet sourceSet) {
-                final XjcSchemaContainer xjcSchemas = new XjcSchemaContainer(sourceSet, project.getFileResolver());
+                final XjcSchemaContainer xjcSchemas = new XjcSchemaContainer(sourceSet, project);
 
                 //hekter inn utvidelser på source settet
                 ((HasConvention) sourceSet).getConvention().getPlugins().put(CONVENTION_NAME, new XjcSourceSetConvention(xjcSchemas));
@@ -76,11 +76,10 @@ class XjcPlugin implements Plugin<ProjectInternal> {
 
                 xjcSchemas.all(new Action<XjcConfig>() {
                     void execute(XjcConfig xjcConfig) {
-                        XjcSourceDirectorySet xjcSchema = xjcConfig.source;
                         //setter ingen default plassering av kildefiler for sourceSet - dette må eksplisitt deklareres i konfigurasjon
 
                         final File genOutputDir = project.file(xjcConfig.genOutputPath)
-                        final File buildOutputDir = project.file("${project.getBuildDir()}/classes/${xjcSchema.getName()}")
+                        final File buildOutputDir = project.file("${project.getBuildDir()}/classes/${xjcConfig.name}")
 
                         Task xjcTask = createXjcTaskForSourceSet(xjcConfig, genOutputDir).dependsOn(
                                 configuration,
@@ -103,9 +102,11 @@ class XjcPlugin implements Plugin<ProjectInternal> {
 
                         //legger til generert kildekode slik at de kan bli plukket opp av dokumentajonsverktøy, kildekode distribusjon mm
                         sourceSet.getAllJava().srcDir(genOutputDir);
-                        //legger også til kildekode for xsd filer
-                        sourceSet.getAllSource().srcDirs(xjcSchema);
 
+                        project.afterEvaluate {
+                            //legger også til kildekode for xsd filer
+                            sourceSet.getAllSource().srcDirs(xjcConfig.source.files as File[]);
+                        }
 
                         project.tasks.clean.delete(genOutputDir) //SKTOOLS-10: clean sletter genererte filer
 
@@ -118,7 +119,7 @@ class XjcPlugin implements Plugin<ProjectInternal> {
                         task.getConventionMapping().with {
                             map("source", new Callable() {
                                 public Object call() {
-                                    return config.source;
+                                    return config.source.asFileTree;
                                 }
                             });
                             map("config", new Callable() {

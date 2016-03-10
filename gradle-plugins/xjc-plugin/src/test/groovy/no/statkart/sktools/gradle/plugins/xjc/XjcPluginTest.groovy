@@ -348,4 +348,48 @@ class XjcPluginTest {
     }
 
 
+    /**
+     * Verifiserer at src dirs kan konfigureres
+     */
+    @Test
+    void testSrcDirs() {
+        //forks a new project in a temp folder
+        ProjectHelper projectHelper = XjcProjectBuilder.builder().applyXjcPlugin().build()
+
+        //generates a simple source file
+        use(XjcTestutilFilewriter) {
+            projectHelper.writeCustomFile("src/main/xsd/simple.xsd") {""}
+            projectHelper.writeCustomFile("src/main/xsd1/simple1.xsd") {""}
+            projectHelper.writeCustomFile("src/main/xsd2/simple2.xsd") {""}
+            projectHelper.writeCustomFile("src/main/xsd3/simple3.xsd") {""}
+        }
+
+        //config
+        projectHelper.configureProject {
+            sourceSets {
+                main.xjc {
+                    schema {
+                        srcDir 'src/main/xsd1'
+                        srcDir 'src/main/xsd2'
+                        srcDirs 'src/main/xsd3', 'src/main/xsd'
+                    }
+                }
+            }
+        }
+
+        def assertFilesInFileTree = {
+            assert it.contains(projectHelper.project.file('src/main/xsd/simple.xsd'))
+            assert it.contains(projectHelper.project.file('src/main/xsd1/simple1.xsd'))
+            assert it.contains(projectHelper.project.file('src/main/xsd2/simple2.xsd'))
+            assert it.contains(projectHelper.project.file('src/main/xsd3/simple3.xsd'))
+        }
+
+        //asserts the results
+        projectHelper.project.sourceSets.main.xjc[0].with { def config ->
+            assertFilesInFileTree projectHelper.project.tasks[config.genTaskName].getSource();
+            assertFilesInFileTree config.source.asFileTree;
+        }
+
+    }
+
 }

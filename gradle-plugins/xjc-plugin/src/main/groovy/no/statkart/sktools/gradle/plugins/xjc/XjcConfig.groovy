@@ -1,6 +1,8 @@
 package no.statkart.sktools.gradle.plugins.xjc
 
 import org.apache.commons.lang.StringUtils
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
@@ -35,7 +37,7 @@ class XjcConfig implements Serializable {
     public String genOutputPath //SKTOOLS-10: mulighet for konfigurering av path
     public transient String genTaskName, compileTaskName, hookTaskName  //SKTOOLS-10: mulighet for konfigurering av navn
 
-    public final transient XjcSourceDirectorySet source;
+    public final transient ConfigurableFileCollection source;
 
     protected Collection<String> includes;
     @Input
@@ -43,15 +45,15 @@ class XjcConfig implements Serializable {
     protected Map<String, Map> xjcOptions = [:] as HashMap
 
 
-    XjcConfig(SourceSet sourceSet, String name, XjcSourceDirectorySet schema) {
+    XjcConfig(SourceSet sourceSet, String name, ConfigurableFileCollection sourceFiles) {
         this.name = sourceSet.getName() + StringUtils.capitalize(name);
 
-        this.source = schema
-        this.genOutputPath = String.format("gen/%s/xjc/%s", sourceSet.getName(), schema.getName())
+        this.source = sourceFiles
+        this.genOutputPath = String.format("gen/%s/xjc/%s", sourceSet.getName(), name)
 
-        this.genTaskName = sourceSet.getTaskName("gen", schema.getName()); //SKTOOLS-10: mulighet for konfigurering av navn
-        this.compileTaskName = sourceSet.getTaskName("compile", schema.getName()); //SKTOOLS-10: mulighet for konfigurering av navn
-        this.hookTaskName = sourceSet.getTaskName("hookCompile", schema.getName());
+        this.genTaskName = sourceSet.getTaskName("gen", name); //SKTOOLS-10: mulighet for konfigurering av navn
+        this.compileTaskName = sourceSet.getTaskName("compile", name); //SKTOOLS-10: mulighet for konfigurering av navn
+        this.hookTaskName = sourceSet.getTaskName("hookCompile", name);
     }
 
 
@@ -144,20 +146,24 @@ class XjcConfig implements Serializable {
     }
 
 
-    public FileTree srcDir(Object srcDir) {
-        return source.srcDir(srcDir);
+    public FileCollection srcDir(Object srcDir) {
+        return source.from(srcDir);
     }
 
-    public FileTree srcDirs(Object... srcDirs) {
-        return source.srcDirs(srcDirs);
+    public FileCollection srcDirs(Object... srcDirs) {
+        return source.from(srcDirs);
     }
 
-    public FileTree setSrcDirs(Iterable<?> srcPaths) {
-        return source.setSrcDirs(srcPaths);
+    public void setSrcDirs(Iterable<?> srcPaths) {
+        source.setFrom(srcPaths);
     }
 
-    public FileTree source(FileTree src) {
-        return source.source(src);
+    public void setSrcDirs(Object... srcPaths) {
+        source.setFrom(srcPaths);
+    }
+
+    public FileCollection source(FileTree src) {
+        return source.from(src);
     }
 
 }
