@@ -125,15 +125,11 @@ class ArtifactMatcherTest {
      */
     @Test
     void testVersionViaManifest() {
-
         ProjectHelper projectHelper = GradleProjectBuilder.builder().build()
 
-        File gradleJarFile = projectHelper.project.configurations.detachedConfiguration(projectHelper.project.getDependencies().gradleApi()).filter {
-            it.name.contains 'gradle-core'
-        }.singleFile
-
-        Assert.assertEquals(ArtifactMatcher.findImplementationVersionInManifest(gradleJarFile), projectHelper.project.gradle.getGradleVersion())
-
+        final File gradleJarFile = projectHelper.project.configurations.detachedConfiguration(projectHelper.project.getDependencies().gradleApi()).filter {it.name.contains 'gradle'}.first()
+        final String versionInManifest = ArtifactMatcher.findImplementationVersionInManifest(gradleJarFile)
+        Assert.assertEquals(versionInManifest, projectHelper.project.gradle.getGradleVersion())
     }
 
     /**
