@@ -2,8 +2,6 @@ package no.statkart.sktools.gradle.plugins.webstart.util
 
 import no.statkart.sktools.gradle.testutils.ProjectHelper
 import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
-import org.gradle.api.internal.artifacts.dependencies.DefaultSelfResolvingDependency
-import org.gradle.api.tasks.util.PatternSet
 import org.testng.Assert
 import org.testng.annotations.Test
 
@@ -130,7 +128,9 @@ class ArtifactMatcherTest {
 
         ProjectHelper projectHelper = GradleProjectBuilder.builder().build()
 
-        File gradleJarFile = ((DefaultSelfResolvingDependency) projectHelper.project.getDependencies().gradleApi()).getSource().getAsFileTree().matching(new PatternSet(includes: ['**/*gradle-core*.jar'])).files.iterator().next()
+        File gradleJarFile = projectHelper.project.configurations.detachedConfiguration(projectHelper.project.getDependencies().gradleApi()).filter {
+            it.name.contains 'gradle-core'
+        }.singleFile
 
         Assert.assertEquals(ArtifactMatcher.findImplementationVersionInManifest(gradleJarFile), projectHelper.project.gradle.getGradleVersion())
 
