@@ -40,13 +40,14 @@ class XjcConfig implements Serializable {
     public final transient ConfigurableFileCollection source;
 
     protected Collection<String> includes;
-    @Input
+
     //SKTOOLS-128: annoterer properties som er input felter
-    protected Map<String, Map> xjcOptions = [:] as HashMap
+    @Input
+    public Map<String, Map> xjcOptions = [:] as HashMap
 
 
     XjcConfig(SourceSet sourceSet, String name, ConfigurableFileCollection sourceFiles) {
-        this.name = sourceSet.getName() + StringUtils.capitalize(name);
+        this.name = name;
 
         this.source = sourceFiles
         this.genOutputPath = String.format("gen/%s/xjc/%s", sourceSet.getName(), name)
