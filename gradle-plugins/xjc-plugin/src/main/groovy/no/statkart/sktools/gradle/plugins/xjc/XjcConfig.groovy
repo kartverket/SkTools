@@ -1,6 +1,5 @@
 package no.statkart.sktools.gradle.plugins.xjc
 
-import org.apache.commons.lang.StringUtils
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
@@ -21,13 +20,11 @@ import org.gradle.util.ConfigureUtil
 class XjcConfig implements Serializable {
     static final Logger logger = Logging.getLogger(XjcConfig.class)
 
-    private static final long serialVersionUID = 1L; //SKTOOLS-130: remove Serializable in sktools version 2.1
-
-    /*
+    /**
      * For lovlige parametere se {@link com.sun.tools.xjc.addon.statkart.ListGenPlugin#parseArgument(com.sun.tools.xjc.Options, String[], int)
      */
     static final String LIST_ADAPTER = 'list_adapter';
-    /*
+    /**
      * For lovlige parametere se {@link com.sun.tools.xjc.addon.statkart.GrunnbokDocPlugin#parseArgument(com.sun.tools.xjc.Options, String[], int)
      */
     static final String GRUNNBOK_DOC = 'grunnbok_doc';
@@ -39,7 +36,6 @@ class XjcConfig implements Serializable {
 
     public final transient ConfigurableFileCollection source;
 
-    protected Collection<String> includes;
 
     //SKTOOLS-128: annoterer properties som er input felter
     @Input
@@ -58,13 +54,6 @@ class XjcConfig implements Serializable {
     }
 
 
-    XjcConfig includes(String... patterns) {
-        if (includes == null) {
-            includes = new ArrayList<String>();
-        }
-        includes.addAll(patterns);
-        return this
-    }
 
     //todo: endre default fqn i en versjon etter 1.0?
     //metode for deklarativ konfigurasjon

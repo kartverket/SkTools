@@ -21,6 +21,11 @@ sourceSets {
 
 task('gen').description = "Genererte ressurser for alle sourceSets"
 
+task zipSchemas(type: Zip) {
+    classifier = 'schemas'
+    from sourceSets.main.xjc.schemas.collect {it.source}
+}
+
 //integrasjon med xjc plugin
 afterEvaluate {
     if (project.plugins.hasPlugin('sktools-xjc-plugin')) {
@@ -37,6 +42,9 @@ afterEvaluate {
 task runDemo() {
     description = 'Kjører en enkel demo for å teste funksjonaliteten'
 
+    Assert.that('clean', 'zipSchemas').describedAs("schemaArchive").leadsTo(project).withState {
+        zipTree(tasks.zipSchemas.archivePath).asPath.contains 'simple.xsd'
+    }
 
     Assert.that('clean', sourceSets.main.xjc[0].config.genTaskName).describedAs("schemaGeneratesSourceCode").leadsTo(project).withState {
         assertXjcGeneratedSources()
