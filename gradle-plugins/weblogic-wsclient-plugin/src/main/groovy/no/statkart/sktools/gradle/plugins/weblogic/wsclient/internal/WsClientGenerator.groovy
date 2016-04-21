@@ -79,9 +79,8 @@ class WsClientGenerator {
         attributes += compileOptions.optionMap()
 
         if (attributes.encoding) {
-            attributes.srcEncoding = attributes.encoding
-            attributes.destEncoding = attributes.encoding
-            attributes.remove('encoding')
+            //encoding attributt i Weblogic 11g, 12c
+            // ikke tilgjengelig i Weblogic 9.x
         }
         attributes.fork = false
 
