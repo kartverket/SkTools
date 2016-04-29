@@ -19,126 +19,139 @@ import java.util.List;
  * @since 2.0
  */
 public class WsDocCompileTask extends JavaCompile {
-    protected static final Logger logger = Logging.getLogger(WsDocCompileTask.class);
+   protected static final Logger logger = Logging.getLogger(WsDocCompileTask.class);
 
-    private WsDocGroup docGroup;
-    private FileCollection processorClasspath;
+   private WsDocGroup docGroup;
+   private FileCollection processorClasspath;
 
-    /**
-     * Gradle 1.2/2.0 - no arg constructor or @Inject annotated constructor
-     */
-    public WsDocCompileTask() {
-        super();
-        getLogging().captureStandardOutput(LogLevel.INFO);
-        getLogging().captureStandardError(LogLevel.DEBUG);
-    }
+   /**
+    * Gradle 1.2/2.0 - no arg constructor or @Inject annotated constructor
+    */
+   public WsDocCompileTask() {
+      super();
+      getLogging().captureStandardOutput(LogLevel.INFO);
+      getLogging().captureStandardError(LogLevel.DEBUG);
+   }
 
-    /**
-     * Initial input values - no mutation of state in {@code @TaskAction} [SKTOOLS-131]
-     */
-    public void init(WsDocGroup docGroup) {
-        setDocGroup(docGroup);
-        initCompilerArgs(getOptions().getCompilerArgs());
-    }
+   /**
+    * Initial input values - no mutation of state in {@code @TaskAction} [SKTOOLS-131]
+    */
+   public void init(WsDocGroup docGroup) {
+      setDocGroup(docGroup);
+      initCompilerArgs(getOptions().getCompilerArgs());
+      initEncoding();
+   }
 
-    void initCompilerArgs(final List<String> compilerArgs) {
-        compilerArgs.add("-proc:only"); //only annotation processing is done, without any subsequent compilation.
-        compilerArgs.add("-processor");
-        compilerArgs.add("no.statkart.sktools.utils.wsdocgen.processor.WSDocProcessor"); //Names of the annotation processors to run. This bypasses the default discovery process.
+   private void initEncoding() {
+      String encoding = getEncoding();
+      if (encoding != null && !encoding.isEmpty()) {
+         getOptions().setEncoding(encoding);
+      }
+   }
 
-        final FileCollection processorClasspath = getProcessorClasspath();
-        if (!processorClasspath.isEmpty()) {
-            compilerArgs.add("-processorpath");
-            compilerArgs.add(processorClasspath.getAsFileTree().getAsPath());
-        } else {
-            assert true; //ok under testing
-        }
+   void initCompilerArgs(final List<String> compilerArgs) {
+      compilerArgs.add("-proc:only"); //only annotation processing is done, without any subsequent compilation.
+      compilerArgs.add("-processor");
+      compilerArgs.add("no.statkart.sktools.utils.wsdocgen.processor.WSDocProcessor"); //Names of the annotation processors to run. This bypasses the default discovery process.
 
-        final File xsl = getServiceXsltFile();
-        if (!xsl.exists()) {
-            throw new RuntimeException("xslt file not found: " + getProject().relativePath(xsl));
-        }
+      final FileCollection processorClasspath = getProcessorClasspath();
+      if (!processorClasspath.isEmpty()) {
+         compilerArgs.add("-processorpath");
+         compilerArgs.add(processorClasspath.getAsFileTree().getAsPath());
+      } else {
+         assert true; //ok under testing
+      }
 
-        compilerArgs.add("-Axslt=" + xsl.getPath()); //xslt file
+      final File xsl = getServiceXsltFile();
+      if (!xsl.exists()) {
+         throw new RuntimeException("xslt file not found: " + getProject().relativePath(xsl));
+      }
 
-        if (getLookupPath() != null) {
-            compilerArgs.add("-AjavaDocLookupPath=" + getLookupPath()); //lookup path
-        }
+      compilerArgs.add("-Axslt=" + xsl.getPath()); //xslt file
 
-        if (getIndexXsltFile() != null) {
-            compilerArgs.add("-AindexXslt=" + getIndexXsltFile().getPath()); //SKTOOLS-105
-        }
+      if (getLookupPath() != null) {
+         compilerArgs.add("-AjavaDocLookupPath=" + getLookupPath()); //lookup path
+      }
 
-        if (getDocGroup().includes != null) {
-            include(getDocGroup().includes); //up to date affects getSource()
-        }
+      if (getIndexXsltFile() != null) {
+         compilerArgs.add("-AindexXslt=" + getIndexXsltFile().getPath()); //SKTOOLS-105
+      }
 
-    }
+      if (getDocGroup().includes != null) {
+         include(getDocGroup().includes); //up to date affects getSource()
+      }
+   }
 
-    public FileCollection getProcessorClasspath() {
-        return processorClasspath;
-    }
+   public FileCollection getProcessorClasspath() {
+      return processorClasspath;
+   }
 
-    public void setProcessorClasspath(FileCollection processorClasspath) {
-        this.processorClasspath = processorClasspath;
-    }
+   public void setProcessorClasspath(FileCollection processorClasspath) {
+      this.processorClasspath = processorClasspath;
+   }
 
-    @TaskAction
-    @Override
-    protected void compile() {
-        logger.info("args: " + getOptions().getCompilerArgs());
-        logger.debug("Classpath for generating WsDoc: {}", getClasspath().getFiles());
-        super.compile();
-    }
+   @TaskAction
+   @Override
+   protected void compile() {
+      logger.info("args: " + getOptions().getCompilerArgs());
+      logger.debug("Classpath for generating WsDoc: {}", getClasspath().getFiles());
+      super.compile();
+   }
 
-    @Optional
-    @Input //not up to date when changed
-    public String getLookupPath() {
-        return getDocGroup().lookupPath;
-    }
+   @Optional
+   @Input //not up to date when changed
+   public String getLookupPath() {
+      return getDocGroup().lookupPath;
+   }
 
+   @Optional
+   @Input
+   public String getEncoding() {
+      return getDocGroup().encoding;
+   }
 
-    @Override
-    public CompileOptions getOptions() {
-        final CompileOptions options = super.getOptions();
-        options.setListFiles(logger.isDebugEnabled());
-        options.setVerbose(logger.isInfoEnabled());
+   @Override
+   public CompileOptions getOptions() {
+      final CompileOptions options = super.getOptions();
+      options.setListFiles(logger.isDebugEnabled());
+      options.setVerbose(logger.isInfoEnabled());
 
-        return options;
-    }
+      return options;
+   }
 
-    @InputFile
-    public File getServiceXsltFile() {
-        if (getDocGroup().serviceXsltPath != null) {
-            return getProject().file(getDocGroup().serviceXsltPath);
-        } else {
-            logger.warn("WARNING: no xslt file specified - using template for TESTING purposes..");
-            WsDocGenConvention convention = (WsDocGenConvention) getProject().getConvention().getPlugins().get(WsDocGenPlugin.CONVENTION_NAME);
-            return convention.generateTestFile(new File(getProject().getBuildDir(), "Transform.xsl")); //can't write to output dir because it gets wiped when not up to date...
-        }
-    }
+   @InputFile
+   public File getServiceXsltFile() {
+      if (getDocGroup().serviceXsltPath != null) {
+         return getProject().file(getDocGroup().serviceXsltPath);
+      } else {
+         logger.warn("WARNING: no xslt file specified - using template for TESTING purposes..");
+         WsDocGenConvention convention = (WsDocGenConvention) getProject().getConvention().getPlugins().get(WsDocGenPlugin.CONVENTION_NAME);
+         return convention.generateTestFile(new File(getProject().getBuildDir(), "Transform.xsl")); //can't write to output dir because it gets wiped when not up to date...
+      }
+   }
 
-    @Optional
-    @InputFile //not up to date when change in file
-    File getIndexXsltFile() {
-        if (getDocGroup().indexXsltPath != null) {
-            return getProject().file(getDocGroup().indexXsltPath);
-        } else {
-            return null; //optional null
-        }
-    }
+   @Optional
+   @InputFile
+      //not up to date when change in file
+   File getIndexXsltFile() {
+      if (getDocGroup().indexXsltPath != null) {
+         return getProject().file(getDocGroup().indexXsltPath);
+      } else {
+         return null; //optional null
+      }
+   }
 
-    private WsDocGroup getDocGroup() {
-        return docGroup;
-    }
+   private WsDocGroup getDocGroup() {
+      return docGroup;
+   }
 
-    private void setDocGroup(WsDocGroup docGroup) {
-        this.docGroup = docGroup;
-    }
+   private void setDocGroup(WsDocGroup docGroup) {
+      this.docGroup = docGroup;
+   }
 
-    @Override
-    public Logger getLogger() {
-        return logger;
-    }
+   @Override
+   public Logger getLogger() {
+      return logger;
+   }
 
 }
