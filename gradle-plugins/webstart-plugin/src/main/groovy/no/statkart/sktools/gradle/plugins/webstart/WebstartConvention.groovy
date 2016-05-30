@@ -357,7 +357,7 @@ class ResourcesConfiguration implements Serializable {
     protected final transient JnlpConfiguration jnlp;
 
     protected final Map<String, Object> systemProperties = new LinkedHashMap();
-    protected final List<JavaRuntimeConfiguration> runtimes = new ArrayList<JavaRuntimeConfiguration>();
+    protected final List<RuntimeConfiguration> runtimes = new ArrayList<JavaRuntimeConfiguration>();
 
     ResourcesConfiguration(JnlpConfiguration jnlp) {
         this.jnlp = jnlp;
@@ -400,7 +400,7 @@ class ResourcesConfiguration implements Serializable {
             ConfigureUtil.configureByMap(properties, javaRuntime)
         }
         if (config != null) {
-            ConfigureUtil.configure(config, javaRuntime, false)
+            ConfigureUtil.configure(config, javaRuntime)
         }
         return javaRuntime;
     }
@@ -418,7 +418,7 @@ class ResourcesConfiguration implements Serializable {
             ConfigureUtil.configureByMap(properties, runtimeConfiguration)
         }
         if (config != null) {
-            ConfigureUtil.configure(config, runtimeConfiguration, false)
+            ConfigureUtil.configure(config, runtimeConfiguration)
         }
         return runtimeConfiguration;
     }

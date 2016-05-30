@@ -125,7 +125,7 @@ abstract class AbstractDatabaseConvention {
         patch.unSetIndexesInSyncWithPatchTaskName = 'UnSetIndexInSyncWithPatch';
         patch.assertPatchVersionTaskName = 'AssertPatchVersion';
 
-        ConfigureUtil.configure(closure, patch, false);
+        ConfigureUtil.configure(closure, patch);
 
         patch.addDefaultTasks();
 
@@ -164,7 +164,7 @@ abstract class AbstractDatabaseConvention {
         }
         ConfigureUtil.configureByMap(params, task)
 
-        ConfigureUtil.configure(closure, task, false);
+        ConfigureUtil.configure(closure, task);
 
         getTasks().addTask(name, task)
         return task;

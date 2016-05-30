@@ -85,7 +85,7 @@ class WeblogicDeployConfiguration {
             }
         }
         this.dependsOn askIfProdserverTask
-        ConfigureUtil.configure(config, askIfProdserverTask, false)
+        ConfigureUtil.configure(config, askIfProdserverTask)
     }
 
 
@@ -100,7 +100,7 @@ class WeblogicDeployConfiguration {
         setCommonConventionalValues(undeployTask)
 
         ConfigureUtil.configureByMap(params, undeployTask)
-        ConfigureUtil.configure(config, undeployTask, false)
+        ConfigureUtil.configure(config, undeployTask)
         return undeployTask
     }
 
@@ -119,7 +119,7 @@ class WeblogicDeployConfiguration {
         deployTask.conventionMapping 'file', { this.getFile() }
 
         ConfigureUtil.configureByMap(params, deployTask)
-        ConfigureUtil.configure(config, deployTask, false)
+        ConfigureUtil.configure(config, deployTask)
         return deployTask
     }
 
