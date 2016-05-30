@@ -9,9 +9,9 @@ dependencies {
 
     //gradle api til byggesystemm blir benyttet som std
     compile gradleApi()
-    runtime 'commons-lang:commons-lang:2.6@jar'
-    runtime 'commons-io:commons-io:1.4@jar'
-    runtime 'commons-codec:commons-codec:1.2@jar'
+    compile libraries.commons_io
+    compile libraries.commons_lang
+    compile 'commons-codec:commons-codec:1.2@jar'
 
 
     //test
