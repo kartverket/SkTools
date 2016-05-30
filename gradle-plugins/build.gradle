@@ -42,7 +42,7 @@ Closure setUpDemoTestingFor = { final Project pluginProject, final File demoDir 
         [runDemoTask].each { Task task ->
             task.startParameter.projectProperties = [sktools_versjon: "${pluginProject.version}", MAVEN_REPO: MAVEN_REPO, WEBLOGIC_HOME: WEBLOGIC_HOME]
             task.startParameter.systemPropertiesArgs = [noMavenBootstrap: 'true'];
-            task.startParameter.offline = true;
+            task.startParameter.offline = false;
             task.outputs.upToDateWhen { false } //always run this...
             task.shouldRunAfter pluginProject.tasks.test //kjøring av (optional) test før kjøring av demos
         }
