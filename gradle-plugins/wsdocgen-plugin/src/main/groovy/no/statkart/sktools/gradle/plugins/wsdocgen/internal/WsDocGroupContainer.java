@@ -1,13 +1,11 @@
 package no.statkart.sktools.gradle.plugins.wsdocgen.internal;
 
 import groovy.lang.Closure;
-import groovy.lang.GroovyObjectSupport;
 import no.statkart.sktools.gradle.plugins.wsdocgen.WsDocGenConvention;
 import no.statkart.sktools.gradle.plugins.wsdocgen.WsDocGroup;
 import org.apache.commons.lang.StringUtils;
 import org.gradle.api.Action;
 import org.gradle.api.InvalidUserDataException;
-import org.gradle.api.Project;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.util.ConfigureUtil;
 

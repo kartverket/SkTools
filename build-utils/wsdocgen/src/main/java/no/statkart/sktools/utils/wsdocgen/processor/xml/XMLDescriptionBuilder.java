@@ -1,8 +1,6 @@
 package no.statkart.sktools.utils.wsdocgen.processor.xml;
 
 import no.statkart.sktools.utils.wsdocgen.processor.util.JavaDocUtils;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import java.util.regex.Matcher;
@@ -14,6 +12,7 @@ import java.util.regex.Pattern;
  * @author Leif Lislegård
  * @since 1.3 - SKTOOLS-108
  */
+@SuppressWarnings({"FieldCanBeLocal", "unused"})
 public class XMLDescriptionBuilder {
 
     private static final Pattern spanElementPattern = Pattern.compile("<span class=\"(\\w+)\">(.*?)</span>");
@@ -55,7 +54,7 @@ public class XMLDescriptionBuilder {
         return descriptionElement;
     }
 
-    private void appendTextNodeTo(Element descriptionElement, String text, int from, int to) {
+    private void appendTextNodeTo(org.w3c.dom.Element descriptionElement, String text, int from, int to) {
         if (to > from) {
             final String substring = text.substring(from, to);
             if (!substring.trim().isEmpty()) {
@@ -64,7 +63,7 @@ public class XMLDescriptionBuilder {
         }
     }
 
-    private void appendSpanNodeTo(Element descriptionElement, String text, String cssClass) {
+    private void appendSpanNodeTo(org.w3c.dom.Element descriptionElement, String text, String cssClass) {
         if (text != null) {
             descriptionElement.appendChild(buildSpanNode(text, cssClass));
         }

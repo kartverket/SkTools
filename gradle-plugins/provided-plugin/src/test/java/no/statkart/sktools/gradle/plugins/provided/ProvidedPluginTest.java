@@ -10,8 +10,6 @@ import org.gradle.testfixtures.ProjectBuilder;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Test for {@link ProvidedPlugin}.

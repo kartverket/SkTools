@@ -19,7 +19,6 @@ import javax.xml.transform.*;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
-import javax.xml.ws.WebServiceProvider;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
