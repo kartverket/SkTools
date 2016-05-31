@@ -1,8 +1,8 @@
 package no.statkart.sktools.gradle.plugins.webstart
 
 import no.statkart.sktools.gradle.plugins.webstart.util.FileHashIdent
-import org.apache.commons.lang.builder.EqualsBuilder
-import org.apache.commons.lang.builder.HashCodeBuilder
+import org.apache.commons.lang3.builder.EqualsBuilder
+import org.apache.commons.lang3.builder.HashCodeBuilder
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.NamedDomainObjectFactory
 import org.gradle.api.Project

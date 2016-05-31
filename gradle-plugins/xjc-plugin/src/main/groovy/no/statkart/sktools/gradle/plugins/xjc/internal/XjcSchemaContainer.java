@@ -2,7 +2,7 @@ package no.statkart.sktools.gradle.plugins.xjc.internal;
 
 import groovy.lang.Closure;
 import no.statkart.sktools.gradle.plugins.xjc.XjcConfig;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Action;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;

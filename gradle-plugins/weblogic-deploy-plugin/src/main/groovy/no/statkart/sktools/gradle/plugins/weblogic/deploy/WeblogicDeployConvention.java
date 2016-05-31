@@ -1,7 +1,7 @@
 package no.statkart.sktools.gradle.plugins.weblogic.deploy;
 
 import groovy.lang.Closure;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Project;
 import org.gradle.util.ConfigureUtil;
 

@@ -10,7 +10,7 @@ dependencies {
     //gradle api til byggesystemm blir benyttet som std
     compile gradleApi()
     compile libraries.commons_io
-    compile libraries.commons_lang
+    compile libraries.commons_lang3
 
     compile project(':gradle-plugins:weblogic-plugin')
 

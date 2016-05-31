@@ -1,6 +1,6 @@
 package no.statkart.sktools.gradle.plugins.weblogic.wsclient
 
-import org.apache.commons.lang.StringUtils
+import org.apache.commons.lang3.StringUtils
 import org.gradle.api.Project
 import org.gradle.api.Plugin
 import org.gradle.api.artifacts.Configuration

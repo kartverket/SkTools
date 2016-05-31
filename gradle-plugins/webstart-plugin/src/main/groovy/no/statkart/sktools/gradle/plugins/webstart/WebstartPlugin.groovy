@@ -1,7 +1,7 @@
 package no.statkart.sktools.gradle.plugins.webstart
 
 import no.statkart.sktools.gradle.plugins.webstart.util.ArtifactMatcher
-import org.apache.commons.lang.StringUtils
+import org.apache.commons.lang3.StringUtils
 import org.gradle.api.Action
 import org.gradle.api.Plugin
 import org.gradle.api.Project

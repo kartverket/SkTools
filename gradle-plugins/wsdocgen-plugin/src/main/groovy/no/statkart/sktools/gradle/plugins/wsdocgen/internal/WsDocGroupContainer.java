@@ -3,7 +3,7 @@ package no.statkart.sktools.gradle.plugins.wsdocgen.internal;
 import groovy.lang.Closure;
 import no.statkart.sktools.gradle.plugins.wsdocgen.WsDocGenConvention;
 import no.statkart.sktools.gradle.plugins.wsdocgen.WsDocGroup;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Action;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.tasks.SourceSet;

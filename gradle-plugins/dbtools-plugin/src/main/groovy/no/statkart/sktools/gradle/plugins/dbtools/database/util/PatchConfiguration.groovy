@@ -3,7 +3,7 @@ package no.statkart.sktools.gradle.plugins.dbtools.database.util
 import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsConvention
 import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsPlugin
 import no.statkart.sktools.utils.databasepatcher.exception.ConfigurationException
-import org.apache.commons.lang.StringUtils
+import org.apache.commons.lang3.StringUtils
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.Dependency

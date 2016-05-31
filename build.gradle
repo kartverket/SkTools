@@ -37,7 +37,7 @@ project.ext.libraries = [
         log4j: "log4j:log4j:${libVersion('log4j', '1.2.17')}@jar",
 
         commons_io  : 'org.apache.commons:commons-io:1.3.2@jar',
-        commons_lang: 'commons-lang:commons-lang:2.6@jar',
+        commons_lang3: 'org.apache.commons:commons-lang3:3.4',
         guava: 'com.google.guava:guava:19.0',
 
         // Testing
