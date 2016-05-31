@@ -127,9 +127,9 @@ class ArtifactMatcherTest {
     void testVersionViaManifest() {
         ProjectHelper projectHelper = GradleProjectBuilder.builder().build()
 
-        final File gradleJarFile = projectHelper.project.configurations.detachedConfiguration(projectHelper.project.getDependencies().gradleApi()).filter {it.name.contains 'gradle'}.first()
-        final String versionInManifest = ArtifactMatcher.findImplementationVersionInManifest(gradleJarFile)
-        Assert.assertEquals(versionInManifest, projectHelper.project.gradle.getGradleVersion())
+        final File groovyJarFile = projectHelper.project.configurations.detachedConfiguration(projectHelper.project.getDependencies().gradleApi()).filter {it.name.contains 'groovy'}.first()
+        final String versionInManifest = ArtifactMatcher.findImplementationVersionInManifest(groovyJarFile)
+        Assert.assertEquals(versionInManifest, GroovySystem.getVersion())
     }
 
     /**
