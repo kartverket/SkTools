@@ -8,6 +8,7 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
+import org.gradle.api.logging.LoggingManager;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Nested;
@@ -38,8 +39,8 @@ class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInter
      */
     public WeblogicGenClientTask() {
         super();
-        getLogging().captureStandardOutput(LogLevel.INFO);
-        getLogging().captureStandardError(LogLevel.DEBUG);
+        ((LoggingManager)getLogging()).captureStandardOutput(LogLevel.INFO);
+        ((LoggingManager)getLogging()).captureStandardError(LogLevel.DEBUG);
 
         getOptions().setFork(true);
         getOptions().setListFiles(true);

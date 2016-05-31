@@ -10,6 +10,7 @@ import org.gradle.api.internal.project.ProjectInternal;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
+import org.gradle.api.logging.LoggingManager;
 import org.gradle.api.tasks.*;
 import org.gradle.api.tasks.compile.AbstractCompile;
 import org.gradle.api.tasks.compile.CompileOptions;
@@ -38,8 +39,8 @@ public class WeblogicWsCompileTask extends AbstractCompile implements WeblogicTa
 
 
     public WeblogicWsCompileTask() {
-        getLogging().captureStandardOutput(LogLevel.INFO);
-        getLogging().captureStandardError(LogLevel.DEBUG);
+        ((LoggingManager)getLogging()).captureStandardOutput(LogLevel.INFO);
+        ((LoggingManager)getLogging()).captureStandardError(LogLevel.DEBUG);
 
         //setting defaults for this compiler.
         getOptions().setFork(true);
