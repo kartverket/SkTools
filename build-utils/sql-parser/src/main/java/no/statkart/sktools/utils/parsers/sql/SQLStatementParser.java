@@ -67,7 +67,7 @@ public class SQLStatementParser {
 
             reader.reset();
 
-            if (nextLine.matches("CREATE(\\s+OR\\s+REPLACE)?\\s+(TRIGGER|FUNCTION|PACKAGE|PROCEDURE).*")) {
+            if (nextLine.matches("CREATE(\\s+OR\\s+REPLACE)?\\s+(TRIGGER|FUNCTION|PACKAGE|PROCEDURE|TYPE BODY).*")) {
                 newExpression = new PLSQLStatement();
             } else if (nextLine.matches("(DECLARE|BEGIN).*")) {
                 newExpression = new PLSQLStatement();

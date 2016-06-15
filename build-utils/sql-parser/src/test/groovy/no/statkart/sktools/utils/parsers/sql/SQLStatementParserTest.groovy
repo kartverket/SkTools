@@ -1,14 +1,8 @@
 package no.statkart.sktools.utils.parsers.sql
 
-import org.testng.annotations.Test
-import no.statkart.sktools.utils.parsers.sql.model.Expression
+import no.statkart.sktools.utils.parsers.sql.model.*
 import org.testng.Assert
-import no.statkart.sktools.utils.parsers.sql.model.DefaultStatement
-import no.statkart.sktools.utils.parsers.sql.model.Statement
-import no.statkart.sktools.utils.parsers.sql.model.PLSQLStatement
-import no.statkart.sktools.utils.parsers.sql.model.PromptStatement
-import no.statkart.sktools.utils.parsers.sql.model.Comment
-import no.statkart.sktools.utils.parsers.sql.model.LineComment
+import org.testng.annotations.Test
 
 /**
  * Tester parsing av sql setninger ifra flatfil.
@@ -321,4 +315,43 @@ select slutt
         i++
         Assert.assertEquals(list.size(), i, 'antall statements')
     }
+
+/**
+ * Tester parsing av PL/SQL for TYPE BODY
+ */
+    @Test
+    void testParsing_PLSQL_Create_TYPE_BODY() {
+        String statement1 = '''\
+CREATE OR REPLACE TYPE BODY concat_all_ot AS
+STATIC FUNCTION ODCIAggregateInitialize (sctx IN OUT concat_all_ot) RETURN NUMBER  IS
+ BEGIN
+   sctx := concat_all_ot (NULL, NULL);
+      return ODCIConst.Success;
+ END;
+MEMBER FUNCTION ODCIAggregateIterate (SELF IN OUT concat_all_ot,    ctx IN concat_expr)    RETURN NUMBER IS
+ BEGIN
+  IF SELF.str IS NOT NULL THEN
+   SELF.str := SELF.str || ctx.del;
+  END IF;
+  return ODCIConst.Success;
+ END;
+END;
+'''
+
+        StringReader stringReader = new StringReader("""\
+${statement1}
+/
+""")
+
+        LineNumberReader reader = new LineNumberReader(stringReader)
+        List<Expression> list = SQLStatementParser.parseExpressions(reader)
+
+        int i = 0
+        Assert.assertTrue(list[i] instanceof PLSQLStatement, "instanceof ${PLSQLStatement.class}")
+        Assert.assertTrue(((PLSQLStatement)list[i]).sql.contains(statement1), 'innhold')
+    }
+
 }
+
+
+
