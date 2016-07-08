@@ -69,8 +69,17 @@ public class WeblogicWsCompileTask extends AbstractCompile implements WeblogicTa
 
         project.delete(getGenDir()); //no dirty files
 
-        WorkResult result = compiler.execute(spec);
-        setDidWork(result.getDidWork());
+        final String javaEndorsedDirs = System.getProperty("java.endorsed.dirs");
+        try {
+            if (System.getProperty("java.endorsed.dirs").contains(" ")) {
+                logger.warn("WARNING: Invalid java.endorsed.dirs={}. No whitespace allowed. Discarding this property for jwsc!");
+                System.setProperty("java.endorsed.dirs", "");
+            }
+            WorkResult result = compiler.execute(spec);
+            setDidWork(result.getDidWork());
+        } finally {
+            System.setProperty("java.endorsed.dirs", javaEndorsedDirs); //reverting modification as this could have unwanted side effects elsewhere in the build system
+        }
 
 
         //extract application files
