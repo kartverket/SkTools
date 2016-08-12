@@ -1,0 +1,60 @@
+group = 'no.statkart.sktools.gradle.plugins.weblogic-wswar-plugin.demos'
+
+// build a map of the dependency artifacts to use. Allows centralized definition of the versions of artifacts to use
+project.ext.set('libraries', [:])
+
+//tools.jar for JDK
+libraries.'tools.jar' = files("${System.getenv('JAVA_HOME')}/lib/tools.jar").stopExecutionIfEmpty() //JAVA_HOME ikke satt??
+
+libraries.weblogic =  fileTree(dir:"${WEBLOGIC_HOME}", includes:[
+        'wlserver_10.3/server/lib/weblogic.jar',
+        'wlserver_10.3/server/lib/webservices.jar',
+        'wlserver_10.3/server/lib/wljmsclient.jar',
+        'modules/javax.annotation_*.jar/',
+        'modules/javax.ejb_3*.jar',
+        'modules/javax.interceptor_*.jar',
+        'modules/javax.servlet_*.jar',
+        'modules/javax.transaction_*.jar',
+        'modules/com.bea.core.transaction_*.jar',
+        'modules/com.bea.core.datasource*.jar',
+        'modules/glassfish.jaxws.rt*.jar',
+]).stopExecutionIfEmpty() //feilsituasjon dersom WEBLOGIC_HOME ikke er riktig satt
+
+
+
+assert GradleVersion.version('2.1').compareTo(GradleVersion.current()) <= 0 //lowest gradle version supported
+
+//innkobling av plugin jar filer for gradle byggesystem
+buildscript {
+    if (rootProject.ext.has('sktools_versjon')) version = rootProject.ext.get('sktools_versjon')
+    if (version == Project.DEFAULT_VERSION) { version = '1.4-SNAPSHOT'; logger.warn "No -Psktools_versjon= defined. Defaulting to \"${version}\""} //nb - dersom ikke default version er satt riktig så blir kjøring ifra demo-katalog feil..
+
+    // Variables to grab from environment + defaults
+    ['WEBLOGIC_HOME', 'MAVEN_REPO'].each { val ->
+        if (!rootProject.ext.has(val) && System.getenv(val) != null) {
+            rootProject.ext.set(val, System.getenv(val))
+        }
+    }
+
+    project.ext.set('MAVEN_REPO', project.properties.get('MAVEN_REPO', 'http://nexus.statkart.no:8090/nexus/content/groups/public/'))
+
+    repositories {
+        //bruker kun lokale filer her da dette er et demo prosjekt...
+        mavenLocal()
+//        maven { name = 'public'; url = MAVEN_REPO }
+    }
+    dependencies {
+        classpath "no.statkart.sktools.gradle:wsgen-plugin:${version}"
+    }
+}
+
+def clean = task('clean')<<{
+    logger.info "Cleaning project ${project.projectDir}"
+}
+
+allprojects {
+    setVersion(rootProject.version)
+    tasks.matching { 'runDemo' == it.name }.each {
+        it.mustRunAfter clean
+    }
+}

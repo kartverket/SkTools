@@ -1,0 +1,140 @@
+import no.statkart.sktools.gradle.plugins.wsgen.WsdlGenTask
+
+/******************************************************************************************************************** **
+ *
+ * Demonstrasjon på bruk av plugin.
+ *
+ * En viser også eksempel implementasjon av 'gen' target.
+ *
+ ******************************************************************************************************************** */
+
+//apply plugin: 'war'
+apply plugin: 'sktools-wsgen-plugin'
+
+dependencies {
+    jaxws libraries.weblogic
+    jaxws libraries.'tools.jar'
+}
+
+
+/******************************************************************************************************************** **
+ * Diverse tasker som tester og demonstrerer implementasjonen
+ ******************************************************************************************************************** */
+
+task runDemo() {
+    description = 'Kjører en enkel demo for å verifisere funksjonalitet'
+
+    Assert.that('clean', 'compileJava').describedAs('compileJavaGeneratesCompiledCode').prep { clean() }.leadsTo(project).withState {
+        assertCompileJava()
+    }
+
+    Assert.that('war').describedAs('makeWar').prep { clean() }.leadsTo(project).withState {
+        assertWar()
+    }
+
+    Assert.that('genWsdl').describedAs('makeWsdl').prep { clean() }.leadsTo(project).withState {
+        assertGenWsdl()
+    }
+
+}
+
+class Assert {
+    def taskName
+    String[] taskNames
+    Project project
+    List<Closure> prep = []
+
+    static def previousTask = null
+
+    static Assert that(String... taskNames) {
+        Assert instance = new Assert(); instance.taskNames = taskNames; return instance
+    }
+
+    Assert describedAs(String taskName) {
+        this.taskName = taskName; this
+    }
+
+    Assert prep(Closure prepProjectBeforeAsserts) {
+        prep << [prepProjectBeforeAsserts]; this
+    }
+
+    Assert leadsTo(Project project = project) {
+        this.project = project; this
+    }
+
+    Assert withState(Closure check) {
+        def task = project.task(taskName, type: GradleBuild) {
+            dir = project.projectDir
+            tasks = taskNames
+            startParameter.systemPropertiesArgs = [noMavenBootstrap: 'true']
+            startParameter.projectProperties = [sktools_versjon:"${project.version}"]
+            prep.reverseEach { Closure beforeAsserts -> doFirst { beforeAsserts.setDelegate(this); beforeAsserts.run()}}
+            doLast { check.setDelegate(this); check.run() }
+            doFirst {
+                toConsole('--------------------------------------------------------------------------------');
+                toConsole("Testing use case: ${taskName} tasks=${taskNames}\n\n\n");
+            }
+            doLast {
+                toConsole "\n  ...end of test case: ${taskName}"
+                toConsole('--------------------------------------------------------------------------------\n\n');
+            }
+            outputs.upToDateWhen { false } //always run this...
+        }
+        project.tasks['runDemo'].dependsOn task
+
+        if (previousTask) task.dependsOn previousTask //ordered execution of asserts...
+        previousTask = task
+        this
+    }
+
+    private void toConsole(def message) {
+        project.logger.quiet(message)
+    }
+
+
+    //convenience methods and asserts....
+
+    void clean() {
+        project.delete('build/classes', 'build/weblogic') //har problemer med clean av lib katalogen...
+    }
+
+    void assertWar() {
+        def war = project.file("build/libs/${project.name}-${project.version}.war")
+        assert war.exists() //forventer at war fil er opprettet
+
+        FileTree warTree = project.zipTree(war)
+        assert !warTree.matching { include 'WEB-INF/classes/WebConfig.class' }.files.isEmpty()
+        assert warTree.matching { exclude 'WEB-INF/'; include '**/WebConfig.*' }.files.isEmpty()
+
+        assert !warTree.matching { include 'WEB-INF/classes/exceptiondemo01/ExceptionService1WSBean.class' }.files.isEmpty()
+        assert warTree.matching { exclude 'WEB-INF/'; include '**/ExceptionService1WSBean.*' }.files.isEmpty()
+
+        assert !warTree.matching { include 'WEB-INF/classes/**/ServiceFaultInfo.*' }.files.isEmpty() //forventer ikke noen filer ifra main sourceset
+
+        assert !warTree.matching { include 'WEB-INF/web.xml' }.files.isEmpty() //forventer at web.xml kommer med i arkiv
+
+        def webXml = warTree.matching { include 'WEB-INF/web.xml' }.singleFile
+        assert webXml.text.contains('<display-name>dummy</display-name>') //forventer denne versjonen av web.xml (ikke generert fil)
+
+    }
+
+    void assertCompileJava() {
+        def outputTree = project.sourceSets.main.output.asFileTree
+        assert outputTree.find { it.name == 'ServiceException.class' }
+        assert outputTree.find { it.name == 'ServiceFaultInfo.class' }
+        assert !outputTree.matching { include 'WebConfig.class' }.files.isEmpty()
+        assert !outputTree.matching { include 'exceptiondemo01/ExceptionService1WSBean.class' }.files.isEmpty()
+        assert !outputTree.matching { include 'exceptiondemo01/ExceptionService2WSBean.class' }.files.isEmpty()
+    }
+
+    void assertGenWsdl() {
+        def dir = project.file("build/genWsdls")
+        assert dir.exists() //forventer at katalog er opprettet
+
+        def wsdlTree = project.fileTree(dir)
+        assert !wsdlTree.matching { include 'ExceptionService1WS.wsdl' }.files.isEmpty()
+        assert !wsdlTree.matching { include 'ExceptionService1WS_schema1.xsd' }.files.isEmpty()
+        assert !wsdlTree.matching { include 'ExceptionService1WS_schema2.xsd' }.files.isEmpty()
+    }
+
+}

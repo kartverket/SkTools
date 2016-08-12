@@ -1,0 +1,20 @@
+apply plugin: 'groovy'
+apply plugin: 'maven'
+
+group = 'no.statkart.sktools.gradle'
+
+dependencies {
+    //gradle api til byggesystemm blir benyttet som std
+    compile gradleApi()
+}
+
+task sourcesJar(type: Jar, dependsOn:classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+    onlyIf { gradle.taskGraph.hasTask(install) || gradle.taskGraph.hasTask(uploadArchives) } //only when published..
+}
+
+
+artifacts {
+    archives sourcesJar
+}
