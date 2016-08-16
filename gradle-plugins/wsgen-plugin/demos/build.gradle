@@ -1,4 +1,4 @@
-group = 'no.statkart.sktools.gradle.plugins.weblogic-wswar-plugin.demos'
+group = 'no.statkart.sktools.gradle.plugins.wsgen-plugin.demos'
 
 // build a map of the dependency artifacts to use. Allows centralized definition of the versions of artifacts to use
 project.ext.set('libraries', [:])
