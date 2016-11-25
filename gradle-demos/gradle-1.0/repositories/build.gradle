@@ -95,18 +95,26 @@ task demo(description: 'Kjører demo for å teste funksjonaliteten') {
 
 }
 
-task assertMavenPublicForBuildsystem() << {
-    assert project.MAVEN_LOCAL_FOR_BUILDSYSTEM == null
+task assertMavenPublicForBuildsystem() {
+    doFirst {
+        assert project.MAVEN_LOCAL_FOR_BUILDSYSTEM == null
+    }
 }
-task assertMavenPublicForProject() << {
-    assert project.MAVEN_LOCAL_FOR_PROJECT == null
+task assertMavenPublicForProject() {
+    doFirst {
+        assert project.MAVEN_LOCAL_FOR_PROJECT == null
+    }
 }
 
-task assertMavenLocalForBuildsystem() << {
-    assert project.MAVEN_LOCAL_FOR_BUILDSYSTEM != null
+task assertMavenLocalForBuildsystem() {
+    doFirst {
+        assert project.MAVEN_LOCAL_FOR_BUILDSYSTEM != null
+    }
 }
-task assertMavenLocalForProject() << {
-    assert project.MAVEN_LOCAL_FOR_PROJECT != null
+task assertMavenLocalForProject() {
+    doFirst {
+        assert project.MAVEN_LOCAL_FOR_PROJECT != null
+    }
 }
 
 

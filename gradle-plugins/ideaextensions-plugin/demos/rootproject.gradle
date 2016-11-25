@@ -36,18 +36,26 @@ task runDemo() {
 }
 
 
-task('testMasks', dependsOn: tasks.idea) << {
-    assert file("${project.name}.iws").text.contains('mask="*.tmp"')
+task('testMasks', dependsOn: tasks.idea) {
+    doFirst {
+        assert file("${project.name}.iws").text.contains('mask="*.tmp"')
+    }
 }
 
-task('testVCS', dependsOn: tasks.idea) << {
-    assert file("${project.name}.ipr").text.contains('vcs="Perforce"')
+task('testVCS', dependsOn: tasks.idea) {
+    doFirst {
+        assert file("${project.name}.ipr").text.contains('vcs="Perforce"')
+    }
 }
 
-task('testInspections', dependsOn: tasks.idea) << {
-    assert file("${project.name}.ipr").text.contains('"SKTools Default"')
+task('testInspections', dependsOn: tasks.idea) {
+    doFirst {
+        assert file("${project.name}.ipr").text.contains('"SKTools Default"')
+    }
 }
 
-task('testCodeStyle', dependsOn: tasks.idea) << {
-    assert file("${project.name}.ipr").text.contains('"XML_ATTRIBUTE_WRAP"')
+task('testCodeStyle', dependsOn: tasks.idea) {
+    doFirst {
+        assert file("${project.name}.ipr").text.contains('"XML_ATTRIBUTE_WRAP"')
+    }
 }

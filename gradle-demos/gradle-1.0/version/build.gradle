@@ -75,59 +75,83 @@ task demo(description: 'Kjører en enkel demo for å teste funksjonaliteten') {
 }
 
 //legger til tasker for testing av std versjon
-project.task('assertDefaultVersionRelease') << {
-    assert project.version.hovedversjon == defaultVersion.hovedversjon
-    assert project.version.subversjon == defaultVersion.subversjon
+project.task('assertDefaultVersionRelease') {
+    doFirst {
+        assert project.version.hovedversjon == defaultVersion.hovedversjon
+        assert project.version.subversjon == defaultVersion.subversjon
+    }
 }
-project(':projectA').task('assertDefaultVersionRelease') << {
-    assert project.version.hovedversjon == defaultVersion.hovedversjon
-    assert project.version.subversjon == defaultVersion.subversjon
+project(':projectA').task('assertDefaultVersionRelease') {
+    doFirst {
+        assert project.version.hovedversjon == defaultVersion.hovedversjon
+        assert project.version.subversjon == defaultVersion.subversjon
+    }
 }
-project(':projectB').task('assertDefaultVersionRelease') << {
-    assert project.version.hovedversjon == '2.0'
-    assert project.version.subversjon == defaultVersion.subversjon
-}
-
-
-project.task('assertDefaultVersionSnapshot') << {
-    assert project.version.hovedversjon == defaultVersion.hovedversjon
-    assert project.version.subversjon == defaultVersion.subversjon + '-SNAPSHOT'
-}
-project(':projectA').task('assertDefaultVersionSnapshot') << {
-    assert project.version.hovedversjon == defaultVersion.hovedversjon
-    assert project.version.subversjon == defaultVersion.subversjon + '-SNAPSHOT'
-}
-project(':projectB').task('assertDefaultVersionSnapshot') << {
-    assert project.version.hovedversjon == '2.0'
-    assert project.version.subversjon == defaultVersion.subversjon + '-SNAPSHOT'
+project(':projectB').task('assertDefaultVersionRelease') {
+    doFirst {
+        assert project.version.hovedversjon == '2.0'
+        assert project.version.subversjon == defaultVersion.subversjon
+    }
 }
 
 
-project.task('assertHovedversjonRelease') << {
-    assert project.version.hovedversjon == '2.1'
-    assert project.version.subversjon == '.0'
+project.task('assertDefaultVersionSnapshot') {
+    doFirst {
+        assert project.version.hovedversjon == defaultVersion.hovedversjon
+        assert project.version.subversjon == defaultVersion.subversjon + '-SNAPSHOT'
+    }
 }
-project(':projectA').task('assertHovedversjonRelease') << {
-    assert project.version.hovedversjon == '2.1'
-    assert project.version.subversjon == '.0'
+project(':projectA').task('assertDefaultVersionSnapshot') {
+    doFirst {
+        assert project.version.hovedversjon == defaultVersion.hovedversjon
+        assert project.version.subversjon == defaultVersion.subversjon + '-SNAPSHOT'
+    }
 }
-project(':projectB').task('assertHovedversjonRelease') << {
-    assert project.version.hovedversjon == '2.0'
-    assert project.version.subversjon == '.0'
+project(':projectB').task('assertDefaultVersionSnapshot') {
+    doFirst {
+        assert project.version.hovedversjon == '2.0'
+        assert project.version.subversjon == defaultVersion.subversjon + '-SNAPSHOT'
+    }
 }
 
 
-project.task('assertHovedversjonAndSubversjonRelease') << {
-    assert project.version.hovedversjon == '2.1'
-    assert project.version.subversjon == '.1a'
+project.task('assertHovedversjonRelease') {
+    doFirst {
+        assert project.version.hovedversjon == '2.1'
+        assert project.version.subversjon == '.0'
+    }
 }
-project(':projectA').task('assertHovedversjonAndSubversjonRelease') << {
-    assert project.version.hovedversjon == '2.1'
-    assert project.version.subversjon == '.1a'
+project(':projectA').task('assertHovedversjonRelease') {
+    doFirst {
+        assert project.version.hovedversjon == '2.1'
+        assert project.version.subversjon == '.0'
+    }
 }
-project(':projectB').task('assertHovedversjonAndSubversjonRelease') << {
-    assert project.version.hovedversjon == '2.0'
-    assert project.version.subversjon == '.1a'
+project(':projectB').task('assertHovedversjonRelease') {
+    doFirst {
+        assert project.version.hovedversjon == '2.0'
+        assert project.version.subversjon == '.0'
+    }
+}
+
+
+project.task('assertHovedversjonAndSubversjonRelease') {
+    doFirst {
+        assert project.version.hovedversjon == '2.1'
+        assert project.version.subversjon == '.1a'
+    }
+}
+project(':projectA').task('assertHovedversjonAndSubversjonRelease') {
+    doFirst {
+        assert project.version.hovedversjon == '2.1'
+        assert project.version.subversjon == '.1a'
+    }
+}
+project(':projectB').task('assertHovedversjonAndSubversjonRelease') {
+    doFirst {
+        assert project.version.hovedversjon == '2.0'
+        assert project.version.subversjon == '.1a'
+    }
 }
 
 

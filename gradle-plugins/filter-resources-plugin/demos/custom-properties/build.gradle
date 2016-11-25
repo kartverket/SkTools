@@ -17,9 +17,11 @@ task runDemo() {
 }
 
 
-task('testFilterResources', dependsOn: tasks.filterResources) << {
-    assert file('gen/main/resources/someFile.txt').exists()
-    assert file('gen/main/resources/someFile.txt').text.contains("version=@version@")
-    assert file('gen/main/resources/someFile.txt').text.contains("testValue=myValue")
+task('testFilterResources', dependsOn: tasks.filterResources) {
+    doFirst {
+        assert file('gen/main/resources/someFile.txt').exists()
+        assert file('gen/main/resources/someFile.txt').text.contains("version=@version@")
+        assert file('gen/main/resources/someFile.txt').text.contains("testValue=myValue")
+    }
 }
 

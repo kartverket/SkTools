@@ -100,38 +100,41 @@ task demo(dependsOn:'clean') {
 
 
 
-task assertIdeaModule() << {
+task assertIdeaModule() {
+    doFirst {
+        file("${project.name}.iml").text.with {
 
-    file("${project.name}.iml").text.with {
+            assert it.contains('<sourceFolder url="file://$MODULE_DIR$/src/main/java')
+            assert it.contains('<sourceFolder url="file://$MODULE_DIR$/src/jasper/java')
+            assert it.contains('<sourceFolder url="file://$MODULE_DIR$/src/test/java')
 
-        assert it.contains('<sourceFolder url="file://$MODULE_DIR$/src/main/java')
-        assert it.contains('<sourceFolder url="file://$MODULE_DIR$/src/jasper/java')
-        assert it.contains('<sourceFolder url="file://$MODULE_DIR$/src/test/java')
+            assert it.contains('<root url="file://$MODULE_DIR$/build/resources/main')
 
-        assert it.contains('<root url="file://$MODULE_DIR$/build/resources/main')
+            assert it.contains('<root url="file://$MODULE_DIR$/gen/jasper/reports')
+            assert it.contains('<root url="file://$MODULE_DIR$/build/resources/jasper')
 
-        assert it.contains('<root url="file://$MODULE_DIR$/gen/jasper/reports')
-        assert it.contains('<root url="file://$MODULE_DIR$/build/resources/jasper')
+            assert it.contains('<root url="file://$MODULE_DIR$/src/jasper/resources') //forventer at denne hektes inn som source for lib
 
-        assert it.contains('<root url="file://$MODULE_DIR$/src/jasper/resources') //forventer at denne hektes inn som source for lib
+            assert it.contains('commons-lang-2.6.jar!')  //forventer at denne ligger som runtime avhengighet
+            assert it.contains('jasperreports-3.7.0.jar!') //forventer denne som compile time avhengighet
+        }
 
-        assert it.contains('commons-lang-2.6.jar!')  //forventer at denne ligger som runtime avhengighet
-        assert it.contains('jasperreports-3.7.0.jar!') //forventer denne som compile time avhengighet
     }
-
 }
 
 
-task printSourceSets() << {
-    logger.info "SourceSets defined: "
-    project.convention.plugins.java.sourceSets.each { s ->
-        ['java', 'allJava', 'resources', 'filterResources', 'groovy', 'allGroovy', 'allSource'].each { id ->
-            try {
-                def prefix = "${s.name}.${id}"
-                s."$id".srcDirs.each { println "$prefix <- ".padLeft(prefix.size() + 5, ' ') + project.relativePath(it); prefix = prefix.replaceAll(/./, ' ')  }
-                println()
-            } catch (MissingPropertyException mpe) {
-                assert true //ok her
+task printSourceSets() {
+    doFirst {
+        logger.info "SourceSets defined: "
+        project.convention.plugins.java.sourceSets.each { s ->
+            ['java', 'allJava', 'resources', 'filterResources', 'groovy', 'allGroovy', 'allSource'].each { id ->
+                try {
+                    def prefix = "${s.name}.${id}"
+                    s."$id".srcDirs.each { println "$prefix <- ".padLeft(prefix.size() + 5, ' ') + project.relativePath(it); prefix = prefix.replaceAll(/./, ' ')  }
+                    println()
+                } catch (MissingPropertyException mpe) {
+                    assert true //ok her
+                }
             }
         }
     }

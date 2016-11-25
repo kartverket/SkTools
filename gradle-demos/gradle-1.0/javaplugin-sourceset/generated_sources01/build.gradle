@@ -93,60 +93,68 @@ task demo(dependsOn:'clean') {
 }
 
 
-task assertClasspath() << {
-    def sourceSet = project.convention.plugins.java.sourceSets.main
+task assertClasspath() {
+    doFirst {
+        def sourceSet = project.convention.plugins.java.sourceSets.main
 
-    assert sourceSet.runtimeClasspath.contains(file("${buildDir}/special/resources"))
-    assert sourceSet.runtimeClasspath.contains(file("${buildDir}/classes/special"))
+        assert sourceSet.runtimeClasspath.contains(file("${buildDir}/special/resources"))
+        assert sourceSet.runtimeClasspath.contains(file("${buildDir}/classes/special"))
 
-    //tester ved å eksekvere generert javaklient
-    project.javaexec {
-        main = 'Messenger'
-        classpath = sourceSet.runtimeClasspath
-        standardOutput = System.out
-        errorOutput = System.err
+        //tester ved å eksekvere generert javaklient
+        project.javaexec {
+            main = 'Messenger'
+            classpath = sourceSet.runtimeClasspath
+            standardOutput = System.out
+            errorOutput = System.err
 
-        println "Excecuting javaprogram with classpath \n  = ${classpath.files.join(';\n += ')};"
-    }.rethrowFailure()
-}
-
-task assertIdeaModule() << {
-
-    file("${project.name}.iml").text.with {
-        assert it.contains("build/resources/special")    //forventer at sti for egenproduserte ressurser ligger på classpath
-        assert it.contains("build/classes/special")    //forventer at sti for egenproduserte classes ligger på classpath
+            println "Excecuting javaprogram with classpath \n  = ${classpath.files.join(';\n += ')};"
+        }.rethrowFailure()
     }
-
 }
 
-task assertResources() << {
-    def sourceSet = project.convention.plugins.java.sourceSets.main
+task assertIdeaModule() {
+    doFirst {
+        file("${project.name}.iml").text.with {
+            assert it.contains("build/resources/special")    //forventer at sti for egenproduserte ressurser ligger på classpath
+            assert it.contains("build/classes/special")    //forventer at sti for egenproduserte classes ligger på classpath
+        }
+    }
+}
 
-    assert sourceSet.output.files.contains(file("${buildDir}/special/resources"))
-    assert sourceSet.output.asFileTree.contains(file("${buildDir}/special/resources/myGeneratedResource.properties"))
+task assertResources() {
+    doFirst {
+        def sourceSet = project.convention.plugins.java.sourceSets.main
+
+        assert sourceSet.output.files.contains(file("${buildDir}/special/resources"))
+        assert sourceSet.output.asFileTree.contains(file("${buildDir}/special/resources/myGeneratedResource.properties"))
+    }
 }
 
 
-task assertJavaSource() << {
-    def sourceSet = project.convention.plugins.java.sourceSets.main
+task assertJavaSource() {
+    doFirst {
+        def sourceSet = project.convention.plugins.java.sourceSets.main
 
-    assert sourceSet.allSource.srcDirs.contains(file('gen/special/java'))
+        assert sourceSet.allSource.srcDirs.contains(file('gen/special/java'))
 
-    assert sourceSet.output.files.contains(file("${buildDir}/classes/special"))
-    assert sourceSet.output.asFileTree.contains(file("${buildDir}/classes/special/Special.class"))
+        assert sourceSet.output.files.contains(file("${buildDir}/classes/special"))
+        assert sourceSet.output.asFileTree.contains(file("${buildDir}/classes/special/Special.class"))
+    }
 }
 
 
-task printSourceSets() << {
-    logger.info "SourceSets defined: "
-    project.convention.plugins.java.sourceSets.each { s ->
-        ['java', 'allJava', 'resources', 'filterResources', 'groovy', 'allGroovy', 'allSource'].each { id ->
-            try {
-                def prefix = "${s.name}.${id}"
-                s."$id".srcDirs.each { println "$prefix <- ".padLeft(prefix.size() + 5, ' ') + project.relativePath(it); prefix = prefix.replaceAll(/./, ' ')  }
-                println()
-            } catch (MissingPropertyException mpe) {
-                assert true //ok her
+task printSourceSets() {
+    doFirst {
+        logger.info "SourceSets defined: "
+        project.convention.plugins.java.sourceSets.each { s ->
+            ['java', 'allJava', 'resources', 'filterResources', 'groovy', 'allGroovy', 'allSource'].each { id ->
+                try {
+                    def prefix = "${s.name}.${id}"
+                    s."$id".srcDirs.each { println "$prefix <- ".padLeft(prefix.size() + 5, ' ') + project.relativePath(it); prefix = prefix.replaceAll(/./, ' ')  }
+                    println()
+                } catch (MissingPropertyException mpe) {
+                    assert true //ok her
+                }
             }
         }
     }

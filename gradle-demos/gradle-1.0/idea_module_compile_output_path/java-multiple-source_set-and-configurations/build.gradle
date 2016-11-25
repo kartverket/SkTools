@@ -115,39 +115,40 @@ task demo(dependsOn:'clean') {
 
 
 
-task assertIdeaModule() << {
+task assertIdeaModule() {
+    doFirst {
+        file("${project.name}.iml").text.with {
 
+            assert it.contains('$MODULE_DIR$/src/main/java')
+            assert it.contains('$MODULE_DIR$/src/main/java2')
+            assert it.contains('$MODULE_DIR$/src/main/resources2')
+            assert it.contains('$MODULE_DIR$/src/main/resources')
+            assert it.contains('$MODULE_DIR$/src/test/java')
 
-    file("${project.name}.iml").text.with {
+            assert !it.contains('$MODULE_DIR$/src/other/resources')
+            assert !it.contains('$MODULE_DIR$/src/other/java')
 
-        assert it.contains('$MODULE_DIR$/src/main/java')
-        assert it.contains('$MODULE_DIR$/src/main/java2')
-        assert it.contains('$MODULE_DIR$/src/main/resources2')
-        assert it.contains('$MODULE_DIR$/src/main/resources')
-        assert it.contains('$MODULE_DIR$/src/test/java')
+            assert it.contains('$MODULE_DIR$/build/classes/other')
+            assert it.contains('$MODULE_DIR$/build/resources/other')
 
-        assert !it.contains('$MODULE_DIR$/src/other/resources')
-        assert !it.contains('$MODULE_DIR$/src/other/java')
-
-        assert it.contains('$MODULE_DIR$/build/classes/other')
-        assert it.contains('$MODULE_DIR$/build/resources/other')
-
+        }
 
     }
-
 }
 
 
-task printSourceSets() << {
-    logger.info "SourceSets defined: "
-    project.convention.plugins.java.sourceSets.each { s ->
-        ['java', 'allJava', 'resources', 'filterResources', 'groovy', 'allGroovy', 'allSource'].each { id ->
-            try {
-                def prefix = "${s.name}.${id}"
-                s."$id".srcDirs.each { println "$prefix <- ".padLeft(prefix.size() + 5, ' ') + project.relativePath(it); prefix = prefix.replaceAll(/./, ' ')  }
-                println()
-            } catch (MissingPropertyException mpe) {
-                assert true //ok her
+task printSourceSets() {
+    doFirst {
+        logger.info "SourceSets defined: "
+        project.convention.plugins.java.sourceSets.each { s ->
+            ['java', 'allJava', 'resources', 'filterResources', 'groovy', 'allGroovy', 'allSource'].each { id ->
+                try {
+                    def prefix = "${s.name}.${id}"
+                    s."$id".srcDirs.each { println "$prefix <- ".padLeft(prefix.size() + 5, ' ') + project.relativePath(it); prefix = prefix.replaceAll(/./, ' ')  }
+                    println()
+                } catch (MissingPropertyException mpe) {
+                    assert true //ok her
+                }
             }
         }
     }

@@ -64,19 +64,25 @@ task demo() {
 
 allprojects { project ->
     //legger til task for testing at user property er tilgjengeliggjort
-    project.task('assertUserProperties') << {
-        println "\tmyProperty=${myProperty}"
-        assert project.myProperty == 'user configured!'
+    project.task('assertUserProperties') {
+        doFirst {
+            println "\tmyProperty=${myProperty}"
+            assert project.myProperty == 'user configured!'
+        }
     }
 
-    project.task('assertDefaultProperty') << {
-        println "\tmyProperty=${myProperty}"
-        assert project.myProperty == 'default value!'
+    project.task('assertDefaultProperty') {
+        doFirst {
+            println "\tmyProperty=${myProperty}"
+            assert project.myProperty == 'default value!'
+        }
     }
 
-    project.task('assertPropertyOverride') << {
-        println "\tmyProperty=${myProperty}"
-        assert project.myProperty == 'overridden!'
+    project.task('assertPropertyOverride') {
+        doFirst {
+            println "\tmyProperty=${myProperty}"
+            assert project.myProperty == 'overridden!'
+        }
     }
 
 }

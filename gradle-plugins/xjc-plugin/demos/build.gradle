@@ -40,8 +40,10 @@ buildscript {
 
 }
 
-def clean = task('clean')<<{
-    logger.info "Cleaning project ${project.projectDir}"
+def clean = task('clean') {
+    doFirst {
+        logger.info "Cleaning project ${project.projectDir}"
+    }
 }
 
 allprojects {

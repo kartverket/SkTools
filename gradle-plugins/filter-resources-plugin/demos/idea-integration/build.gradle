@@ -15,16 +15,18 @@ tasks.clean.doLast {
     project.delete 'gen', 'src'
 }
 
-task('testFilterResourcesAsSourceFolders', dependsOn: tasks.ideaModule) << {
-    file("${project.name}.iml").text.with { fileContents ->
-        [
-                '$MODULE_DIR$/gen/main/resources',
-                '$MODULE_DIR$/gen/test/resources',
-        ].each {
-            assert fileContents.contains(it) //forventer at iml fil inneholder filstier
+task('testFilterResourcesAsSourceFolders', dependsOn: tasks.ideaModule) {
+    doFirst {
+        file("${project.name}.iml").text.with { fileContents ->
+            [
+                    '$MODULE_DIR$/gen/main/resources',
+                    '$MODULE_DIR$/gen/test/resources',
+            ].each {
+                assert fileContents.contains(it) //forventer at iml fil inneholder filstier
+            }
+
         }
 
     }
-
 }
 

@@ -98,14 +98,18 @@ task runDemo() {
     dependsOn 'testClean'
 }
 
-task('testGenWebstart', dependsOn: tasks.war) << {
-    FileTree warTree = project.zipTree(war.archivePath)
+task('testGenWebstart', dependsOn: tasks.war) {
+    doFirst {
+        FileTree warTree = project.zipTree(war.archivePath)
 
-    assert warTree.matching { include '*.jnlp' }.files.collect {it.name} as Set == ['client1-signed.jnlp', 'client1-unsigned.jnlp', 'runtimes-demo.jnlp', 'properties.jnlp'] as Set
-    assert (warTree.matching { include 'lib/echo-client*.jar' }.files.collect {it.name} as Set).size() == 2 //forventer en signert (ganger 3 riktignok) og en usingert jar
+        assert warTree.matching { include '*.jnlp' }.files.collect {it.name} as Set == ['client1-signed.jnlp', 'client1-unsigned.jnlp', 'runtimes-demo.jnlp', 'properties.jnlp'] as Set
+        assert (warTree.matching { include 'lib/echo-client*.jar' }.files.collect {it.name} as Set).size() == 2 //forventer en signert (ganger 3 riktignok) og en usingert jar
+    }
 }
 
-task('testClean', dependsOn: [tasks.testGenWebstart, tasks.clean]) << {
-    logger.quiet 'todo'
+task('testClean', dependsOn: [tasks.testGenWebstart, tasks.clean]) {
+    doFirst {
+        logger.quiet 'todo'
+    }
 }
 

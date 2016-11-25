@@ -18,7 +18,9 @@ configureDatabasePlugin {
         ]
 
         ('a'..'z').each { def name ->
-            task("${name}") << { println "$it.name" }
+            task("${name}") {
+                doFirst { println "$it.name" }
+            }
         }
 
         ('a'..'z').each { def name ->

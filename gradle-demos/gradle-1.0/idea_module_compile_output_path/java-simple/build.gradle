@@ -32,26 +32,29 @@ task demo(dependsOn:'clean') {
 
 
 
-task assertIdeaModule() << {
-
-    file("${project.name}.iml").text.with {
+task assertIdeaModule() {
+    doFirst {
+        file("${project.name}.iml").text.with {
 //        assert it.contains("build/resources/special")    //forventer at sti for egenproduserte ressurser ligger på classpath
 //        assert it.contains("build/classes/special")    //forventer at sti for egenproduserte classes ligger på classpath
-    }
+        }
 
+    }
 }
 
 
-task printSourceSets() << {
-    logger.info "SourceSets defined: "
-    project.convention.plugins.java.sourceSets.each { s ->
-        ['java', 'allJava', 'resources', 'filterResources', 'groovy', 'allGroovy', 'allSource'].each { id ->
-            try {
-                def prefix = "${s.name}.${id}"
-                s."$id".srcDirs.each { println "$prefix <- ".padLeft(prefix.size() + 5, ' ') + project.relativePath(it); prefix = prefix.replaceAll(/./, ' ')  }
-                println()
-            } catch (MissingPropertyException mpe) {
-                assert true //ok her
+task printSourceSets() {
+    doFirst {
+        logger.info "SourceSets defined: "
+        project.convention.plugins.java.sourceSets.each { s ->
+            ['java', 'allJava', 'resources', 'filterResources', 'groovy', 'allGroovy', 'allSource'].each { id ->
+                try {
+                    def prefix = "${s.name}.${id}"
+                    s."$id".srcDirs.each { println "$prefix <- ".padLeft(prefix.size() + 5, ' ') + project.relativePath(it); prefix = prefix.replaceAll(/./, ' ')  }
+                    println()
+                } catch (MissingPropertyException mpe) {
+                    assert true //ok her
+                }
             }
         }
     }

@@ -74,14 +74,16 @@ class WeblogicDeployConfiguration {
      * @return
      */
     Task askIfProdserverTask(Closure config) {
-        askIfProdserverTask = project.task(convention.getTaskName('askIfProdserver', name)) << {
-            print("\nDeploy til PRODSERVER (${url}), vil du fortsette? (j/n) ")
-            System.out.flush();
-            BufferedReader br = new BufferedReader(new InputStreamReader(System.in))
-            def svar = br.readLine()
-            if( !svar.equalsIgnoreCase("j") && !svar.equalsIgnoreCase("ja") ) {
-                println "Build aborted by user"
-                assert false
+        askIfProdserverTask = project.task(convention.getTaskName('askIfProdserver', name)) {
+            doFirst {
+                print("\nDeploy til PRODSERVER (${url}), vil du fortsette? (j/n) ")
+                System.out.flush();
+                BufferedReader br = new BufferedReader(new InputStreamReader(System.in))
+                def svar = br.readLine()
+                if( !svar.equalsIgnoreCase("j") && !svar.equalsIgnoreCase("ja") ) {
+                    println "Build aborted by user"
+                    assert false
+                }
             }
         }
         this.dependsOn askIfProdserverTask
