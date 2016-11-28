@@ -151,12 +151,24 @@ class WeblogicDeployConfiguration {
         return askIfProdserverTask
     }
 
+    String getProtocol() {
+        return protocol
+    }
+
     void setProtocol(String protocol) {
         this.protocol = protocol
     }
 
+    String getHost() {
+        return host
+    }
+
     void setHost(String host) {
         this.host = host
+    }
+
+    String getPort() {
+        return port
     }
 
     void setPort(String port) {
@@ -179,8 +191,16 @@ class WeblogicDeployConfiguration {
         ConfigureUtil.configureByMap(params, this)
     }
 
+    String getTargets() {
+        return targets
+    }
+
     void setTargets(String targets) {
         this.targets = targets
+    }
+
+    String getUsername() {
+        return username
     }
 
     void setUsername(String username) {
