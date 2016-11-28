@@ -204,6 +204,10 @@ class WeblogicDeployConfiguration {
         this.name = deploymentName
     }
 
+    public String getName() {
+        return name;
+    }
+
     void setClasspath(Object classpath) {
         this.classpath = classpath
     }
