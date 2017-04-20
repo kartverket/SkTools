@@ -28,7 +28,7 @@ public class WsImportPlugin implements Plugin<Project> {
         wsImportTask.setDestinationDir(genSrcDir);
         wsImportTask.setJaxwsClasspath(jaxwsConfiguration);
         wsImportTask.source(mainSourceSet.getResources());
-        wsImportTask.dependsOn(resourcesTask.getTaskDependencies());
+        wsImportTask.dependsOn(resourcesTask);
 
         Task compileJavaTask = project.getTasks().getByName(mainSourceSet.getCompileJavaTaskName());
         compileJavaTask.dependsOn(wsImportTask);

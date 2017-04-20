@@ -27,6 +27,20 @@ public class WsImportTask extends SourceTask {
 
     String lastWsdl = null;
 
+    /**
+     * Angir hvilken WSDL som skal prosesseres sist. Dette må være den som trekker inn mest.
+     */
+    public void lastWsdl(String lastWsdl) {
+        setLastWsdl(lastWsdl)
+    }
+
+    /**
+     * Angir at exceptions skal samles i denne pakken fremfor å ligge i hver service-pakke.
+     */
+    public void exceptionReusePackage(String packageOrPathString) {
+        setPackageOrPathString(packageOrPathString)
+    }
+
     @TaskAction
     protected void genServices() {
         ant.taskdef(name: 'wsimport', classname: 'com.sun.tools.ws.ant.WsImport', classpath: getJaxwsClasspath().getAsPath())
