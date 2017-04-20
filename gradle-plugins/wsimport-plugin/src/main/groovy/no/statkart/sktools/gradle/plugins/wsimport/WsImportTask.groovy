@@ -1,6 +1,5 @@
 package no.statkart.sktools.gradle.plugins.wsimport
 
-import org.apache.commons.io.FileUtils
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileVisitDetails
 import org.gradle.api.tasks.OutputDirectory
@@ -9,6 +8,7 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.util.PatternSet
 
 import java.nio.charset.StandardCharsets
+import java.nio.file.Files
 
 public class WsImportTask extends SourceTask {
     FileCollection jaxwsClasspath;
@@ -86,7 +86,7 @@ public class WsImportTask extends SourceTask {
             File relocatedFile = new File(exceptionPackageDir, file.getName())
             logger.info("merging exception ${relocatedFile} <- ${file}")
 
-            FileUtils.copyFileToDirectory(file, exceptionPackageDir)
+            Files.copy(file.toPath(), exceptionPackageDir.toPath().resolve(file.name))
             file.delete()
 
             //kjører regexp replace på package statement for flyttet fil
