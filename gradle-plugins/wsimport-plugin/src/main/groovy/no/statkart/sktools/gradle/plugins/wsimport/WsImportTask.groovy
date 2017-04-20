@@ -25,6 +25,8 @@ public class WsImportTask extends SourceTask {
     // Bruker UTF-8 som standard fordi: 1) UTF-8 er gyldig windows-1252, men windows-1252 er ikke gyldig UTF-8; 2) Den faktiske koden skal ikke innholde ikke-ASCII-tegn, kun eventuelt kommentarer
     String encoding = StandardCharsets.UTF_8.name();
 
+    String lastWsdl = null;
+
     @TaskAction
     protected void genServices() {
         ant.taskdef(name: 'wsimport', classname: 'com.sun.tools.ws.ant.WsImport', classpath: getJaxwsClasspath().getAsPath())
@@ -33,15 +35,29 @@ public class WsImportTask extends SourceTask {
 
         def wsdls = getSource().matching { include '**/*.wsdl' }
 
+        List<FileVisitDetails> last = []
+
         wsdls.visit { FileVisitDetails details ->
             if (!details.directory) {
-                ant.wsimport(wsdl: details.file, extension: 'true', destdir: getTemporaryDir(), sourcedestdir: getDestinationDir(), keep: 'true', xnocompile: 'true', wsdllocation: '/' + details.relativePath, verbose: verbose, encoding: encoding)
+                if (details.relativePath.toString().equals(lastWsdl)) {
+                    last.add(details)
+                } else {
+                    wsimport(details)
+                }
             }
+        }
+
+        last.each {
+            wsimport(it)
         }
 
         if (packageOrPathString) {
             reuseExceptions(getDestinationDir())
         }
+    }
+
+    protected void wsimport(FileVisitDetails details) {
+        ant.wsimport(wsdl: details.file, extension: 'true', destdir: getTemporaryDir(), sourcedestdir: getDestinationDir(), keep: 'true', xnocompile: 'true', wsdllocation: '/' + details.relativePath, verbose: verbose, encoding: encoding)
     }
 
     String getPackageString() {
