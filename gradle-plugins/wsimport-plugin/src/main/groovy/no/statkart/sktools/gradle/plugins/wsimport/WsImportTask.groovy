@@ -9,6 +9,7 @@ import org.gradle.api.tasks.util.PatternSet
 
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 
 public class WsImportTask extends SourceTask {
     FileCollection jaxwsClasspath;
@@ -100,7 +101,7 @@ public class WsImportTask extends SourceTask {
             File relocatedFile = new File(exceptionPackageDir, file.getName())
             logger.info("merging exception ${relocatedFile} <- ${file}")
 
-            Files.copy(file.toPath(), exceptionPackageDir.toPath().resolve(file.name))
+            Files.copy(file.toPath(), exceptionPackageDir.toPath().resolve(file.name), StandardCopyOption.REPLACE_EXISTING)
             file.delete()
 
             //kjører regexp replace på package statement for flyttet fil
