@@ -2,15 +2,12 @@ package no.statkart.sktools.gradle.plugins.wsgen
 
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileVisitDetails
-import org.gradle.api.internal.ConventionTask
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.SourceTask
 import org.gradle.api.tasks.TaskAction
 
-public class WsdlGenTask extends ConventionTask {
-    @InputFiles
-    FileCollection input;
-
+public class WsdlGenTask extends SourceTask {
     @InputFiles
     FileCollection classpath;
 
@@ -25,10 +22,9 @@ public class WsdlGenTask extends ConventionTask {
         ant.delete(dir: getDestinationDir(), quiet: 'true')
         ant.mkdir(dir: getDestinationDir())
 
-        def wsBeans = getInput().asFileTree.matching { include '**/*WSBean.class' }
+        def wsBeans = getSource().matching { include '**/*WSBean.class' }
 
-        def completeClasspath = getClasspath() + getInput();
-        ant.path(id: this.getPath() ,path: completeClasspath.asPath)
+        ant.path(id: this.getPath() ,path: getClasspath().asPath)
 
         wsBeans.visit { FileVisitDetails details ->
             if (!details.directory) {
