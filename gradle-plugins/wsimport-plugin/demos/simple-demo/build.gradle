@@ -1,0 +1,111 @@
+/******************************************************************************************************************** **
+ * Demonstrerer standard bruk av plugin
+ *
+ * Det demonstreres også eksempel implementasjon av 'gen' target
+ ******************************************************************************************************************** */
+
+apply plugin: 'sktools-wsimport-plugin'
+
+
+dependencies {
+    jaxws libraries.jaxws
+}
+
+/******************************************************************************************************************** **
+ * Diverse tasker som tester og demonstrerer implementasjonen
+ ******************************************************************************************************************** */
+
+task runDemo() {
+
+    //SKTOOLS-56: viser tempdir konfigurasjon
+    logger.quiet("Java tempdir for gradle prosjekt: {}", System.getProperty('java.io.tmpdir'))
+
+    Assert.that('clean', 'wsimport').describedAs('genWsClient').leadsTo(project).withState {
+        assertGenWsClient()
+    }
+
+    Assert.that('clean', 'build').describedAs('buildWsClient').leadsTo(project).withState {
+        assertGenWsClient()
+        assertBuild()
+        assertLibs()
+    }
+
+}
+
+
+class Assert {
+    def taskName
+    String[] taskNames
+    Project project
+    List<Closure> prep = []
+
+    static def previousTask = null
+
+    static Assert that(String... taskNames) {
+        Assert instance = new Assert(); instance.taskNames = taskNames; return instance
+    }
+
+    Assert describedAs(String taskName) {
+        this.taskName = taskName; this
+    }
+
+    Assert prep(Closure prepProjectBeforeAsserts) {
+        prep << [prepProjectBeforeAsserts]; this
+    }
+
+    Assert leadsTo(Project project = project) {
+        this.project = project; this
+    }
+
+    Assert withState(Closure check) {
+        def task = project.task(taskName, type: GradleBuild) {
+            dir = project.projectDir
+            tasks = taskNames
+            startParameter.systemPropertiesArgs = [noMavenBootstrap: 'true']
+            startParameter.projectProperties = [sktools_versjon: "${project.version}"]
+            prep.reverseEach { Closure beforeAsserts ->
+                doFirst {
+                    beforeAsserts.setDelegate(this); beforeAsserts.run()
+                }
+            }
+            doLast { check.setDelegate(this); check.run() }
+            doFirst {
+                toConsole('--------------------------------------------------------------------------------');
+                toConsole("Testing use case: ${taskName} tasks=${taskNames}\n\n\n");
+            }
+            doLast {
+                toConsole "\n  ...end of test case: ${taskName}"
+                toConsole('--------------------------------------------------------------------------------\n\n');
+            }
+            outputs.upToDateWhen { false } //always run this...
+        }
+        project.tasks['runDemo'].dependsOn task
+
+        if (previousTask) task.dependsOn previousTask //ordered execution of asserts...
+        previousTask = task
+        this
+    }
+
+
+    private void toConsole(def message) {
+        project.logger.quiet(message)
+    }
+
+    //convenience methods and asserts....
+
+    void assertLibs() {
+        assert project.file("build/libs/${project.name}-${project.version}.jar").exists()
+    }
+
+    void assertBuild() {
+        assert project.file('build/resources/main/META-INF/wsdls/TestServiceWS.wsdl').exists()
+        assert project.file('build/resources/main/META-INF/wsdls/TestServiceWS_schema1.xsd').exists()
+        assert project.file('build/classes/main/no/statkart/test/service/v1/TestServiceWS.class').exists()
+    }
+
+    void assertGenWsClient() {
+        assert project.file('build/wsimport/no/statkart/test/service/v1/TestServiceWS.java').exists()
+    }
+
+
+}

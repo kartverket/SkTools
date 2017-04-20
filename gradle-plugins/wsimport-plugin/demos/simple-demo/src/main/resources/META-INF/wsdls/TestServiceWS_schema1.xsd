@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema version="1.0" targetNamespace="http://test.statkart.no/service/v1" xmlns:tns="http://test.statkart.no/service/v1" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:element name="noPing" type="tns:noPing"/>
+
+  <xs:element name="noPingResponse" type="tns:noPingResponse"/>
+
+  <xs:element name="ping" type="tns:ping"/>
+
+  <xs:element name="pingResponse" type="tns:pingResponse"/>
+
+  <xs:complexType name="ping">
+    <xs:sequence/>
+  </xs:complexType>
+
+  <xs:complexType name="pingResponse">
+    <xs:sequence>
+      <xs:element name="return" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="noPing">
+    <xs:sequence/>
+  </xs:complexType>
+
+  <xs:complexType name="noPingResponse">
+    <xs:sequence/>
+  </xs:complexType>
+</xs:schema>
+

@@ -18,6 +18,7 @@ include ':gradle-plugins:webstart-plugin'
 include ':gradle-plugins:wsdl-customizer-plugin'
 include ':gradle-plugins:wsdocgen-plugin'
 include ':gradle-plugins:wsgen-plugin'
+include ':gradle-plugins:wsimport-plugin'
 include ':gradle-plugins:xjc-plugin'
 
 include ':gradle-plugins:properties-plugin'
