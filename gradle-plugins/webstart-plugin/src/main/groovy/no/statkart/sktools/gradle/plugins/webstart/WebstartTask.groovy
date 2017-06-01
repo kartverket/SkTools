@@ -9,7 +9,7 @@ import org.gradle.api.tasks.*
 
 /**
  *
- * @author Leif Lislegård
+ * @author Leif Lislegï¿½rd
  * @author Tor Egil R. Strand
  */
 class WebstartTask extends ConventionTask {
@@ -100,7 +100,7 @@ class WebstartTask extends ConventionTask {
     /**
      * Genererer <code>jnlp</code>fil.
      *
-     * Filen blir delvis basert på template og delvis bygget opp i koden via {@link groovy.util.Node}.
+     * Filen blir delvis basert pï¿½ template og delvis bygget opp i koden via {@link groovy.util.Node}.
      */
     public void createJnlp(JnlpConfiguration jnlp) {
         this.getClass().getResource('template.jnlp').withInputStream { jnlpTemplateStream ->  //groovy way of handling streams
@@ -135,9 +135,9 @@ class WebstartTask extends ConventionTask {
 
 
             if (jnlp.hasApplication()) {
-                jnlpNode.appendNode('application-desc', ['main-class': jnlp.application.mainClass])
+                def applicationDescNode = jnlpNode.appendNode('application-desc', ['main-class': jnlp.application.mainClass])
+                applicationDescNode.appendNode('argument', '$$site')
             }
-
 
             writeXml(new File(getDestinationDir(), jnlp.jnlpFilename), jnlpNode, jnlp.withXml)
         }
