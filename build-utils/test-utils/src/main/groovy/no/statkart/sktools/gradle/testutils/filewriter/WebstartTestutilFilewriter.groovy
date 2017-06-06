@@ -10,6 +10,10 @@ import org.apache.commons.io.FileUtils
  */
 class WebstartTestutilFilewriter extends AbstractTestutilFilewriter {
 
+    private final static KeystorePath = "/keystore/selfsign.jks";
+    final static String KeystoreAlias = 'selfsign';
+    final static String KeystorePassword = 'meMyselfAndI';
+
     /**
      * Kopierer ut <code>kodesignering.jks</code> til targetPath.
      */
@@ -17,7 +21,7 @@ class WebstartTestutilFilewriter extends AbstractTestutilFilewriter {
         ArrayList<File> generatedFiles = new ArrayList<File>()
 
         File certFile = projectHelper.project.file("${targetPath}/kodesignering.jks")
-        FileUtils.copyURLToFile(WebstartTestutilFilewriter.class.getResource("kodesignering.jks"), certFile)
+        FileUtils.copyURLToFile(getClass().getResource(KeystorePath), certFile)
         generatedFiles.add(certFile)
 
         return generatedFiles;

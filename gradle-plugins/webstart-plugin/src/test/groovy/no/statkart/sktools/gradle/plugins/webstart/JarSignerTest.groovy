@@ -32,11 +32,11 @@ class JarSignerTest {
         Assert.assertTrue(certificateFile.exists());
 
         //configures the jar signer
-        return projectHelper.project.task(name, type: JarSigner) {
-            setCertificateFile(certificateFile)
-            setPassword('SagZ45_p1')
-            setAlias('statenskartverk')
-            manifestAttribute('Permissions', 'sandbox')
+        return projectHelper.project.task(name, type: JarSigner) { JarSigner task ->
+            task.setCertificateFile(certificateFile)
+            task.setPassword(WebstartTestutilFilewriter.KeystorePassword)
+            task.setAlias(WebstartTestutilFilewriter.KeystoreAlias)
+            task.manifestAttribute('Permissions', 'sandbox')
         } as JarSigner
     }
 
