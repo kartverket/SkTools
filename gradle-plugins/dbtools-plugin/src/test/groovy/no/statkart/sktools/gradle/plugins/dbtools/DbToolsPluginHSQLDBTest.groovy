@@ -243,7 +243,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
      * Tester at standard test blir lagt til for en "patch"
      */
     @Test
-    void testPatchStandardTasks() {
+    void testPatchStandardTaskPrintPatchVersion() {
         final ProjectHelper testCase = DbToolsProjectBuilder.builder().applyDbUtilsPlugin().build();
 
         testCase.configureProject {
@@ -253,6 +253,34 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
                     credentials.username = defaultCredentials.username
                     credentials.password = defaultCredentials.password
 
+                    url = sql.connection.properties.URL
+                    driver = jdbcDriverClassString
+
+                    patch {
+                        //tom konfigurasjon
+                    }
+                }
+            }
+        }
+
+        // STEG 3 - tester
+        Task printPatchVersionTask = testCase.project.tasks.getByName('prefixPrintPatchVersion')
+        Assert.assertNotNull(printPatchVersionTask, "Forventet task for 'prefixPrintPatchVersion")
+    }
+
+    /**
+     * Tester at standard test blir lagt til for en "patch"
+     */
+    @Test
+    void testPatchStandardTaskSetIndexInSyncWithPatch() {
+        final ProjectHelper testCase = DbToolsProjectBuilder.builder().applyDbUtilsPlugin().build();
+
+        testCase.configureProject {
+            configureDatabasePlugin {
+                toolset(name: 'Prefix', type: 'hsqldb', prefix: 'Prefix') {
+
+                    credentials.username = defaultCredentials.username
+                    credentials.password = defaultCredentials.password
 
                     url = sql.connection.properties.URL
                     driver = jdbcDriverClassString
@@ -260,18 +288,42 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
                     patch {
                         //tom konfigurasjon
                     }
-
                 }
             }
         }
 
         // STEG 3 - tester
-        Task printPatchVersionTask = testCase.project.tasks.getByName('prefixPrintPatchVersion')
         Task setIndexInSyncWithPatchTask = testCase.project.tasks.getByName('prefixSetIndexInSyncWithPatch')
-
-        Assert.assertNotNull(printPatchVersionTask, "Forventet task for 'prefixPrintPatchVersion")
         Assert.assertNotNull(setIndexInSyncWithPatchTask, "Forventet task for 'prefixSetIndexInSyncWithPatch")
+    }
 
+    /**
+     * Tester at standard test blir lagt til for en "patch"
+     */
+    @Test
+    void testPatchStandardTaskUnSetIndexInSyncWithPatch() {
+        final ProjectHelper testCase = DbToolsProjectBuilder.builder().applyDbUtilsPlugin().build();
+
+        testCase.configureProject {
+            configureDatabasePlugin {
+                toolset(name: 'Prefix', type: 'hsqldb', prefix: 'Prefix') {
+
+                    credentials.username = defaultCredentials.username
+                    credentials.password = defaultCredentials.password
+
+                    url = sql.connection.properties.URL
+                    driver = jdbcDriverClassString
+
+                    patch {
+                        //tom konfigurasjon
+                    }
+                }
+            }
+        }
+
+        // STEG 3 - tester
+        Task unsetIndexInSyncWithPatchTask = testCase.project.tasks.getByName('prefixUnSetIndexInSyncWithPatch')
+        Assert.assertNotNull(unsetIndexInSyncWithPatchTask, "Forventet task for 'prefixUnSetIndexInSyncWithPatch")
     }
 
     /**
