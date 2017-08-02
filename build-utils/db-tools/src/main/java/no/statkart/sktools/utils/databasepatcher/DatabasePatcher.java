@@ -924,7 +924,7 @@ public class DatabasePatcher {
       Connection con = null;
       try {
          con = createConnection();
-         PatchInfo patchInfo = getPatchInfo(con);   //feiler dersom ikke versjon finnes
+         PatchInfo patchInfo = getOrCreatePatchInfo(con, getDefaultPatchInfo()); //oppretter/vedlikeholder patchinfo tabell
          setIndexesInSyncWithPatch(con, value);
       } catch( SQLException e ) {
           throw new OperationalException(logger, "Feil ved sql-connection", e);
