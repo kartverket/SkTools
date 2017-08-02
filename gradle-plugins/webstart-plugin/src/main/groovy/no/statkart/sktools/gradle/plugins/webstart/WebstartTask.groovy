@@ -9,7 +9,7 @@ import org.gradle.api.tasks.*
 
 /**
  *
- * @author Leif Lislegï¿½rd
+ * @author Leif Lislegård
  * @author Tor Egil R. Strand
  */
 class WebstartTask extends ConventionTask {
@@ -100,7 +100,7 @@ class WebstartTask extends ConventionTask {
     /**
      * Genererer <code>jnlp</code>fil.
      *
-     * Filen blir delvis basert pï¿½ template og delvis bygget opp i koden via {@link groovy.util.Node}.
+     * Filen blir delvis basert på template og delvis bygget opp i koden via {@link groovy.util.Node}.
      */
     public void createJnlp(JnlpConfiguration jnlp) {
         this.getClass().getResource('template.jnlp').withInputStream { jnlpTemplateStream ->  //groovy way of handling streams
@@ -160,7 +160,6 @@ class WebstartTask extends ConventionTask {
 
     /**
      * Finner XmlTransformer, som ligger i forskjellige pakker avhengig av Gradle-versjon
-     * @return
      */
     static private Object findXmlTransformer() {
         Class transformerClass;
