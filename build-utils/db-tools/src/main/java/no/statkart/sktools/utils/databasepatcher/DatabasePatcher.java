@@ -356,7 +356,7 @@ public class DatabasePatcher {
     * @param patchFilePath filsti for patchfil som skal eksekveres
     * @param synchToPatchlevel dersom {@code true} så kjøres patcher frem til patchnivå om igjen.
     * @param patchtypes filter av patchtyper som skal påføres. {@link PatchtypeKode#isTypeOf(PatchtypeKode)}
-    * @return antall patchblokker påført (inkludert indekser dersom indexesInSyncWithPatch != true)
+    * @return antall patchblokker påført
     */
    public int patch_impl(String patchFilePath, boolean synchToPatchlevel, Collection<PatchtypeKode> patchtypes) {
       Connection con = null;
@@ -412,6 +412,8 @@ public class DatabasePatcher {
                  executedPatchesCount = executedPatchesCount; //oppdateres ikke antall eksekverte patchblokker da denne er såpass spesiell
              }
          }
+
+         //SKTOOLS-160: DatabasePatcher markerer ikke lenger indexesInSyncWithPatch ved kall til patch
 
          return executedPatchesCount;
       } catch( SQLException e ) {
