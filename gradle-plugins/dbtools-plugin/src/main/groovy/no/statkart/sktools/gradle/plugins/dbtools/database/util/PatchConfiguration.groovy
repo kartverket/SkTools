@@ -41,16 +41,16 @@ class PatchConfiguration {
 
     //legger til std tasks dersom allerede ikke eksplisitt lagt til
     void addDefaultTasks() {
-        if (!databaseConvention.getTasks().getTasks().containsKey(printPatchVersionTaskName)) {
+        if (!getTasks().getTasks().containsKey(printPatchVersionTaskName)) {
             printPatchVersionTask([:], null, null)
         }
-        if (!databaseConvention.getTasks().getTasks().containsKey(setIndexesInSyncWithPatchTaskName)) {
+        if (!getTasks().getTasks().containsKey(setIndexesInSyncWithPatchTaskName)) {
             setIndexesInSyncWithPatchTask([:], null, null)
         }
-        if (!databaseConvention.getTasks().getTasks().containsKey(unSetIndexesInSyncWithPatchTaskName)) {
+        if (!getTasks().getTasks().containsKey(unSetIndexesInSyncWithPatchTaskName)) {
             unSetIndexesInSyncWithPatchTask([:], null, null)
         }
-        if (!databaseConvention.getTasks().getTasks().containsKey(assertPatchVersionTaskName)) {
+        if (!getTasks().getTasks().containsKey(assertPatchVersionTaskName)) {
             assertPatchVersionTask([:], null, null)
         }
 
