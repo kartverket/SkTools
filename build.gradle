@@ -41,7 +41,7 @@ project.ext.libraries = [
         guava: 'com.google.guava:guava:19.0',
 
         // Testing
-        assertj: 'org.assertj:assertj-core:2.2.0', /* AssertJ 2.x for Java 7, 3.x for Java8 */
+        assertj: 'org.assertj:assertj-core:2.8.0', /* AssertJ 2.x for Java 7, 3.x for Java8 */
         testng: 'org.testng:testng:6.9.10',
         hsqldb: 'org.hsqldb:hsqldb:2.2.8',
         jaxws: 'com.sun.xml.ws:jaxws-tools:2.2.10',
