@@ -82,7 +82,10 @@ public abstract class AbstractParserVisitorFactory implements VisitorFactoryInte
             } while (sb.indexOf(delimiterString) == -1);
 
 
-            return returnDelimiter ? sb.toString() : sb.toString().replaceAll(delimiterString, "");
+            if (!returnDelimiter) {
+                sb.replace(sb.length() - delimiterString.length(), sb.length(), "");
+            }
+            return sb.toString();
         }
     }
 

@@ -75,14 +75,18 @@ public class SQLStatementParser {
                 newExpression = new PromptStatement();
             } else if (nextLine.matches("--.*")) {
                 newExpression = new LineComment();
+            } else if (nextLine.matches("/\\*.*")) {
+                newExpression = new InlineComment();
             } else {
                 newExpression = new DefaultStatement();
             }
 
-            Object o = newExpression.execute(visitor, null);
+            if (newExpression != null) {
+                Object o = newExpression.execute(visitor, null);
 
-            if (o != null) {
-                expressions.add((Expression) o);
+                if (!(o instanceof InlineComment)) {
+                    expressions.add((Expression) o);
+                }
             }
 
             { //end of file??

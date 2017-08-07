@@ -226,6 +226,11 @@ public class DefaultSQLParserVisitorFactory extends AbstractParserVisitorFactory
                 }
 
                 @Override
+                public Object inlineComment(LineComment host, Object param) {
+                    throw new RuntimeException("not implemented");
+                }
+
+                @Override
                 public Object defaultCase(Expression host, Object param) {
                     throw new RuntimeException("implementation error: this should never happen!");
                 }
@@ -244,6 +249,14 @@ public class DefaultSQLParserVisitorFactory extends AbstractParserVisitorFactory
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
+                    return host;
+                }
+
+                @Override
+                public Object inlineComment(LineComment host, Object param) {
+                    host.setLineNumber(reader.getLineNumber());
+                    String text = scanner.getInput("*/", true);
+                    host.setText(text);
                     return host;
                 }
             };

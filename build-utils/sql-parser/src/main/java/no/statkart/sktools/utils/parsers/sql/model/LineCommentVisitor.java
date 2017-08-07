@@ -8,4 +8,6 @@ package no.statkart.sktools.utils.parsers.sql.model;
  */
 public interface LineCommentVisitor<T extends LineComment> extends ExpressionVisitor<T> {
     Object commentCase(T host, Object param);
+
+    Object inlineComment(T host, Object param);
 }

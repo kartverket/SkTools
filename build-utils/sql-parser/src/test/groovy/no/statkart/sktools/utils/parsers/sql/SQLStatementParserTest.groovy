@@ -1,6 +1,7 @@
 package no.statkart.sktools.utils.parsers.sql
 
 import no.statkart.sktools.utils.parsers.sql.model.*
+import org.assertj.core.api.Assertions
 import org.testng.Assert
 import org.testng.annotations.Test
 
@@ -351,7 +352,38 @@ ${statement1}
         Assert.assertTrue(((PLSQLStatement)list[i]).sql.contains(statement1), 'innhold')
     }
 
+    /**
+     * SKTOOLS-150: parsing av kommentarer inlinet i sql blokker
+     * SKTOOLS-150: parsing av kommentarer før PL/SQL blokker
+     */
+    @Test
+    void testParsing_SQL_samme_linje() {
+        StringReader stringReader = new StringReader('''\
+-- PATCH DATA DB.VERSION="2.4" PATCH.NO="40" "GBOK-7554: Fjerner konverteringsmodul: BUBBLESTATUS felt"
+ALTER TABLE RETTSSTIFTELSE DROP COLUMN BUBBLESTATUS; /* fjerner også IX_RETTST_BUBBLEST */
+ALTER TABLE REGISTERENHETSRETTSANDEL DROP COLUMN BUBBLESTATUS; /* fjerner også IX_REGRETTSANDEL_BUBBLEST */
+
+-- PATCH INDEX DB.VERSION="3.12" PATCH.NO="2" "MAT-13789: Fonetiske indexer tilpasset Oracle 12cR2"
+/* info: inline kommentar */
+create INDEX IDX_PERSON_SOUNDEX_FX ON PERSON( soundex( FONETISK(navn)), id);
+''')
+
+        LineNumberReader reader = new LineNumberReader(stringReader)
+        final List<Expression> list = SQLStatementParser.parseExpressions(reader)
+
+        Assertions.assertThat(list).extracting("class").containsExactly(
+                LineComment.class,
+                DefaultStatement.class,
+                DefaultStatement.class,
+                LineComment.class,
+                DefaultStatement.class,
+        )
+
+        Assertions.assertThat(list[3].text)
+        .isEqualTo("-- PATCH INDEX DB.VERSION=\"3.12\" PATCH.NO=\"2\" \"MAT-13789: Fonetiske indexer tilpasset Oracle 12cR2\"")
+
+        Assertions.assertThat(list[4].sql)
+        .isEqualTo("create INDEX IDX_PERSON_SOUNDEX_FX ON PERSON( soundex( FONETISK(navn)), id)")
+    }
+
 }
-
-
-
