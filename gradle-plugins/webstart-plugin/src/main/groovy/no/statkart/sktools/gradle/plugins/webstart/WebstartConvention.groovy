@@ -48,7 +48,7 @@ class ClientConfiguration {
     private final List<JnlpConfiguration> jnlpConfigurations = new ArrayList<JnlpConfiguration>();
     private ConfigurableFileCollection jarDependencies
     private Closure mainJar = {
-        project.logger.debug "Treating ${it.name} as main jar in ${name}..." //default så betraktes alle filer som main jars i #jarDependencies...
+        project.logger.debug "Treating ${it.name} as main jar in ${name}..." //default sï¿½ betraktes alle filer som main jars i #jarDependencies...
         true
     }
 
@@ -58,7 +58,7 @@ class ClientConfiguration {
     String libDir = 'lib'
 
     /**
-     * Angir om jnlp-filene skal legges rett til war-en. Sett til <code>false</code> dersom jnlp-filene skal prosesseres mer på ett eller annet vis.
+     * Angir om jnlp-filene skal legges rett til war-en. Sett til <code>false</code> dersom jnlp-filene skal prosesseres mer pï¿½ ett eller annet vis.
      */
     boolean warJnlps = true
 
@@ -191,20 +191,15 @@ class JnlpConfiguration implements Serializable {
     private static final long serialVersionUID = 1L;
 
     protected final transient Project project
-
     String jnlpFilename;
-
     String title;
     String vendor;
     String description;
-
     String homepage = null; //optional
-
     String version = null; //optional
+    boolean addServerURLArgument = false
     protected ApplicationConfiguration application = null;  //might be null
-
     protected final List<ResourcesConfiguration> resourcesList = new ArrayList<ResourcesConfiguration>();
-
     private transient Closure withXml;
 
     JnlpConfiguration(Project project) {
@@ -218,6 +213,11 @@ class JnlpConfiguration implements Serializable {
 
     public JnlpConfiguration title(String title) {
         this.title = title;
+        return this;
+    }
+
+    public JnlpConfiguration addServerURLArgument(boolean addServerURLArgument) {
+        this.addServerURLArgument = addServerURLArgument;
         return this;
     }
 
