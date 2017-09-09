@@ -13,7 +13,6 @@ apply plugin: 'sktools-wsgen-plugin'
 
 dependencies {
     jaxws libraries.weblogic
-    jaxws libraries.'tools.jar'
 }
 
 

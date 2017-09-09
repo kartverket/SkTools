@@ -3,9 +3,6 @@ group = 'no.statkart.sktools.gradle.plugins.xjc-plugin.demos'
 // build a map of the dependency artifacts to use. Allows centralized definition of the versions of artifacts to use
 project.ext.set('libraries', [:])
 
-//tools.jar for JDK
-libraries.'tools.jar' = files("${System.getenv('JAVA_HOME')}/lib/tools.jar").stopExecutionIfEmpty() //JAVA_HOME ikke satt??
-
 
 assert GradleVersion.version('2.1').compareTo(GradleVersion.current()) <= 0 //lowest gradle version supported
 
