@@ -1,0 +1,41 @@
+description = "Eksekverer installerte demoer for plugins. Dette forutsetter at disse er tilgjengeliggort i maven repo"
+
+defaultTasks 'demo'
+
+task demo(description: "Eksekverer alle demoer i underprosjekter via forket gradle bygg")
+
+ext.MAVEN_REPO = rootProject.properties.get('MAVEN_REPO', System.getenv('MAVEN_REPO'))
+if (ext.MAVEN_REPO == null) {
+    ext.MAVEN_REPO = 'https://repo.maven.apache.org/maven2/'
+    logger.warn "warning: MAVEN_REPO not defined. Defaulting to ${MAVEN_REPO}"
+}
+
+repositories {
+    mavenLocal()
+    maven { name = 'public'; url = MAVEN_REPO }
+}
+
+project.projectDir.listFiles().each { demoDir ->
+    if (demoDir.isDirectory()) {
+        project.tasks.create(name: demoDir.name, type: GradleBuild) {
+            tasks = ['runDemo']
+            dir = demoDir
+            startParameter.projectProperties.putAll(project.gradle.startParameter.projectProperties)
+            startParameter.projectProperties.put('MAVEN_REPO', MAVEN_REPO)
+
+            project.tasks.demo.dependsOn it
+        }
+    }
+}
+
+
+logger.quiet """
+------------------------------------------------------------------------------------------------------------------------
+SKTOOLS_VERSION=${version}
+WEBLOGIC_VERSION=${project.properties.get('WEBLOGIC_VERSION', 'ikke satt')}
+WEBLOGIC_HOME=${project.properties.get('WEBLOGIC_HOME', 'ikke satt')}
+JAVA = ${System.getProperty('java.version')}
+GRADLE = ${gradle.gradleVersion}
+MAVEN_REPO = ${MAVEN_REPO}
+------------------------------------------------------------------------------------------------------------------------"""
+

@@ -1,19 +1,31 @@
 
-defaultTasks 'runDemos'
+task runDemos(description: 'Eksekverer alle demoer i underprosjekter via forket gradle bygg', type: GradleBuild) {
 
-task runDemos(type: GradleBuild) {
+    dir = "$buildDir/demos"
+    tasks = ['demo']
 
-    tasks = ['runDemos']
+    startParameter.projectProperties = [
+            MAVEN_REPO: MAVEN_REPO,
+            WEBLOGIC_HOME: WEBLOGIC_HOME,
+            WEBLOGIC_VERSION: WEBLOGIC_VERSION,
+    ]
+    startParameter.offline = true;
+
 
     doFirst {
-        if (GradleVersion.version('1.0').compareTo(GradleVersion.current()) < 0) {
-//            startParameter.currentDir = project.file('gradle-1.0')
-            dir = project.file('gradle-1.0')
-        } else {
-            println "Ingen demoer finnes for Gradle version [${gradle.gradleVersion}]"
+        project.delete dir
+
+//        def configuration = configurations.detachedConfiguration dependencies.create("no.statkart.sktools.gradle:gradle-plugins-demo:${version}")
+        def configuration = configurations.detachedConfiguration dependencies.create("no.statkart.sktools.gradle:gradle-plugins:${version}@zip")
+        def zipFile = files(configuration).singleFile //har du husket på publisering til maven repo?
+
+        logger.lifecycle "...extracting ${zipFile}"
+
+        project.copy {
+            into dir
+            from zipTree(zipFile)
         }
-
     }
-
 }
+
 

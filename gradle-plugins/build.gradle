@@ -11,58 +11,38 @@ dependencies {
 }
 
 
-def demosExecuted = 0
+task demoConfig() {
+    File propertyFile = file("${buildDir}/demo/gradle.properties")
+    //registerer output-filer for denne tasken
+    outputs.files propertyFile
+    doFirst {
+        logger.info "writing to $propertyFile"
+        propertyFile.parentFile.mkdirs()
+        def props = ['version': version /* bestemmer sktools versjon for demo context */] as Properties
+        props.store(new PrintWriter(propertyFile, "UTF-8"), "generated ${new Date()}")
+    }
+    inputs.property 'version', version
+}
 
-//task som eksekverer alle demo-prosjekter som evt måtte finnes
-final def testAllDemos = task('testDemos', description: 'Eksekverer demoer for hvert plugin') {
-    mustRunAfter project.tasks.test
-    doLast {
-        logger.lifecycle "\n...${demosExecuted} demos executed!"
+task zipDemos(description: 'Pakker sammen alle demoer for releasetesting', type: Zip) {
+    appendix = 'demo'
+
+    from 'src/demos'
+    from tasks.demoConfig
+
+    project.childProjects.each { name, p ->
+        def demoDir = p.file('demos')
+        if (demoDir) {
+            into name, {
+                from demoDir
+                exclude '**/.gradle/**', '**/build/**', '**/gen/**'
+            }
+        }
     }
 }
 
-Closure setUpDemoTestingFor = { final Project pluginProject, final File demoDir ->
-        //gradle 2.8 liker dårlig to GradleBuild invokasjoner i samme dir.
-        Task runDemoTask = pluginProject.task('runDemo', type: GradleBuild) {
-            dir = demoDir
-            tasks = ['clean', 'runDemo']
-            pluginProject.test.dependsOn it //part of test
-
-            doFirst {
-                logger.quiet '################################################################################'
-                logger.quiet "## executing demo in ${rootProject.relativePath(dir)}"
-                demosExecuted++
-            }
-            doLast {
-                logger.quiet "\n  ...end of demo ${name}"
-                logger.quiet '################################################################################\n\n'
-            }
-        }
-
-        [runDemoTask].each { Task task ->
-            task.startParameter.projectProperties = [sktools_versjon: "${pluginProject.version}", MAVEN_REPO: MAVEN_REPO, WEBLOGIC_HOME: WEBLOGIC_HOME]
-            task.startParameter.systemPropertiesArgs = [noMavenBootstrap: 'true'];
-            task.startParameter.offline = false;
-            task.outputs.upToDateWhen { false } //always run this...
-            task.shouldRunAfter pluginProject.tasks.test //kjøring av (optional) test før kjøring av demos
-        }
-
-        return runDemoTask
-}
-
-evaluationDependsOnChildren()
-subprojects { Project childProject ->
-    File demoDir = childProject.file("demos")
-    if (demoDir.exists()) {
-        logger.quiet "..demo found for ${childProject.getPath()}"
-
-        childProject.task('testDemos') {
-            dependsOn setUpDemoTestingFor(childProject, demoDir)
-            testAllDemos.mustRunAfter it
-        }
-    } else {
-        logger.warn "..no demo found for ${childProject.getPath()}"
-    }
+artifacts {
+    archives zipDemos
 }
 
 

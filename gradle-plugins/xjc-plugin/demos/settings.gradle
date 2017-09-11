@@ -1,25 +1,3 @@
 include ':simple-demo'
 
 rootProject.name = 'xjc-demos'
-
-
-
-
-//automatisk re-compile og install av siste versjon av plugin til lokal maven (spesifikt for demo-prosjekt)
-gradle.projectsLoaded { Gradle g ->
-    final File projectDir = g.rootProject.file('..')
-
-    //dersom ikke nested bygg..
-    if (g.startParameter.systemPropertiesArgs['noMavenBootstrap']) {
-        logger.info "Skipping maven install due to -DnoMavenBootstrap=${g.startParameter.systemPropertiesArgs['noMavenBootstrap']}"
-    } else {
-        logger.quiet 'Asserting project is up to date. Forking install on plugin-project. TIP: feature can be disabled with param -DnoMavenBootstrap=true'
-
-        org.gradle.tooling.ProjectConnection connection = org.gradle.tooling.GradleConnector.newConnector().forProjectDirectory(projectDir).connect()
-        try {
-            connection.newBuild().forTasks('install').run()
-        } finally {
-            connection.close()
-        }
-    }
-}
