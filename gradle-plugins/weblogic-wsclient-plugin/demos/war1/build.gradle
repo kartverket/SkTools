@@ -7,7 +7,6 @@ dependencies {
     weblogicCompile project(path: project.path, configuration: 'runtime')
 
     weblogicProvided libraries.weblogic
-    weblogicProvided libraries['tools.jar']
 }
 
 //innkobling av plugin jar filer for gradle byggesystem

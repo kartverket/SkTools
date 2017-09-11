@@ -13,8 +13,6 @@ dependencies {
 
     //test
     testCompile project(':build-utils:test-utils')
-    testRuntime libraries.'tools.jar'
-
 }
 
 task sourcesJar(type: Jar, dependsOn:classes) {

@@ -55,6 +55,9 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
         project.apply plugin: JavaBasePlugin.class
         project.apply plugin: WeblogicBasePlugin.class
 
+        // wswar har alltid trengt tools.jar (weblogic 10.3.5, 10.3.6, 12.1.x)
+        WeblogicBasePlugin.addToolsJarToWeblogicProvidedClasspath(project)
+
         createWeblogicConfiguration(project);
         final SourceSet weblogicSourceSet = createSourceSet(project);
 

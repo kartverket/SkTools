@@ -36,6 +36,9 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
         project.apply plugin: JavaBasePlugin.class;
         project.apply plugin: WeblogicBasePlugin.class;
 
+        // SKTOOLS-17: weblogic 10.3.5 eller nyerer avhenger av tools.jar på classpath for wsclient
+        WeblogicBasePlugin.addToolsJarToWeblogicProvidedClasspath(project)
+
         final JavaPluginConvention javaConvention = project.getConvention().getPlugins().get("java") as JavaPluginConvention;
         final Configuration weblogicProvidedConfiguration = project.getConfigurations().getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME)
 

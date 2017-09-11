@@ -19,7 +19,7 @@ class WeblogicWsClientProjectBuilder<T extends WeblogicWsClientProjectBuilder> e
 
     public T withWeblogicClasspath() {
         setWeblogicClasspath = true
-        addToolsJar = true     //SKIF-191: weblogic 10.3.5 eller nyerer avhenger av tools.jar på classpath
+        addToolsJar = true     //SKTOOLS-17: weblogic 10.3.5 eller nyerer avhenger av tools.jar på classpath
         closures.add {
             projectHelper.defineWEBLOGIC_HOME()
         }

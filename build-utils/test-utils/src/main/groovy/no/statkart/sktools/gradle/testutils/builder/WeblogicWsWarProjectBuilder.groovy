@@ -9,7 +9,6 @@ class WeblogicWsWarProjectBuilder<T extends WeblogicWsWarProjectBuilder> extends
 
 
     private boolean setWeblogicClasspath
-    private boolean addToolsJar
 
 
     public static WeblogicWsWarProjectBuilder<? extends WeblogicWsWarProjectBuilder<WeblogicWsWarProjectBuilder>> builder() {
@@ -19,7 +18,6 @@ class WeblogicWsWarProjectBuilder<T extends WeblogicWsWarProjectBuilder> extends
 
     public T withWeblogicClasspath() {
         setWeblogicClasspath = true
-        addToolsJar = true
         closures.add {
             projectHelper.defineWEBLOGIC_HOME()
         }
@@ -42,12 +40,6 @@ class WeblogicWsWarProjectBuilder<T extends WeblogicWsWarProjectBuilder> extends
             closures.add {
                 //set dependency
                 dependencies.weblogicProvided projectHelper.weblogicClasspath
-            }
-        }
-        if (addToolsJar) {
-            closures.add {
-                //sets dependency
-                dependencies.weblogicProvided projectHelper.toolsJar
             }
         }
         return this

@@ -211,10 +211,13 @@ class ProjectHelper {
     }
 
     /**
-     * Henter ut tools.jar ifra JDK funnet via env variabler
+     * Henter tools.jar fra JDK
      */
     FileCollection getToolsJar() {
-        return project.files("${System.getenv('JAVA_HOME')}/lib/tools.jar").stopExecutionIfEmpty() //JAVA_HOME ikke satt??
+        return project.files(
+                System.getProperty("java.home") + "/../lib/tools.jar" /* for windows */,
+                System.getProperty("java.home") + "/../classes/classes.jar" /* for mac os*/,
+                ).stopExecutionIfEmpty() //ukjent JDK ??
     }
 
     public File assertFileNotExists(Object path, Closure testClosure = null) {

@@ -17,7 +17,6 @@ dependencies {
 //    weblogicCompile project(path: project.path, configuration:'default')  //samme som project
 
     weblogicProvided libraries.weblogic
-    weblogicProvided libraries.'tools.jar'
 }
 
 

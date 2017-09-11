@@ -8,7 +8,6 @@ apply plugin: 'sktools-weblogic-wsclient-plugin'
 
 dependencies {
     weblogicProvided libraries.weblogic
-    weblogicProvided libraries.'tools.jar'  //tools jar må være med for weblogic 10.3.5 eller nyere?
 }
 
 

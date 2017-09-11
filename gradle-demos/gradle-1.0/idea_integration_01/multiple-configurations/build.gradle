@@ -8,7 +8,7 @@ apply plugin: 'java'
 
 sourceSets {
     other {
-        compileClasspath += project.files("${System.getenv('JAVA_HOME')}/lib/tools.jar").stopExecutionIfEmpty() //legger til tools jar som compile dependency
+        compileClasspath += project.files("${System.getProperty('java.home')}/../lib/tools.jar").stopExecutionIfEmpty() //legger til tools jar som compile dependency
     }
 
 }

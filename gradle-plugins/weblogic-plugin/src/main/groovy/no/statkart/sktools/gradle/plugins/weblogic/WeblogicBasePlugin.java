@@ -56,4 +56,11 @@ public class WeblogicBasePlugin implements Plugin<Project> {
         });
     }
 
+    public static void addToolsJarToWeblogicProvidedClasspath(Project project) {
+        project.getDependencies().add(WEBLOGIC_PROVIDED_CONFIGURATION_NAME, project.files(
+                System.getProperty("java.home") + "/../lib/tools.jar" /* for windows */,
+                System.getProperty("java.home") + "/../classes/classes.jar" /* for mac os*/
+        ));
+    }
+
 }
