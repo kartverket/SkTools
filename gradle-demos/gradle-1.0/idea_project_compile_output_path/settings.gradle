@@ -1,4 +1,0 @@
-include ':java-multiple-source_set'
-//include ':java-multiple-source_set-generated'
-//include ':java-multiple-source_set-and-configurations'
-

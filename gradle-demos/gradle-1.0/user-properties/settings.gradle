@@ -1,2 +1,0 @@
-//definerer to Projects, root + :projectA
-include ':projectA'

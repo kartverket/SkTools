@@ -1,4 +1,0 @@
-include ':convention'
-include ':generated_sources01'
-include ':generated_sources02_sourceset'
-include ':generated_sources03_configurations'
