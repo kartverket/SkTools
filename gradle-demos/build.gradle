@@ -16,7 +16,7 @@ task runDemos(description: 'Eksekverer alle demoer i underprosjekter via forket 
         project.delete dir
 
 //        def configuration = configurations.detachedConfiguration dependencies.create("no.statkart.sktools.gradle:gradle-plugins-demo:${version}")
-        def configuration = configurations.detachedConfiguration dependencies.create("no.statkart.sktools.gradle:gradle-plugins:${version}@zip")
+        def configuration = configurations.detachedConfiguration dependencies.create("no.statkart.sktools.gradle:gradle-plugins:${version}:demos@zip")
         def zipFile = files(configuration).singleFile //har du husket på publisering til maven repo?
 
         logger.lifecycle "...extracting ${zipFile}"

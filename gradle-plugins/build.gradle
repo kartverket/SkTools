@@ -25,7 +25,7 @@ task demoConfig() {
 }
 
 task zipDemos(description: 'Pakker sammen alle demoer for releasetesting', type: Zip) {
-    appendix = 'demo'
+    classifier = 'demos'
 
     from 'src/demos'
     from tasks.demoConfig
