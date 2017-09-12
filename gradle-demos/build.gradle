@@ -9,7 +9,6 @@ task runDemos(description: 'Eksekverer alle demoer i underprosjekter via forket 
             WEBLOGIC_HOME: WEBLOGIC_HOME,
             WEBLOGIC_VERSION: WEBLOGIC_VERSION,
     ]
-    startParameter.offline = true;
 
 
     doFirst {
