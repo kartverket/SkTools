@@ -5,8 +5,6 @@ description = "Web modul med webservice implementasjon - v2"
 
 dependencies {
     weblogicCompile project(path: project.path, configuration: 'runtime')
-
-    weblogicProvided libraries.weblogic
 }
 
 //innkobling av plugin jar filer for gradle byggesystem

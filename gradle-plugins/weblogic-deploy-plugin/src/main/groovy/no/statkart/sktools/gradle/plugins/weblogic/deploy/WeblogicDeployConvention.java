@@ -4,6 +4,7 @@ import groovy.lang.Closure;
 import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
+import org.gradle.api.file.FileCollection;
 import org.gradle.util.ConfigureUtil;
 
 import java.util.concurrent.Callable;
@@ -53,7 +54,11 @@ public class WeblogicDeployConvention {
                 task.conventionMapping("classpath", new Callable<Object>() {
                     @Override
                     public Object call() throws Exception {
-                        return configuration.getClasspath();
+                        FileCollection classpath = configuration.getClasspath();
+                        if (classpath.isEmpty()) {
+                            return findAntClasspath(project);
+                        }
+                        return classpath;
                     }
                 });
                 task.conventionMapping("url", new Callable<Object>() {
@@ -89,4 +94,37 @@ public class WeblogicDeployConvention {
             }
         };
     }
+
+
+    static FileCollection findAntClasspath(Project project) {
+        if (project.hasProperty("WEBLOGIC_HOME")) {
+            if (project.hasProperty("WEBLOGIC_VERSION")) {
+                Object wlsVersion = project.property("WEBLOGIC_VERSION");
+                return weblogicClasspathFor(String.valueOf(wlsVersion), project);
+            }
+        }
+        return project.files();
+    }
+
+
+    static FileCollection weblogicClasspathFor(String wlsVersion, Project project) {
+        Object WEBLOGIC_HOME = project.property("WEBLOGIC_HOME");
+
+        if (wlsVersion.startsWith("12.")) {
+            if (wlsVersion.startsWith("12.1")) {
+                return project.files("${WEBLOGIC_HOME}/wlserver/server/lib/weblogic.jar");
+            }
+
+            project.getLogger().warn("WARNING: no optimalization found for weblogic version " + wlsVersion);
+            return project.files("wlserver/server/lib/weblogic.jar");
+        }
+
+
+        if (wlsVersion.startsWith("10.3")) {
+            return project.files("${WEBLOGIC_HOME}/wlserver_10.3/server/lib/weblogic.jar");
+        }
+
+        throw new RuntimeException("Unsupported weblogic version found - please add support for " + wlsVersion);
+    }
+
 }

@@ -1,6 +1,7 @@
 //prosjekt logik for pakking og deploying av test-ear til weblogic server
 
 apply plugin: 'ear'
+apply plugin: 'sktools-weblogic-deploy-plugin'
 
 
 project.ext.set('app_url', properties.get('wls.deploy.adminurl', "http://${java.net.InetAddress.localHost.hostName}:7001"))
@@ -46,44 +47,19 @@ afterEvaluate {
 
 
 
+weblogicDeploy {
+    name = appName
+    url = project.properties.get('wls.deploy.adminurl', 'http://localhost:7001')
+    username = project.properties.get('wls.deploy.username', 'admmatr')
+    password = project.properties.get('wls.deploy.password', 'matrikkeladm1')
+    targets = project.properties.get('wls.deploy.target', 'AdminServer')
 
-ant.taskdef(name: 'wldeploy', classname: 'weblogic.ant.taskdefs.management.WLDeploy', classpath: libraries.weblogic.asPath)
+    deployTask('deploy', file: ear.archivePath, dependsOn: ['ear', 'undeploy'], description: "Deployer ${name} til ${url}")
 
-task deploy(dependsOn: ['assemble', 'undeploy']) {
-    doFirst {
-        def args = [
-                action: 'deploy',
-                source: "${ear.archivePath}",
-                name: appName,
-                user: project.properties.get('wls.deploy.username', 'admmatr'),
-                password: project.properties.get('wls.deploy.password', 'matrikkeladm1'),
-                adminurl: project.properties.get('wls.deploy.adminurl', 'http://localhost:7001'),
-                targets: project.properties.get('wls.deploy.target', 'AdminServer'),
-                upload: 'true',
-                timeout: '18000',
-                verbose: 'true',
-                failonerror: 'true',
-        ]
-        ant.wldeploy(args)
-    }
+    undeployTask('undeploy', description: "Undeployer ${name} til ${url}")
+
 }
 
-task undeploy() {
-    doFirst {
-        def args = [
-                action: 'undeploy',
-                name: appName,
-                user: project.properties.get('wls.deploy.username', 'admmatr'),
-                password: project.properties.get('wls.deploy.password', 'matrikkeladm1'),
-                adminurl: project.properties.get('wls.deploy.adminurl', 'http://localhost:7001'),
-                targets: project.properties.get('wls.deploy.target', 'AdminServer'),
-                graceful: true,
-                verbose: true,
-                failonerror: true,
-        ]
-        ant.wldeploy(args)
-    }
-}
 
 
 

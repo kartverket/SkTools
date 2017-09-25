@@ -16,7 +16,6 @@ dependencies {
     weblogicCompile project(path: project.path)
 //    weblogicCompile project(path: project.path, configuration:'default')  //samme som project
 
-    weblogicProvided libraries.weblogic
 }
 
 

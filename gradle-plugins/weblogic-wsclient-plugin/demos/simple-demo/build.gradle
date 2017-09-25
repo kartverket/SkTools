@@ -1,16 +1,12 @@
+apply plugin: 'java'
+apply plugin: 'sktools-weblogic-wsclient-plugin'
+
 /******************************************************************************************************************** **
  * Demonstrerer standard bruk av plugin
  *
  * Det demonstreres også eksempel implementasjon av 'gen' target
  ******************************************************************************************************************** */
 
-apply plugin: 'java'
-apply plugin: 'sktools-weblogic-wsclient-plugin'
-
-
-dependencies {
-    weblogicProvided libraries.weblogic
-}
 
 tasks.withType(AbstractCompile) { options.encoding = 'windows-1252' }
 

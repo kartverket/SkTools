@@ -6,10 +6,6 @@ apply plugin: 'java'
 apply plugin: 'sktools-weblogic-wsclient-plugin'
 
 
-dependencies {
-    weblogicProvided libraries.weblogic
-}
-
 
 weblogicWsClient {
     client1 {
