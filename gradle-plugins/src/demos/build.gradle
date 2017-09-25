@@ -16,7 +16,7 @@ repositories {
 }
 
 project.projectDir.listFiles().each { demoDir ->
-    if (demoDir.isDirectory()) {
+    if (demoDir.isDirectory() && !demoDir.name.startsWith('.') /* excluding folder ".gradle" */) {
         project.tasks.create(name: demoDir.name, type: GradleBuild) {
             tasks = ['runDemo']
             dir = demoDir
