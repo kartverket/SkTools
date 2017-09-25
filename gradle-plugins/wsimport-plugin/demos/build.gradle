@@ -1,15 +1,6 @@
 group = 'no.statkart.sktools.gradle.plugins.wsclient-plugin.demos'
 
-// build a map of the dependency artifacts to use. Allows centralized definition of the versions of artifacts to use
-project.ext.set('libraries', [:])
-
-libraries.jaxws =  [
-        'com.sun.xml.ws:jaxws-tools:2.2.10',
-]
-
-
-
-assert GradleVersion.version('2.1').compareTo(GradleVersion.current()) <= 0 //lowest gradle version supported
+assert GradleVersion.current() >= GradleVersion.version('2.4') //lowest gradle version supported
 
 //innkobling av plugin jar filer for gradle byggesystem
 buildscript {
@@ -26,7 +17,6 @@ buildscript {
     project.ext.set('MAVEN_REPO', project.properties.get('MAVEN_REPO', 'http://nexus.statkart.no:8090/nexus/content/groups/public/'))
 
     repositories {
-        //bruker kun lokale filer her da dette er et demo prosjekt...
         mavenLocal()
         maven { name = 'public'; url = MAVEN_REPO }
     }
@@ -48,7 +38,6 @@ allprojects {
     }
 
     repositories {
-        //bruker kun lokale filer her da dette er et demo prosjekt...
         mavenLocal()
         maven { name = 'public'; url = MAVEN_REPO }
     }

@@ -11,8 +11,13 @@ import no.statkart.sktools.gradle.plugins.wsgen.WsdlGenTask
 //apply plugin: 'war'
 apply plugin: 'sktools-wsgen-plugin'
 
+repositories {
+    maven { name = 'public'; url = rootProject.MAVEN_REPO }
+}
+
+
 dependencies {
-    jaxws libraries.weblogic
+    jaxws 'com.sun.xml.ws:jaxws-tools:2.3.0'
 }
 
 
