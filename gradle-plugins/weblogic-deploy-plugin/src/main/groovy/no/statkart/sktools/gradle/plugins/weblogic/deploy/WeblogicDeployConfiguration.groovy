@@ -4,7 +4,6 @@ import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.FileCollection
-import org.gradle.api.internal.ConventionTask
 import org.gradle.util.ConfigureUtil
 
 /**
@@ -99,7 +98,6 @@ class WeblogicDeployConfiguration {
             throw new GradleException('name parameter not supplied for task!')
         }
         undeployTask = (WeblogicUndeployTask) project.task(type: WeblogicUndeployTask.class, name)
-        setCommonConventionalValues(undeployTask)
 
         ConfigureUtil.configureByMap(params, undeployTask)
         ConfigureUtil.configure(config, undeployTask)
@@ -117,23 +115,11 @@ class WeblogicDeployConfiguration {
 
         Task task = project.task(type: WeblogicDeployTask.class, name)
         deployTask = (WeblogicDeployTask) task
-        setCommonConventionalValues(deployTask)
         deployTask.conventionMapping 'file', { this.getFile() }
 
         ConfigureUtil.configureByMap(params, deployTask)
         ConfigureUtil.configure(config, deployTask)
         return deployTask
-    }
-
-    private ConventionTask setCommonConventionalValues(ConventionTask task) {
-        task.dependsOn { this.dependsOn }
-        task.conventionMapping 'classpath', { this.getClasspath() }
-        task.conventionMapping 'deploymentName', { this.name }
-        task.conventionMapping 'url', { this.getUrl() }
-        task.conventionMapping 'targets', { this.targets }
-        task.conventionMapping 'username', { this.username }
-        task.conventionMapping 'password', { this.password }
-        task
     }
 
     WeblogicUndeployTask getUndeployTask() {
@@ -205,6 +191,10 @@ class WeblogicDeployConfiguration {
 
     void setUsername(String username) {
         this.username = username
+    }
+
+    String getPassword() {
+        return password
     }
 
     void setPassword(String password) {

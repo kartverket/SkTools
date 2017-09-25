@@ -19,5 +19,6 @@ public class WeblogicDeployPlugin implements Plugin<ProjectInternal> {
         WeblogicDeployConvention convention = new WeblogicDeployConvention(project);
         project.getConvention().getPlugins().put(WEBLOGIC_DEPLOY_CONVENTION_NAME, convention);
 
+        project.getTasks().withType(AbstractWeblogicDeployTask.class, convention.conventionalValuesForAbstractWeblogicDeployTask());
     }
 }
