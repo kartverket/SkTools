@@ -317,11 +317,7 @@ public class JarSigner extends ConventionTask {
 
     @OutputFiles
     public FileCollection getJarFiles() {
-        if (getCertificateFile() != null) { //dersom signering
-            return signedJarFiles;
-        } else {
-            return jarFilesToSign;
-        }
+        return signedJarFiles;
     }
 
     private Collection<File> collectSignedJars() {

@@ -72,7 +72,13 @@ class WebstartPlugin implements Plugin<Project> {
 
         final WebstartTask webstartTask = (WebstartTask) project.task(args, makeTaskName('gen', clientConfiguration.name, 'Jnlp'));
 
-        webstartTask.jarResources jarSigner
+        webstartTask.jarResources {
+            if (jarSigner.getCertificateFile() != null) { //dersom signering
+                return jarSigner.getJarFiles();
+            } else {
+                return clientConfiguration.getJarDependencies();
+            }
+        }
         webstartTask.setJnlpConfigurations(clientConfiguration.jnlpConfigurations)
 
         //late bindings since configuration is applied later...
