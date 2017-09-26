@@ -50,6 +50,7 @@ if not "%GRADLE_HOME%"=="" goto CONFIGURE_GRADLE_HOME
   set GRADLE_OPTS=-XX:MaxPermSize=512m
 :END_GRADLE_HOME
 
+title %title% %GRADLE_HOME%
 
 : Groovy Setup (optional)
 if "%GROOVY_HOME%"=="" goto END_GROOVY_HOME
