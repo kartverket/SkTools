@@ -7,6 +7,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.CopySpec
+import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileCopyDetails
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
@@ -72,13 +73,17 @@ class WebstartPlugin implements Plugin<Project> {
 
         final WebstartTask webstartTask = (WebstartTask) project.task(args, makeTaskName('gen', clientConfiguration.name, 'Jnlp'));
 
-        webstartTask.jarResources {
-            if (jarSigner.getCertificateFile() != null) { //dersom signering
-                return jarSigner.getJarFiles();
-            } else {
-                return clientConfiguration.getJarDependencies();
+        webstartTask.jarResources(new Callable<Object>() {
+            @Override
+            Object call() throws Exception {
+                if (jarSigner.getCertificateFile() != null) { //dersom signering
+                    return jarSigner.getJarFiles();
+                } else {
+                    return clientConfiguration.getJarDependencies();
+                }
             }
-        }
+        });
+
         webstartTask.setJnlpConfigurations(clientConfiguration.jnlpConfigurations)
 
         //late bindings since configuration is applied later...
@@ -86,7 +91,8 @@ class WebstartPlugin implements Plugin<Project> {
         webstartTask.conventionMapping.map('mainJar', new Callable<Object>() {
             @Override
             Object call() throws Exception {
-                return jarSigner.jarFiles.filter(clientConfiguration.mainJarFilter)
+                FileCollection jarFiles = webstartTask.getJarResources();
+                return jarFiles.filter(clientConfiguration.mainJarFilter)
             }
         })
         webstartTask.conventionMapping.map('digest', new Callable<String>() {
