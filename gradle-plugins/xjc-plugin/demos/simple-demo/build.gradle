@@ -124,7 +124,7 @@ void createDirtySchema(def path) {
 
 class Assert {
     def taskName
-    String[] taskNames
+    List<String> taskNames
     Project project
     List<Closure> prep = []
 
