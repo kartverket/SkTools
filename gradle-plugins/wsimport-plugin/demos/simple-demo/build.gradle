@@ -98,9 +98,9 @@ class Assert {
     }
 
     void assertBuild() {
-        assert project.file('build/resources/main/META-INF/wsdls/TestServiceWS.wsdl').exists()
-        assert project.file('build/resources/main/META-INF/wsdls/TestServiceWS_schema1.xsd').exists()
-        assert project.file('build/classes/main/no/statkart/test/service/v1/TestServiceWS.class').exists()
+        assert project.sourceSets.main.output.asFileTree.matching {include '**/META-INF/wsdls/TestServiceWS.wsdl'}.size() == 1
+        assert project.sourceSets.main.output.asFileTree.matching {include '**/META-INF/wsdls/TestServiceWS_schema1.xsd'}.size() == 1
+        assert project.sourceSets.main.output.asFileTree.matching {include '**/no/statkart/test/service/v1/TestServiceWS.class'}.size() == 1
     }
 
     void assertGenWsClient() {
