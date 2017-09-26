@@ -26,10 +26,8 @@ import java.util.concurrent.Callable
 class WebstartPlugin implements Plugin<Project> {
     protected static Logger logger = Logging.getLogger(WebstartPlugin.class)
 
-    public static final String WEBSTART_CONVENTION_NAME = 'webstart'
-    public static final String SIGN_TASK_PREFIX = 'sign'
-    public static final String WEBSTART_TASK_PREFIX = 'gen'
-    public static final String WEBSTART_TASK_POSTFIX = 'Jnlp'
+    public static final String WEBSTART_CONVENTION_NAME = 'webstart';
+
 
     @Override
     void apply(Project project) {
@@ -38,31 +36,27 @@ class WebstartPlugin implements Plugin<Project> {
         WebstartConvention convention = new WebstartConvention(project)
         project.convention.plugins.put(WEBSTART_CONVENTION_NAME, convention)
 
-        convention.webstart.all(new Action<ClientConfiguration>() {
+        convention.getWebstart().all(new Action<ClientConfiguration>() {
             @Override
             void execute(ClientConfiguration clientConfiguration) {
-                configureClient(project, clientConfiguration)
+                JarSigner jarSigner = configureJarSigner(project, clientConfiguration)
+                WebstartTask genJnlp = configureGenJnlp(project, clientConfiguration, jarSigner)
+                configureWar(project, clientConfiguration, jarSigner, genJnlp)
             }
-        })
+        });
+
     }
 
-    private static void configureClient(Project project, ClientConfiguration clientConfiguration) {
-        JarSigner jarSigner = configureJarSigner(project, clientConfiguration)
-        WebstartTask genJnlp = configureGenJnlp(project, clientConfiguration, jarSigner)
-        configureWar(project, clientConfiguration, jarSigner, genJnlp)
-    }
 
     private static JarSigner configureJarSigner(Project project, ClientConfiguration clientConfiguration) {
-
         HashMap<String, Object> args = new HashMap<String, Object>();
         args.put(Task.TASK_TYPE, JarSigner.class);
         args.put(Task.TASK_OVERWRITE, "false");
 
-        final JarSigner jarSigner = (JarSigner) project.task(args, makeTaskName(SIGN_TASK_PREFIX, clientConfiguration.name, null));
+        final JarSigner jarSigner = (JarSigner) project.task(args, makeTaskName('sign', clientConfiguration.name, null));
 
         jarSigner.jarFilesToSign = clientConfiguration.jarDependencies
         jarSigner.conventionMapping.certificateFile = { clientConfiguration?.signingConfiguration?.keystore }
-        jarSigner.conventionMapping.digestAlgorithm = { clientConfiguration?.signingConfiguration?.digestAlgorithm }
         jarSigner.conventionMapping.alias = { clientConfiguration?.signingConfiguration?.alias }
         jarSigner.conventionMapping.password = { clientConfiguration?.signingConfiguration?.password }
         jarSigner.conventionMapping.digestAlgorithm = { clientConfiguration?.signingConfiguration?.digestAlgorithm }
@@ -72,12 +66,11 @@ class WebstartPlugin implements Plugin<Project> {
     }
 
     private static WebstartTask configureGenJnlp(Project project, ClientConfiguration clientConfiguration, JarSigner jarSigner) {
-
         HashMap<String, Object> args = new HashMap<String, Object>();
         args.put(Task.TASK_TYPE, WebstartTask.class);
         args.put(Task.TASK_OVERWRITE, "false");
 
-        final WebstartTask webstartTask = (WebstartTask) project.task(args, makeTaskName(WEBSTART_TASK_PREFIX, clientConfiguration.name, WEBSTART_TASK_POSTFIX));
+        final WebstartTask webstartTask = (WebstartTask) project.task(args, makeTaskName('gen', clientConfiguration.name, 'Jnlp'));
 
         webstartTask.jarResources jarSigner
         webstartTask.setJnlpConfigurations(clientConfiguration.jnlpConfigurations)
