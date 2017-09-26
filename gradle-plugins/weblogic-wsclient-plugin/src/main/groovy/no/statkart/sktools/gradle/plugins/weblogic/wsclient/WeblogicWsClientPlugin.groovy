@@ -152,11 +152,6 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
                 return sourceSet.getCompileClasspath();
             }
         });
-        conventionMapping.map("dependencyCacheDir", new Callable<Object>() {
-            public Object call() throws Exception {
-                return javaConvention.getDependencyCacheDir();
-            }
-        });
         conventionMapping.map("destinationDir", new Callable<Object>() {
             public Object call() throws Exception {
                 return project.file("${project.buildDir}/wsclient/${sourceSet.name}");
