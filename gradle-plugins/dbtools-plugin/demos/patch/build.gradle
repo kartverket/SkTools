@@ -26,8 +26,8 @@ configureDatabasePlugin {
     useDrivers project.configurations.hsqldb
 
     toolset( name:'sa', type:'hsqldb', prefix:'') {
-        //;shutdown=true
-        url = "jdbc:hsqldb:hsql://localhost/testPatching${project.version}"
+        def suffix = System.getenv('EXECUTOR_NUMBER') ?: '0' //unikhet muliggjør parallell testing
+        url = "jdbc:hsqldb:hsql://localhost/testPatching${suffix}${project.version}"
         credentials.username = 'SA'
         credentials.password = ''
 
@@ -275,9 +275,10 @@ class Assert {
     }
 
     void startUpDatabase() { //Forker database i subprosess
-        //forking the groovy way until GRADLE-1254
+        def dbname = project.convention.plugins.db.dbToolSets['sa'].url.split('/')[3]
+        //forking the groovy way until https://github.com/gradle/gradle/issues/1367
         def cmd = ['java', '-cp', project.configurations.hsqldb.asPath, 'org.hsqldb.Server',
-                '-database.0', 'mem:test', '-dbname.0', "testPatching${project.version}" //definisjon for database med navn "test"
+                   '-database.0', 'mem:test', '-dbname.0', dbname //definisjon for database med navn "test"
         ]
 
         toConsole "Starter opp database via kommando: \n\t${cmd.join(' ')}"
