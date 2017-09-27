@@ -802,6 +802,8 @@ class WSDocProcessorTest {
 
                      /**
                       * Intended for asserting a conversion.
+                      *
+                      * @throws Exception ved feil i konvertering
                       */
                      public long intToLong(int value, int base) throws Exception {
                          return 0;
@@ -809,6 +811,9 @@ class WSDocProcessorTest {
 
                      /**
                       * Intended for asserting a conversion.
+                      *
+                      * @throws Exception ved feil i konvertering
+                      * @throws RuntimeException ved andre mystiske feil 
                       */
                      public int longToInt(long value, int base) throws RuntimeException, Exception {
                          return 0;
