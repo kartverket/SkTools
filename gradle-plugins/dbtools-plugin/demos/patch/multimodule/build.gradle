@@ -22,8 +22,8 @@ dependencies {
 }
 
 
-int executorNumber = System.getenv('EXECUTOR_NUMBER') ?: 0 //unikhet muliggjør parallell testing
-ext.port = 9001 + executorNumber
+def executorNumber = System.getenv('EXECUTOR_NUMBER') ?: 0 //unikhet muliggjør parallell testing
+ext.port = 9001 + (executorNumber as int)
 
 //see DbtoolsConvention#ConfigureDatabasePlugin
 configureDatabasePlugin {
