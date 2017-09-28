@@ -394,8 +394,6 @@ buildscript {
     // Miljøvariable for konfigurasjon av byggemiljø
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     [
-            'JAVA_HOME',
-            'LOCALHOSTNAME',
             'WEBLOGIC_HOME',
             'WEBLOGIC_VERSION',
     ].each { key ->

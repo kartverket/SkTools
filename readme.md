@@ -2,7 +2,13 @@
 
 ## Releasetesting 
 For å teste virkemåten til de ulike plugins finnes det noen veldig enkle demo prosjekter. 
-Disse kan kjøres via `gradle :gradle-demos:runDemos`
+Disse kan kjøres via `gradle install` og `gradle :gradle-demos:runDemos`
+
+Følgende parametere er aktuelle å teste
+* `WEBLOGIC_VERSION` styrer default veblogic classpath.
+* `WEBLOGIC_HOME` dersom ikke en angir WEBLOGIC_VERSION kan denne brukes eksplisitt
+* Gradle versjon (runtime)
+* JDK versjon (runtime)
 
 
 ### Jenkins pipeline

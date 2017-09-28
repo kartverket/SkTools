@@ -104,7 +104,7 @@ buildscript {
     assert version != Project.DEFAULT_VERSION // set via env variables
 
     // Variables to grab from environment + defaults
-    ['COMPUTERNAME', 'MAVEN_REPO', 'JAVA_HOME'].each { val ->
+    ['MAVEN_REPO'].each { val ->
         if (!rootProject.ext.has(val) && System.getenv(val) != null) {
             rootProject.ext.set(val, System.getenv(val))
         }

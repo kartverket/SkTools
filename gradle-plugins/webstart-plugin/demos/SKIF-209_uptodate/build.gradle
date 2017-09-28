@@ -115,8 +115,8 @@ class Assert {
         def task = project.task(taskName, type: GradleBuild) {
             dir = project.projectDir
             tasks = taskNames
-            startParameter.systemPropertiesArgs = [noMavenBootstrap: 'true']
-            startParameter.projectProperties = [sktools_versjon:"${project.version}"]
+            startParameter.projectProperties = [sktools_versjon: "${project.version}"]
+            startParameter.projectProperties << gradle.startParameter.projectProperties
             prep.reverseEach { Closure beforeAsserts -> doFirst { beforeAsserts.setDelegate(this); beforeAsserts.run()}}
             doLast { check.setDelegate(this); check.run() }
             doFirst {
