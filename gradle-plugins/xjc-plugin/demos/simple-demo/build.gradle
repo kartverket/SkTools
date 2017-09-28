@@ -151,7 +151,7 @@ class Assert {
             dir = project.projectDir
             tasks = taskNames
             startParameter.projectProperties = [sktools_versjon:"${project.version}"]
-            startParameter.projectProperties << gradle.startParameter.projectProperties
+            startParameter.projectProperties << project.gradle.startParameter.projectProperties
             if (logLevel) startParameter.logLevel = logLevel
             prep.reverseEach { Closure beforeAsserts -> doFirst { beforeAsserts.setDelegate(this); beforeAsserts.run()}}
             doLast { check.setDelegate(this); check.run() }
