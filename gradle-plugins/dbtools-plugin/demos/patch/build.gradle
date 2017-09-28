@@ -22,9 +22,6 @@ dependencies {
 }
 
 
-def executorNumber = System.getenv('EXECUTOR_NUMBER') ?: 0 //unikhet muliggjør parallell testing
-ext.port = 9001 + (executorNumber as int)
-
 
 //see DbtoolsConvention#ConfigureDatabasePlugin
 configureDatabasePlugin {
@@ -183,7 +180,7 @@ class Assert {
             dir = project.projectDir
             tasks = taskNames
             startParameter.systemPropertiesArgs = [noMavenBootstrap: 'true']
-            startParameter.projectProperties = [sktools_versjon:"${project.version}"]
+            startParameter.projectProperties = [sktools_versjon:"${project.version}", port:"${project.port}"]
             prep.reverseEach { Closure beforeAsserts -> doFirst { beforeAsserts.setDelegate(this); beforeAsserts.run()}}
             doLast { check.setDelegate(this); check.run() }
             doFirst {
