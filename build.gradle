@@ -414,7 +414,7 @@ buildscript {
 
     ext.REPO_UPLOAD_RELEASES = rootProject.properties.get('REPO_UPLOAD_RELEASES', System.getenv('REPO_UPLOAD_RELEASES'))
     if (ext.REPO_UPLOAD_RELEASES == null) {
-        ext.REPO_UPLOAD_RELEASES = 'http://admin:admin123@nexus.statkart.no:8090/nexus/content/repositories/releases/'
+        ext.REPO_UPLOAD_RELEASES = 'http://nexus.statkart.no:8090/nexus/content/repositories/releases/'
         logger.warn "warning: REPO_UPLOAD_RELEASES not defined. Defaulting to ${'http://admin:***@nexus.statkart.no:8090/nexus/content/repositories/releases/'}"
     }
     ext.REPO_UPLOAD_RELEASES_USERNAME = rootProject.properties.get('REPO_UPLOAD_RELEASES_USERNAME', System.getenv('REPO_UPLOAD_RELEASES_USERNAME'))
