@@ -68,7 +68,7 @@ pipeline { //declarative pipeline syntax
                     steps {
                         dir('sktools') {
                             bat "gradle --version"
-                            bat "gradle test ${gradleOptions(params, env)}"
+                            bat "gradle test -DignoreFailures=true ${gradleOptions(params, env)}"
                             junit '**/build/test-results/*.xml'
 //                            step([$class: 'Publisher', reportFilenamePattern: '**/build/reports/tests/testng-results.xml'])
                         }
@@ -81,7 +81,7 @@ pipeline { //declarative pipeline syntax
                     steps {
                         dir('sktools') {
                             bat "gradle --version"
-                            bat "gradle test ${gradleOptions(params, env)} -DbuildDirName=build/gradle2.14" //buildDirName for å kjøre flere bygg med forskjellige gradle versjoner
+                            bat "gradle test -DignoreFailures=true ${gradleOptions(params, env)} -DbuildDirName=build/gradle2.14" //buildDirName for å kjøre flere bygg med forskjellige gradle versjoner
                             junit '**/build/gradle2.14/test-results/*.xml'
 //                            step([$class: 'Publisher', reportFilenamePattern: '**/build/gradle2.14/reports/tests/testng-results.xml'])
                         }
