@@ -101,5 +101,11 @@ class GradleProjectBuilder<T extends GradleProjectBuilder<T>> {
         return this
     }
 
+    public T withConventionalWEBLOGIC() {
+        closures.add {
+            projectHelper.withConventionalWEBLOGIC()
+        }
+        return this
+    }
 
 }

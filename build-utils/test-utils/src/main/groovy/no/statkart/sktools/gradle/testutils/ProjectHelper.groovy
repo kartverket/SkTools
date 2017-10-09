@@ -1,7 +1,7 @@
 package no.statkart.sktools.gradle.testutils
 
+import no.statkart.sktools.testutils.RootDirectoryLocator
 import org.gradle.api.Project
-import org.gradle.api.file.FileCollection
 import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.api.Task
 import org.testng.Assert
@@ -167,20 +167,32 @@ class ProjectHelper {
     private static List<File> gradleJars = null;
 
     /**
-     * Setter {@code WEBLOGIC_HOME} property for prosjekt
+     * Setter conventional {@code WEBLOGIC_HOME} og {@code WEBLOGIC_VERSION} property for prosjekt
      */
-    ProjectHelper defineWEBLOGIC_HOME() {
+    public ProjectHelper withConventionalWEBLOGIC() {
         //foretrekker satt verdi satt i setEnv_Personal
         if (System.getenv('ORG_GRADLE_PROJECT_WEBLOGIC_HOME') != null) {
             project.ext.set('WEBLOGIC_HOME', System.getenv('ORG_GRADLE_PROJECT_WEBLOGIC_HOME'))
         }
+        if (System.getenv('ORG_GRADLE_PROJECT_WEBLOGIC_VERSION') != null) {
+            project.ext.set('WEBLOGIC_VERSION', System.getenv('ORG_GRADLE_PROJECT_WEBLOGIC_VERSION'))
+        }
 
-        ['WEBLOGIC_HOME'].each { val ->
-            if (!project.ext.has(val)) {
-                if (System.getenv(val) != null) {
-                    project.ext.set(val, System.getenv(val))
+        File gradlePropertiesFile = new File(RootDirectoryLocator.getRootDirectory(), "gradle.properties")
+        def gradleProperties = new Properties()
+        if (gradlePropertiesFile) {
+            gradleProperties.load(gradlePropertiesFile.newInputStream())
+        }
+
+        ['WEBLOGIC_HOME', 'WEBLOGIC_VERSION'].each { key ->
+            if (!project.ext.has(key)) {
+                if (gradleProperties.containsKey(key)) {
+                    project.ext.set(key, gradleProperties.get(key))
+                }
+                if (System.getenv(key) != null) {
+                    project.ext.set(key, System.getenv(key))
                 } else {
-                    throw new Error("Env variabel for ${val} ikke satt!")
+                    throw new Error("Env variabel for ${key} ikke satt!")
                 }
             }
         }
@@ -188,37 +200,6 @@ class ProjectHelper {
         return this
     }
 
-    /**
-     * Beregner en weblogic classpath for weblogic jar avhengigheter.
-     */
-    FileCollection getWeblogicClasspath() {
-        if (!project.hasProperty('WEBLOGIC_HOME')) {
-            defineWEBLOGIC_HOME()
-        }
-        return project.fileTree(dir: "${project.WEBLOGIC_HOME}", includes: [
-                    'wlserver_10.3/server/lib/weblogic.jar',
-                    'wlserver_10.3/server/lib/webservices.jar',
-                    'wlserver_10.3/server/lib/wljmsclient.jar',
-                    'modules/javax.annotation_*.jar/',
-                    'modules/javax.ejb_3*.jar',
-                    'modules/javax.interceptor_*.jar',
-                    'modules/javax.servlet_*.jar',
-                    'modules/javax.transaction_*.jar',
-                    'modules/com.bea.core.transaction_*.jar',
-                    'modules/com.bea.core.datasource*.jar',
-                    'modules/glassfish.jaxws.rt*.jar',
-            ]).stopExecutionIfEmpty() //feilsituasjon dersom WEBLOGIC_HOME ikke er riktig satt
-    }
-
-    /**
-     * Henter tools.jar fra JDK
-     */
-    FileCollection getToolsJar() {
-        return project.files(
-                System.getProperty("java.home") + "/../lib/tools.jar" /* for windows */,
-                System.getProperty("java.home") + "/../classes/classes.jar" /* for mac os*/,
-                ).stopExecutionIfEmpty() //ukjent JDK ??
-    }
 
     public File assertFileNotExists(Object path, Closure testClosure = null) {
         return assertFile(path, '', testClosure, false);

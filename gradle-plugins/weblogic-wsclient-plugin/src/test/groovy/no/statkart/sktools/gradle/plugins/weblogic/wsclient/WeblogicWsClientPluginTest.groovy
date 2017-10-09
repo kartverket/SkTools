@@ -44,7 +44,7 @@ class WeblogicWsClientPluginTest {
     @Test
     void testConventionConfiguration() {
         //forks a new project in a temp folder
-        ProjectHelper wsClientProjectHelper = WeblogicWsClientProjectBuilder.builder().applyWsClientPlugin(false).build()
+        ProjectHelper wsClientProjectHelper = WeblogicWsClientProjectBuilder.builder().applyWsClientPlugin().build()
         Project wsClientProject = wsClientProjectHelper.project
 
 
@@ -181,7 +181,7 @@ class WeblogicWsClientPluginTest {
     @Test()
     void testBuildTaskDependsOn() {
         //forks a new project in a temp folder
-        ProjectHelper projectHelper = WeblogicWsClientProjectBuilder.builder().applyJavaPlugin().applyWsClientPlugin(false).build()
+        ProjectHelper projectHelper = WeblogicWsClientProjectBuilder.builder().applyJavaPlugin().applyWsClientPlugin().build()
 
         projectHelper.initializeProject(false)
 
@@ -202,7 +202,7 @@ class WeblogicWsClientPluginTest {
     void testWeblogicClasspath() {
 
         //forks a new project in a temp folder
-        ProjectHelper projectHelper = WeblogicWsClientProjectBuilder.builder().applyWsClientPlugin(false).build()
+        ProjectHelper projectHelper = WeblogicWsClientProjectBuilder.builder().applyWsClientPlugin().build()
 
         File someJarFile = projectHelper.project.file('weblogic.jar')
 

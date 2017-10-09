@@ -1,10 +1,11 @@
 package no.statkart.sktools.gradle.plugins.weblogic;
 
-import org.gradle.api.Task;
+import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.Action;
+import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.specs.Spec;
 
 /**
@@ -56,11 +57,11 @@ public class WeblogicBasePlugin implements Plugin<Project> {
         });
     }
 
-    public static void addToolsJarToWeblogicProvidedClasspath(Project project) {
-        project.getDependencies().add(WEBLOGIC_PROVIDED_CONFIGURATION_NAME, project.files(
+    public static FileCollection toolsJar(Project project) {
+        return project.files(
                 System.getProperty("java.home") + "/../lib/tools.jar" /* for windows */,
                 System.getProperty("java.home") + "/../classes/classes.jar" /* for mac os*/
-        ));
+        );
     }
 
 }

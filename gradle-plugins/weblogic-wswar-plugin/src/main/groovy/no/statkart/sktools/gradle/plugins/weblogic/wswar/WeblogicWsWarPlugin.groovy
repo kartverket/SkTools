@@ -57,8 +57,8 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
         project.apply plugin: WeblogicBasePlugin.class
 
         // wswar har alltid trengt tools.jar (weblogic 10.3.5, 10.3.6, 12.1.x)
-        WeblogicBasePlugin.addToolsJarToWeblogicProvidedClasspath(project)
-        conditionallyAddWeblogicDependencies(project);
+        project.getDependencies().add(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME, WeblogicBasePlugin.toolsJar(project));
+        project.getDependencies().add(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME, conventionalWeblogicDependencies(project));
 
         createWeblogicConfiguration(project);
         final SourceSet weblogicSourceSet = createSourceSet(project);
@@ -75,16 +75,15 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
         War war = configureArchives(project, weblogicSourceSet);
     }
 
-    static void conditionallyAddWeblogicDependencies(Project project) {
+    public static FileCollection conventionalWeblogicDependencies(Project project) {
         if (project.hasProperty("WEBLOGIC_HOME")) {
             if (project.hasProperty("WEBLOGIC_VERSION")) {
                 def wlsVersion = project.property("WEBLOGIC_VERSION");
                 def wlsJars = weblogicJarsFor(wlsVersion as String, project);
-
-                project.getDependencies().add(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME, wlsJars);
+                return wlsJars;
             }
         }
-
+        return project.files();
     }
 
     static FileCollection weblogicJarsFor(String wlsVersion, Project project) {

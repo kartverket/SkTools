@@ -38,8 +38,8 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
         project.apply plugin: WeblogicBasePlugin.class;
 
         // SKTOOLS-17: weblogic 10.3.5 eller nyerer avhenger av tools.jar på classpath for wsclient
-        WeblogicBasePlugin.addToolsJarToWeblogicProvidedClasspath(project)
-        conditionallyAddWeblogicDependencies(project)
+        project.getDependencies().add(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME, WeblogicBasePlugin.toolsJar(project))
+        project.getDependencies().add(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME, conventionalWeblogicDependencies(project))
 
         final JavaPluginConvention javaConvention = project.getConvention().getPlugins().get("java") as JavaPluginConvention;
         final Configuration weblogicProvidedConfiguration = project.getConfigurations().getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME)
@@ -209,16 +209,15 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
         return sourceSet;
     }
 
-    static void conditionallyAddWeblogicDependencies(Project project) {
+    public static FileCollection conventionalWeblogicDependencies(Project project) {
         if (project.hasProperty("WEBLOGIC_HOME")) {
             if (project.hasProperty("WEBLOGIC_VERSION")) {
                 def wlsVersion = project.property("WEBLOGIC_VERSION");
                 def wlsJars = weblogicJarsFor(wlsVersion as String, project);
-
-                project.getDependencies().add(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME, wlsJars);
+                return wlsJars;
             }
         }
-
+        return project.files();
     }
 
     static FileCollection weblogicJarsFor(String wlsVersion, Project project) {

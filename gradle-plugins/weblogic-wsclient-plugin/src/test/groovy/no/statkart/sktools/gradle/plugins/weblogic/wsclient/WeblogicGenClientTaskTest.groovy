@@ -1,5 +1,6 @@
 package no.statkart.sktools.gradle.plugins.weblogic.wsclient
 
+import no.statkart.sktools.gradle.plugins.weblogic.WeblogicBasePlugin
 import no.statkart.sktools.gradle.plugins.weblogic.wsclient.internal.WsClientGenerator
 import no.statkart.sktools.gradle.plugins.weblogic.wswar.WeblogicWsWarPlugin
 import no.statkart.sktools.gradle.testutils.ProjectHelper
@@ -9,7 +10,6 @@ import no.statkart.sktools.gradle.testutils.filewriter.WeblogicWsWarTestutilFile
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.util.PatternSet
-import org.gradle.testfixtures.ProjectBuilder
 import org.testng.Assert
 import org.testng.annotations.Test
 
@@ -28,7 +28,7 @@ class WeblogicGenClientTaskTest {
     @Test
     void testDefaults() {
         //forks a new project in a temp folder
-        ProjectHelper rootProjectHelper = GradleProjectBuilder.builder("rootProject").build()
+        ProjectHelper rootProjectHelper = GradleProjectBuilder.builder("rootProject").withConventionalWEBLOGIC().build()
         Project rootProject = rootProjectHelper.project
 
         //forks a new project in a temp folder
@@ -67,7 +67,9 @@ class WeblogicGenClientTaskTest {
         WeblogicGenClientTask genClientTask = rootProject.tasks.create('genClient', WeblogicGenClientTask)
         genClientTask.webServiceConfig = createWebServiceConfigFor(rootProject)
         genClientTask.webServiceConfig.schemaFiles someDirFiles, additionalFiles
-        genClientTask.setWeblogicClasspath(rootProjectHelper.weblogicClasspath + rootProjectHelper.toolsJar)
+        genClientTask.setWeblogicClasspath(rootProject.files(
+                WeblogicWsClientPlugin.conventionalWeblogicDependencies(rootProject),
+                WeblogicBasePlugin.toolsJar(rootProject)))
         genClientTask.setDestinationDir(rootProject.buildDir)
         genClientTask.source = genClientTask.webServiceConfig.schemaFiles
 
@@ -93,7 +95,7 @@ class WeblogicGenClientTaskTest {
     @Test
     void testExceptionRewrite() {
         //forks a new project in a temp folder
-        ProjectHelper rootProjectHelper = GradleProjectBuilder.builder("rootProject").applyJavaPlugin().build()
+        ProjectHelper rootProjectHelper = GradleProjectBuilder.builder("rootProject").withConventionalWEBLOGIC().build()
         Project rootProject = rootProjectHelper.project
 
         //forks a new project in a temp folder
@@ -130,7 +132,9 @@ class WeblogicGenClientTaskTest {
         genClientTask.webServiceConfig.schemaFiles(schemaFiles)
         genClientTask.webServiceConfig.exceptionReusePackage('no.statkart.test.exceptiondemo01.common')
 
-        genClientTask.setWeblogicClasspath(rootProjectHelper.weblogicClasspath + rootProjectHelper.toolsJar)
+        genClientTask.setWeblogicClasspath(rootProject.files(
+                WeblogicWsClientPlugin.conventionalWeblogicDependencies(rootProject),
+                WeblogicBasePlugin.toolsJar(rootProject)))
         genClientTask.setDestinationDir(rootProject.file('src/main/java'))
         genClientTask.source = schemaFiles
 
@@ -153,7 +157,8 @@ class WeblogicGenClientTaskTest {
     void testResourceRewrite() {
 
         //forks a new project in a temp folder
-        Project project = ProjectBuilder.builder().build()
+        ProjectHelper rootProjectHelper = GradleProjectBuilder.builder().withConventionalWEBLOGIC().build()
+        Project project = rootProjectHelper.getProject()
         def dir = project.mkdir('build')
 
 
@@ -163,7 +168,6 @@ class WeblogicGenClientTaskTest {
 
 
         WeblogicGenClientTask genClientTask = project.tasks.create('genClient', WeblogicGenClientTask)
-        genClientTask.setProject(project)
         genClientTask.setDestinationDir(dir)
 
         final WsClientGenerator generator = genClientTask.createGenerator()
@@ -184,7 +188,7 @@ class WeblogicGenClientTaskTest {
     @Test
     void testApiPrefix() {
         //forks a new project in a temp folder
-        ProjectHelper rootProjectHelper = GradleProjectBuilder.builder("rootProject").build()
+        ProjectHelper rootProjectHelper = GradleProjectBuilder.builder("rootProject").withConventionalWEBLOGIC().build()
         Project rootProject = rootProjectHelper.project
 
         //forks a new project in a temp folder
@@ -224,7 +228,9 @@ class WeblogicGenClientTaskTest {
         genClientTask.webServiceConfig = createWebServiceConfigFor(rootProject)
         genClientTask.webServiceConfig.schemaFiles someDirFiles, additionalFiles
         genClientTask.webServiceConfig.apiPrefix 'sktoolstest'
-        genClientTask.setWeblogicClasspath(rootProjectHelper.weblogicClasspath + rootProjectHelper.toolsJar)
+        genClientTask.setWeblogicClasspath(rootProject.files(
+                WeblogicWsClientPlugin.conventionalWeblogicDependencies(rootProject),
+                WeblogicBasePlugin.toolsJar(rootProject)))
         genClientTask.setDestinationDir(rootProject.buildDir)
         genClientTask.source = genClientTask.webServiceConfig.schemaFiles
 
