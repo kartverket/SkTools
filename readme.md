@@ -1,5 +1,12 @@
 # SkTools - Felles byggeverktøy i kartverket
 
+## Utvikleroppsett
+Opprett gradle.properties med innhold, feks:
+```
+WEBLOGIC_HOME=C:/bea1213
+WEBLOGIC_VERSION=12.1.3
+```
+
 ## Releasetesting 
 For å teste virkemåten til de ulike plugins finnes det noen veldig enkle demo prosjekter. 
 Disse kan kjøres via `gradle install` og `gradle :gradle-demos:runDemos`

@@ -405,6 +405,9 @@ buildscript {
     if (!project.hasProperty('LOCALHOSTNAME')) {
         project.ext.setProperty('LOCALHOSTNAME', java.net.InetAddress.localHost.hostName + '.statkart.no')
     }
+    if (!project.hasProperty('sktools_versjon')) {
+        project.ext.setProperty('sktools_versjon', Project.DEFAULT_VERSION)
+    }
 
     ext.MAVEN_REPO = rootProject.properties.get('MAVEN_REPO', System.getenv('MAVEN_REPO'))
     if (ext.MAVEN_REPO == null) {

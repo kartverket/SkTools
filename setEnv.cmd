@@ -52,12 +52,6 @@ if not "%GRADLE_HOME%"=="" goto CONFIGURE_GRADLE_HOME
 
 title %title% %GRADLE_HOME%
 
-: Groovy Setup (optional)
-if "%GROOVY_HOME%"=="" goto END_GROOVY_HOME
-:CONFIGURE_END_GROOVY_HOME
-  set PATH=%PATH%;%GROOVY_HOME%\bin
-:END_GROOVY_HOME
-
 
 
 : Project Setup
@@ -66,18 +60,6 @@ if "%ORG_GRADLE_PROJECT_sktools_versjon%"=="" (
       set ORG_GRADLE_PROJECT_sktools_versjon=%%~nxP
       @echo Setter sktools_versjon til '%%~nxP'
    )
-)
-
-
-
-: Weglogic Setup
-if "%WEBLOGIC_HOME%"=="" (
-  @echo   WEBLOGIC_HOME environment variable er ikke satt. Har du glem å sette den i setEnv_personal.cmd?
-  set ERROR=true
-)
-if "%WEBLOGIC_VERSION%"=="" (
-  @echo   WEBLOGIC_VERSION environment variable er ikke satt. Har du glem å sette den i setEnv_personal.cmd?
-  set ERROR=true
 )
 
 
