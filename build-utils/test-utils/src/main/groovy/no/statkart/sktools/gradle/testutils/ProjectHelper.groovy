@@ -188,8 +188,7 @@ class ProjectHelper {
             if (!project.ext.has(key)) {
                 if (gradleProperties.containsKey(key)) {
                     project.ext.set(key, gradleProperties.get(key))
-                }
-                if (System.getenv(key) != null) {
+                } else if (System.getenv(key) != null) {
                     project.ext.set(key, System.getenv(key))
                 } else {
                     throw new Error("Env variabel for ${key} ikke satt!")
