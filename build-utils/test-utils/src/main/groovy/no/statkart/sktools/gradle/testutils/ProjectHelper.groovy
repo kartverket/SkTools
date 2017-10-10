@@ -44,7 +44,9 @@ class ProjectHelper {
 
 
     ProjectHelper configureProject(Closure closure) {
-        project.configure(project, closure);
+        if (closure != null) {
+            project.configure(project, closure);
+        }
         return this
     }
 

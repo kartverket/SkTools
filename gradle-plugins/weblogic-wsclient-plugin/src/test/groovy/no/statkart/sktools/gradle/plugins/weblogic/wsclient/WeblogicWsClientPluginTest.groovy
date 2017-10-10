@@ -2,11 +2,9 @@ package no.statkart.sktools.gradle.plugins.weblogic.wsclient
 
 import no.statkart.sktools.gradle.plugins.weblogic.wswar.WeblogicWsWarPlugin
 import no.statkart.sktools.gradle.testutils.ProjectHelper
-import no.statkart.sktools.gradle.testutils.builder.WeblogicWsClientProjectBuilder
-import no.statkart.sktools.gradle.testutils.builder.WeblogicWsWarProjectBuilder
+import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
-import org.testng.Assert
 import org.testng.annotations.Test
 import org.gradle.api.plugins.BasePlugin
 import no.statkart.sktools.gradle.testutils.filewriter.WeblogicWsWarTestutilFilewriter
@@ -44,12 +42,9 @@ class WeblogicWsClientPluginTest {
     @Test
     void testConventionConfiguration() {
         //forks a new project in a temp folder
-        ProjectHelper wsClientProjectHelper = WeblogicWsClientProjectBuilder.builder().applyWsClientPlugin().build()
-        Project wsClientProject = wsClientProjectHelper.project
+        ProjectHelper wsClientProjectHelper = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-weblogic-wsclient-plugin'
 
-
-        //konfigurerer prosjekt
-        wsClientProjectHelper.configureProject {
             weblogicWsClient {
                 example1 {
                     baseWar { 'org.organisation:someproject:1.1' }
@@ -75,7 +70,7 @@ class WeblogicWsClientPluginTest {
 
         wsClientProjectHelper.initializeProject()
 
-        def convention = wsClientProject.convention.plugins.get(WeblogicWsClientPlugin.CONVENTION_NAME) as WeblogicWsClientConvention
+        def convention = wsClientProjectHelper.project.convention.plugins.get(WeblogicWsClientPlugin.CONVENTION_NAME) as WeblogicWsClientConvention
 
         assert convention != null
         assert convention.genDir == 'gen/main/wsclient'
@@ -94,7 +89,7 @@ class WeblogicWsClientPluginTest {
         }
 
         //tester schema files
-        Set<File> someFiles = wsClientProject.files('some.wsdl', 'some.xsd').files
+        Set<File> someFiles = wsClientProjectHelper.project.files('some.wsdl', 'some.xsd').files
         ['example3', 'some1', 'some2'].each {
             assert convention.webService[it] != null
             assert convention.webService[it].schemaFiles.files.containsAll(someFiles)   //forventer at filer finnes
@@ -109,11 +104,15 @@ class WeblogicWsClientPluginTest {
     @Test
     void testDependency() {
         //forks a new wsClientProject in a temp folder
-        ProjectHelper wsClientProjectHelper = WeblogicWsClientProjectBuilder.builder().withName('wsclient').applyJavaPlugin().applyWsClientPlugin(true).build()
-        Project wsClientProject = wsClientProjectHelper.project
+        ProjectHelper wsClientProjectHelper = GradleProjectBuilder.builder('wsclient').withConventionalWEBLOGIC().build {
+            apply plugin: 'java'
+            apply plugin: 'sktools-weblogic-wsclient-plugin'
+        }
 
         //forks a child wsClientProject within the same temp folder
-        ProjectHelper wsWarProjectHelper = WeblogicWsWarProjectBuilder.builder().withName('wswar').withParent(wsClientProjectHelper).applyWsWarPlugin(true).build()
+        ProjectHelper wsWarProjectHelper = GradleProjectBuilder.builder("wswar").withConventionalWEBLOGIC().withParent(wsClientProjectHelper).build {
+            apply plugin: 'sktools-weblogic-wswar-plugin'
+        }
 
         //oppretter to servicer
         use(WeblogicWsWarTestutilFilewriter) {
@@ -150,7 +149,7 @@ class WeblogicWsClientPluginTest {
 
 
         //tester sourceSet
-        SourceSet sourceSet = wsClientProject.sourceSets.main;
+        SourceSet sourceSet = wsClientProjectHelper.project.sourceSets.main;
 
         //tester sourceSet.output
         assert sourceSet.output.asFileTree.files.find { it.toURI().path.endsWith('/no/statkart/test/service/demotns/TestServiceWS.class')}
@@ -181,7 +180,10 @@ class WeblogicWsClientPluginTest {
     @Test()
     void testBuildTaskDependsOn() {
         //forks a new project in a temp folder
-        ProjectHelper projectHelper = WeblogicWsClientProjectBuilder.builder().applyJavaPlugin().applyWsClientPlugin().build()
+        ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+            apply plugin: 'java'
+            apply plugin: 'sktools-weblogic-wsclient-plugin'
+        }
 
         projectHelper.initializeProject(false)
 
@@ -202,7 +204,9 @@ class WeblogicWsClientPluginTest {
     void testWeblogicClasspath() {
 
         //forks a new project in a temp folder
-        ProjectHelper projectHelper = WeblogicWsClientProjectBuilder.builder().applyWsClientPlugin().build()
+        ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-weblogic-wsclient-plugin'
+        }
 
         File someJarFile = projectHelper.project.file('weblogic.jar')
 
@@ -223,27 +227,7 @@ class WeblogicWsClientPluginTest {
         assert task.weblogicClasspath.files.contains(someJarFile)
 
 
-
     }
-
-
-
-    /**
-     * Tester at man kan legge til ekstra java klasser
-     */
-    @Test(enabled = false)
-    void testSourceSetJava() {
-        Assert.fail('todo')
-    }
-
-    /**
-     * Tester at man kan legge til ekstra ressursfiler
-     */
-    @Test(enabled = false)
-    void testSourceSetResources() {
-        Assert.fail('todo')
-    }
-
 
 
 }

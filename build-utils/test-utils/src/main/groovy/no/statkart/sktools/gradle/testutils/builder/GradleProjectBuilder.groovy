@@ -38,14 +38,14 @@ class GradleProjectBuilder<T extends GradleProjectBuilder<T>> {
         return builder().withName(projectName)
     }
 
-    public ProjectHelper build() {
+    public ProjectHelper build(Closure closure = null) {
         //forks a new project in a temp folder
         projectHelper = new ProjectHelper(builder.build())
         projectHelper.setProjectProperties(projectProperties)
         closures.each {
-            it.delegate = projectHelper.project
-            it()
+            projectHelper.configureProject it
         }
+        projectHelper.configureProject closure
         return projectHelper
     }
 

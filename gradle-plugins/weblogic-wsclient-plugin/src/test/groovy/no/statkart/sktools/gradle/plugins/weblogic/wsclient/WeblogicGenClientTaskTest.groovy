@@ -5,7 +5,6 @@ import no.statkart.sktools.gradle.plugins.weblogic.wsclient.internal.WsClientGen
 import no.statkart.sktools.gradle.plugins.weblogic.wswar.WeblogicWsWarPlugin
 import no.statkart.sktools.gradle.testutils.ProjectHelper
 import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
-import no.statkart.sktools.gradle.testutils.builder.WeblogicWsWarProjectBuilder
 import no.statkart.sktools.gradle.testutils.filewriter.WeblogicWsWarTestutilFilewriter
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
@@ -32,7 +31,10 @@ class WeblogicGenClientTaskTest {
         Project rootProject = rootProjectHelper.project
 
         //forks a new project in a temp folder
-        ProjectHelper wsWarProjectHelper = WeblogicWsWarProjectBuilder.builder().applyWsWarPlugin(true).withName("wswar").withParent(rootProject).build()
+        ProjectHelper wsWarProjectHelper = GradleProjectBuilder.builder('wswar').withParent(rootProject).withConventionalWEBLOGIC().build()
+        wsWarProjectHelper.configureProject {
+            apply plugin: 'sktools-weblogic-wswar-plugin'
+        }
 
         //oppretter to servicer
         use(WeblogicWsWarTestutilFilewriter) {
@@ -99,7 +101,12 @@ class WeblogicGenClientTaskTest {
         Project rootProject = rootProjectHelper.project
 
         //forks a new project in a temp folder
-        ProjectHelper wsWarProjectHelper = WeblogicWsWarProjectBuilder.builder().applyWsWarPlugin(true).withName("wswar").withParent(rootProject).applyJavaPlugin().build()
+        ProjectHelper wsWarProjectHelper = GradleProjectBuilder.builder('wswar').withParent(rootProject).withConventionalWEBLOGIC().build()
+        wsWarProjectHelper.configureProject {
+            apply plugin: 'sktools-weblogic-wswar-plugin'
+            apply plugin: 'java'
+        }
+
         wsWarProjectHelper.configureProject() {
             dependencies {
                 weblogicCompile project(path: project.path, configuration: 'runtime')    //
@@ -192,7 +199,10 @@ class WeblogicGenClientTaskTest {
         Project rootProject = rootProjectHelper.project
 
         //forks a new project in a temp folder
-        ProjectHelper wsWarProjectHelper = WeblogicWsWarProjectBuilder.builder().applyWsWarPlugin(true).withName("wswar").withParent(rootProject).build()
+        ProjectHelper wsWarProjectHelper = GradleProjectBuilder.builder("wswar").withParent(rootProject).withConventionalWEBLOGIC().build();
+        wsWarProjectHelper.configureProject {
+            apply plugin: 'sktools-weblogic-wswar-plugin'
+        }
 
         //oppretter to servicer
         use(WeblogicWsWarTestutilFilewriter) {

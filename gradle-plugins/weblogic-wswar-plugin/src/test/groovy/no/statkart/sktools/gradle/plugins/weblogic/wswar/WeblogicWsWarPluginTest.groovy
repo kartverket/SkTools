@@ -1,19 +1,15 @@
 package no.statkart.sktools.gradle.plugins.weblogic.wswar
 
-import org.testng.annotations.Test
+import no.statkart.sktools.gradle.testutils.ProjectHelper
+import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
+import no.statkart.sktools.gradle.testutils.filewriter.WeblogicWsWarTestutilFilewriter
 import org.gradle.api.Project
-import org.gradle.testfixtures.ProjectBuilder
-import org.testng.Assert
+import org.gradle.api.Task
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSet
-import org.gradle.api.Task
-
-import no.statkart.sktools.gradle.testutils.ProjectHelper
-import no.statkart.sktools.gradle.testutils.builder.WeblogicWsWarProjectBuilder
-import org.gradle.api.file.FileCollection
-import no.statkart.sktools.gradle.testutils.filewriter.WeblogicWsWarTestutilFilewriter
-import org.gradle.api.tasks.SourceTask
 import org.gradle.api.tasks.compile.AbstractCompile
+import org.gradle.testfixtures.ProjectBuilder
+import org.testng.annotations.Test
 
 /**
  * Test av {@link WeblogicWsWarPlugin}
@@ -29,7 +25,6 @@ class WeblogicWsWarPluginTest {
     void testAppplyPlugin() {
         //forks a new project in a temp folder
         Project project = ProjectBuilder.builder().build()
-        ProjectHelper projectHelper = new ProjectHelper(project)
 
         //konfigurerer project
         project.with {
@@ -46,10 +41,10 @@ class WeblogicWsWarPluginTest {
      * Tester og demonstrerer angivelse av konfigurasjon
      */
     @Test
-    void testConventionConfiguration() {
-        ProjectHelper projectHelper = WeblogicWsWarProjectBuilder.builder().applyWsWarPlugin(true).build()
+    void projectHelper() {
+        ProjectHelper projectHelper = GradleProjectBuilder.builder().withConventionalWEBLOGIC().build {
+            apply plugin: 'sktools-weblogic-wswar-plugin'
 
-        projectHelper.configureProject {
             sourceSets.weblogic {
                 java.srcDir 'scr/someJavaSourceDir'
                 resources.srcDir 'scr/someResourcesDir'
@@ -72,7 +67,9 @@ class WeblogicWsWarPluginTest {
     @Test
     void testCompileTaskClasspath() {
         //forks a new project in a temp folder
-        ProjectHelper projectHelper = WeblogicWsWarProjectBuilder.builder().applyWsWarPlugin(true).build()
+        ProjectHelper projectHelper = GradleProjectBuilder.builder().withConventionalWEBLOGIC().build {
+            apply plugin: 'sktools-weblogic-wswar-plugin'
+        }
         Project project = projectHelper.project
 
         AbstractCompile genTask = project.tasks[WeblogicWsWarPlugin.WEBLOGIC_GEN_TASK_NAME]
@@ -92,8 +89,9 @@ class WeblogicWsWarPluginTest {
     @Test
     void testCompileTask() {
         //forks a new project in a temp folder
-        ProjectHelper projectHelper = WeblogicWsWarProjectBuilder.builder().applyWsWarPlugin(true).build()
-        Project project = projectHelper.project
+        ProjectHelper projectHelper = GradleProjectBuilder.builder().withConventionalWEBLOGIC().build {
+            apply plugin: 'sktools-weblogic-wswar-plugin'
+        }
 
         //genererer java kildekode for en testservice
         use(WeblogicWsWarTestutilFilewriter) {
@@ -118,8 +116,9 @@ class WeblogicWsWarPluginTest {
     @Test
     void testWarTask() {
         //forks a new project in a temp folder
-        ProjectHelper projectHelper = WeblogicWsWarProjectBuilder.builder().applyWsWarPlugin(true).build()
-        Project project = projectHelper.project
+        ProjectHelper projectHelper = GradleProjectBuilder.builder().withConventionalWEBLOGIC().build {
+            apply plugin: 'sktools-weblogic-wswar-plugin'
+        }
 
         //genererer java kildekode for en testservice
         use(WeblogicWsWarTestutilFilewriter) {
@@ -147,7 +146,9 @@ class WeblogicWsWarPluginTest {
     @Test
     void testSourceSetConfig() {
         //forks a new project in a temp folder
-        ProjectHelper projectHelper = WeblogicWsWarProjectBuilder.builder().applyWsWarPlugin(false).build()
+        ProjectHelper projectHelper = GradleProjectBuilder.builder().withConventionalWEBLOGIC().build {
+            apply plugin: 'sktools-weblogic-wswar-plugin'
+        }
         Project project = projectHelper.project
 
 
@@ -175,7 +176,9 @@ class WeblogicWsWarPluginTest {
     @Test
     void testResourcesConfig() {
         //forks a new project in a temp folder
-        ProjectHelper projectHelper = WeblogicWsWarProjectBuilder.builder().applyWsWarPlugin(false).build()
+        ProjectHelper projectHelper = GradleProjectBuilder.builder().withConventionalWEBLOGIC().build {
+            apply plugin: 'sktools-weblogic-wswar-plugin'
+        }
         Project project = projectHelper.project
 
         Collection<File> weblogicResourceFiles = null
@@ -227,7 +230,9 @@ class WeblogicWsWarPluginTest {
     @Test
     void testSourceConfig() {
         //forks a new project in a temp folder
-        ProjectHelper projectHelper = WeblogicWsWarProjectBuilder.builder().applyWsWarPlugin(false).build()
+        ProjectHelper projectHelper = GradleProjectBuilder.builder().withConventionalWEBLOGIC().build {
+            apply plugin: 'sktools-weblogic-wswar-plugin'
+        }
         Project project = projectHelper.project
 
         Collection<File> weblogicSourceFiles = null
@@ -289,7 +294,10 @@ class WeblogicWsWarPluginTest {
     @Test
     void testJavaPluginIntegration() {
         //forks a new rootProject in a temp folder
-        ProjectHelper projectHelper = WeblogicWsWarProjectBuilder.builder().applyJavaPlugin().applyWsWarPlugin(false).withName('testproject').build()
+        ProjectHelper projectHelper = GradleProjectBuilder.builder().withConventionalWEBLOGIC().withName('testproject').build {
+            apply plugin: 'sktools-weblogic-wswar-plugin'
+            apply plugin: 'java'
+        }
         Project rootProject = projectHelper.project
 
         Collection<File> weblogicSourceFiles = null
