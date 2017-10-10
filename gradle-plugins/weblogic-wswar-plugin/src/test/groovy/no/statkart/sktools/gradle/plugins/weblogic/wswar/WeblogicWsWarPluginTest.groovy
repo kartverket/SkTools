@@ -116,7 +116,7 @@ class WeblogicWsWarPluginTest {
     @Test
     void testWarTask() {
         //forks a new project in a temp folder
-        ProjectHelper projectHelper = GradleProjectBuilder.builder().withConventionalWEBLOGIC().build {
+        ProjectHelper projectHelper = GradleProjectBuilder.builder("projectName").withConventionalWEBLOGIC().build {
             apply plugin: 'sktools-weblogic-wswar-plugin'
         }
 
@@ -133,7 +133,7 @@ class WeblogicWsWarPluginTest {
         projectHelper.assertTaskExecutedNotSkipped(WeblogicWsWarPlugin.WEBLOGIC_GEN_TASK_NAME)
         projectHelper.assertTaskExecutedNotSkipped('compileWeblogicJava')
 
-        File warFile = projectHelper.assertFileExists('build/libs/WeblogicWsWarProjectBuilder-weblogic.war')
+        File warFile = projectHelper.assertFileExists('build/libs/projectName-weblogic.war')
 
         assert warTask.getOutputs().getFiles().getSingleFile() == warFile //forventer at output inneholder denne filen
 
