@@ -180,7 +180,7 @@ class ProjectHelper {
 
         File gradlePropertiesFile = new File(RootDirectoryLocator.getRootDirectory(), "gradle.properties")
         def gradleProperties = new Properties()
-        if (gradlePropertiesFile) {
+        if (gradlePropertiesFile.exists()) {
             gradleProperties.load(gradlePropertiesFile.newInputStream())
         }
 
