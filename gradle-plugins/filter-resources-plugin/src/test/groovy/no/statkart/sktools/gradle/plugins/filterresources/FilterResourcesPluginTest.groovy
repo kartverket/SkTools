@@ -1,7 +1,7 @@
 package no.statkart.sktools.gradle.plugins.filterresources
 
 import no.statkart.sktools.gradle.testutils.ProjectHelper
-import no.statkart.sktools.gradle.testutils.builder.FilterResourcesProjectBuilder
+import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
 import no.statkart.sktools.gradle.testutils.filewriter.FilterPropertiesTestutilFilewriter
 import org.gradle.api.Project
 import org.gradle.api.plugins.BasePlugin
@@ -30,28 +30,29 @@ class FilterResourcesPluginTest {
 
     }
 
-
-
-
     /**
      * Tester og demonstrerer angivelse av konfigurasjon
      */
     @Test
     void testConventionConfiguration() {
-        ProjectHelper projectHelper = FilterResourcesProjectBuilder.builder().applyJavaPlugin().applyFilterResourcesPlugin().build()
+        ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+            apply plugin: 'java'
+            apply plugin: 'sktools-filter-resources-plugin'
+        }
+
         FilterResourcesConvention convention = (FilterResourcesConvention) projectHelper.project.convention.plugins.get(FilterResourcesPlugin.CONVENTION_NAME)
 
         projectHelper.initializeProject()
 
         projectHelper.configureProject {
             filterResources {
-                properties = [singleProperty:'singleValue']
+                properties = [singleProperty: 'singleValue']
             }
         }
 
-        assert convention.properties == ['singleProperty':'singleValue']
+        assert convention.properties == ['singleProperty': 'singleValue']
 
-        projectHelper.setProjectProperties(['projectProperty':'projectValue'])
+        projectHelper.setProjectProperties(['projectProperty': 'projectValue'])
 
 
         projectHelper.configureProject {
@@ -66,19 +67,21 @@ class FilterResourcesPluginTest {
 
     }
 
-
     /**
      * Tester bruk med standard verdier.
      */
     @Test
     void testDefaultValues() {
-        ProjectHelper projectHelper = FilterResourcesProjectBuilder.builder().applyJavaPlugin().applyFilterResourcesPlugin().withName('PropertiesFilterTest').build()
+        ProjectHelper projectHelper = GradleProjectBuilder.builder("PropertiesFilterTest").build {
+            apply plugin: 'java'
+            apply plugin: 'sktools-filter-resources-plugin'
+        }
 
         use(FilterPropertiesTestutilFilewriter) {
             projectHelper.writeTwoSimpleResources('src/main/filterResources')
         }
 
-        projectHelper.setProjectProperties([myProperty2:'testValue', myEmail:'unittest'])
+        projectHelper.setProjectProperties([myProperty2: 'testValue', myEmail: 'unittest'])
         assert projectHelper.project.getName() == "PropertiesFilterTest"
 
         projectHelper.initializeProject()
@@ -107,13 +110,16 @@ class FilterResourcesPluginTest {
      */
     @Test
     void testCustomProperties() {
-        ProjectHelper projectHelper = FilterResourcesProjectBuilder.builder().applyJavaPlugin().applyFilterResourcesPlugin().withName('PropertiesFilterTest').build()
+        ProjectHelper projectHelper = GradleProjectBuilder.builder("PropertiesFilterTest").build {
+            apply plugin: 'java'
+            apply plugin: 'sktools-filter-resources-plugin'
+        }
 
         use(FilterPropertiesTestutilFilewriter) {
             projectHelper.writeTwoSimpleResources('src/main/filterResources')
         }
 
-        projectHelper.setProjectProperties([myProperty1:'testValue'])
+        projectHelper.setProjectProperties([myProperty1: 'testValue'])
 
         projectHelper.configureProject {
             filterResources {
@@ -138,19 +144,21 @@ class FilterResourcesPluginTest {
 
     }
 
-
     /**
      * Tester 'processResources' task blir satt opp riktig.
      */
     @Test
     void testResources() {
-        ProjectHelper projectHelper = FilterResourcesProjectBuilder.builder().applyJavaPlugin().applyFilterResourcesPlugin().withName('PropertiesFilterTest').build()
+        ProjectHelper projectHelper = GradleProjectBuilder.builder("PropertiesFilterTest").build {
+            apply plugin: 'java'
+            apply plugin: 'sktools-filter-resources-plugin'
+        }
 
         use(FilterPropertiesTestutilFilewriter) {
             projectHelper.writeTwoSimpleResources('src/main/filterResources')
         }
 
-        projectHelper.setProjectProperties([myProperty1:'testValue'])
+        projectHelper.setProjectProperties([myProperty1: 'testValue'])
         projectHelper.initializeProject()
 
         projectHelper.executeTask("processResources")
@@ -168,7 +176,10 @@ class FilterResourcesPluginTest {
      */
     @Test
     void testClean() {
-        ProjectHelper projectHelper = FilterResourcesProjectBuilder.builder().applyJavaPlugin().applyFilterResourcesPlugin().withName('PropertiesFilterTest').build()
+        ProjectHelper projectHelper = GradleProjectBuilder.builder("PropertiesFilterTest").build {
+            apply plugin: 'java'
+            apply plugin: 'sktools-filter-resources-plugin'
+        }
 
         use(FilterPropertiesTestutilFilewriter) {
             projectHelper.writeTwoSimpleResources('src/main/filterResources')
@@ -190,7 +201,6 @@ class FilterResourcesPluginTest {
 
     }
 
-
     /**
      * SKIF-173
      *
@@ -198,7 +208,10 @@ class FilterResourcesPluginTest {
      */
     @Test
     void testCustomPathsConfiguration() {
-        ProjectHelper projectHelper = FilterResourcesProjectBuilder.builder().applyJavaPlugin().applyFilterResourcesPlugin().build()
+        ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+            apply plugin: 'java'
+            apply plugin: 'sktools-filter-resources-plugin'
+        }
 
         //definerer to source set med filtrerte ressurser
         projectHelper.configureProject {
@@ -220,8 +233,8 @@ class FilterResourcesPluginTest {
 
         //skriver noen filer til disk
         use(FilterPropertiesTestutilFilewriter) {
-            projectHelper.writeCustomFile('src/special/main/file1.txt') { "file1.version=@version@"}
-            projectHelper.writeCustomFile('src/special/test/file2.txt') { "file2.version=@version@"}
+            projectHelper.writeCustomFile('src/special/main/file1.txt') { "file1.version=@version@" }
+            projectHelper.writeCustomFile('src/special/test/file2.txt') { "file2.version=@version@" }
         }
 
         //eksekverer
@@ -230,7 +243,6 @@ class FilterResourcesPluginTest {
         projectHelper.executeTask(FilterResourcesPlugin.FILTER_TEST_RESOURCES_TASK_NAME)
         projectHelper.assertTaskExecutedNotSkipped(FilterResourcesPlugin.FILTER_MAIN_RESOURCES_TASK_NAME)
         projectHelper.assertTaskExecutedNotSkipped(FilterResourcesPlugin.FILTER_TEST_RESOURCES_TASK_NAME)
-
 
         //tester resultat
         projectHelper.assertFileExists("gen/special/main/file1.txt")
@@ -248,7 +260,10 @@ class FilterResourcesPluginTest {
      */
     @Test
     void testSourceSetIkkeOverlapper() {
-        ProjectHelper projectHelper = FilterResourcesProjectBuilder.builder().applyJavaPlugin().applyFilterResourcesPlugin().build()
+        ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+            apply plugin: 'java'
+            apply plugin: 'sktools-filter-resources-plugin'
+        }
 
         //definerer to source set med filtrerte ressurser
         projectHelper.configureProject {
@@ -271,10 +286,10 @@ class FilterResourcesPluginTest {
 
         //skriver noen filer til disk
         use(FilterPropertiesTestutilFilewriter) {
-            projectHelper.writeCustomFile('src/main/java/file1.txt') { "file1.txt"}
-            projectHelper.writeCustomFile('src/main/java/file1.java') { "interface file1 {}"}
-            projectHelper.writeCustomFile('src/test/resources/file2.txt') { "file2.txt"}
-            projectHelper.writeCustomFile('src/test/resources/file2.nofilter') { "file2.nofilter"}
+            projectHelper.writeCustomFile('src/main/java/file1.txt') { "file1.txt" }
+            projectHelper.writeCustomFile('src/main/java/file1.java') { "interface file1 {}" }
+            projectHelper.writeCustomFile('src/test/resources/file2.txt') { "file2.txt" }
+            projectHelper.writeCustomFile('src/test/resources/file2.nofilter') { "file2.nofilter" }
         }
 
         //eksekverer
@@ -282,7 +297,6 @@ class FilterResourcesPluginTest {
         projectHelper.executeTask("build")
         projectHelper.assertTaskExecutedNotSkipped(FilterResourcesPlugin.FILTER_MAIN_RESOURCES_TASK_NAME)
         projectHelper.assertTaskExecutedNotSkipped(FilterResourcesPlugin.FILTER_TEST_RESOURCES_TASK_NAME)
-
 
         //tester resultat
         projectHelper.assertFileExists("gen/main/resources/file1.txt")
@@ -296,15 +310,17 @@ class FilterResourcesPluginTest {
         assert !project.sourceSets.test.resources.contains(projectHelper.assertFileExists("src/test/resources/file2.txt"))
     }
 
-
-
     /**
      * SKIF-173
      *
      */
     @Test
     void testClasspathForSourceSet() {
-        ProjectHelper projectHelper = FilterResourcesProjectBuilder.builder().applyJavaPlugin().applyFilterResourcesPlugin().build()
+        ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+            apply plugin: 'java'
+            apply plugin: 'sktools-filter-resources-plugin'
+        }
+
 
         projectHelper.configureProject {
             sourceSets {
@@ -353,5 +369,5 @@ class FilterResourcesPluginTest {
 
         projectHelper.assertFileExists('build/gen/so/cool/resource1.txt', 'Forventer at ressursfil er generert')
         projectHelper.assertFileExists('build/gen/so/cool/resource2.txt', 'Forventer at ressursfil er generert')
-    }    
+    }
 }

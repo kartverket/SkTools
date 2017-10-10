@@ -2,7 +2,7 @@ package no.statkart.sktools.gradle.plugins.properties
 
 import no.statkart.sktools.gradle.plugins.properties.extension.PropertyUtils
 import no.statkart.sktools.gradle.testutils.ProjectHelper
-import no.statkart.sktools.gradle.testutils.builder.PropertiesProjectBuilder
+import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import org.testng.Assert
@@ -67,8 +67,14 @@ class PropertiesPluginTest {
      */
     @Test
     void testParentProjectProperties() {
-        ProjectHelper rootProjectHelper = PropertiesProjectBuilder.builder().applyJavaPlugin().applyPropertiesPlugin().build()
-        ProjectHelper child1ProjectHelper = PropertiesProjectBuilder.builder().withParent(rootProjectHelper).applyPropertiesPlugin().build()
+        ProjectHelper rootProjectHelper = GradleProjectBuilder.builder().build {
+            apply plugin: 'java'
+            apply plugin: 'sktools-properties-plugin'
+        }
+
+        ProjectHelper child1ProjectHelper = GradleProjectBuilder.builder().withParent(rootProjectHelper).build {
+            apply plugin: 'sktools-properties-plugin'
+        }
 
         rootProjectHelper.setProjectProperties(testProperty: "TestValue");
         Assert.assertEquals(child1ProjectHelper.project.property("testProperty"), "TestValue")

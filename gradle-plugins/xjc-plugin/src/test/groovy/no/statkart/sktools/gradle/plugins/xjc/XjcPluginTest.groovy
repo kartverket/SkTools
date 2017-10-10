@@ -1,7 +1,7 @@
 package no.statkart.sktools.gradle.plugins.xjc
 
 import no.statkart.sktools.gradle.testutils.ProjectHelper
-import no.statkart.sktools.gradle.testutils.builder.XjcProjectBuilder
+import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
 import no.statkart.sktools.gradle.testutils.filewriter.XjcTestutilFilewriter
 import org.gradle.api.Project
 import org.gradle.api.tasks.SourceSet
@@ -36,7 +36,9 @@ class XjcPluginTest {
     @Test
     void testDefaultSetting() {
         //forks a new project in a temp folder
-        ProjectHelper projectHelper = XjcProjectBuilder.builder().applyXjcPlugin().build()
+        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-xjc-plugin'
+        }
 
         //generates a simple source file
         use(XjcTestutilFilewriter) {
@@ -75,7 +77,9 @@ class XjcPluginTest {
     @Test
     void testGrunnbokDoc() {
         //forks a new project in a temp folder
-        ProjectHelper projectHelper = XjcProjectBuilder.builder().applyXjcPlugin().build()
+        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-xjc-plugin'
+        }
 
         //generates a simple source file with gdoc annotations
         use(XjcTestutilFilewriter) {
@@ -118,7 +122,9 @@ class XjcPluginTest {
     @Test
     void testListAdapter() {
         //forks a new project in a temp folder
-        ProjectHelper projectHelper = XjcProjectBuilder.builder().applyXjcPlugin().build()
+        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-xjc-plugin'
+        }
 
         //generates a simple source file
         use(XjcTestutilFilewriter) {
@@ -171,10 +177,8 @@ class XjcPluginTest {
     void testConventionConfiguration2() {
 
         //forks a new project in a temp folder
-        ProjectHelper projectHelper = XjcProjectBuilder.builder().applyXjcPlugin().build()
-
-        //config
-        projectHelper.configureProject {
+        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-xjc-plugin'
 
             sourceSets {
                 main {
@@ -244,10 +248,8 @@ class XjcPluginTest {
     void ideaTasksCanHandleSourceSetConfiguration() {
 
         //forks a new project in a temp folder
-        ProjectHelper projectHelper = XjcProjectBuilder.builder().applyXjcPlugin().build()
-
-        //config
-        projectHelper.configureProject {
+        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-xjc-plugin'
             apply plugin: 'idea'
 
             sourceSets {
@@ -273,10 +275,9 @@ class XjcPluginTest {
     void canSpecifyTaskNameForGen() {
 
         //forks a new project in a temp folder
-        ProjectHelper projectHelper = XjcProjectBuilder.builder().applyXjcPlugin().build()
+        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-xjc-plugin'
 
-        //config
-        projectHelper.configureProject {
             sourceSets {
                 main.xjc {
                     schema {
@@ -297,10 +298,9 @@ class XjcPluginTest {
     void canSpecifyTaskNameForCompile() {
 
         //forks a new project in a temp folder
-        ProjectHelper projectHelper = XjcProjectBuilder.builder().applyXjcPlugin().build()
+        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-xjc-plugin'
 
-        //config
-        projectHelper.configureProject {
             sourceSets {
                 main.xjc {
                     schema {
@@ -321,7 +321,9 @@ class XjcPluginTest {
     void canSpecifyGenOutputPath() {
 
         //forks a new project in a temp folder
-        ProjectHelper projectHelper = XjcProjectBuilder.builder().applyXjcPlugin().build()
+        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-xjc-plugin'
+        }
 
         //config
         projectHelper.configureProject {
@@ -347,14 +349,15 @@ class XjcPluginTest {
 
     }
 
-
     /**
      * Verifiserer at src dirs kan konfigureres
      */
     @Test
     void testSrcDirs() {
         //forks a new project in a temp folder
-        ProjectHelper projectHelper = XjcProjectBuilder.builder().applyXjcPlugin().build()
+        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-xjc-plugin'
+        }
 
         //generates a simple source file
         use(XjcTestutilFilewriter) {

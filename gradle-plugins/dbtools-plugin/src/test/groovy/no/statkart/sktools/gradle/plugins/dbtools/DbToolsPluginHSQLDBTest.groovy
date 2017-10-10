@@ -4,13 +4,13 @@ import com.google.common.base.Preconditions
 import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsConvention
 import no.statkart.sktools.gradle.plugins.dbtools.testutils.DbToolsPluginPatchHelper
 import no.statkart.sktools.gradle.testutils.ProjectHelper
-import no.statkart.sktools.gradle.testutils.builder.DbToolsProjectBuilder
-import org.testng.annotations.Test
-
-import org.testng.Assert
-import java.sql.SQLSyntaxErrorException
+import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
 import org.gradle.api.Task
 import org.gradle.api.tasks.TaskExecutionException
+import org.testng.Assert
+import org.testng.annotations.Test
+
+import java.sql.SQLSyntaxErrorException
 
 /**
  * Tester funksjonell plugin funjsonalitet via HSQLDB - en in memory database
@@ -42,7 +42,9 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
     void testDynamicCredentials() {
         Preconditions.checkState(sql.connection.isValid(0))
 
-        final ProjectHelper testCase = DbToolsProjectBuilder.builder().applyDbUtilsPlugin().build();
+        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-dbtools-plugin'
+        };
 
         // STEG 1 - oppretter sql-filer relativt til prosjekt
 
@@ -155,7 +157,9 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
         Preconditions.checkState(getSql(user1).connection.isValid(0))
         Preconditions.checkState(getSql(user2).connection.isValid(0))
 
-        final ProjectHelper testCase = DbToolsProjectBuilder.builder().applyDbUtilsPlugin().build();
+        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-dbtools-plugin'
+        };
 
 
         // STEG 1 - oppretter sql-filer relativt til prosjekt
@@ -244,7 +248,9 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
      */
     @Test
     void testPatchStandardTaskPrintPatchVersion() {
-        final ProjectHelper testCase = DbToolsProjectBuilder.builder().applyDbUtilsPlugin().build();
+        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-dbtools-plugin'
+        };
 
         testCase.configureProject {
             configureDatabasePlugin {
@@ -273,7 +279,9 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
      */
     @Test
     void testPatchStandardTaskSetIndexInSyncWithPatch() {
-        final ProjectHelper testCase = DbToolsProjectBuilder.builder().applyDbUtilsPlugin().build();
+        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-dbtools-plugin'
+        };
 
         testCase.configureProject {
             configureDatabasePlugin {
@@ -302,7 +310,9 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
      */
     @Test
     void testPatchStandardTaskUnSetIndexInSyncWithPatch() {
-        final ProjectHelper testCase = DbToolsProjectBuilder.builder().applyDbUtilsPlugin().build();
+        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-dbtools-plugin'
+        };
 
         testCase.configureProject {
             configureDatabasePlugin {
@@ -331,7 +341,9 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
      */
     @Test
     void testPatchDatabase() {
-        final ProjectHelper testCase = DbToolsProjectBuilder.builder().applyDbUtilsPlugin().build();
+        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-dbtools-plugin'
+        };
 
         // STEG 1 - setter opp testmaterie
         File patchFile = DbToolsPluginPatchHelper.createSimplePatchFile()

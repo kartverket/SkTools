@@ -1,8 +1,8 @@
 package no.statkart.sktools.gradle.plugins.properties
 
+import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
 import org.testng.annotations.Test
 import no.statkart.sktools.gradle.testutils.ProjectHelper
-import no.statkart.sktools.gradle.testutils.builder.PropertiesProjectBuilder
 import no.statkart.sktools.gradle.plugins.properties.extension.PropertyUtils
 import org.testng.Assert
 import org.gradle.api.Project
@@ -22,7 +22,9 @@ class PropertyUtilsTest {
     @Test
     void testLoadProperties() {
         //forks a new project in a temp folder
-        ProjectHelper projectHelper = PropertiesProjectBuilder.builder().build()
+        ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-properties-plugin'
+        }
         projectHelper.project.file('custom.properties').withPrintWriter('UTF-8') {
             it.println('hei=hopp')
             it.println('hopp=hei')
@@ -45,7 +47,10 @@ class PropertyUtilsTest {
     @Test
     void testLoadPropertiesNoneExistantResource() {
         //forks a new project in a temp folder
-        ProjectHelper projectHelper = PropertiesProjectBuilder.builder().build()
+        ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-properties-plugin'
+        }
+
 
         PropertyUtils propertyUtils = new PropertyUtils(projectHelper.project);
         Map<String, ?> properties = propertyUtils.fromFile('noneExistant.properties')
@@ -54,25 +59,23 @@ class PropertyUtilsTest {
         Assert.assertEquals(properties.size(), 0, "Antall properties")
     }
 
-
     /**
      * Tester substituering av properties
      *
-     * @see PropertyUtils#assignPropertiesToProject(Map<java.lang.String,?>[])
+     * @see PropertyUtils#assignPropertiesToProject(Map)
      */
     @Test
     void testAssignPropertiesToProject() {
         //forks a new project in a temp folder
-        Project project = PropertiesProjectBuilder.builder().build().project;
+        Project project = GradleProjectBuilder.builder().build().project;
         PropertyUtils propertyUtils = new PropertyUtils(project);
 
-        Map<String, String> myProperties = ['hei':'hopp', 'hopp':'hei']
+        Map<String, String> myProperties = ['hei': 'hopp', 'hopp': 'hei']
         propertyUtils.assignPropertiesToProject(myProperties);
 
         Assert.assertEquals(project.hei, 'hopp', "Forventet value")
         Assert.assertEquals(project.properties['hopp'], 'hei', "Forventet value")
     }
-
 
     /**
      * Tester ekspandering av properties
@@ -82,7 +85,7 @@ class PropertyUtilsTest {
     @Test
     void testExpandProjectProperties() {
         //forks a new project in a temp folder
-        Project project = PropertiesProjectBuilder.builder().build().project;
+        Project project = GradleProjectBuilder.builder().build().project;
         PropertyUtils propertyUtils = new PropertyUtils(project);
 
         project.ext.hei = 'hei${hopp}!'
@@ -104,7 +107,7 @@ class PropertyUtilsTest {
     @Test
     void testExpandProperties() {
         //forks a new project in a temp folder
-        Project project = PropertiesProjectBuilder.builder().build().project;
+        Project project = GradleProjectBuilder.builder().build().project;
         project.ext.hei = 'heisann!'
         project.ext.hopp = 'sann'
 
@@ -113,18 +116,17 @@ class PropertyUtilsTest {
 
         //demonstrerer expanding der en substituerer inn verdier ifra prosjekt-properties
         myProps += [
-                heiarop: '${hei} ${hei} ${hopp}!',
+                heiarop                   : '${hei} ${hei} ${hopp}!',
                 'systemProp.file.encoding': 'UTF-8',
         ]
         propertyUtils.expandProperties(myProps)
         Assert.assertEquals(myProps['heiarop'], 'heisann! heisann! sann!', "Forventet value")
         Assert.assertEquals(myProps['systemProp.file.encoding'], 'UTF-8', "Forventet value")
 
-
         //demonstrerer expanding der en overstyrer property verdi (key:'hei')
         myProps += [
                 heiarop: '${hei} ${hei} ${hopp}!',
-                hei: 'hallo${hopp}!',
+                hei    : 'hallo${hopp}!',
         ]
         propertyUtils.expandProperties(myProps)
         Assert.assertEquals(myProps['heiarop'], 'hallosann! hallosann! sann!', "Forventet value")
@@ -137,21 +139,21 @@ class PropertyUtilsTest {
         Assert.assertEquals(myProps['hei'], 'heisann!', "Forventet value")
     }
 
-
     /**
      * Tester at extension fungerer
      */
     @Test
     void testExtension() {
-        Project project = PropertiesProjectBuilder.builder().applyPropertiesPlugin().build().project;
+        ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-properties-plugin'
+        }
+        Project project = projectHelper.project;
 
         Object extensionObject = project.getExtensions().getByName('propertyUtils')
         Assert.assertNotNull("Forventet instans")
         Assert.assertTrue(extensionObject instanceof PropertyUtils, "Forventet PropertyUtils klasse")
 
     }
-
-
 
 
 }

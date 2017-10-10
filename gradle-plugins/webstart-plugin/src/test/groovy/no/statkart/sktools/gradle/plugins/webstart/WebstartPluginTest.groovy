@@ -1,7 +1,7 @@
 package no.statkart.sktools.gradle.plugins.webstart
 
 import no.statkart.sktools.gradle.testutils.ProjectHelper
-import no.statkart.sktools.gradle.testutils.builder.WebstartProjectBuilder
+import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import org.testng.Assert
@@ -38,8 +38,10 @@ class WebstartPluginTest {
     @Test
     void testDefaultWebstart() {
         //forks a new project in a temp folder
-        ProjectHelper projectHelper = WebstartProjectBuilder.builder().withName('root').applyWebstartPlugin().build()
-        projectHelper.setProjectProperties(version: 101)
+        ProjectHelper projectHelper = GradleProjectBuilder.builder('root').build {
+            apply plugin: 'sktools-webstart-plugin'
+            version = 101
+        }
 
         projectHelper.configureProject {
             webstart {
@@ -66,14 +68,20 @@ class WebstartPluginTest {
     void testConventionConfigurationResources() {
 
 
-        ProjectHelper projectHelper = WebstartProjectBuilder.builder().withName('root').applyWebstartPlugin().build()
-        projectHelper.setProjectProperties(version: '2.0')
+        ProjectHelper projectHelper = GradleProjectBuilder.builder('root').build {
+            apply plugin: 'sktools-webstart-plugin'
+            version = '2.0'
+        }
 
-        ProjectHelper aProjectHelper = WebstartProjectBuilder.builder().withName('projectA').withParent(projectHelper).applyJavaPlugin().build()
-        aProjectHelper.setProjectProperties(version: '1.0')
+        ProjectHelper aProjectHelper = GradleProjectBuilder.builder('projectA').withParent(projectHelper).build {
+            apply plugin: 'java'
+            version = '1.0'
+        }
 
-        ProjectHelper bProjectHelper = WebstartProjectBuilder.builder().withName('projectB').withParent(projectHelper).applyJavaPlugin().build()
-        bProjectHelper.setProjectProperties(version: '1.2')
+        ProjectHelper bProjectHelper = GradleProjectBuilder.builder('projectB').withParent(projectHelper).build {
+            apply plugin: 'java'
+            version = '1.2'
+        }
 
         File wsClientRuntimeJar = bProjectHelper.project.file('../wsClientRuntime-1.0.jar')
         assert wsClientRuntimeJar.createNewFile()
@@ -138,14 +146,18 @@ class WebstartPluginTest {
      */
     @Test
     void testDuplicates() {
-        ProjectHelper projectHelper = WebstartProjectBuilder.builder().withName('root').applyWebstartPlugin().build()
-        projectHelper.setProjectProperties(version: '2.0')
+        ProjectHelper projectHelper = GradleProjectBuilder.builder('root').build {
+            apply plugin: 'sktools-webstart-plugin'
+            version = '2.0'
+        }
 
-        ProjectHelper aProjectHelper = WebstartProjectBuilder.builder().withName('projectA').withParent(projectHelper).applyJavaPlugin().build()
-        aProjectHelper.setProjectProperties(version: '1.0')
+        ProjectHelper aProjectHelper = GradleProjectBuilder.builder().withName('projectA').withParent(projectHelper).applyJavaPlugin().build {
+            version = '1.0'
+        }
 
-        ProjectHelper bProjectHelper = WebstartProjectBuilder.builder().withName('projectB').withParent(projectHelper).applyJavaPlugin().build()
-        bProjectHelper.setProjectProperties(version: '1.2')
+        ProjectHelper bProjectHelper = GradleProjectBuilder.builder().withName('projectB').withParent(projectHelper).applyJavaPlugin().build {
+            version = '1.2'
+        }
 
         File wsClientRuntimeJar = bProjectHelper.project.file('../wsClientRuntime-1.0.jar')
         assert wsClientRuntimeJar.createNewFile()
@@ -218,7 +230,9 @@ class WebstartPluginTest {
      */
     @Test
     void jarFilesDefaultsAsMainJars() {
-        final ProjectHelper projectHelper = WebstartProjectBuilder.builder().withName('root').applyWebstartPlugin().build()
+        ProjectHelper projectHelper = GradleProjectBuilder.builder('root').build {
+            apply plugin: 'sktools-webstart-plugin'
+        }
 
         final File wsClientRuntimeJar = projectHelper.project.file('../wsClientRuntime-1.0.jar')
         wsClientRuntimeJar.createNewFile()
@@ -281,7 +295,9 @@ class WebstartPluginTest {
      */
     @Test
     void canSpecifyMainJar() {
-        final ProjectHelper projectHelper = WebstartProjectBuilder.builder().withName('root').applyWebstartPlugin().build()
+        ProjectHelper projectHelper = GradleProjectBuilder.builder('root').build {
+            apply plugin: 'sktools-webstart-plugin'
+        }
 
         final File wsClientRuntimeJar = projectHelper.project.file('../wsClientRuntime-1.0.jar')
         wsClientRuntimeJar.createNewFile()
@@ -342,7 +358,9 @@ class WebstartPluginTest {
      */
     @Test
     void canSpecifyExtraManifestAttributes() {
-        final ProjectHelper projectHelper = WebstartProjectBuilder.builder().withName('root').applyWebstartPlugin().build()
+        ProjectHelper projectHelper = GradleProjectBuilder.builder('root').build {
+            apply plugin: 'sktools-webstart-plugin'
+        }
 
         projectHelper.configureProject {
             apply: 'java'

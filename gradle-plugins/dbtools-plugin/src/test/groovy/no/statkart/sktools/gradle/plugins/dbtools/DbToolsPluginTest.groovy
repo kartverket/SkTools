@@ -7,7 +7,7 @@ import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.Defi
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.PatchTask
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.SyncPatchTask
 import no.statkart.sktools.gradle.testutils.ProjectHelper
-import no.statkart.sktools.gradle.testutils.builder.DbToolsProjectBuilder
+import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
 import org.gradle.api.Task
 import org.testng.Assert
 import org.testng.annotations.Test
@@ -26,7 +26,9 @@ class DbToolsPluginTest {
      */
     @Test
     void testAppplyPlugin() {
-        final ProjectHelper testCase = DbToolsProjectBuilder.builder().applyDbUtilsPlugin().build();
+        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-dbtools-plugin'
+        };
 
         Assert.assertTrue(testCase.project.convention.plugins.db instanceof DbtoolsConvention)
     }
@@ -39,7 +41,10 @@ class DbToolsPluginTest {
      */
     @Test
     void testApplyCredentials() {
-        final ProjectHelper testCase = DbToolsProjectBuilder.builder().applyDbUtilsPlugin().build();
+        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-dbtools-plugin'
+        };
+
         testCase.createNewFileWithDirsRelativeToProject('src/hsql/PleaseAuthenticateMe.sql')
 
         testCase.configureProject {
@@ -120,7 +125,10 @@ class DbToolsPluginTest {
      */
     @Test
     void configurationInUnresolvedState() {
-        final ProjectHelper testCase = DbToolsProjectBuilder.builder().applyDbUtilsPlugin().build();
+        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-dbtools-plugin'
+        };
+
         testCase.createNewFileWithDirsRelativeToProject('src/hsql/PleaseAuthenticateMe.sql')
         testCase.createNewFileWithDirsRelativeToProject('lib/testfile-2.3.3.jar')
 
@@ -150,8 +158,9 @@ class DbToolsPluginTest {
      */
     @Test
     void testOracleImportTask() {
-        final ProjectHelper testCase = DbToolsProjectBuilder.builder().applyDbUtilsPlugin().build();
-        testCase.configureProject {
+        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-dbtools-plugin'
+
             configureDatabasePlugin {
                 toolset(name: 'db1', type: 'oracle') {
                     properties = [  //deklarering via felles properties for toolset
@@ -187,8 +196,9 @@ class DbToolsPluginTest {
      */
     @Test
     void testOracleExportTask() {
-        final ProjectHelper testCase = DbToolsProjectBuilder.builder().applyDbUtilsPlugin().build();
-        testCase.configureProject {
+        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-dbtools-plugin'
+
             configureDatabasePlugin {
                 toolset(name: 'db1', type: 'oracle') {
                     properties = [  //deklarering via felles properties for toolset
@@ -223,8 +233,9 @@ class DbToolsPluginTest {
      */
     @Test
     void testPatchTask() {
-        final ProjectHelper testCase = DbToolsProjectBuilder.builder().applyDbUtilsPlugin().build();
-        testCase.configureProject {
+        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-dbtools-plugin'
+
             configureDatabasePlugin {
                 toolset(name: 'db1', type: 'oracle') {
                     properties = [  //deklarering via felles properties for toolset
@@ -277,8 +288,9 @@ class DbToolsPluginTest {
      */
     @Test
     void testPatchTaskSchema() {
-        final ProjectHelper testCase = DbToolsProjectBuilder.builder().applyDbUtilsPlugin().build();
-        testCase.configureProject {
+        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-dbtools-plugin'
+
             configureDatabasePlugin {
                 toolset(name: 'db1', type: 'oracle') {
                     properties = [  //deklarering via felles properties for toolset
@@ -323,8 +335,9 @@ class DbToolsPluginTest {
      */
     @Test
     void testSyncPatchTask() {
-        final ProjectHelper testCase = DbToolsProjectBuilder.builder().applyDbUtilsPlugin().build();
-        testCase.configureProject {
+        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-dbtools-plugin'
+
             configureDatabasePlugin {
                 toolset(name: 'db1', type: 'oracle') {
                     properties = [  //deklarering via felles properties for toolset
@@ -380,8 +393,9 @@ class DbToolsPluginTest {
      */
     @Test
     void testDefineLatestPatchVersionTask() {
-        final ProjectHelper testCase = DbToolsProjectBuilder.builder().applyDbUtilsPlugin().build();
-        testCase.configureProject {
+        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-dbtools-plugin'
+
             configureDatabasePlugin {
                 toolset(name: 'db1', type: 'oracle') {
                     patch {
@@ -418,8 +432,9 @@ class DbToolsPluginTest {
      */
     @Test
     void testInfoTask() {
-        final ProjectHelper testCase = DbToolsProjectBuilder.builder().applyDbUtilsPlugin().build();
-        testCase.configureProject {
+        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-dbtools-plugin'
+
             configureDatabasePlugin {
                 toolset(name: 'coolDb', type: 'hsqldb', prefix: 'coolDb') {
                     url = "jdbc:hsqldb:mem:${this.class.simpleName}TestApplyCredentials"
@@ -441,8 +456,9 @@ class DbToolsPluginTest {
      */
     @Test
     void taskSequenceIsExtendedToProject() {
-        final ProjectHelper testCase = DbToolsProjectBuilder.builder().applyDbUtilsPlugin().build();
-        testCase.configureProject {
+        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-dbtools-plugin'
+
             taskSequence('nestedTask') {
                 dependsOn task('task1')
                 dependsOn task('task2')

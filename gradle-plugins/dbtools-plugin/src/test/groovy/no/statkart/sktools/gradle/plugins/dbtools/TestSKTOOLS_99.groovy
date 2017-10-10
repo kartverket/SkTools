@@ -5,7 +5,7 @@ import no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractDatabase
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.PatchConfiguration
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.SequenceTask
 import no.statkart.sktools.gradle.testutils.ProjectHelper
-import no.statkart.sktools.gradle.testutils.builder.DbToolsProjectBuilder
+import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
 import org.testng.annotations.Test
 
 import static org.testng.Assert.assertNotNull
@@ -29,8 +29,9 @@ class TestSKTOOLS_99 {
      */
     @Test
     void testTaskSequenceOnProject() {
-        final ProjectHelper testCase = DbToolsProjectBuilder.builder().applyDbUtilsPlugin().build();
-        testCase.configureProject {
+        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-dbtools-plugin'
+
             taskSequence('ProjectTaskA') {
                 dependsOn taskSequence('ProjectTaskAA') {
                 }
@@ -67,8 +68,9 @@ class TestSKTOOLS_99 {
     @Test
     void testTaskSequenceOnDatabaseConvention() {
 
-        final ProjectHelper testCase = DbToolsProjectBuilder.builder().applyDbUtilsPlugin().build();
-        testCase.configureProject {
+        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-dbtools-plugin'
+
             configureDatabasePlugin {
                 toolset(name: 'testToolset', type: 'hsqldb', prefix: 'test') {
 
@@ -110,8 +112,9 @@ class TestSKTOOLS_99 {
     @Test
     void testTaskSequenceOnPatchConfiguration() {
 
-        final ProjectHelper testCase = DbToolsProjectBuilder.builder().applyDbUtilsPlugin().build();
-        testCase.configureProject {
+        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-dbtools-plugin'
+
             configureDatabasePlugin {
                 toolset(name: 'testToolset', type: 'hsqldb', prefix: 'test') {
 

@@ -1,9 +1,9 @@
 package no.statkart.sktools.gradle.plugins.wsdocgen
 
+import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
 import org.testng.annotations.Test
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
-import no.statkart.sktools.gradle.testutils.builder.WsDocGenProjectBuilder
 import no.statkart.sktools.gradle.testutils.ProjectHelper
 import no.statkart.sktools.gradle.testutils.filewriter.WsDocgenTestutilFilewriter
 
@@ -42,7 +42,10 @@ class WsDocGenPluginTest {
     @Test
     void genWsDocGeneratesDocumentationForAllSourceSets() {
         //forks a new java project in a temp folder
-        ProjectHelper projectHelper = WsDocGenProjectBuilder.builder().applyJavaPlugin().applyWsDocGenPlugin().build()
+        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+            apply plugin: 'java'
+            apply plugin: 'sktools-wsdocgen-plugin'
+        }
 
 
         use(WsDocgenTestutilFilewriter) {
@@ -67,9 +70,10 @@ class WsDocGenPluginTest {
     @Test
     void tasksForVanillaConfiguration() {
         //forks a new java project in a temp folder
-        ProjectHelper projectHelper = WsDocGenProjectBuilder.builder().applyJavaPlugin().applyWsDocGenPlugin().build()
+        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+            apply plugin: 'java'
+            apply plugin: 'sktools-wsdocgen-plugin'
 
-        projectHelper.configureProject {
             sourceSets {
                 main.wsdoc.group { }
             }
@@ -91,9 +95,10 @@ class WsDocGenPluginTest {
     @Test
     void noTasksForNoneAnnotatedSourceSets() {
         //forks a new java project in a temp folder
-        ProjectHelper projectHelper = WsDocGenProjectBuilder.builder().applyJavaPlugin().applyWsDocGenPlugin().build()
+        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+            apply plugin: 'java'
+            apply plugin: 'sktools-wsdocgen-plugin'
 
-        projectHelper.configureProject {
             sourceSets {
                 main { }
                 other.wsdoc.group { }
@@ -116,9 +121,10 @@ class WsDocGenPluginTest {
     @Test
     void sourceSetForVanillaConfiguration() {
         //forks a new java project in a temp folder
-        ProjectHelper projectHelper = WsDocGenProjectBuilder.builder().applyJavaPlugin().applyWsDocGenPlugin().build()
+        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+            apply plugin: 'java'
+            apply plugin: 'sktools-wsdocgen-plugin'
 
-        projectHelper.configureProject {
             sourceSets {
                 main.wsdoc.group { }
                 other
@@ -140,9 +146,9 @@ class WsDocGenPluginTest {
     @Test
     void canCustomizeOutputLocation() {
         //forks a new java project in a temp folder
-        ProjectHelper projectHelper = WsDocGenProjectBuilder.builder().applyWsDocGenPlugin().build()
+        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-wsdocgen-plugin'
 
-        projectHelper.configureProject {
             sourceSets {
                 multi {
                     wsdoc {
@@ -176,9 +182,9 @@ class WsDocGenPluginTest {
     @Test
     void canCustomizeLookupPath() {
         //forks a new java project in a temp folder
-        ProjectHelper projectHelper = WsDocGenProjectBuilder.builder().applyWsDocGenPlugin().build()
+        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-wsdocgen-plugin'
 
-        projectHelper.configureProject {
             sourceSets {
                 main.wsdoc.group { lookupPath '../../some/wacky/path' }
             }
@@ -193,9 +199,9 @@ class WsDocGenPluginTest {
     @Test
     void canCustomizeInclude() {
         //forks a new java project in a temp folder
-        ProjectHelper projectHelper = WsDocGenProjectBuilder.builder().applyWsDocGenPlugin().build()
+        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-wsdocgen-plugin'
 
-        projectHelper.configureProject {
             sourceSets {
                 main.wsdoc.group { include '**/TestServiceWSBean.java' }
             }
@@ -210,15 +216,9 @@ class WsDocGenPluginTest {
 
     @Test
     void generatedFilesHasLookupPath() {
-        ProjectHelper projectHelper = WsDocGenProjectBuilder.builder().applyWsDocGenPlugin().build()
+        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-wsdocgen-plugin'
 
-        //generer eksempel-kildekode som har domene-klasse definert
-        use(WsDocgenTestutilFilewriter) {
-            projectHelper.writeInterfaceServiceWSBean('src/main/java')
-        }
-
-
-        projectHelper.configureProject {
             sourceSets {
                 main.wsdoc.group {
                     targetPath 'build/mydocs'
@@ -226,6 +226,12 @@ class WsDocGenPluginTest {
                 }
             }
         }
+
+        //generer eksempel-kildekode som har domene-klasse definert
+        use(WsDocgenTestutilFilewriter) {
+            projectHelper.writeInterfaceServiceWSBean('src/main/java')
+        }
+
 
         projectHelper.executeTask(WsDocGenPlugin.GEN_TASK_NAME)
 
@@ -243,7 +249,10 @@ class WsDocGenPluginTest {
 
         //forks a new java project in a temp folder
         //ps: notice that the java plugin is applied after the plugin, at a  later stage.
-        ProjectHelper projectHelper = WsDocGenProjectBuilder.builder().applyWsDocGenPlugin().applyJavaPlugin().build()
+        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-wsdocgen-plugin'
+            apply plugin: 'java' //after
+        }
 
 
         //generer eksempel-kildekode som har domene-klasse definert

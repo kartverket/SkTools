@@ -1,11 +1,11 @@
 package no.statkart.sktools.gradle.plugins.webstart
 
+import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
 import org.gradle.api.XmlProvider
 import org.gradle.testfixtures.ProjectBuilder
 import org.testng.Assert
 import org.testng.annotations.Test
 import no.statkart.sktools.gradle.testutils.ProjectHelper
-import no.statkart.sktools.gradle.testutils.builder.WebstartProjectBuilder
 import org.gradle.api.Project
 
 /**
@@ -21,7 +21,9 @@ class WebstartTaskTest {
      */
     @Test
     void testConfigurationNoResources() {
-        ProjectHelper projectHelper = WebstartProjectBuilder.builder().withName('root').applyWebstartPlugin().build()
+        ProjectHelper projectHelper = GradleProjectBuilder.builder('root').build {
+            apply plugin: 'sktools-webstart-plugin'
+        }
         projectHelper.setProjectProperties(version: 101, description: 'Project description')
 
         projectHelper.configureProject {
@@ -122,7 +124,8 @@ class WebstartTaskTest {
     public static ProjectHelper jnlpFileFromFullConfiguration() {
         if (!jnlpFileFromFullConfiguration_instance) {
             //forks a new project in a temp folder
-            ProjectHelper projectHelper = WebstartProjectBuilder.builder().withName('root').build()
+            ProjectHelper projectHelper = GradleProjectBuilder.builder('root').build {
+            }
             projectHelper.setProjectProperties(version: 101)
 
             Project depProject = ProjectBuilder.builder().withName('dep').withParent(projectHelper.project).build()

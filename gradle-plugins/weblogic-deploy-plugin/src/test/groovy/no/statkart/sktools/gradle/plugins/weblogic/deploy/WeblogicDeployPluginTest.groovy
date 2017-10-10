@@ -1,11 +1,11 @@
 package no.statkart.sktools.gradle.plugins.weblogic.deploy
 
-import org.testng.annotations.Test
+import no.statkart.sktools.gradle.testutils.ProjectHelper
+import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import org.testng.Assert
-import no.statkart.sktools.gradle.testutils.ProjectHelper
-import no.statkart.sktools.gradle.testutils.builder.WeblogicDeployProjectBuilder
+import org.testng.annotations.Test
 
 /**
  * Test av weblogic deploy plugin.
@@ -33,9 +33,9 @@ class WeblogicDeployPluginTest {
      */
     @Test
     void testConfiguration() {
-        ProjectHelper projectHelper = WeblogicDeployProjectBuilder.builder().applyWeblogicDeployPlugin().build()
+        ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-weblogic-deploy-plugin'
 
-        projectHelper.configureProject {
             weblogicDeploy {
                 protocol = "a"
                 host = "b"
@@ -64,9 +64,8 @@ class WeblogicDeployPluginTest {
      */
     @Test
     void testDependsOn() {
-        ProjectHelper projectHelper = WeblogicDeployProjectBuilder.builder().applyWeblogicDeployPlugin().build()
-
-        projectHelper.configureProject {
+        ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-weblogic-deploy-plugin'
 
             project.task 'myTask'
 
