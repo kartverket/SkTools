@@ -112,16 +112,16 @@ public class WeblogicDeployConvention {
 
         if (wlsVersion.startsWith("12.")) {
             if (wlsVersion.startsWith("12.1")) {
-                return project.files("${WEBLOGIC_HOME}/wlserver/server/lib/weblogic.jar");
+                return project.files(WEBLOGIC_HOME + "/wlserver/server/lib/weblogic.jar");
             }
 
             project.getLogger().warn("WARNING: no optimalization found for weblogic version " + wlsVersion);
-            return project.files("wlserver/server/lib/weblogic.jar");
+            return project.files(WEBLOGIC_HOME + "/wlserver/server/lib/weblogic.jar");
         }
 
 
         if (wlsVersion.startsWith("10.3")) {
-            return project.files("${WEBLOGIC_HOME}/wlserver_10.3/server/lib/weblogic.jar");
+            return project.files(WEBLOGIC_HOME + "/wlserver_10.3/server/lib/weblogic.jar");
         }
 
         throw new RuntimeException("Unsupported weblogic version found - please add support for " + wlsVersion);
