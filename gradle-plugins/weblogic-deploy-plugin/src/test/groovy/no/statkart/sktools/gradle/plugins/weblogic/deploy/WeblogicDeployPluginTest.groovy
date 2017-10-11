@@ -83,4 +83,30 @@ class WeblogicDeployPluginTest {
         assert project.tasks['undeploy'].dependsOn.contains(project.tasks['deploy'])
     }
 
+    /**
+     * SKTOOLS-164/SKTOOLS-165: Forenklet konfigurasjon via WEBLOGIC_VERSION.
+     * Dersom denne property er gitt, så legges en standard classpath til task.
+     */
+    @Test
+    void testConventionalWeblogicClasspath() {
+        ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-weblogic-deploy-plugin'
+
+            weblogicDeploy {
+                deployTask('deploy')
+                undeployTask('undeploy')
+            }
+        }
+
+        Project project = projectHelper.project
+
+        assert project.tasks['deploy'].classpath.isEmpty()
+        assert project.tasks['undeploy'].classpath.isEmpty()
+
+        projectHelper.withConventionalWEBLOGIC()
+
+        assert !project.tasks['deploy'].classpath.isEmpty()
+        assert !project.tasks['undeploy'].classpath.isEmpty()
+    }
+
 }

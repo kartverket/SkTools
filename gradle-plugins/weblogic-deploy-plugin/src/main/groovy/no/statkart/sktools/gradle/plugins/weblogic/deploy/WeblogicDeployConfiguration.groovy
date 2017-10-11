@@ -227,7 +227,7 @@ class WeblogicDeployConfiguration {
     }
 
     FileCollection getClasspath() {
-        return project.files(classpath);
+        return classpath ? project.files(classpath) : project.files()
     }
 
     void dependsOn(Object... objects) {
