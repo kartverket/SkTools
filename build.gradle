@@ -402,9 +402,6 @@ buildscript {
         }
     }
 
-    if (!project.hasProperty('LOCALHOSTNAME')) {
-        project.ext.setProperty('LOCALHOSTNAME', java.net.InetAddress.localHost.hostName + '.statkart.no')
-    }
     if (!project.hasProperty('sktools_versjon')) {
         project.ext.setProperty('sktools_versjon', Project.DEFAULT_VERSION)
     }
