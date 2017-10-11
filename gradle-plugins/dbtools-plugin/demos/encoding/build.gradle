@@ -11,7 +11,7 @@ String norskeTegn = "\u00c6\u00e6\u00d8\u00f8\u00c5\u00e5"// 'ÆæØøÅå' written wi
 
 configureDatabasePlugin {
 
-    useDrivers 'org.hsqldb:hsqldb:2.2.8'
+    useDrivers 'org.hsqldb:hsqldb:2.3.3'
 
     toolset(name: 'UTF8', type: 'hsqldb', prefix: '') {
 

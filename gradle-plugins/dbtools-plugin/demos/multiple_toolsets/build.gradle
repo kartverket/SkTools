@@ -12,7 +12,7 @@ apply plugin: 'sktools-dbtools-plugin'
 //see DbtoolsConvention#ConfigureDatabasePlugin
 configureDatabasePlugin {
 
-    useDrivers 'org.hsqldb:hsqldb:2.2.8'
+    useDrivers 'org.hsqldb:hsqldb:2.3.3'
 
     toolset( name:'sa', type:'hsqldb', prefix:'sa') {
         url = "jdbc:hsqldb:mem:testbase"
