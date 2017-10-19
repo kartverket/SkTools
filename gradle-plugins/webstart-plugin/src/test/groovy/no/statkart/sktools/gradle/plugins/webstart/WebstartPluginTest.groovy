@@ -2,6 +2,7 @@ package no.statkart.sktools.gradle.plugins.webstart
 
 import no.statkart.sktools.gradle.testutils.ProjectHelper
 import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
+import org.assertj.core.api.Assertions
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import org.testng.Assert
@@ -395,4 +396,26 @@ class WebstartPluginTest {
 
     }
 
+    @Test //regression
+    void jnlpTaskDependsOnSignJars() {
+        //forks a new project in a temp folder
+        ProjectHelper projectHelper = GradleProjectBuilder.builder('root').build {
+            apply plugin: 'sktools-webstart-plugin'
+            version = 101
+        }
+
+        projectHelper.configureProject {
+            webstart {
+                client {
+                    jarDependencies files(projectHelper.gradleJars[1])
+                    jnlp {
+                    }
+                }
+            }
+        }
+
+        projectHelper.initializeProject()
+
+        Assertions.assertThat(projectHelper.findDependsOnTaskNames('genClientJnlp')).contains('signClient')
+    }
 }

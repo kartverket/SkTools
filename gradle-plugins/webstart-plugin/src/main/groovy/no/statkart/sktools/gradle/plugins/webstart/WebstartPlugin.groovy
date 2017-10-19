@@ -73,6 +73,7 @@ class WebstartPlugin implements Plugin<Project> {
 
         final WebstartTask webstartTask = (WebstartTask) project.task(args, makeTaskName('gen', clientConfiguration.name, 'Jnlp'));
 
+        webstartTask.dependsOn(jarSigner);
         webstartTask.jarResources(new Callable<Object>() {
             @Override
             Object call() throws Exception {
