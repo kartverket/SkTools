@@ -40,7 +40,7 @@ public class PropertyUtils {
      * Convenient way of retrieving project properties
      */
     public Map<String, Object> projectProperties() {
-        HashMap<String, Object> filteredProjectProperties = new HashMap<String, Object>();
+        HashMap<String, Object> filteredProjectProperties = new HashMap<>();
         for (Map.Entry<String, ?> entry : project.getProperties().entrySet()) {
             if (entry.getValue() instanceof CharSequence) {
                 filteredProjectProperties.put(entry.getKey(), entry.getValue().toString());
@@ -57,6 +57,7 @@ public class PropertyUtils {
      * @param path Samme som {@link Project#file(Object)}.
      * @return properties lest ifra fil(er), eller tomt map dersom ingen filer funnet.
      */
+    @SuppressWarnings("unchecked")
     public Map<String, ?> fromFile(Object... path) throws IOException {
         Properties props = new Properties();
         for (Object o : path) {
@@ -74,7 +75,8 @@ public class PropertyUtils {
      * Legger properties til prosjektet.
      * @param propertiess properties som ønskes satt på prosjektet
      */
-    public void assignPropertiesToProject(Map<String, ?>... propertiess) {
+    @SafeVarargs
+    public final void assignPropertiesToProject(Map<String, ?>... propertiess) {
         ExtraPropertiesExtension ext = project.getExtensions().getExtraProperties();
 
         for (Map<String, ?> properties : propertiess) {
@@ -102,7 +104,7 @@ public class PropertyUtils {
         Matcher matcher = null; //felles matcher instans
 
         //plukker ut interessange properties
-        HashMap<String, String> props = new HashMap<String, String>();
+        Map<String, Object> props = new HashMap<>();
         for (Map.Entry<String, ?> entry : project.getExtensions().getExtraProperties().getProperties().entrySet()) { //SKTOOLS-70: ta ikke med properties ifra prosjektets vedhengsobjekter (extensions)
             Object value = entry.getValue();
             if (value instanceof CharSequence) {
@@ -130,12 +132,12 @@ public class PropertyUtils {
      * @param properties properties som skal ekspanderes
      * @throws GradleException dersom {@link #strict} og ikke alle properties kunne expandes
      */
-    public void expandProperties(Map properties) throws GradleException {
+    public void expandProperties(Map<String, Object> properties) throws GradleException {
         LOG.debug("expanding custom properties on project {}", project.getPath());
         expandPropertiesImpl(strict, properties);
     }
 
-    public void expandProperties(Map properties, boolean strict) throws GradleException {
+    public void expandProperties(Map<String, Object> properties, boolean strict) throws GradleException {
         LOG.debug("expanding custom properties on project {}", project.getPath());
         expandPropertiesImpl(strict, properties);
     }
@@ -148,7 +150,7 @@ public class PropertyUtils {
      * key2=${key3}
      * key3=${key1}
      */
-    private void expandPropertiesImpl(boolean strict, Map<String, String> props) {
+    private void expandPropertiesImpl(boolean strict, Map<String, Object> props) {
         LOG.debug("strict mode is {}", strict);
 
         Matcher matcher = null; //felles matcher instans
@@ -159,11 +161,11 @@ public class PropertyUtils {
 
         //expanderer props
         while (true) {
-            LinkedHashMap<String, Object> unresolvedProperties = new LinkedHashMap<String, Object>();
-            HashMap<String, Object> resolvedProperties = new HashMap<String, Object>();
+            LinkedHashMap<String, Object> unresolvedProperties = new LinkedHashMap<>();
+            HashMap<String, Object> resolvedProperties = new HashMap<>();
 
-            for (Map.Entry<String, String> entry : props.entrySet()) {
-                String value = entry.getValue();
+            for (Map.Entry<String, ?> entry : props.entrySet()) {
+                String value = String.valueOf(entry.getValue());
                 matcher = (matcher == null) ? SUBSTITUTION_PATTERN.matcher(value) : matcher.reset(value);
 
                 StringBuffer expandedValue = null; //null if substitution is unresolved
