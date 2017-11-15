@@ -24,7 +24,7 @@ import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.SequenceTa
 
 configureDatabasePlugin {
 
-    useDrivers "com.oracle:ojdbc6:11.2.0.2.0@jar"
+    useDrivers 'com.oracle.jdbc:ojdbc8_g:12.2.0.1@jar'
 
     toolset(type:'oracle', name:'Db', prefix:'') {
 
