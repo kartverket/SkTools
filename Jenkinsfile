@@ -48,7 +48,7 @@ pipeline { //declarative pipeline syntax
         stage('Checkout') {
             steps {
                 bat "set"
-                checkout perforce(credential: 'matrikkel-builder' /*krever global credential*/, populate: autoClean(delete: true, modtime: false, parallel: [enable: false, minbytes: '1024', minfiles: '1', threads: '4'], pin: '', quiet: true, replace: true, tidy: false), workspace: manualSpec(charset: 'none', name: 'jenkins-${NODE_NAME}-${JOB_NAME}', pinHost: false, spec: clientSpec(allwrite: false, backup: false, clobber: false, compress: false, line: 'LOCAL', locked: false, modtime: false, rmdir: false, serverID: '', streamName: '', type: 'WRITABLE', view: '//sktools/SKToolsKode/${BRANCH_NAME}/... //jenkins-${NODE_NAME}-${JOB_NAME}/sktools/...')))
+                checkout perforce(credential: 'matrikkel-builder' /*krever global credential*/, populate: autoClean(delete: true, modtime: false, parallel: [enable: false, minbytes: '1024', minfiles: '1', threads: '4'], pin: '', quiet: true, replace: true, tidy: false), workspace: manualSpec(charset: 'none', name: 'jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}', pinHost: false, spec: clientSpec(allwrite: false, backup: false, clobber: false, compress: false, line: 'LOCAL', locked: false, modtime: false, rmdir: false, serverID: '', streamName: '', type: 'WRITABLE', view: '//sktools/SKToolsKode/${BRANCH_NAME}/... //jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}/sktools/...')))
             }
         }
         stage('Prepare') {
