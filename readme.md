@@ -1,4 +1,15 @@
-# SkTools - Felles byggeverktøy i kartverket
+# SkTools - Felles byggeverktÃ¸y i kartverket
+
+
+## UtviklingsmiljÃ¸
+
+UTF-8 for all kildekode
+
+JDK 7 - 1.7.0_0_111 (latest)
+
+IntelliJ - kjÃ¸r gradlew og importer versjonert ipr fil
+
+
 
 ## Utvikleroppsett
 Opprett gradle.properties med innhold, feks:
@@ -8,10 +19,10 @@ WEBLOGIC_VERSION=12.1.3
 ```
 
 ## Releasetesting 
-For å teste virkemåten til de ulike plugins finnes det noen veldig enkle demo prosjekter. 
-Disse kan kjøres via `gradle install` og `gradle :gradle-demos:runDemos`
+For Ã¥ teste virkemÃ¥ten til de ulike plugins finnes det noen veldig enkle demo prosjekter. 
+Disse kan kjÃ¸res via `gradle install` og `gradle :gradle-demos:runDemos`
 
-Følgende parametere er aktuelle å teste
+FÃ¸lgende parametere er aktuelle Ã¥ teste
 * `WEBLOGIC_VERSION` styrer default veblogic classpath.
 * `WEBLOGIC_HOME` dersom ikke en angir WEBLOGIC_VERSION kan denne brukes eksplisitt
 * Gradle versjon (runtime)
@@ -27,7 +38,7 @@ Hver jobb automatiserer bygging, enhetstesting og integrasjonstesting av hver ve
 Flyten illustreres slik:
 
 1. Kompilering, enhetstesting -> publish til lokalt repo
-2. Integrasjonstesting ved kjøring av demoer mot artefakter installert lokalt
+2. Integrasjonstesting ved kjÃ¸ring av demoer mot artefakter installert lokalt
    3. Integrasjonstesting ulike kompbinasjoner av gradle, weblogic osv
 4. Deploy til felles repo (nexus)
   
