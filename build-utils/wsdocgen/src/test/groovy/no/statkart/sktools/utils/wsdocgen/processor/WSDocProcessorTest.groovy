@@ -312,7 +312,7 @@ class WSDocProcessorTest {
                 package test1;
 
                 /**
-                 * Service description.
+                 * Service Æøå description.
                  * Second sentence.
                  * @since 1.0 - inception
                  * @author Leif Lislegård
@@ -424,7 +424,7 @@ class WSDocProcessorTest {
             GPathResult html = parseXML(file)
 
             //sjekker innhold
-            Assert.assertEquals html.body.span[0].text(), 'Service description.\nSecond sentence.', "service description"
+            Assert.assertEquals html.body.span[0].text(), 'Service Æøå description.\nSecond sentence.', "service description"
 
             //sjekker dokumenterte metoder
             Assert.assertEquals html.body.div[0].div[0].h4[0].text().trim(), 'intToLong', "overskrift"

@@ -26,7 +26,7 @@ task sourcesJar(type: Jar, dependsOn:classes) {
 }
 
 
-install.dependsOn ':build-utils:wsdocgen:install' //deployer automatisk også denne..
+install.dependsOn ':build-utils:wsdocgen:install' //deployer automatisk ogsÃ¥ denne..
 
 artifacts {
     archives sourcesJar

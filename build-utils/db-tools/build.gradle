@@ -6,7 +6,7 @@ dependencies {
     compile project(':build-utils:sql-parser')
 
     compile gradleApi()
-//    provided libraries.log4j //forutsetter at denne finnes på classpath
+//    provided libraries.log4j //forutsetter at denne finnes pÃ¥ classpath
 
     testCompile project(':build-utils:test-utils')
 

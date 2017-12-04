@@ -1,8 +1,8 @@
 /******************************************************************************************************************** **
  *
- * Demonstrasjon på hvordan en kan sette opp en database med forskjellige brukere.
+ * Demonstrasjon pÃ¥ hvordan en kan sette opp en database med forskjellige brukere.
  *
- * Eksempelet kan enkelt utvides til å omfatte flere databaser.
+ * Eksempelet kan enkelt utvides til Ã¥ omfatte flere databaser.
  *
  ******************************************************************************************************************** */
 
@@ -49,7 +49,7 @@ task('dbInit', description: 'Setter opp demobase') {
  ******************************************************************************************************************** */
 
 task runDemo() {
-    description = 'Kjører en enkel demo for å teste funksjonaliteten'
+    description = 'KjÃ¸rer en enkel demo for Ã¥ teste funksjonaliteten'
 
     Assert.that('dbInit').describedAs('credentialsSeparationAmongToolsets').leadsTo(project).withState {
         assertTable1AccessForSA()

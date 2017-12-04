@@ -53,7 +53,7 @@ task runDemo(dependsOn: ['clean', ':echo-client:clean']) {
     final File resourceFile = project.project(':echo-client').file('src/main/SKIF-209/addedResource.txt')
 
     Assert.that('war').describedAs('warAssemblesClient').prep {
-        project.logger.quiet "Tømmer cache katalog..."
+        project.logger.quiet "TÃ¸mmer cache katalog..."
         project.rootProject.delete('.cache')
 
         project.logger.quiet "Sletter genererte filer"

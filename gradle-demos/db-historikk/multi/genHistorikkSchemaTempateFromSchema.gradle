@@ -4,7 +4,7 @@
 
   Bruk:
 
-  Benytt closure hektet inn på ext.genHistorikkSchemaTempateFromSchema med følgende parametere:
+  Benytt closure hektet inn pÃ¥ ext.genHistorikkSchemaTempateFromSchema med fÃ¸lgende parametere:
 
     filename - filnavn for generert sql script
     dbToolset - for connection
@@ -45,7 +45,7 @@ ext.genHistorikkSchemaTempateFromSchema = { Map params ->
     //styrer arving av default verdier for tabell-kollonner.
     final def inheritDefaults = false;
 
-    //styrer hvilke historikk-kolonner som implementeres og hva de heter. merk at rekkefølgen er vestentlig.
+    //styrer hvilke historikk-kolonner som implementeres og hva de heter. merk at rekkefÃ¸lgen er vestentlig.
     final Map historikkColumnNames = (Map) params.get('historikkColumnNames', ['TVERSION', 'TBEGIN_INFO', 'TEND_INFO', 'TBEGIN', 'TEND'].collectEntries { [it, it.toString()] })
     assert historikkColumnNames.TVERSION //mandatory column for historikk-data
     assert historikkColumnNames.TBEGIN //mandatory column for historikk-data
@@ -217,7 +217,7 @@ ext.genHistorikkSchemaTempateFromSchema = { Map params ->
                 def indexKeys = pk + [historikkColumnNames.TEND, historikkColumnNames.TBEGIN]
 
                 out.write '\n'
-                out.write "ALTER TABLE ${quotedSchemaNameDot}\"${tableName}\" \nADD CONSTRAINT \"C_HIST_${tableName}\" UNIQUE \n"  //GBOK-1424: import endrer navn lik inded (oracle standard) husk å re-name denne etter import
+                out.write "ALTER TABLE ${quotedSchemaNameDot}\"${tableName}\" \nADD CONSTRAINT \"C_HIST_${tableName}\" UNIQUE \n"  //GBOK-1424: import endrer navn lik inded (oracle standard) husk Ã¥ re-name denne etter import
                 out.write "(\n\t"
                 out.write(indexKeys.collect {"\"$it\""}.join(',\n\t'))
                 out.write "\n"

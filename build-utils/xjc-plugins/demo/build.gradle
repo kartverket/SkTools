@@ -41,7 +41,7 @@ task('testListgenPluginWithBaseClass') {
         //oppretter mapper for gen kode + ant defgen
         ant.mkdir(dir: outputPath)
 
-        //kjører xjc task
+        //kjÃ¸rer xjc task
         ant.xjc(destDir: outputPath, extension: true) {
             schema(dir: sourcePath, includes: '**/*.xsd')
             arg(line: '-listgen baseClass=some.implementation.ListTestIterable')
@@ -56,7 +56,7 @@ task('testListgenPlugin') {
         //oppretter mapper for gen kode + ant defgen
         ant.mkdir(dir: outputPath)
 
-        //kjører xjc task
+        //kjÃ¸rer xjc task
         ant.xjc(destDir: outputPath, extension: true) {
             schema(dir: sourcePath, includes: '**/*.xsd')
             arg(line: '-listgen')

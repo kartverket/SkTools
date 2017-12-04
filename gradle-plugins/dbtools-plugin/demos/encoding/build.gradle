@@ -6,7 +6,7 @@
 
 apply plugin: 'sktools-dbtools-plugin'
 
-String norskeTegn = "\u00c6\u00e6\u00d8\u00f8\u00c5\u00e5"// 'ÆæØøÅå' written with utf8 escaped values
+String norskeTegn = "\u00c6\u00e6\u00d8\u00f8\u00c5\u00e5"// 'Ã†Ã¦Ã˜Ã¸Ã…Ã¥' written with utf8 escaped values
 
 
 configureDatabasePlugin {
@@ -39,7 +39,7 @@ configureDatabasePlugin {
  ******************************************************************************************************************** */
 
 task runDemo() {
-    description = 'Kjører en enkel demo for å teste funksjonaliteten'
+    description = 'KjÃ¸rer en enkel demo for Ã¥ teste funksjonaliteten'
 
     Assert.that('createTable', 'insertData').describedAs('spesialtegnPersisteresRiktig').leadsTo(project).withState {
 

@@ -4,7 +4,7 @@
 
   Bruk:
 
-  Benytt closure hektet inn på ext.genHistorikkViewsAndTriggers med følgende parametere:
+  Benytt closure hektet inn pÃ¥ ext.genHistorikkViewsAndTriggers med fÃ¸lgende parametere:
 
     dbToolset - for connection
     historikkSourceSchema - historikk skjema som inneholder _H tabeller
@@ -40,7 +40,7 @@ ext.genHistorikkViewsAndTriggers = { Map params ->
 
     final def ignoredColumnNames = params.get('ignoredColumnNames', [:]) //kan trolig ikke ignorere noen kollonner i view eller triggere...
 
-    // implementert navn for historikk-kolonner (disse må være like i sanntid-db og historikk-db)
+    // implementert navn for historikk-kolonner (disse mÃ¥ vÃ¦re like i sanntid-db og historikk-db)
     final Map historikkColumnNames = (Map) params.get('historikkColumnNames', ['TVERSION', 'TBEGIN_INFO', 'TEND_INFO', 'TBEGIN', 'TEND'].collectEntries { [it, it.toString()] })
     assert historikkColumnNames.TVERSION //mandatory column for historikk-data
     assert historikkColumnNames.TBEGIN //mandatory column for historikk-data
@@ -100,7 +100,7 @@ ext.genHistorikkViewsAndTriggers = { Map params ->
     }
 
 
-    //view kan ha annen felt-rekkefølge enn skygge-tabell
+    //view kan ha annen felt-rekkefÃ¸lge enn skygge-tabell
     def writeTriggersForView = { Writer out, String schemaName, String triggerName, String viewSchemaName, String viewName, String hTableName, def pkColumns, Map columnMappingForView, def columnNamesForTable ->
         def quotedSchemaNameDot = schemaName ? "\"${schemaName}\"." : ''
         def quotedViewSchemaNameDot = viewSchemaName ? "\"${viewSchemaName}\"." : ''
@@ -130,7 +130,7 @@ CREATE OR REPLACE TRIGGER ${quotedSchemaNameDot}"${triggerName}"
             columnNamesForTable.collect {
                 if (it == historikkColumnNames.TBEGIN) return 't_Trans'
                 if (it == historikkColumnNames.TEND) return 't_End'        //levende objekter har denne tend verdi
-                if (it == historikkColumnNames.TVERSION) return 1          //nye objekter inserted via view får version=1 (default 0)
+                if (it == historikkColumnNames.TVERSION) return 1          //nye objekter inserted via view fÃ¥r version=1 (default 0)
                 if (it == historikkColumnNames.TBEGIN_INFO && isSetUsernameOnUpdate) return 'userInfo'
                 if (it == historikkColumnNames.TEND_INFO && isSetUsernameOnDelete) return 'null' // ingen verdi (null) for nye objekter.
 
@@ -267,7 +267,7 @@ CREATE OR REPLACE TRIGGER ${quotedSchemaNameDot}"${triggerName}"
         return mapping
     }
 
-    //finner felter som inngår i primærnøkkler ved å se på unique constraint med navn C_HIST_<tabellenavn>
+    //finner felter som inngÃ¥r i primÃ¦rnÃ¸kkler ved Ã¥ se pÃ¥ unique constraint med navn C_HIST_<tabellenavn>
     def findPKColumnNames = { String schemaName, tableName ->
         def ret = []
         sql.eachRow("select * from ALL_CONS_COLUMNS where OWNER = ? and TABLE_NAME = ? and constraint_name like 'C\\_HIST\\_%' escape '\\' order by POSITION", [schemaName, tableName]) {

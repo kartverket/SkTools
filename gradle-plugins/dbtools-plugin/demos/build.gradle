@@ -4,7 +4,7 @@ assert GradleVersion.current() >= GradleVersion.version('2.4') //lowest gradle v
 
 buildscript {
     if (rootProject.ext.has('sktools_versjon')) version = rootProject.ext.get('sktools_versjon')
-    if (version == Project.DEFAULT_VERSION) { version = '1.4-SNAPSHOT'; logger.warn "No -Psktools_versjon= defined. Defaulting to \"${version}\""} //nb - dersom ikke default version er satt riktig så blir kjøring ifra demo-katalog feil..
+    if (version == Project.DEFAULT_VERSION) { version = '1.4-SNAPSHOT'; logger.warn "No -Psktools_versjon= defined. Defaulting to \"${version}\""} //nb - dersom ikke default version er satt riktig sÃ¥ blir kjÃ¸ring ifra demo-katalog feil..
 
     // Variables to grab from environment + defaults
     ['MAVEN_REPO'].each { val ->
@@ -52,12 +52,12 @@ ext.port = gradle.startParameter.projectProperties.get('port', randomHsqldbPort(
 static int randomHsqldbPort() {
     int port = 9001 /*default port for hsqldb*/
 
-    //velger en random port for parallel kjøring i jenkins
+    //velger en random port for parallel kjÃ¸ring i jenkins
     //jenkins freestyle project og pipeline jobber setter env EXECUTOR_NUMBER
-    def executorNumber = System.getenv('EXECUTOR_NUMBER') ?: 0 //unikhet muliggjør parallell testing
+    def executorNumber = System.getenv('EXECUTOR_NUMBER') ?: 0 //unikhet muliggjÃ¸r parallell testing
     port += executorNumber as int
 
-    //for parallelkjøring i jenkins pipelineline settes ingen ytterligere variable, her må man imporovisere.
+    //for parallelkjÃ¸ring i jenkins pipelineline settes ingen ytterligere variable, her mÃ¥ man imporovisere.
     int randomNum = java.util.concurrent.ThreadLocalRandom.current().nextInt(0, 10)
     port += randomNum
     return port

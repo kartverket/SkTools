@@ -12,9 +12,9 @@ task info() {
   database. Implementasjon tilpasset Oracle 11g database.
 ------------------------------------------------------------
 
-For å komme raskt i gang, se "Database Management tasks".
+For Ã¥ komme raskt i gang, se "Database Management tasks".
 
-Prosjektet er satt opp med standardverdier for kjøring mot lokal database.
+Prosjektet er satt opp med standardverdier for kjÃ¸ring mot lokal database.
 Dette kan endres via properties i gradle.properties
 
 Her er typisk bruk av demo:
@@ -79,7 +79,7 @@ libraries.jdbc = ORA_DEBUG ? libraries.ojdbc_g : libraries.ojdbc
 
 
 
-//hjelpefunksjon for eksekveringsrekkefølge dersom task blir kjørt
+//hjelpefunksjon for eksekveringsrekkefÃ¸lge dersom task blir kjÃ¸rt
 Closure getDependsOnIfExecuted() {
     return { def task, def dependent ->
         gradle.taskGraph.whenReady { if (gradle.taskGraph.hasTask(dependent)) task.dependsOn(dependent) }

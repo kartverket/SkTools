@@ -9,7 +9,7 @@
 
   Bruk:
 
-  Benytt closure hektet inn på ext.genSanntidTriggers med følgende parametere:
+  Benytt closure hektet inn pÃ¥ ext.genSanntidTriggers med fÃ¸lgende parametere:
 
     dbToolset - for connection
     sanntidSourceSchema - skjema for sanntids-tabeller
@@ -47,7 +47,7 @@ ext.genSanntidTriggers = { Map params ->
 
     final def ignoredColumnNames = params.get('ignoredColumnNames', [:]) //kan trolig ikke ignorere noen kollonner i view eller triggere...
 
-    // implementert navn for historikk-kolonner (disse må være like i sanntid-db og historikk-db)
+    // implementert navn for historikk-kolonner (disse mÃ¥ vÃ¦re like i sanntid-db og historikk-db)
     final Map historikkColumnNames = (Map) params.get('historikkColumnNames', ['TVERSION', 'TBEGIN_INFO', 'TEND_INFO', 'TBEGIN', 'TEND'].collectEntries { [it, it.toString()] })
 
     // variables
@@ -75,7 +75,7 @@ ext.genSanntidTriggers = { Map params ->
         def noneHistorikkColumns = columnMappingForTable.keySet().collectMany {!historikkColumnNames.containsValue(it) ? [it] : [] }
 
         if (!pkColumns.intersect(historikkColumnNames.values()).isEmpty()) {
-            logger.warn "Primary Key for sanntidstabeller kan ikke inneholde kollonner for historikk. Genererte triggere er ikke garantert til å virke."
+            logger.warn "Primary Key for sanntidstabeller kan ikke inneholde kollonner for historikk. Genererte triggere er ikke garantert til Ã¥ virke."
         }
 
         out.write "\n"
@@ -153,7 +153,7 @@ CREATE OR REPLACE TRIGGER ${quotedHistorikkSchemaNameDot}"${triggerName}"
 
             } else {
                 '''
-  -- ..ingen historikkfelter i sanntid å vedlikeholde.
+  -- ..ingen historikkfelter i sanntid Ã¥ vedlikeholde.
 '''
             }
         }

@@ -1,8 +1,8 @@
 /******************************************************************************************************************** **
  *
- * Demonstrasjon på enkel bruk av plugin.
+ * Demonstrasjon pÃ¥ enkel bruk av plugin.
  *
- * En viser også eksempel implementasjon av 'gen' target.
+ * En viser ogsÃ¥ eksempel implementasjon av 'gen' target.
  *
  ******************************************************************************************************************** */
 
@@ -40,7 +40,7 @@ afterEvaluate {
  ******************************************************************************************************************** */
 
 task runDemo() {
-    description = 'Kjører en enkel demo for å teste funksjonaliteten'
+    description = 'KjÃ¸rer en enkel demo for Ã¥ teste funksjonaliteten'
 
     Assert.that('clean', 'zipSchemas').describedAs("schemaArchive").leadsTo(project).withState {
         zipTree(tasks.zipSchemas.archivePath).asPath.contains 'simple.xsd'
@@ -97,8 +97,7 @@ void createDirtySchema(def path) {
         project.logger.quiet "Creating file ${project.relativePath(file)}"
         file.parentFile.mkdirs()
         file.createNewFile()
-        file.withPrintWriter { writer ->
-//    file.withPrintWriter('UTF-8') { writer ->
+        file.withPrintWriter('UTF-8') { writer ->
             writer.print '''<?xml version="1.0" encoding="UTF-8"?>
             <xs:schema
                     version="1.0"
@@ -197,11 +196,11 @@ class Assert {
     }
 
     void assertNoDirtySources() {
-        assert !project.files(project.sourceSets.main.xjc[0].config.genOutputPath).asFileTree.files.find { it.name == 'Dirty.java' } //forventer ikke å finne Dirty.java blandt source
+        assert !project.files(project.sourceSets.main.xjc[0].config.genOutputPath).asFileTree.files.find { it.name == 'Dirty.java' } //forventer ikke Ã¥ finne Dirty.java blandt source
     }
 
     void assertNoDirtyClasses() {
-        assert !project.files(project.sourceSets.main.output).asFileTree.files.find { it.name == 'Dirty.class' } //forventer ikke å finne Dirty.class blandt class filer
+        assert !project.files(project.sourceSets.main.output).asFileTree.files.find { it.name == 'Dirty.class' } //forventer ikke Ã¥ finne Dirty.class blandt class filer
     }
 
 }

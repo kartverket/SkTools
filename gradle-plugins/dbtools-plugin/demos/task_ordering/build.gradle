@@ -64,13 +64,13 @@ taskSequence('taskSequenceZXY', description: 'Transitive task dependencies execu
 
 task runDemo() {
 
-    //SKTOOLS-152: verifiserer rekkefølge
+    //SKTOOLS-152: verifiserer rekkefÃ¸lge
     dependsOn task('verifyTaskSequence', type:GradleBuild) {
         startParameter.logLevel = LogLevel.QUIET
         tasks = ['taskSequenceZXY']
     }
 
-    //SKTOOLS-152: verifiserer rekkefølge
+    //SKTOOLS-152: verifiserer rekkefÃ¸lge
     dependsOn task('verifyTaskSequence2', type:GradleBuild) {
         startParameter.logLevel = LogLevel.QUIET
         tasks = ['taskSequenceYMCA']

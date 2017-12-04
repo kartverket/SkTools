@@ -1,6 +1,6 @@
 apply plugin: 'sktools-dbtools-plugin'
 
-//hjelpefunksjon for eksekveringsrekkefølge dersom task blir kjørt
+//hjelpefunksjon for eksekveringsrekkefÃ¸lge dersom task blir kjÃ¸rt
 def dependsOnIfExecuted = rootProject.getDependsOnIfExecuted()
 
 configureDatabasePlugin {
@@ -12,7 +12,7 @@ configureDatabasePlugin {
     /**
      * Toolset for DBA med script for:
      *
-     *  - Vedlikehold av grants for brukere på systemnivå
+     *  - Vedlikehold av grants for brukere pÃ¥ systemnivÃ¥
      *  - Opprettelse/sletting av tablespace
      *  - Opprettelse/sletting av brukere
      */
@@ -71,7 +71,7 @@ configureDatabasePlugin {
     /**
      * Toolset for SA-bruker med script for:
      *
-     *  - Vedlikehold av grants for brukere på skjema-nivå
+     *  - Vedlikehold av grants for brukere pÃ¥ skjema-nivÃ¥
      *  - Opprettelse og vedlikehold av skjema (inkludert patching)
      *
      *  - Mekanikk for migrering til og fra historikk skjema

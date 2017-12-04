@@ -1,5 +1,5 @@
 /******************************************************************************************************************** **
- * Demonstrerer versjonert api og løsning for navnekonflikter
+ * Demonstrerer versjonert api og lÃ¸sning for navnekonflikter
  ******************************************************************************************************************** */
 
 apply plugin: 'java'

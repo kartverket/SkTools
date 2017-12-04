@@ -2,9 +2,9 @@ import no.statkart.sktools.gradle.plugins.wsgen.WsdlGenTask
 
 /******************************************************************************************************************** **
  *
- * Demonstrasjon på bruk av plugin.
+ * Demonstrasjon pÃ¥ bruk av plugin.
  *
- * En viser også eksempel implementasjon av 'gen' target.
+ * En viser ogsÃ¥ eksempel implementasjon av 'gen' target.
  *
  ******************************************************************************************************************** */
 
@@ -26,7 +26,7 @@ dependencies {
  ******************************************************************************************************************** */
 
 task runDemo() {
-    description = 'Kjører en enkel demo for å verifisere funksjonalitet'
+    description = 'KjÃ¸rer en enkel demo for Ã¥ verifisere funksjonalitet'
 
     Assert.that('clean', 'compileJava').describedAs('compileJavaGeneratesCompiledCode').prep { clean() }.leadsTo(project).withState {
         assertCompileJava()

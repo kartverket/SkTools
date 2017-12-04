@@ -3,13 +3,13 @@ apply plugin: 'sktools-dbtools-plugin'
 
  // Kort intro til HSQLDB - http://hsqldb.org
  /**
-  * Hsqldb er en liten lettvekts database som kan kjøres in memory eller som stand alone.
-  * En har mulighet til å persistere informasjon til disk.
+  * Hsqldb er en liten lettvekts database som kan kjÃ¸res in memory eller som stand alone.
+  * En har mulighet til Ã¥ persistere informasjon til disk.
   *
-  * Dersom en kjører in memory kan en aksessere databasen innenfor samme javavm.
+  * Dersom en kjÃ¸rer in memory kan en aksessere databasen innenfor samme javavm.
   *
-  * Ved aksessering ifra flere prosesser bør en kjøre basen i "stand alone" mode. En har her fortsatt mulighet til
-  * å kjøre denne som in memory. Databasen kjører da i en frittstående prosess.
+  * Ved aksessering ifra flere prosesser bÃ¸r en kjÃ¸re basen i "stand alone" mode. En har her fortsatt mulighet til
+  * Ã¥ kjÃ¸re denne som in memory. Databasen kjÃ¸rer da i en frittstÃ¥ende prosess.
   *
   * HSQLDB 2.4.x krever JRE 8
   */
@@ -121,7 +121,7 @@ task runDemo() {
 
     /**
      * Illustrerer mekanikk for setting av patch# etter import (eksperimentell)
-     * - PS: vanligvis så følger patchinfo data med importerte data
+     * - PS: vanligvis sÃ¥ fÃ¸lger patchinfo data med importerte data
      */
     Assert.that('dbImportEmpty').describedAs('definePatchversionCreatesPatchinfo').leadsTo(project).withState {
         def sql = sqlSA()
@@ -272,7 +272,7 @@ class Assert {
         try {
             sqlSA().execute('SHUTDOWN;')
         } catch (java.sql.SQLException e) {
-            assert true //får noen ganger EOFException her..
+            assert true //fÃ¥r noen ganger EOFException her..
         }
     }
 

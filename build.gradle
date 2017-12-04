@@ -50,7 +50,7 @@ project.ext.libraries = [
 
 // Oracle Weblogic dependencies
 
-assert WEBLOGIC_VERSION //husk å utvide byggesystem med ny weblogic version..
+assert WEBLOGIC_VERSION //husk Ã¥ utvide byggesystem med ny weblogic version..
 assert WEBLOGIC_HOME //WEBLOGIC_HOME maa vaere gitt
 
 
@@ -150,7 +150,7 @@ subprojects { Project project ->
 
 
 
-        // Får Idea til å legge build katalog for alle moduler i en egen felles topp katalog (out/production, out/test)
+        // FÃ¥r Idea til Ã¥ legge build katalog for alle moduler i en egen felles topp katalog (out/production, out/test)
         project.idea.module {
             inheritOutputDirs = true
 //            scopes.PROVIDED.plus += configurations.provided
@@ -160,17 +160,17 @@ subprojects { Project project ->
         /**
          * Testing via TestNG grupper. Se bruk av @Test(groups = "") i koden.
          *
-         * -DignoreFailures=true stopper ikke eksekvering etter feilende modul og kjører videre. Kjekt for integrasjonstesting som ønsker å kjøre alle tester alltid.
+         * -DignoreFailures=true stopper ikke eksekvering etter feilende modul og kjÃ¸rer videre. Kjekt for integrasjonstesting som Ã¸nsker Ã¥ kjÃ¸re alle tester alltid.
          */
         test {
-            ignoreFailures = gradle.startParameter.systemPropertiesArgs.get('ignoreFailures', 'false') == 'true' //Gradle feiler ikke dersom denne er true. Kan ikke være true dersom en gjør en install eller uploadArchives
+            ignoreFailures = gradle.startParameter.systemPropertiesArgs.get('ignoreFailures', 'false') == 'true' //Gradle feiler ikke dersom denne er true. Kan ikke vÃ¦re true dersom en gjÃ¸r en install eller uploadArchives
 
 
             jvmArgs '-Xmx512m', '-XX:PermSize=128m', '-XX:MaxPermSize=256m'
 //            testLogging.showStandardStreams = true
 
-            inputs.property 'excludedGroups', testFramework.options.includeGroups //trigger re-kjøring av test ved endring av grupper
-            inputs.property 'includedGroups', testFramework.options.excludeGroups //trigger re-kjøring av test ved endring av grupper
+            inputs.property 'excludedGroups', testFramework.options.includeGroups //trigger re-kjÃ¸ring av test ved endring av grupper
+            inputs.property 'includedGroups', testFramework.options.excludeGroups //trigger re-kjÃ¸ring av test ved endring av grupper
 
             onOutput { descriptor, event ->
                 if (event.destination == TestOutputEvent.Destination.StdErr) {
@@ -216,6 +216,14 @@ subprojects { Project project ->
         groovyOptions.encoding = System.getProperty('file.encoding') //SKTOOLS-83: groovy source files in system encoding (default is UTF-8)
     }
 
+}
+
+task pelle {
+    doFirst {
+        println "pelle Ã† Ã˜ Ã…"
+        println "pelle Ã¦ Ã¸ Ã¥"
+        println gradle.startParameter.projectProperties.PELLE == 'Ã†'
+    }
 }
 
 allprojects {
@@ -310,7 +318,7 @@ afterEvaluate {
         outputFile = file("${project.name}-${project.version.toString().replace('-SNAPSHOT', '')}-gradle${gradle.gradleVersion}.ipr")
     }
 
-    // gradle spesifik iml fil da gradle dependencies ligger på hver modul
+    // gradle spesifik iml fil da gradle dependencies ligger pÃ¥ hver modul
     allprojects {
         idea.module {
             outputFile = file("${project.name}-gradle${gradle.gradleVersion}.iml")
@@ -325,7 +333,7 @@ rootProject.idea.workspace.iws.withXml { provider ->
     final def weblogicHome = WEBLOGIC_HOME
 
     /**
-     * Eksempler og dokumentasjon på hvordan man kan benytte groovy xml og Node funksjonalitet
+     * Eksempler og dokumentasjon pÃ¥ hvordan man kan benytte groovy xml og Node funksjonalitet
      * <br> http://groovy.codehaus.org/Reading+XML+using+Groovy%27s+XmlSlurper
      * <br> http://groovy.codehaus.org/Updating+XML+with+XmlSlurper
      */
@@ -366,8 +374,8 @@ rootProject.idea.workspace.iws.withXml { provider ->
         ''')
                 runManager.append(it)
             }
-            it.option.find { it.@name == 'TEST_OBJECT' }.@value = 'PACKAGE' //ved høyreklikk i struktur velges kun tester innen samme pakke. Denne sees i sammenheng med  TEST_SEARCH_SCOPE=singleModule
-            it.option.find { it.@name == 'TEST_SEARCH_SCOPE' }.value.@defaultName = 'singleModule' //kjører kun tester innen samme modul - ikke på tvers av moduler
+            it.option.find { it.@name == 'TEST_OBJECT' }.@value = 'PACKAGE' //ved hÃ¸yreklikk i struktur velges kun tester innen samme pakke. Denne sees i sammenheng med  TEST_SEARCH_SCOPE=singleModule
+            it.option.find { it.@name == 'TEST_SEARCH_SCOPE' }.value.@defaultName = 'singleModule' //kjÃ¸rer kun tester innen samme modul - ikke pÃ¥ tvers av moduler
 
         }
 
@@ -391,7 +399,7 @@ rootProject.idea.workspace.iws.withXml { provider ->
 buildscript {
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // Miljøvariable for konfigurasjon av byggemiljø
+    // MiljÃ¸variable for konfigurasjon av byggemiljÃ¸
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     [
             'WEBLOGIC_HOME',

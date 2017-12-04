@@ -4,7 +4,7 @@ apply plugin: 'sktools-weblogic-wsclient-plugin'
 /******************************************************************************************************************** **
  * Demonstrerer standard bruk av plugin
  *
- * Det demonstreres også eksempel implementasjon av 'gen' target
+ * Det demonstreres ogsÃ¥ eksempel implementasjon av 'gen' target
  ******************************************************************************************************************** */
 
 

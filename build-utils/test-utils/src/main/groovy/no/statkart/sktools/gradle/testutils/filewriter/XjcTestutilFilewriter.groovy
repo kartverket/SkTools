@@ -33,7 +33,7 @@ class XjcTestutilFilewriter extends AbstractTestutilFilewriter {
 
         generatedFiles.add projectHelper.project.file(targetPath+'/ListTestIterable.java').with { File file ->
             file.parentFile.mkdirs()
-            file.withPrintWriter { writer ->
+            file.withPrintWriter('UTF-8') { writer ->
                 writer.print """
                     import java.util.Iterator;
                     import javax.xml.bind.annotation.XmlTransient;
@@ -68,7 +68,7 @@ class XjcTestutilFilewriter extends AbstractTestutilFilewriter {
 
         generatedFiles.add projectHelper.project.file(targetFilePath).with { File file ->
             file.parentFile.mkdirs()
-            file.withPrintWriter { writer ->
+            file.withPrintWriter('ISO-8859-1') { writer ->
                 writer.print """<?xml version="1.0" encoding="ISO-8859-1"?>
                     <xs:schema
                             version="1.0"

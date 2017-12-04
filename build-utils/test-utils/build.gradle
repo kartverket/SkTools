@@ -13,7 +13,7 @@ dependencies {
     compile libraries.testng
 }
 
-// Testfunksjonalitet som avgjør om en kjører tester ifra IntelliJ eller ikke.
+// Testfunksjonalitet som avgjÃ¸r om en kjÃ¸rer tester ifra IntelliJ eller ikke.
 // NB: Denne kildekoden skal IKKE med i gradle bygget!!
 idea.module {
     testSourceDirs += file('src/idea/test-source')
