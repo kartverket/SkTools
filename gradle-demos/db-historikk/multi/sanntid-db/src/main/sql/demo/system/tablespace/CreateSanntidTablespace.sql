@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------------------------------------------------
 -- Kjores som systembruker
--- Benytter forenklet BIGFILE da denne kan opprette en enkel fil som kan bli større enn 32GB (limit ved 8k blokker)
--- For lokal utvikling hvor man ikke ønsker backup er dette et mer optimalt oppsett.
+-- Benytter forenklet BIGFILE da denne kan opprette en enkel fil som kan bli stÃ¸rre enn 32GB (limit ved 8k blokker)
+-- For lokal utvikling hvor man ikke Ã¸nsker backup er dette et mer optimalt oppsett.
 ------------------------------------------------------------------------------------------------------------------------
 
 CREATE BIGFILE TABLESPACE "@sanntid_db_tablespace@"

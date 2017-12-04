@@ -1,4 +1,4 @@
--- AUTHID DEFINER fører til at funksjonene blir kjørt med rettigheter til historikk-db-userInfo (brukeren som oppretter/eier denne)
+-- AUTHID DEFINER fÃ¸rer til at funksjonene blir kjÃ¸rt med rettigheter til historikk-db-userInfo (brukeren som oppretter/eier denne)
 CREATE OR REPLACE PACKAGE "@historikk_db_schema@".HISTORIKK_TRANSACTION AUTHID DEFINER AS
 
   -- Konverterer timestamp ifra fast streng-representasjon
@@ -27,7 +27,7 @@ CREATE OR REPLACE PACKAGE BODY "@historikk_db_schema@".HISTORIKK_TRANSACTION AS
   --todo: make transaction scoped variable like t_Trans
   userInfo VARCHAR(255 CHAR);
 
-  minimum_unit_of_time CONSTANT INTERVAL DAY(0) TO SECOND(9) := INTERVAL '0.000000001' SECOND; --denne må samsvare med granualitet til SNAPSHOT_TRANS.v
+  minimum_unit_of_time CONSTANT INTERVAL DAY(0) TO SECOND(9) := INTERVAL '0.000000001' SECOND; --denne mÃ¥ samsvare med granualitet til SNAPSHOT_TRANS.v
 
 
   FUNCTION findLastTransactionFromData
@@ -41,7 +41,7 @@ CREATE OR REPLACE PACKAGE BODY "@historikk_db_schema@".HISTORIKK_TRANSACTION AS
     FOR i IN (SELECT * FROM user_tables WHERE TABLE_NAME LIKE '%\_H' escape '\')
     LOOP
       BEGIN
-        EXECUTE IMMEDIATE 'SELECT max(tBegin) FROM ' || i.TABLE_NAME INTO max_t_Begin;   -- todo: substituere tEnd og tBegin med implemententerte navn for løsning
+        EXECUTE IMMEDIATE 'SELECT max(tBegin) FROM ' || i.TABLE_NAME INTO max_t_Begin;   -- todo: substituere tEnd og tBegin med implemententerte navn for lÃ¸sning
         EXECUTE IMMEDIATE 'SELECT max(tEnd) FROM ' || i.TABLE_NAME || ' WHERE tEnd != :t_Current' INTO max_t_End
           USING SNAPSHOT_TIME.Get_T_CURRENT();
 
@@ -114,7 +114,7 @@ CREATE OR REPLACE PACKAGE BODY "@historikk_db_schema@".HISTORIKK_TRANSACTION AS
       END IF;
     END IF;
 
-    t_Trans_old := t_Trans; --tar vare på førtilstand for sessjon..
+    t_Trans_old := t_Trans; --tar vare pÃ¥ fÃ¸rtilstand for sessjon..
     isNewTransaction := Get_T_Trans(FALSE) IS NULL;
 
     IF isNewTransaction THEN
@@ -130,9 +130,9 @@ CREATE OR REPLACE PACKAGE BODY "@historikk_db_schema@".HISTORIKK_TRANSACTION AS
         END IF;
       END IF;
 
-      --må sjekke dette her før en evt overskriver t_Trans ved ny transaksjon...
+      --mÃ¥ sjekke dette her fÃ¸r en evt overskriver t_Trans ved ny transaksjon...
       IF t_Trans_old IS NOT NULL THEN
-        --sjekke om det er en ny transaksjon. Korrigerer kun om nødvendig.
+        --sjekke om det er en ny transaksjon. Korrigerer kun om nÃ¸dvendig.
         IF fix_inncorrect_timestamps AND newValue <= t_Trans_old THEN
           t_Trans_new := t_Trans_old + minimum_unit_of_time;
           DBMS_OUTPUT.PUT_LINE('adding one ns to last set transaction time!');
@@ -147,7 +147,7 @@ CREATE OR REPLACE PACKAGE BODY "@historikk_db_schema@".HISTORIKK_TRANSACTION AS
 
     EXCEPTION WHEN incorrect_semantics
     THEN
-      RAISE_APPLICATION_ERROR(-20102, 'T for transaksjonen må være stigende!', FALSE);
+      RAISE_APPLICATION_ERROR(-20102, 'T for transaksjonen mÃ¥ vÃ¦re stigende!', FALSE);
   END Set_T_Trans;
 
 
@@ -164,7 +164,7 @@ CREATE OR REPLACE PACKAGE BODY "@historikk_db_schema@".HISTORIKK_TRANSACTION AS
     EXCEPTION
     WHEN userInfo_null
     THEN
-      RAISE_APPLICATION_ERROR(-20101, 'Brukernavn må være satt før man prøver å legge inn data!', FALSE);
+      RAISE_APPLICATION_ERROR(-20101, 'Brukernavn mÃ¥ vÃ¦re satt fÃ¸r man prÃ¸ver Ã¥ legge inn data!', FALSE);
   END Get_UserInfo;
 
   PROCEDURE Set_UserInfo(username IN VARCHAR2, opts IN NUMBER := 0)
