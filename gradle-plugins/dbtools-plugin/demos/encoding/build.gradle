@@ -15,7 +15,7 @@ configureDatabasePlugin {
 
     toolset(name: 'UTF8', type: 'hsqldb', prefix: '') {
 
-        sqlTask('insertData', sqlFile: 'sql/insertData.sql', encoding: 'UTF-8')
+        sqlTask('insertData', sqlFile: 'sql/insertData.sql', encoding: 'UTF-16')
         sqlTask('createTable', sqlString: '''
             CREATE TABLE TABLE1 (
                 ID INTEGER NOT NULL,
