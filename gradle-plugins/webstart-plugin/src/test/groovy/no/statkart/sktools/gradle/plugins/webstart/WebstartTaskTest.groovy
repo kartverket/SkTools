@@ -11,7 +11,7 @@ import org.gradle.api.Project
 /**
  * Test av {@link WebstartTask}
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @author Tor Egil R. Strand
  */
 class WebstartTaskTest {

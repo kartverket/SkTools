@@ -53,7 +53,7 @@ public class WsdlCustomizerPlugin implements Plugin<Project> {
     }
 
     private Copy configureSchemaExtractionTask(final Project project, final Configuration originalSchemas) {
-        // Bruker replace() siden add() er depracated og create() ikke fantes før
+        // Bruker replace() siden add() er depracated og create() ikke fantes fÃ¸r
         Copy extractSchemas = project.getTasks().replace("extractSchemas", Copy.class);
         extractSchemas.setDestinationDir(new File(project.getBuildDir(), extractSchemas.getName()));
         extractSchemas.dependsOn(originalSchemas);
@@ -78,7 +78,7 @@ public class WsdlCustomizerPlugin implements Plugin<Project> {
         final PatternSet wsdlAndXsdPattern = new PatternSet();
         wsdlAndXsdPattern.include("**/*.wsdl", "**/*.xsd");
 
-        // Bruker replace() siden add() er depracated og create() ikke fantes før
+        // Bruker replace() siden add() er depracated og create() ikke fantes fÃ¸r
         Copy extractWsdls = project.getTasks().replace("extractWsdls", Copy.class);
         extractWsdls.setDestinationDir(new File(project.getBuildDir(), extractWsdls.getName()));
         extractWsdls.dependsOn(generatedSchemas);

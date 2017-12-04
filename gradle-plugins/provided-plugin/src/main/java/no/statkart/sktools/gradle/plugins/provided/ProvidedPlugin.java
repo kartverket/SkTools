@@ -11,7 +11,7 @@ import org.gradle.plugins.ide.idea.IdeaPlugin;
 import org.gradle.plugins.ide.idea.model.IdeaModel;
 
 /**
- * Oppretter provided-konfigurasjon for alle SourceSets og konfigurerer IdeaModule (om/når idea-plugin applyes).
+ * Oppretter provided-konfigurasjon for alle SourceSets og konfigurerer IdeaModule (om/nÃ¥r idea-plugin applyes).
  *
  * @author Tor Egil R. Strand
  * @since 1.2

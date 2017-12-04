@@ -8,7 +8,7 @@ apply plugin: 'sktools-weblogic-wsclient-plugin'
  ******************************************************************************************************************** */
 
 
-tasks.withType(AbstractCompile) { options.encoding = 'windows-1252' }
+tasks.withType(AbstractCompile) { options.encoding = 'utf-8' }
 
 weblogicWsClient {
     client1 {

@@ -12,7 +12,7 @@ import org.gradle.api.tasks.TaskAction
  * Task for deploy
  *
  * @since 1.2
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 class WeblogicDeployTask extends AbstractWeblogicDeployTask {
     protected static final Logger logger = Logging.getLogger(WeblogicDeployTask.class);

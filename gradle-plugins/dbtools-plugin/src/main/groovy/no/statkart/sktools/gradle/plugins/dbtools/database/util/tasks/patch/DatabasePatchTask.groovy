@@ -9,7 +9,7 @@ import org.gradle.api.tasks.Optional
 /**
  * Task for patching av schema over JDBC.
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 1.2
  */
 abstract class DatabasePatchTask extends AbstractSQLTask {

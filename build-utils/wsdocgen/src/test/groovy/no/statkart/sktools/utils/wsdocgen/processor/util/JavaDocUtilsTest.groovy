@@ -7,7 +7,7 @@ import org.testng.annotations.Test
  * Tester {@link JavaDocUtils}
  *
  * @since 1.3 - ny grunnbok sprint 30
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 class JavaDocUtilsTest {
 

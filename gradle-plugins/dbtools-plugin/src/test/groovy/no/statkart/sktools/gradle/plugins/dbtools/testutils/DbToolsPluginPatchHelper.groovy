@@ -4,7 +4,7 @@ import no.statkart.sktools.gradle.testutils.ProjectHelper
 
 /**
  * @since 1.3
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 class DbToolsPluginPatchHelper {
 

@@ -2,7 +2,7 @@ package no.statkart.sktools.gradle.plugins.ideaextensions
 
 /**
  * @since 1.3
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 class GradleTestContext extends IdeaTestContext<GradleTestContext> {
 

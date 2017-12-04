@@ -8,7 +8,7 @@ import org.testng.annotations.Test
 /**
  * Test av {@link ArtifactMatcher}
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @author Tor Egil R. Strand
  */
 class ArtifactMatcherTest {

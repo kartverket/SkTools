@@ -6,7 +6,7 @@ import org.testng.annotations.Test
  * Test av {@link CompareUtil}
  *
  * @since 1.3
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 class CompareUtilTest {
 

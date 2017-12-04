@@ -11,9 +11,9 @@ import java.util.Collections;
 import java.util.Map;
 
 /**
- * Klient for visning av miljø variabler.
+ * Klient for visning av miljÃ¸ variabler.
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 public class WebstartTester {
 

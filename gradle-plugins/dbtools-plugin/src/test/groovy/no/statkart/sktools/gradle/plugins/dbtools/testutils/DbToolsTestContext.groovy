@@ -2,7 +2,7 @@ package no.statkart.sktools.gradle.plugins.dbtools.testutils
 
 /**
  * @since 1.3
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 class DbToolsTestContext<T extends DbToolsTestContext> {
     static enum FILE_TYPE {

@@ -6,9 +6,9 @@ import org.gradle.api.tasks.InputFiles;
 /**
  * Interface for {@link org.gradle.api.internal.ConventionTask}-implementasjoner
  *
- * Pluginet setter {@code weblogicClasspath} på bakgrunn av {@link WeblogicBasePlugin#WEBLOGIC_PROVIDED_CONFIGURATION_NAME}
+ * Pluginet setter {@code weblogicClasspath} pÃ¥ bakgrunn av {@link WeblogicBasePlugin#WEBLOGIC_PROVIDED_CONFIGURATION_NAME}
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 public interface WeblogicTaskInterface {
 

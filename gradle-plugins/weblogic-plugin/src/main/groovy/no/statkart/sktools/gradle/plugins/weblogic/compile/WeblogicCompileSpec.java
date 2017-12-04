@@ -7,7 +7,7 @@ import java.io.File;
 
 /**
  * @since 1.2
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 public interface WeblogicCompileSpec {
 

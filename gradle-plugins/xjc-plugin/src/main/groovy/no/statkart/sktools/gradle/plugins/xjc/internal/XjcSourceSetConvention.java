@@ -6,7 +6,7 @@ import org.gradle.util.ConfigureUtil;
 /**
  * Vedhengsklasse til {@link org.gradle.api.tasks.SourceSet SourceSet}
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 1.2
  */
 public class XjcSourceSetConvention {

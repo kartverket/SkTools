@@ -9,7 +9,7 @@ import no.statkart.sktools.gradle.testutils.filewriter.XjcTestutilFilewriter
 /**
  * Test av {@link ListGenPlugin}
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 class ListGenPluginTest {
 
@@ -42,7 +42,7 @@ class ListGenPluginTest {
                         //oppretter mapper for gen kode + ant defgen
                         ant.mkdir(dir: outputPath)
 
-                        //kjører xjc task
+                        //kjÃ¸rer xjc task
                         ant.xjc(destDir: outputPath, extension: true) {
                             schema(dir: sourcePath, includes: '**/*.xsd')
                             arg(line: '-listgen')
@@ -100,7 +100,7 @@ class ListGenPluginTest {
                         //oppretter mapper for gen kode + ant defgen
                         ant.mkdir(dir: outputPath)
 
-                        //kjører xjc task
+                        //kjÃ¸rer xjc task
                         ant.xjc(destDir: outputPath, extension: true) {
                             schema(dir: sourcePath, includes: '**/*.xsd')
                             arg(line: '-listgen baseClass=some.implementation.ListTestIterable')

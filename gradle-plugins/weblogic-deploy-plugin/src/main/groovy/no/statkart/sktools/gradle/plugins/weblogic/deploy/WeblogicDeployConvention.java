@@ -10,7 +10,7 @@ import org.gradle.util.ConfigureUtil;
 import java.util.concurrent.Callable;
 
 /**
- * Convention for å konfigurere opp egenskaper felles for både deploy og undeploy
+ * Convention for Ã¥ konfigurere opp egenskaper felles for bÃ¥de deploy og undeploy
  *
  * @author Tor Egil R. Strand
  * @since 1.2
@@ -25,11 +25,11 @@ public class WeblogicDeployConvention {
     }
 
     /**
-     * Konfigurerer opp sett av tasker for deploy basert på 'weblogic.ant.taskdefs.management.WLDeploy'
+     * Konfigurerer opp sett av tasker for deploy basert pÃ¥ 'weblogic.ant.taskdefs.management.WLDeploy'
      * <p/>
-     * Dette er deploy tasker som er ment for bruk i utviklingsmiljøer for å understøtte iterativ utvikling.
+     * Dette er deploy tasker som er ment for bruk i utviklingsmiljÃ¸er for Ã¥ understÃ¸tte iterativ utvikling.
      * <p/>
-     * <p> Følgende tasker er implementert
+     * <p> FÃ¸lgende tasker er implementert
      * <ul>
      * <li> WeblogicDeployTask - deployer deployment
      * <li> WeblogicUndeployTask - undeployer deployment

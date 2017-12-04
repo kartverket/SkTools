@@ -85,7 +85,7 @@ class WeblogicDeployPluginTest {
 
     /**
      * SKTOOLS-164/SKTOOLS-165: Forenklet konfigurasjon via WEBLOGIC_VERSION.
-     * Dersom denne property er gitt, så legges en standard classpath til task.
+     * Dersom denne property er gitt, sÃ¥ legges en standard classpath til task.
      */
     @Test
     void testConventionalWeblogicClasspath() {

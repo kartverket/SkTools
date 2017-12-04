@@ -3,7 +3,7 @@ package no.statkart.sktools.utils.parsers.sql.model;
 /**
  * Interface for alle noder i AST treet
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 0.1
  */
 public interface Expression {

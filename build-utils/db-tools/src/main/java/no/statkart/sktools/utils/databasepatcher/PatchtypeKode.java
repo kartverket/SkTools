@@ -6,7 +6,7 @@ import java.util.HashMap;
 /**
  * Beskriver lovlige typer av patchblokker.
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 1.3
  */
 public class PatchtypeKode {
@@ -24,7 +24,7 @@ public class PatchtypeKode {
     public final static PatchtypeKode INDEX = new PatchtypeKode("INDEX", "Patching av indekser");
 
     /** @since 1.3 */
-    public final static PatchtypeKode ALWAYS = new PatchtypeKode("ALWAYS", "Patcheblokk som alltid skal kjøres");
+    public final static PatchtypeKode ALWAYS = new PatchtypeKode("ALWAYS", "Patcheblokk som alltid skal kjÃ¸res");
 
 
     final String name;

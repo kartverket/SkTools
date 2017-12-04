@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 1.2
  */
 public class XjcSchemaContainer extends AbstractList<XjcConfig> {
@@ -50,7 +50,7 @@ public class XjcSchemaContainer extends AbstractList<XjcConfig> {
         return store.add(xjcSchema);
     }
 
-    //besørger optional lik struktur som for konfigurering
+    //besÃ¸rger optional lik struktur som for konfigurering
     public List<XjcConfig> getSchemas() {
         return this;
     }

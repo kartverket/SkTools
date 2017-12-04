@@ -8,15 +8,15 @@ import org.gradle.api.specs.Spec
 import org.gradle.api.tasks.TaskDependency
 
 /**
- * Workaround i gradle da gradle 1.0 ikke har noen støtte for å deklarere rekkefølge på tasker.
+ * Workaround i gradle da gradle 1.0 ikke har noen stÃ¸tte for Ã¥ deklarere rekkefÃ¸lge pÃ¥ tasker.
  *
- * Algoritmen setter {@link Task#mustRunAfter} for å instrumentere ønsket eksekverings-rekkefølge i Gradle
- * basert på sekvenser.
+ * Algoritmen setter {@link Task#mustRunAfter} for Ã¥ instrumentere Ã¸nsket eksekverings-rekkefÃ¸lge i Gradle
+ * basert pÃ¥ sekvenser.
  *
  * SKTOOLS-152:
- * Det er at krav om at sekvenser ikke danner nye sykler da Gradle baseres på en DAG (Directed Acyclic Graph) av tasker.
+ * Det er at krav om at sekvenser ikke danner nye sykler da Gradle baseres pÃ¥ en DAG (Directed Acyclic Graph) av tasker.
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 1.2
  */
 class SequenceTask extends DefaultTask {
@@ -112,7 +112,7 @@ class SequenceTask extends DefaultTask {
 
     /**
      * Propagierer Task.onlyIf{} til dependent objekter.
-     * OnlyIf vil kun slå ut dersom denne task-sekvensen blir utført
+     * OnlyIf vil kun slÃ¥ ut dersom denne task-sekvensen blir utfÃ¸rt
      */
     void propagateOnlyIf(Task task, int depth = 0) {
         TaskInternal thisTask = this

@@ -19,10 +19,10 @@ import java.io.File;
 /**
  * Task for kompilering av java-ws weblogic server implementasjon
  *
- * PS: Merk at denne kun kompilerer ws spesifik implementasjon. Det forutsettes derfor at resten ligger som kompilert kode på classpath
+ * PS: Merk at denne kun kompilerer ws spesifik implementasjon. Det forutsettes derfor at resten ligger som kompilert kode pÃ¥ classpath
  *
  * @since 1.1
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 public class WeblogicWsCompileTask extends AbstractCompile implements WeblogicTaskInterface {
     protected static final Logger logger = Logging.getLogger(WeblogicWsCompileTask.class);
@@ -32,7 +32,7 @@ public class WeblogicWsCompileTask extends AbstractCompile implements WeblogicTa
 
     private FileCollection weblogicClasspath;
 
-    private File classesDir = null;  //for filer som skal på classpath
+    private File classesDir = null;  //for filer som skal pÃ¥ classpath
     private File genSourcesDir = null;
     private File genDir = null;
 

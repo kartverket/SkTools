@@ -14,7 +14,7 @@ import org.gradle.api.plugins.ExtraPropertiesExtension
 /**
  * Hjelpemetoder til bruk i testing
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 class ProjectHelper {
 
@@ -27,7 +27,7 @@ class ProjectHelper {
     /**
      * Emulerer eksekvering av task med dependencies.
      *
-     * Dependencies blir ikke eksekvert i noen bestemt rekkefølge. Rekkefølgenn kan derav divergere ifra gradles egen evaluering.
+     * Dependencies blir ikke eksekvert i noen bestemt rekkefÃ¸lge. RekkefÃ¸lgenn kan derav divergere ifra gradles egen evaluering.
      */
     Task executeTask(String taskName) {
         return execute(project.tasks[taskName])
@@ -73,9 +73,9 @@ class ProjectHelper {
     }
 
     /**
-     * Kall denne der en avhenger av å ha kjørt {@link Project#afterEvaluate(Closure) afterEvaluate actions} for prosjektet.
+     * Kall denne der en avhenger av Ã¥ ha kjÃ¸rt {@link Project#afterEvaluate(Closure) afterEvaluate actions} for prosjektet.
      *
-     * Eksekverer alle actions som er registrert på prosjektet + evt subprosjekter dersom parameterisert.
+     * Eksekverer alle actions som er registrert pÃ¥ prosjektet + evt subprosjekter dersom parameterisert.
      */
     ProjectHelper initializeProject(boolean initializeSubprojects = false) {
         _initializeProject(project, initializeSubprojects)
@@ -117,8 +117,8 @@ class ProjectHelper {
     }
 
     /**
-     * Setter properties på prosjektet.
-     * Dersom prosjektet ikke allerede har propertyen, så legges den til ext.properties
+     * Setter properties pÃ¥ prosjektet.
+     * Dersom prosjektet ikke allerede har propertyen, sÃ¥ legges den til ext.properties
      */
     void setProjectProperties(Map<String, ?> properties) {
         properties?.each {
@@ -246,7 +246,7 @@ class ProjectHelper {
     public Task assertTaskExecutedNotSkipped(String taskName, String message = '', Closure testClosure = null) {
         Task task = project.getTasks().getByName(taskName);
         Assert.assertTrue(task.state.executed, "Forventet at task ${task.path} ble eksekvert. ${message}" )
-        Assert.assertFalse(task.state.skipped, "Forventet at task ${task.path} ikke ble skippet men fullført. ${message}" )
+        Assert.assertFalse(task.state.skipped, "Forventet at task ${task.path} ikke ble skippet men fullfÃ¸rt. ${message}" )
 
         if (testClosure != null) {
             testClosure.call(task)

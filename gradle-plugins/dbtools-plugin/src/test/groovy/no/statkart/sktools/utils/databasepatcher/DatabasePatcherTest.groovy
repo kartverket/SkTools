@@ -15,7 +15,7 @@ import no.statkart.sktools.gradle.plugins.dbtools.testutils.DbToolsTestContext
 /**
  * Tester funksjonaliteten til {@link no.statkart.sktools.utils.databasepatcher.DatabasePatcher}
  *
- * NB: Denne testen tilhører db-tools men er lagt her for enkelhetens skyld (alternativet er å opprette en egen test-modul)
+ * NB: Denne testen tilhÃ¸rer db-tools men er lagt her for enkelhetens skyld (alternativet er Ã¥ opprette en egen test-modul)
  */
 class DatabasePatcherTest extends HSQLDBTest {
 
@@ -86,7 +86,7 @@ class DatabasePatcherTest extends HSQLDBTest {
             Assert.assertEquals(row.dbVersion, null, "Patchversjon/dbVersion")
 
         } catch (Exception e) {
-            Assert.fail("Forventer å finne PATCHINFO tabell", e)
+            Assert.fail("Forventer Ã¥ finne PATCHINFO tabell", e)
         }
 
     }
@@ -114,7 +114,7 @@ class DatabasePatcherTest extends HSQLDBTest {
             Assert.assertNotNull(row, 'Forventer rad')
             Assert.assertEquals(row.dbVersion, null, "Patchversjon/dbVersion")
         } catch (Exception e) {
-            Assert.fail("Forventer å finne PATCHINFO tabell", e)
+            Assert.fail("Forventer Ã¥ finne PATCHINFO tabell", e)
         }
     }
 
@@ -127,7 +127,7 @@ class DatabasePatcherTest extends HSQLDBTest {
         final DatabasePatcherTestContext testContext = buildDatabasePatcherTestFixture()
 
         File patchAFile = testContext.createTempFile(SQL, '''
--- patch for default modul. Testen kjører kun første definerte patch.
+-- patch for default modul. Testen kjÃ¸rer kun fÃ¸rste definerte patch.
 
 -- PATCH DB.MIN.VERSION="<any>"
 -- PATCH DATA DB.VERSION="1.0" PATCH.NO="1" "Create Atable"
@@ -166,7 +166,7 @@ INSERT INTO B_TABLE (ID, NAVN) VALUES (2, 'valueB');
 
         DatabasePatcher databasePatcher = testContext.setUpDatabasePatcher();
 
-        //kjører inn patch for "default" komponent
+        //kjÃ¸rer inn patch for "default" komponent
         databasePatcher.singleStepPatches = true  //singlestep
         databasePatcher.patch(patchAFile.toString())
 
@@ -178,7 +178,7 @@ INSERT INTO B_TABLE (ID, NAVN) VALUES (2, 'valueB');
         Assert.assertEquals(row.dbVersion, "1.0", "Patchversjon/dbVersion")
 
 
-        //kjører inn patcher for komponent "modulB"
+        //kjÃ¸rer inn patcher for komponent "modulB"
         databasePatcher.component = 'modulB'
 
 
@@ -223,7 +223,7 @@ INSERT INTO B_TABLE (ID, NAVN) VALUES (2, 'valueB');
         patches.entrySet().asList().with { def entries ->
             int expressionNo = 0
 
-            Assert.assertNotNull(entries[expressionNo].key, "Forventer at første element er minversion")
+            Assert.assertNotNull(entries[expressionNo].key, "Forventer at fÃ¸rste element er minversion")
             Assert.assertEquals(entries[expressionNo].key.dbVersion, "<any>", "dbVersion")
 
             expressionNo++
@@ -255,7 +255,7 @@ INSERT INTO B_TABLE (ID, NAVN) VALUES (2, 'valueB');
         File patchFile = testContext.createTempFile(DbToolsTestContext.FILE_TYPE.SQL, """
 -- PATCH DB.MIN.VERSION="1.0"
 
--- PATCH ALWAYS DB.VERSION="0" PATCH.NO="-1" "Definerer skjema for påfølgende patcher"
+-- PATCH ALWAYS DB.VERSION="0" PATCH.NO="-1" "Definerer skjema for pÃ¥fÃ¸lgende patcher"
 ALTER SESSION SET CURRENT_SCHEMA = "USER";
 
 
@@ -275,14 +275,14 @@ CREATE TABLE TEST_TABLE2;
         patches.entrySet().asList().with { def entries ->
             int expressionNo = 0
 
-            Assert.assertNotNull(entries[expressionNo].key, "Forventer at første element er minversion")
+            Assert.assertNotNull(entries[expressionNo].key, "Forventer at fÃ¸rste element er minversion")
             Assert.assertEquals(entries[expressionNo].key.dbVersion, "1.0", "dbVersion")
 
             expressionNo++
             Assert.assertEquals(entries[expressionNo].key.patchtype.name, 'ALWAYS', "Forventer at element er data patch")
             Assert.assertEquals(entries[expressionNo].key.dbVersion, '0', "Forventet dbVersion")
             Assert.assertEquals(entries[expressionNo].key.patchNo, -1, "Forventet patchNo")
-            Assert.assertEquals(entries[expressionNo].key.kommentar, '"Definerer skjema for påfølgende patcher"', "Kommentar")
+            Assert.assertEquals(entries[expressionNo].key.kommentar, '"Definerer skjema for pÃ¥fÃ¸lgende patcher"', "Kommentar")
             Assert.assertEquals(entries[expressionNo].value.findAll {it instanceof Statement}.size(), 1, "Forventet antall statements")
 
             expressionNo++
@@ -303,9 +303,9 @@ CREATE TABLE TEST_TABLE2;
     }
 
     /**
-     * Verifiserer at indexer blir kjørt inn igjen uavhengig av {@link DatabasePatcher.PatchInfo#indexesInSyncWithPatch}
+     * Verifiserer at indexer blir kjÃ¸rt inn igjen uavhengig av {@link DatabasePatcher.PatchInfo#indexesInSyncWithPatch}
      *
-     * SKTOOLS-112: Endrer betydning av dette flagget til å overse dette. Dette endrer da den opprinnelige virkemåten
+     * SKTOOLS-112: Endrer betydning av dette flagget til Ã¥ overse dette. Dette endrer da den opprinnelige virkemÃ¥ten
      * i implementasjon ifra matrikkelen.
      */
     @Test
@@ -369,7 +369,7 @@ ${testContext.PATCH_03}
     }
 
     /**
-     * Verifiserer at patchblokker av type {@link PatchtypeKode#ALWAYS} alltid blir kjørt.
+     * Verifiserer at patchblokker av type {@link PatchtypeKode#ALWAYS} alltid blir kjÃ¸rt.
      */
     @Test
     public void testAlwaysPatchblokkPatching() {
@@ -398,7 +398,7 @@ ${testContext.PATCH_03}
         assertPatchInfoRow(sql.firstRow('select * from PATCHINFO'), '1.0', 3, true, "initiell patchinfo")
 
 
-        //STEG: Patcher opp basen igjen - forventer da at kun patch#2 blir kjørt  da denne er tagget som ALWAYS
+        //STEG: Patcher opp basen igjen - forventer da at kun patch#2 blir kjÃ¸rt  da denne er tagget som ALWAYS
         databasePatcher.patch(patchFile.toString());
         sql.firstRow('''select count(*) from TEST_TABLE''').with { def row ->
             Assert.assertEquals(row[0], 3, 'Forventet antall rader')
@@ -409,7 +409,7 @@ ${testContext.PATCH_03}
 
 
     /**
-     * SKTOOLS-114: PatchInfo skal oppdateres for ALWAYS når disse er nye
+     * SKTOOLS-114: PatchInfo skal oppdateres for ALWAYS nÃ¥r disse er nye
      */
     @Test
     public void testAlwaysPatchblokkPatchingUpdatedPatchInfo() {

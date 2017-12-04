@@ -25,11 +25,11 @@ import java.util.HashMap;
 import java.util.concurrent.Callable;
 
 /**
- * Dokumentasjonsgenerering av {@code *WSBean.java} - JAX-WS implementasjon på server.
+ * Dokumentasjonsgenerering av {@code *WSBean.java} - JAX-WS implementasjon pÃ¥ server.
  *
  * Til hvert registrert {@link SourceSet} utivider pluginet med vedhengsfunksjonalitet; se {@link WsDocGroupContainer}
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 1.0
  */
 public class WsDocGenPlugin implements Plugin<ProjectInternal> {
@@ -62,7 +62,7 @@ public class WsDocGenPlugin implements Plugin<ProjectInternal> {
             public void execute(final SourceSet sourceSet) {
                 final WsDocGroupContainer container = new WsDocGroupContainer(sourceSet, convention);
 
-                //hekter inn utvidelser på source settet
+                //hekter inn utvidelser pÃ¥ source settet
                 ((HasConvention) sourceSet).getConvention().getPlugins().put(CONVENTION_NAME, new WsDocSourceSetExtension(container));
 
                 container.all(new Action<WsDocGroup>() {

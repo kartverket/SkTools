@@ -8,7 +8,7 @@ import java.io.File;
 /**
  * Plugin extension for {@link org.gradle.api.tasks.SourceSetOutput}
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 class FilterResourcesSourceSetOutputConvention {
     final FilterResourcesTask filterResources;

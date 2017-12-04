@@ -5,10 +5,10 @@ import org.xml.sax.SAXException
 import org.xml.sax.SAXParseException
 
 /**
- * Resolver DTD filer uten å laste ned disse ifra internett ({@code systemId})
+ * Resolver DTD filer uten Ã¥ laste ned disse ifra internett ({@code systemId})
  *
  * @since 1.3 - ny grunnbok sprint 30
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 class XmlTestUtils {
 

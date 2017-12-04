@@ -15,7 +15,7 @@ import java.io.File;
 import java.util.List;
 
 /**
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 2.0
  */
 public class WsDocCompileTask extends JavaCompile {

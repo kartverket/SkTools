@@ -13,7 +13,7 @@ import static org.gradle.api.Task.TASK_TYPE
  * Convention object for Oracle database tools
  *
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 1.0
  */
 class OracleTasksConvention extends AbstractDatabaseConvention {
@@ -66,7 +66,7 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
         }
 
         // setter konvensjonelle verdier
-        // todo: properties med prefix kan trolig utgå (etter endring i versjon 1.2)..
+        // todo: properties med prefix kan trolig utgÃ¥ (etter endring i versjon 1.2)..
         project.afterEvaluate {
             if (this.properties.containsKey("${propertyPrefix}db_username")) {
 

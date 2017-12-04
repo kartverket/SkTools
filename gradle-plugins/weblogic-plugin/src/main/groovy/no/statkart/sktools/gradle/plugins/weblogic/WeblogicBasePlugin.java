@@ -9,18 +9,18 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.specs.Spec;
 
 /**
- * Setter opp {@link org.gradle.api.artifacts.Configuration} for weblogic bibliotek og/eller avhengigheter som skal være providede.
+ * Setter opp {@link org.gradle.api.artifacts.Configuration} for weblogic bibliotek og/eller avhengigheter som skal vÃ¦re providede.
  *
  * <p>
- * Pluginen setter {@link WeblogicTaskInterface#setWeblogicClasspath} conventional verdi på alle subtyper av denne
+ * Pluginen setter {@link WeblogicTaskInterface#setWeblogicClasspath} conventional verdi pÃ¥ alle subtyper av denne
  * task som blir lagt til prosjektet.
  *
  * <p>
  * <!-- SKTOOLS-19: Provided configuration -->
- * Dersom en ønsker å publisere weblogic spesifike artifakter som war filer mm så bør disse kobles til egen configuration.
- * Det er IKKE anbefalt å benytte {@link WeblogicBasePlugin#WEBLOGIC_PROVIDED_CONFIGURATION_NAME} til dette.
+ * Dersom en Ã¸nsker Ã¥ publisere weblogic spesifike artifakter som war filer mm sÃ¥ bÃ¸r disse kobles til egen configuration.
+ * Det er IKKE anbefalt Ã¥ benytte {@link WeblogicBasePlugin#WEBLOGIC_PROVIDED_CONFIGURATION_NAME} til dette.
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 public class WeblogicBasePlugin implements Plugin<Project> {
 

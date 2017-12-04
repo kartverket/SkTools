@@ -10,7 +10,7 @@ import no.statkart.sktools.gradle.testutils.filewriter.XjcTestutilFilewriter
 /**
  * Test av {@link GrunnbokDocPlugin}
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 class GrunnbokDocPluginTest {
 
@@ -58,7 +58,7 @@ class GrunnbokDocPluginTest {
             } //end configure
 
 
-        //utfører xjc task ihht til konfigurasjon
+        //utfÃ¸rer xjc task ihht til konfigurasjon
         projectHelper.executeTask('testGrunnbokDocPlugin')
 
 

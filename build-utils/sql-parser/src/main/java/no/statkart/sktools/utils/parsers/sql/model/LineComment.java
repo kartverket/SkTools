@@ -3,7 +3,7 @@ package no.statkart.sktools.utils.parsers.sql.model;
 /**
  * Representerer kommentar i sql filer. En linje som starter med -- og ikke ligger inne i en statement betraktes som kommentar
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 1.2
  */
 public class LineComment extends Comment {

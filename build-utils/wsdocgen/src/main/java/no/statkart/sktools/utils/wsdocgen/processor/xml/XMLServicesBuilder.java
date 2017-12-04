@@ -5,7 +5,7 @@ import javax.annotation.processing.ProcessingEnvironment;
 
 /**
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 1.3
  */
 public class XMLServicesBuilder {

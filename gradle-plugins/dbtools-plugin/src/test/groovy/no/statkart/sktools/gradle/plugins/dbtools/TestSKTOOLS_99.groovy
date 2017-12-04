@@ -14,7 +14,7 @@ import static org.testng.Assert.assertNotNull
  * SKTOOLS-99: tester bruk av {@code taskSequence ( .. )} og {@link SequenceTask}
  *
  * @since 1.3 - ny grunnbok sprint 30
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 class TestSKTOOLS_99 {
 

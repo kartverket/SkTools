@@ -8,11 +8,11 @@ import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 
 /**
- * Task for kjøring av export-script for oracle baser
+ * Task for kjÃ¸ring av export-script for oracle baser
  *
- * Det forutsettes at Oracle sqlClient er installer og finnes tilgjengelig på path.
+ * Det forutsettes at Oracle sqlClient er installer og finnes tilgjengelig pÃ¥ path.
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 1.0
  */
 class OracleExportTask extends ConventionTask {

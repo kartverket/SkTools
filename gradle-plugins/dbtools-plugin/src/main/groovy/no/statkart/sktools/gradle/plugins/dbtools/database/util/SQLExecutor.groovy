@@ -4,8 +4,8 @@ import groovy.sql.Sql
 import groovy.transform.CompileStatic
 
 /*
- For at denne biten kan fungere, må jdbc driveren finnes i classpath og være registrert i kjørende classloader.
- Registrering av denne i Gradle kan gjøres på følgende måte:
+ For at denne biten kan fungere, mÃ¥ jdbc driveren finnes i classpath og vÃ¦re registrert i kjÃ¸rende classloader.
+ Registrering av denne i Gradle kan gjÃ¸res pÃ¥ fÃ¸lgende mÃ¥te:
 
  Class driver = loader.loadClass('oracle.jdbc.OracleDriver')
 
@@ -24,10 +24,10 @@ import java.sql.SQLException
 /**
  * Eksekverer sql statements til basen.
  *
- * Gjør kall til databasen med statements parset ifra enten fil eller streng.
+ * GjÃ¸r kall til databasen med statements parset ifra enten fil eller streng.
  *
  * @since 1.2
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 class SQLExecutor {
     protected static Logger logger = Logging.getLogger(SQLExecutor.class);

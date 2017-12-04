@@ -17,17 +17,17 @@ import org.gradle.api.tasks.bundling.War
 import org.gradle.plugins.ide.idea.IdeaPlugin
 
 /**
- * Baserer seg på WeblogicBasePlugin og JavaBasePlugin.
+ * Baserer seg pÃ¥ WeblogicBasePlugin og JavaBasePlugin.
  *
  * <p>
  * Dersom JavaPlugin er aktivert vil det arves ifra main.java konfigurasjonen.
- *  - Dette vil da si at alle dependencies for main vil bli arvet og lagt på weblogic sin.
+ *  - Dette vil da si at alle dependencies for main vil bli arvet og lagt pÃ¥ weblogic sin.
  *
  * <p>
  * Pluginen konfigurerer opp source set med kjente konfigurasjoner. Se {@link SourceSet} for dokumentasjon.
  *
  * <p>
- * Følgende kofigurasjoner defineres:
+ * FÃ¸lgende kofigurasjoner defineres:
  * <ul>
  *   <li><code>weblogicCompile</code> - evt exstra jar libs
  *   <li><code>weblogicRuntime</code> - evt exstra jar libs
@@ -39,8 +39,8 @@ import org.gradle.plugins.ide.idea.IdeaPlugin
  *
  *
  * @since 1.0
- * @author Thor Åge Eldby
- * @author Leif Lislegård
+ * @author Thor Ã…ge Eldby
+ * @author Leif LislegÃ¥rd
  * @author Tor Egil R. Strand
  */
 class WeblogicWsWarPlugin implements Plugin<Project> {
@@ -119,7 +119,7 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
 
 
         if (wlsVersion.startsWith("10.3")) {
-            //tidligere prosjektoppsett splittet ikke weblogic classpath ned i forskjellige deler og benyttet her samtlige jarfiler som var nødvendig for å kompilere i IntellJ
+            //tidligere prosjektoppsett splittet ikke weblogic classpath ned i forskjellige deler og benyttet her samtlige jarfiler som var nÃ¸dvendig for Ã¥ kompilere i IntellJ
             if (wlsVersion.startsWith("10.3.6")) {
                 return project.files(
                         "${WEBLOGIC_HOME}/wlserver_10.3/server/lib/weblogic.jar",
@@ -178,7 +178,7 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
 
     private static void configureIdea(final Project project, final SourceSet weblogicSourceSet) {
         project.plugins.withType(IdeaPlugin.class) {
-            project.afterEvaluate { // Så vi vet at det ikke blir lagt på noe JavaPlugin senere. Hvis det skjer, så overskriver IdeaPlugin scope-greiene
+            project.afterEvaluate { // SÃ¥ vi vet at det ikke blir lagt pÃ¥ noe JavaPlugin senere. Hvis det skjer, sÃ¥ overskriver IdeaPlugin scope-greiene
                 project.idea.module {
                     sourceDirs += weblogicSourceSet.allSource.srcDirs
 
@@ -219,7 +219,7 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
         // following duplicate files will be excluded (first one into archive stays)
         war.setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE); //SKTOOLS-121
 
-        // Må ta inn output fra genTask eksplisitt
+        // MÃ¥ ta inn output fra genTask eksplisitt
         war.into('WEB-INF/classes') {
             from genTask.classesDir
         }

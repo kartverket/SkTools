@@ -15,13 +15,13 @@ class SQLStatementParserTest {
     /**
      * Tester parsing av normale SQL-setninger.
      *
-     * Følgende momenter blir testet:
+     * FÃ¸lgende momenter blir testet:
      * <ul>
      *     <li>terminerende tegn tas bort
      *     <li>blanke tegn blir beholdt
      *     <li>enkeltlinje setninger
      *     <li>multilinje setninger
-     *     <li>flere setninger på en linje
+     *     <li>flere setninger pÃ¥ en linje
      * </ul>
      */
     @Test
@@ -62,7 +62,7 @@ stmt1;  stmt2;stmt3
     /**
      * Tester parsing av kommentarer.
      *
-     * Kommentarer blir strippet vekk, også innline kommentarer.
+     * Kommentarer blir strippet vekk, ogsÃ¥ innline kommentarer.
      */
     @Test
     void testParsing_comments() {
@@ -79,7 +79,7 @@ select --slett;
         Assert.assertEquals(list[i].lineNumber, 1, 'linjenr for kommentar')
         i++
         Assert.assertEquals(list[i].sql.trim(), 'select * from dual')
-        Assert.assertEquals(list[i].lineNumber, 2, 'linjenr for første statement')
+        Assert.assertEquals(list[i].lineNumber, 2, 'linjenr for fÃ¸rste statement')
         i++
         Assert.assertEquals(list.size(), i, 'antall statements')
 
@@ -354,14 +354,14 @@ ${statement1}
 
     /**
      * SKTOOLS-150: parsing av kommentarer inlinet i sql blokker
-     * SKTOOLS-150: parsing av kommentarer før PL/SQL blokker
+     * SKTOOLS-150: parsing av kommentarer fÃ¸r PL/SQL blokker
      */
     @Test
     void testParsing_SQL_samme_linje() {
         StringReader stringReader = new StringReader('''\
 -- PATCH DATA DB.VERSION="2.4" PATCH.NO="40" "GBOK-7554: Fjerner konverteringsmodul: BUBBLESTATUS felt"
-ALTER TABLE RETTSSTIFTELSE DROP COLUMN BUBBLESTATUS; /* fjerner også IX_RETTST_BUBBLEST */
-ALTER TABLE REGISTERENHETSRETTSANDEL DROP COLUMN BUBBLESTATUS; /* fjerner også IX_REGRETTSANDEL_BUBBLEST */
+ALTER TABLE RETTSSTIFTELSE DROP COLUMN BUBBLESTATUS; /* fjerner ogsÃ¥ IX_RETTST_BUBBLEST */
+ALTER TABLE REGISTERENHETSRETTSANDEL DROP COLUMN BUBBLESTATUS; /* fjerner ogsÃ¥ IX_REGRETTSANDEL_BUBBLEST */
 
 -- PATCH INDEX DB.VERSION="3.12" PATCH.NO="2" "MAT-13789: Fonetiske indexer tilpasset Oracle 12cR2"
 /* info: inline kommentar */

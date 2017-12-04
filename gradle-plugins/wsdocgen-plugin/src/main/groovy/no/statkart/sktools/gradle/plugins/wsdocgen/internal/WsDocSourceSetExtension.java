@@ -7,7 +7,7 @@ import org.gradle.util.ConfigureUtil;
  * Vedhengsklasse til {@link org.gradle.api.tasks.SourceSet SourceSet}
  *
  * @since 2.0
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 public class WsDocSourceSetExtension {
     private final WsDocGroupContainer groups;

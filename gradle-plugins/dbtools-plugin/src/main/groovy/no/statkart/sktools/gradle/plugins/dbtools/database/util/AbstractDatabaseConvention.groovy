@@ -194,7 +194,7 @@ abstract class AbstractDatabaseConvention {
 
 
     /**
-     * Action for filtrering av sqlFile satt på task
+     * Action for filtrering av sqlFile satt pÃ¥ task
      */
     private Closure filterClosure = { AbstractSQLTask task ->
 

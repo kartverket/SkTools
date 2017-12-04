@@ -21,7 +21,7 @@ import org.gradle.api.tasks.compile.CompileOptions;
  *
  *
  * @since 1.1
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInterface {
     protected static final Logger logger = Logging.getLogger(WeblogicGenClientTask.class);
@@ -69,10 +69,10 @@ class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInter
 
         generator.gen(getOptions(), getWebServiceConfig());
 
-        //Endrer generert kildekode til å laste WSDLer ifra classpath (jar fil) i stedet for generert søppel URL
+        //Endrer generert kildekode til Ã¥ laste WSDLer ifra classpath (jar fil) i stedet for generert sÃ¸ppel URL
         generator.fixResourceLoaders();
 
-        //SKTOOLS-79: Må også slette noen midlertidige filer som ikke ellers blir slettet fort nok til at Gradle ikke plukker dem opp som output-filer den senere savner
+        //SKTOOLS-79: MÃ¥ ogsÃ¥ slette noen midlertidige filer som ikke ellers blir slettet fort nok til at Gradle ikke plukker dem opp som output-filer den senere savner
         generator.deleteTemporaryFiles();
     }
 

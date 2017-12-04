@@ -19,8 +19,8 @@ import java.util.regex.Matcher;
 
 /**
  * Eksekverer en sql patch fil som er inndelt i patchblokker via patch kommentar direktiver. Patchblokker
- * som er eldre enn database nåværende patchversjon blir ikke utført. Hvis databasen har satt et flagg om
- * at indexer ikke er i synk blir alle index patch blokker utført. Hvis indexer er i sync blir indexer i
+ * som er eldre enn database nÃ¥vÃ¦rende patchversjon blir ikke utfÃ¸rt. Hvis databasen har satt et flagg om
+ * at indexer ikke er i synk blir alle index patch blokker utfÃ¸rt. Hvis indexer er i sync blir indexer i
  * eldre patch blokker skippet.
  */
 public class DatabasePatcher {
@@ -36,7 +36,7 @@ public class DatabasePatcher {
 
     boolean singleStepPatches = false;
 
-    //SKTOOLS-84: error håndtering
+    //SKTOOLS-84: error hÃ¥ndtering
     boolean failOnError, failOnWarning;
 
 
@@ -47,7 +47,7 @@ public class DatabasePatcher {
     /**
      * Mulighet for programatisk konfigurering av properties.
      *
-     * Dette kan feks gjøres ved å selv opprette en Connection instans, eller å sette {@code JDBCHelper.connectionProperties}
+     * Dette kan feks gjÃ¸res ved Ã¥ selv opprette en Connection instans, eller Ã¥ sette {@code JDBCHelper.connectionProperties}
      * @since 1.2
      */
     protected Connection createConnection() throws SQLException {
@@ -133,7 +133,7 @@ public class DatabasePatcher {
    ;
 
    /**
-    * Angir nåverende patchinfo i databasen
+    * Angir nÃ¥verende patchinfo i databasen
     */
    private static class PatchInfo {
       public static final String DEFAULT_MODULE = "null";
@@ -354,9 +354,9 @@ public class DatabasePatcher {
     * Patcher eksisterende database i henhold til patchfil og eksisterende patcher som allerede er installert i databasen
     *
     * @param patchFilePath filsti for patchfil som skal eksekveres
-    * @param synchToPatchlevel dersom {@code true} så kjøres patcher frem til patchnivå om igjen.
-    * @param patchtypes filter av patchtyper som skal påføres. {@link PatchtypeKode#isTypeOf(PatchtypeKode)}
-    * @return antall patchblokker påført
+    * @param synchToPatchlevel dersom {@code true} sÃ¥ kjÃ¸res patcher frem til patchnivÃ¥ om igjen.
+    * @param patchtypes filter av patchtyper som skal pÃ¥fÃ¸res. {@link PatchtypeKode#isTypeOf(PatchtypeKode)}
+    * @return antall patchblokker pÃ¥fÃ¸rt
     */
    public int patch_impl(String patchFilePath, boolean synchToPatchlevel, Collection<PatchtypeKode> patchtypes) {
       Connection con = null;
@@ -368,9 +368,9 @@ public class DatabasePatcher {
 
          con = createConnection();
          PatchInfo currentPatchInfo = getOrCreatePatchInfo(con, getDefaultPatchInfo());
-         logger.info("Nåværende patchinformasjon: " + currentPatchInfo);
+         logger.info("NÃ¥vÃ¦rende patchinformasjon: " + currentPatchInfo);
 
-         // Første entry inneholder min version.
+         // FÃ¸rste entry inneholder min version.
          PatchVersion minVersion = patches.entrySet().iterator().next().getKey();
          patches.remove(minVersion);
          if( currentPatchInfo.patchVersion.compareTo(minVersion) < 0 ) {
@@ -378,7 +378,7 @@ public class DatabasePatcher {
          }
 
          if( singleStepPatches ) {
-            logger.info("Kjøre patcher i singlestep mode. Kun en patch blir tillagt per eksekvering...");
+            logger.info("KjÃ¸re patcher i singlestep mode. Kun en patch blir tillagt per eksekvering...");
          }
 
          int executedPatchesCount = 0;
@@ -399,17 +399,17 @@ public class DatabasePatcher {
                      }
                  }
 
-                 // Ny patch. Utføres alltid.
+                 // Ny patch. UtfÃ¸res alltid.
                  executePatchBlock(con, p, entry.getValue(), newPatch);
                  executedPatchesCount++;
-                 if (singleStepPatches) { //stepper også igjenom ALWAYS patcher
+                 if (singleStepPatches) { //stepper ogsÃ¥ igjenom ALWAYS patcher
                      break;
                  }
 
              } else if (p.patchtype == PatchtypeKode.ALWAYS) {
-                 // ALWAYS patch. Utføres alltid.
+                 // ALWAYS patch. UtfÃ¸res alltid.
                  executePatchBlock(con, p, entry.getValue(), newPatch);
-                 executedPatchesCount = executedPatchesCount; //oppdateres ikke antall eksekverte patchblokker da denne er såpass spesiell
+                 executedPatchesCount = executedPatchesCount; //oppdateres ikke antall eksekverte patchblokker da denne er sÃ¥pass spesiell
              }
          }
 
@@ -429,15 +429,15 @@ public class DatabasePatcher {
        SqlExecutor sqlExecutor = buildSqlExecutor();
        try {
          if( isNewPatch ) {
-            logger.info("Utfører patchblokk: " + p + ((p.kommentar == null) ? "" : " " + p.kommentar));
+            logger.info("UtfÃ¸rer patchblokk: " + p + ((p.kommentar == null) ? "" : " " + p.kommentar));
             sqlExecutor.runScript(con, patchBlock);
             con.commit();
             updatePatchInfo(con, p);
          } else {
              if (p.patchtype != PatchtypeKode.ALWAYS) {
-                 logger.info(String.format("Utfører %s patchblokk på nytt. Noen statements kan feile : %s", p.patchtype.name, p));
+                 logger.info(String.format("UtfÃ¸rer %s patchblokk pÃ¥ nytt. Noen statements kan feile : %s", p.patchtype.name, p));
              } else {
-                 logger.info("Utfører patchblokk: " + p + ((p.kommentar == null) ? "" : " " + p.kommentar));
+                 logger.info("UtfÃ¸rer patchblokk: " + p + ((p.kommentar == null) ? "" : " " + p.kommentar));
              }
              sqlExecutor.runScript(con, patchBlock);
              con.commit();
@@ -480,7 +480,7 @@ public class DatabasePatcher {
       result.put(minDBVersion, null);
       lastPatchVersion = null;
 
-      // Skip kommentar linjer frem til første patchblock
+      // Skip kommentar linjer frem til fÃ¸rste patchblock
       while( i < scriptLines.size() && isOrdinaryComment(scriptLines.get(i)) ) {
          i++;
       }
@@ -493,12 +493,12 @@ public class DatabasePatcher {
               if (PatchtypeKode.ALWAYS.isTypeOf(patchVersion.patchtype)) {
                   //SKTOOLS-77: ALWAYS patcher kan ha patchnummer mindre enn db.min.version
               } else {
-                  throw configurationException(scriptLines.get(i), String.format("Patchblokk må ha høyere versjonsnummer enn minversion (%s ).", minDBVersion));
+                  throw configurationException(scriptLines.get(i), String.format("Patchblokk mÃ¥ ha hÃ¸yere versjonsnummer enn minversion (%s ).", minDBVersion));
               }
           }
 
           if (lastPatchVersion != null && lastPatchVersion.compareTo(patchVersion) >= 0) {
-              throw configurationException(scriptLines.get(i), String.format("Patchblokker må ha stigende versjonsnummer i fil (forrige var: %s ).", lastPatchVersion));
+              throw configurationException(scriptLines.get(i), String.format("Patchblokker mÃ¥ ha stigende versjonsnummer i fil (forrige var: %s ).", lastPatchVersion));
           }
 
          lastPatchVersion = patchVersion;
@@ -515,7 +515,7 @@ public class DatabasePatcher {
           if( isMinDbVersion(scriptLines.get(i)) ) {
               throw configurationException(scriptLines.get(i), "'-- PATCH DB.MIN.VERSION=\"<string>\" allerede spesifisert.");
          } else if( isStatement(scriptLines.get(i)) ) {
-              throw configurationException(scriptLines.get(i), String.format("SQL tilhører ingen patchblokk: %s", statementAsText));
+              throw configurationException(scriptLines.get(i), String.format("SQL tilhÃ¸rer ingen patchblokk: %s", statementAsText));
          } else {
               throw configurationException(scriptLines.get(i), String.format("Feil i '-- PATCH direktiv': %s", statementAsText));
          }
@@ -531,7 +531,7 @@ public class DatabasePatcher {
     /**
     * Returnerer true hvis linjen er en sql kommando
     *
-     * @param expression linje som kan være av typen kommando
+     * @param expression linje som kan vÃ¦re av typen kommando
      */
    private static boolean isStatement(Expression expression) {
       return expression instanceof Statement;
@@ -540,7 +540,7 @@ public class DatabasePatcher {
    /**
     * Parser en kommentarlinje med format: {@code -- PATCH <type> DB.VERSION="<string>" PATCH.NO="<number>" [<kommentar>]}
     *
-    * @param expression linje som kan være av typen kommentar
+    * @param expression linje som kan vÃ¦re av typen kommentar
     */
    private static PatchVersion parsePatchVersion(Expression expression) {
        if (expression instanceof Comment) {
@@ -599,7 +599,7 @@ public class DatabasePatcher {
    /**
     * Returnerer true hvis linjen er en kommentar som starter med: '-- PATCH DB.MIN.VERSION..."
     *
-    * @param expression linje som kan være av typen kommentar
+    * @param expression linje som kan vÃ¦re av typen kommentar
     */
    private static boolean isMinDbVersion(Expression expression) {
        if (expression instanceof Comment) {
@@ -613,7 +613,7 @@ public class DatabasePatcher {
    /**
     * Returnerer {@code true} hvis linjen er en kommentar som ikke starter med: {@code -- PATCH}...
     *
-    * @param expression linje som kan være av typen kommentar
+    * @param expression linje som kan vÃ¦re av typen kommentar
     */
    private static boolean isOrdinaryComment(Expression expression) {
        if (expression instanceof Comment) {
@@ -626,7 +626,7 @@ public class DatabasePatcher {
    }
 
    /**
-    * Henter ut nåværende PatchVersion for en database. Hvis databasen ikke har noe PatchVersion
+    * Henter ut nÃ¥vÃ¦rende PatchVersion for en database. Hvis databasen ikke har noe PatchVersion
     * tabell opprettes en.
     *
     * @param con connection
@@ -638,7 +638,7 @@ public class DatabasePatcher {
       ResultSet rs = null;
       try {
 
-          //finner ut om tabell finnes i databasen ved å spørre på metadata
+          //finner ut om tabell finnes i databasen ved Ã¥ spÃ¸rre pÃ¥ metadata
           {
               rs = con.getMetaData().getTables(con.getCatalog(), schema, "PATCHINFO", new String[]{"TABLE"});
               boolean patchTableExists = rs.next();
@@ -648,7 +648,7 @@ public class DatabasePatcher {
               }
           }
 
-          //finner ut om en evt trenger å utvide tabell
+          //finner ut om en evt trenger Ã¥ utvide tabell
           {
               rs = con.getMetaData().getColumns(con.getCatalog(), schema, "PATCHINFO", null);
               boolean hasComponentColumn = false;
@@ -706,7 +706,7 @@ public class DatabasePatcher {
 
 
     /**
-     * Henter ut nåværende PatchVersion for en database.
+     * Henter ut nÃ¥vÃ¦rende PatchVersion for en database.
      *
      * @param con connection
      * @return patch info for databasen.

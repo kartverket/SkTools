@@ -32,7 +32,7 @@ import java.util.Set;
 /**
  * Steg for signering av alle jar avhengigheter.
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @author Tor Egil R. Strand
  */
 public class JarSigner extends ConventionTask {
@@ -67,7 +67,7 @@ public class JarSigner extends ConventionTask {
     }
 
     /**
-     * Signerer jar filer, eller henter cachede filer basert på lagrede hashverdier.
+     * Signerer jar filer, eller henter cachede filer basert pÃ¥ lagrede hashverdier.
      * Filer blir kopiert til {@link #getCacheDir()} med undermappe lik hashverdi til sertifikatet
      * </br>
      */
@@ -106,7 +106,7 @@ public class JarSigner extends ConventionTask {
 
                 File signedJarFile = null;
 
-                //forsøker cache
+                //forsÃ¸ker cache
                 FileHashIdent cachedFileIdent = signedArtifacts.get(unsignedJar.getName());
                 if (cachedFileIdent != null) {
                     if (cachedFileIdent.equals(jarFileIdent)) {
@@ -122,14 +122,14 @@ public class JarSigner extends ConventionTask {
                     signedJarFile = new File(certDirectory, unsignedJar.getName());
 
 
-                    //kopiere via URL for å overkomme evt symlink filer.
+                    //kopiere via URL for Ã¥ overkomme evt symlink filer.
                     FileUtils.copyURLToFile(unsignedJar.toURI().toURL(), tempFile);
 
                     //signing jar
                     try {
                         signJar(tempFile, manifestAddendum);
 
-                        signedJarFile.delete(); //SKIF-209: sletter evt eksisterende fil før move..
+                        signedJarFile.delete(); //SKIF-209: sletter evt eksisterende fil fÃ¸r move..
                         tempFile.renameTo(signedJarFile);
 
                     } finally {

@@ -70,7 +70,7 @@ import java.util.Set;
 }
  </pre>
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 1.3 - ny grunnbok sprint 30
  */
 @SupportedAnnotationTypes(value= {"javax.jws.WebService"})

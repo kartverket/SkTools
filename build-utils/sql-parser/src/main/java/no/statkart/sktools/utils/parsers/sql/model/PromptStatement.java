@@ -3,7 +3,7 @@ package no.statkart.sktools.utils.parsers.sql.model;
 /**
  * Represents a PROMPT comment statement
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 0.1
  */
 public class PromptStatement extends Comment {

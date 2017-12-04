@@ -7,7 +7,7 @@ import javax.annotation.processing.ProcessingEnvironment;
 /**
  * Factory for xml buildere
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 1.3
  */
 public class XMLBuilderFactory {

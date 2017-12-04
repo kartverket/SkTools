@@ -7,7 +7,7 @@ import org.gradle.process.JavaExecSpec
 /**
  * SKTOOLS-87 - Task for setting av siste eksisterende patchversjon.
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 1.3
  */
 @SuppressWarnings("UnnecessaryQualifiedReference")
@@ -36,7 +36,7 @@ class DefineLatestPatchVersionTask extends PatchTask {
         super.validate();
 
         if (getSqlFile() == null) {
-            throw new Exception("sqlFile må angis!")
+            throw new Exception("sqlFile mÃ¥ angis!")
         }
 
         if (!getSqlFile().exists()) {

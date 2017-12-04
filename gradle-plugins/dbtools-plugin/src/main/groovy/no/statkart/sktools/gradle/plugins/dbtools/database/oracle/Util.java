@@ -1,7 +1,7 @@
 package no.statkart.sktools.gradle.plugins.dbtools.database.oracle;
 
 /**
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since Ny Grunnbok Sprint 39
  */
 public class Util {

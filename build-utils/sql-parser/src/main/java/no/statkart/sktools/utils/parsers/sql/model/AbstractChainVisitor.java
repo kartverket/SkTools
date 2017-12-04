@@ -3,7 +3,7 @@ package no.statkart.sktools.utils.parsers.sql.model;
 /**
  * Felleslogikk for kjedede-visitorer
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 0.1
  */
 public abstract class AbstractChainVisitor<H extends Expression> implements ExpressionVisitor<H> {

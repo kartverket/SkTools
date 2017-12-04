@@ -26,7 +26,7 @@ import static javax.lang.model.type.TypeKind.ERROR;
 import static javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI;
 
 /**
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 1.3
  */
 class XMLTypeBuilder {
@@ -157,7 +157,7 @@ class XMLTypeBuilder {
 
 
     /**
-     * Forsøker å finne namespace til objekt ved å se i package-info
+     * ForsÃ¸ker Ã¥ finne namespace til objekt ved Ã¥ se i package-info
      * <p/>
      * For kjente typer returneres namespace for disse.
      */
@@ -166,7 +166,7 @@ class XMLTypeBuilder {
     }
 
     /**
-     * Forsøker å finne namespace til objekt ved å se i package-info
+     * ForsÃ¸ker Ã¥ finne namespace til objekt ved Ã¥ se i package-info
      * <p/>
      * For kjente typer returneres namespace for disse.
      */

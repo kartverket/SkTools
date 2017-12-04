@@ -95,7 +95,7 @@ class WsClientGenerator {
 
                 logger.info('Calling clientgen with attributes = ' + attributes)
                 def result = ant.clientgen(attributes) {
-                    //nested <fileset> fungerer ikke (testet for WLS 10.3.1), må angi en og en wsdl-fil
+                    //nested <fileset> fungerer ikke (testet for WLS 10.3.1), mÃ¥ angi en og en wsdl-fil
                 }
             }
         }
@@ -109,7 +109,7 @@ class WsClientGenerator {
 
     /**
      * Retter loading av wsdl filer ifra webstart klienter osv.
-     * Rettinger blir påført i kildekoden.
+     * Rettinger blir pÃ¥fÃ¸rt i kildekoden.
      */
     void fixResourceLoaders() {
         project.getAnt().replaceregexp {
@@ -131,9 +131,9 @@ class WsClientGenerator {
     }
 
     /**
-     * Det etterlates noen midlertidige filer i output-katalogen. Disse slettes automatisk (kanskje når Java-prosessen
+     * Det etterlates noen midlertidige filer i output-katalogen. Disse slettes automatisk (kanskje nÃ¥r Java-prosessen
      * er ferdig), men innen da har Gradle sett dem og registrert dem som output-filer. Siden de er vekk ved neste
-     * kjøring anser Gradle tasken som ikke up-to-date.
+     * kjÃ¸ring anser Gradle tasken som ikke up-to-date.
      */
     void deleteTemporaryFiles() {
         def dontWantThese = project.fileTree(dir: getDestinationDir(), include: 'META-INF/wsdls/*', exclude: 'META-INF/wsdls/*.*')
@@ -143,7 +143,7 @@ class WsClientGenerator {
 
     /**
      * Samler alle exceptions for services til felles pakke.
-     * Dette da vi ønsker at den genererte klientkoden skal gjenspeile strukturen til serveren, samt at man ønsker å gjenbruke exception klassene.
+     * Dette da vi Ã¸nsker at den genererte klientkoden skal gjenspeile strukturen til serveren, samt at man Ã¸nsker Ã¥ gjenbruke exception klassene.
      */
     protected void reuseExceptions(File genSourceDir, ExceptionConfig exceptionConfig) {
         String packageString = exceptionConfig.getPackageString()
@@ -162,7 +162,7 @@ class WsClientGenerator {
             FileUtils.copyFileToDirectory(file, exceptionPackageDir)
             file.delete()
 
-            //kjører regexp replace på package statement for flyttet fil
+            //kjÃ¸rer regexp replace pÃ¥ package statement for flyttet fil
             relocatedFile.text = relocatedFile.text.replaceFirst(/(?ms)package[^;]+/, "package " + packageString)
 
         }

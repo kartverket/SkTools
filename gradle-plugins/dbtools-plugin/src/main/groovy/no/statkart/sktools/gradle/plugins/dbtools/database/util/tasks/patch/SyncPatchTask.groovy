@@ -6,7 +6,7 @@ import org.gradle.process.JavaExecSpec
 /**
  * SKTOOLS-86 Task for re-patching av schema over JDBC.
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 1.3
  */
 @SuppressWarnings("UnnecessaryQualifiedReference")

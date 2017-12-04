@@ -7,10 +7,10 @@ import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 
 /**
- * Task for å stoppe en applikasjon.
+ * Task for Ã¥ stoppe en applikasjon.
  *
  * @since 1.3
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @author Tor Egil R. Strand
  */
 class WeblogicStopTask extends AbstractWeblogicDeployTask {

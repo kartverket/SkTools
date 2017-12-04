@@ -277,7 +277,7 @@ class FilterResourcesPluginTest {
                 test {
                     filterResources {
                         srcDir 'src/test/resources'
-                        include '*.txt' //kun et utvalg av test resources skal filtreres, resten skal resources håndtere
+                        include '*.txt' //kun et utvalg av test resources skal filtreres, resten skal resources hÃ¥ndtere
                     }
                     output.filterResourcesOutput 'gen/test/resources'
                 }
@@ -304,7 +304,7 @@ class FilterResourcesPluginTest {
         projectHelper.assertFileExists("build/classes/main/file1.class")
         projectHelper.assertFileExists("build/resources/test/file2.nofilter")
 
-        //tester tilsvarende på SourceSet
+        //tester tilsvarende pÃ¥ SourceSet
         Project project = projectHelper.project
         assert !project.sourceSets.main.allJava.contains(projectHelper.assertFileExists("src/main/java/file1.txt"))
         assert !project.sourceSets.test.resources.contains(projectHelper.assertFileExists("src/test/resources/file2.txt"))

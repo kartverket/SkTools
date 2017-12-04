@@ -10,7 +10,7 @@ import org.gradle.api.tasks.TaskAction
 /**
  * Task for executing av statements over JDBC.
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 1.0
  */
 public class SQLTask extends AbstractSQLTask {
@@ -53,7 +53,7 @@ public class SQLTask extends AbstractSQLTask {
         validateAbstractSQLTask()
 
         if (getSqlFile() == null && getSqlString() == null) {
-            throw new Exception("sqlFile eller sqlString må angis!")
+            throw new Exception("sqlFile eller sqlString mÃ¥ angis!")
         }
 
         if (getSqlFile() != null) {
@@ -68,7 +68,7 @@ public class SQLTask extends AbstractSQLTask {
 
         if (getSqlString() != null) {
             if (getSqlString().trim().isEmpty()) {
-                throw new Exception("sqlString kan ikke være tom! sqlString='${getSqlString()}'")
+                throw new Exception("sqlString kan ikke vÃ¦re tom! sqlString='${getSqlString()}'")
             }
 
             if (getSqlFile() != null) {

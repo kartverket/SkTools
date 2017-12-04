@@ -1,7 +1,7 @@
 package no.statkart.sktools.utils.parsers.sql.model;
 
 /**
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 0.1
  */
 public abstract class Statement extends AbstractExpression {

@@ -12,9 +12,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Hjelpeklasse for å finne navn og versjon utifra filnavn til jar-biblioteker.
+ * Hjelpeklasse for Ã¥ finne navn og versjon utifra filnavn til jar-biblioteker.
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @author Tor Egil R. Strand
  */
 public class ArtifactMatcher {

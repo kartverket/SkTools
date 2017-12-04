@@ -9,7 +9,7 @@ import org.gradle.api.Project
 
 /**
  * @since 1.2
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 class DependencyUtil {
 
@@ -18,14 +18,14 @@ class DependencyUtil {
     synchronized static boolean getIsClasspathExploded() {
         if (_isClasspathExploded == null) {
             String resourceName = "${DependencyUtil.class.name.replaceAll(/\./, '/')}.class"
-            _isClasspathExploded = !DependencyUtil.class.classLoader.getResource(resourceName).toString().contains('!') //filer inne i jar-arkiver får utropstegn i URL
+            _isClasspathExploded = !DependencyUtil.class.classLoader.getResource(resourceName).toString().contains('!') //filer inne i jar-arkiver fÃ¥r utropstegn i URL
         }
         return _isClasspathExploded
     }
 
     /**
-     * Gir deg dependenices avhengig av om det kjøres som test eller ikke.
-     * Antakelse om at dersom man kjører ifra jar fil (ikke exploded) så er man i produksjonssammenheng.
+     * Gir deg dependenices avhengig av om det kjÃ¸res som test eller ikke.
+     * Antakelse om at dersom man kjÃ¸rer ifra jar fil (ikke exploded) sÃ¥ er man i produksjonssammenheng.
      * @param project
      * @return
      */
@@ -63,8 +63,8 @@ class DependencyUtil {
     }
 
     /**
-     * Finner versjon ved å lese manifest informasjon i lastede jar-filer i classloader.
-     * @return versjon eller {@code null} dersom ingen relevante jar-filer eksisterer på classpath (IntelliJ)
+     * Finner versjon ved Ã¥ lese manifest informasjon i lastede jar-filer i classloader.
+     * @return versjon eller {@code null} dersom ingen relevante jar-filer eksisterer pÃ¥ classpath (IntelliJ)
      */
     public static String getSktoolsVersion(Project project) {
         Enumeration resEnum;

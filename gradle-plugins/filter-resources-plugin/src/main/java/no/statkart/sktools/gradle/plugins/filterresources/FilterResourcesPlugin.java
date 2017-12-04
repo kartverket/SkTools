@@ -22,7 +22,7 @@ import static no.statkart.sktools.gradle.plugins.filterresources.FilterResources
 /**
  * SKTOOLS-44: Plugin kun for filtrering av resourceSets
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 1.3
  */
 public class FilterResourcesPlugin implements Plugin<ProjectInternal> {
@@ -88,13 +88,13 @@ public class FilterResourcesPlugin implements Plugin<ProjectInternal> {
                 final FilterResourcesSourceSetConvention sourceSetConvention = new FilterResourcesSourceSetConvention(sourceSet, filterResourcesTask);
                 final FilterResourcesSourceSetOutputConvention sourceSetOutputConvention = new FilterResourcesSourceSetOutputConvention(filterResourcesTask, sourceSet, project);
 
-                //hekter inn utvidelser på source settet
+                //hekter inn utvidelser pÃ¥ source settet
                 ((HasConvention) sourceSet).getConvention().getPlugins().put(CONVENTION_NAME, sourceSetConvention); // SKIF-173
                 ((HasConvention) sourceSet.getOutput()).getConvention().getPlugins().put(CONVENTION_NAME, sourceSetOutputConvention); // SKIF-173
 
                 filterResourcesTask.srcDir(String.format("src/%s/filterResources", sourceSet.getName()));
 
-                //trekker ifra evt filer som evt også befinner seg i 'resources'
+                //trekker ifra evt filer som evt ogsÃ¥ befinner seg i 'resources'
                 sourceSet.getResources().getFilter().exclude(new Spec<FileTreeElement>() {
                     public boolean isSatisfiedBy(FileTreeElement element) {
                         return filterResourcesTask.getSource().contains(element.getFile());

@@ -11,15 +11,15 @@ import java.util.Collections;
 /**
  * Konkret implementasjon av parser.
  *
- * Et tenkt tilfelle kan være en spesifik versjon av SOSI, eks "SOSI3_2ParserVisitorFactory".
+ * Et tenkt tilfelle kan vÃ¦re en spesifik versjon av SOSI, eks "SOSI3_2ParserVisitorFactory".
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 0.1
  */
 public class DefaultSQLParserVisitorFactory extends AbstractParserVisitorFactory {
 
     /**
-     * Factory chain der første element er siste ledd i hht chain of responsibility pattern.
+     * Factory chain der fÃ¸rste element er siste ledd i hht chain of responsibility pattern.
      */
     private ArrayList<AbstractParserVisitorFactory> factories = new ArrayList<AbstractParserVisitorFactory>();
 
@@ -85,7 +85,7 @@ public class DefaultSQLParserVisitorFactory extends AbstractParserVisitorFactory
                                 break;
                             }
                             case (int) ';': {
-//                                sql.append(';');     //TODO: Denne er kommentert ut da vi fikk feil ved kjøring av sql-filer. Både INSERT statements og CREATE
+//                                sql.append(';');     //TODO: Denne er kommentert ut da vi fikk feil ved kjÃ¸ring av sql-filer. BÃ¥de INSERT statements og CREATE
                                 current = -1;
                                 break;
                             }

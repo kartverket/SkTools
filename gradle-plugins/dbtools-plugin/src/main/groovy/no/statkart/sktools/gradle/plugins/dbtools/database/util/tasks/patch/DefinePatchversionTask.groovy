@@ -10,7 +10,7 @@ import org.gradle.process.JavaExecSpec
 /**
  * SKTOOLS-34 - Task som definerer patchversion.
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 1.2
  */
 class DefinePatchversionTask  extends DatabasePatchTask {

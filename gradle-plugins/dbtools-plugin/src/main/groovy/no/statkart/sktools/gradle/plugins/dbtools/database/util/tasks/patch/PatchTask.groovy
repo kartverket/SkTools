@@ -10,7 +10,7 @@ import org.gradle.process.JavaExecSpec
 /**
  * Task for patching av schema over JDBC.
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 1.2
  */
 @SuppressWarnings("UnnecessaryQualifiedReference")
@@ -60,7 +60,7 @@ class PatchTask extends DatabasePatchTask {
         super.validate();
 
         if (getSqlFile() == null) {
-            throw new Exception("sqlFile må angis!")
+            throw new Exception("sqlFile mÃ¥ angis!")
         }
 
         if (!getSqlFile().exists()) {

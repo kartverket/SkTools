@@ -13,7 +13,7 @@ import org.testng.Assert
 import org.testng.annotations.Test
 
 /**
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 class WeblogicGenClientTaskTest {
 

@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * Manuell test for parsing av sql-setninger
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 0.1
  */
 @Test (enabled = false)

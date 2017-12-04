@@ -13,7 +13,7 @@ import java.util.zip.ZipFile
 /**
  * Test av {@link WebstartPlugin}
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @author Tor Egil R. Strand
  */
 class WebstartPluginTest {
@@ -355,7 +355,7 @@ class WebstartPluginTest {
 
 
     /**
-     * Skal kunne spesifisere ekstra manifest informasjon som legges på før signering.
+     * Skal kunne spesifisere ekstra manifest informasjon som legges pÃ¥ fÃ¸r signering.
      */
     @Test
     void canSpecifyExtraManifestAttributes() {

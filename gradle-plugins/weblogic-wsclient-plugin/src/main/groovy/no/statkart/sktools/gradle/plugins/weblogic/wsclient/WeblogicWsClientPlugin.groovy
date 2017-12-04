@@ -20,10 +20,10 @@ import java.util.concurrent.Callable
 import org.gradle.api.tasks.SourceSetContainer
 
 /**
- * Baserer seg på {@code JavaBasePlugin} og integrerer med {@code JavaPlugin} dersom denne aktiveres.
+ * Baserer seg pÃ¥ {@code JavaBasePlugin} og integrerer med {@code JavaPlugin} dersom denne aktiveres.
  *
  * @since 1.1
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @author Tor Egil R. Strand
  */
 class WeblogicWsClientPlugin implements Plugin<Project> {
@@ -37,7 +37,7 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
         project.apply plugin: JavaBasePlugin.class;
         project.apply plugin: WeblogicBasePlugin.class;
 
-        // SKTOOLS-17: weblogic 10.3.5 eller nyerer avhenger av tools.jar på classpath for wsclient
+        // SKTOOLS-17: weblogic 10.3.5 eller nyerer avhenger av tools.jar pÃ¥ classpath for wsclient
         project.getDependencies().add(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME, WeblogicBasePlugin.toolsJar(project))
         project.getDependencies().add(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME, conventionalWeblogicDependencies(project))
 
@@ -61,12 +61,12 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
             compileTask.source(genClientSourceTask)
         }
 
-        //hekter inn genClient ved kjøring av 'resources' task.
+        //hekter inn genClient ved kjÃ¸ring av 'resources' task.
         Task processWeblogicResources = project.tasks.getByName(sourceSet.processResourcesTaskName).dependsOn(
                 GEN_CLIENT_TASK_NAME,
         );
 
-        //hekter inn genClient ved kjøring av 'compile' task.
+        //hekter inn genClient ved kjÃ¸ring av 'compile' task.
         Task compileWeblogicResources = project.tasks.getByName(sourceSet.compileJavaTaskName).dependsOn(
                 GEN_CLIENT_TASK_NAME,
         );
@@ -136,7 +136,7 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
      * Setter classpath og destinationDir som defaults via wsClientConvention.
      *
      * Registrerer genDir til sourceset.output
-     * Registrerer også kildekode til sourceSet.allSource
+     * Registrerer ogsÃ¥ kildekode til sourceSet.allSource
      *
      * @see WeblogicWsClientPlugin#GEN_CLIENT_TASK_NAME
      */
@@ -253,7 +253,7 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
 
 
         if (wlsVersion.startsWith("10.3")) {
-            //tidligere prosjektoppsett splittet ikke weblogic classpath ned i forskjellige deler og benyttet her samtlige jarfiler som var nødvendig for å kompilere i IntellJ
+            //tidligere prosjektoppsett splittet ikke weblogic classpath ned i forskjellige deler og benyttet her samtlige jarfiler som var nÃ¸dvendig for Ã¥ kompilere i IntellJ
             if (wlsVersion.startsWith("10.3.6")) {
                 return project.files(
                         "${WEBLOGIC_HOME}/wlserver_10.3/server/lib/weblogic.jar",

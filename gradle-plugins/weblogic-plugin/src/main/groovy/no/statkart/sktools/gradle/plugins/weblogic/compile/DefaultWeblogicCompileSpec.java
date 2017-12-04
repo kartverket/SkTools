@@ -7,12 +7,12 @@ import java.io.File;
 
 /**
  * @since 1.2
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 public class DefaultWeblogicCompileSpec implements WeblogicCompileSpec {
 
     /**
-     * Classpath for bruk av weblogic spesifike verktøy
+     * Classpath for bruk av weblogic spesifike verktÃ¸y
      */
     private Iterable<File> weblogicClasspath;
 
@@ -22,7 +22,7 @@ public class DefaultWeblogicCompileSpec implements WeblogicCompileSpec {
     private Iterable<File> classpath;
 
     /**
-     * Mappe som kan benyttes generering av temporære filer
+     * Mappe som kan benyttes generering av temporÃ¦re filer
      */
     private File tempDir;
 

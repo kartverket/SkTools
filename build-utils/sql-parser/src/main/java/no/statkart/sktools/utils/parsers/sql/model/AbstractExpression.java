@@ -4,7 +4,7 @@ package no.statkart.sktools.utils.parsers.sql.model;
 /**
  * Felles funksjonalitet for alle noder.
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 0.1
  */
 public abstract class AbstractExpression implements Expression {

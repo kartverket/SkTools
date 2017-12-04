@@ -21,7 +21,7 @@ import java.util.StringTokenizer;
  * <p/>
  * En kan parameterisere navn for {@link #LIST_METHOD getter metode}.
  * <p/>
- * En kan også parameterisere navn for {@link #BASE_CLASS superklasse for lister}. <nr />
+ * En kan ogsÃ¥ parameterisere navn for {@link #BASE_CLASS superklasse for lister}. <nr />
  * Eksempel implementasjon av felles liste klasse:
  * <code><pre>
 
@@ -47,7 +47,7 @@ public abstract class ListTestIterable<T> implements Iterable<T> {
  * <p/>
  * <p/>
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 1.1 - May 2011
  */
 public class ListGenPlugin extends com.sun.tools.xjc.Plugin {
@@ -109,7 +109,7 @@ public class ListGenPlugin extends com.sun.tools.xjc.Plugin {
      */
     @Override
     public int parseArgument(Options opt, String[] args, int i) throws BadCommandLineException, IOException {
-        //holder styr på antall parametere parset
+        //holder styr pÃ¥ antall parametere parset
         int j = 0;
 
         if (args[i].startsWith("-listgen")) {
@@ -151,14 +151,14 @@ public class ListGenPlugin extends com.sun.tools.xjc.Plugin {
         try {
             for (ClassOutline classOutline : outline.getClasses()) {
 
-                //vi benytter ikke denne tagen i schema-definisjonen.... men påfører endringer per konvensjon.
+                //vi benytter ikke denne tagen i schema-definisjonen.... men pÃ¥fÃ¸rer endringer per konvensjon.
                 CPluginCustomization c = classOutline.target.getCustomizations().find(NS, "listgen");
                 if (c != null) { // customization found for this class outline
                     c.markAsAcknowledged();
                 }
 
 
-                //alle klasser som ender på 'List' får per konvensjon påført endringer.
+                //alle klasser som ender pÃ¥ 'List' fÃ¥r per konvensjon pÃ¥fÃ¸rt endringer.
                 if (classOutline.target.getSqueezedName().endsWith("List")) {
 
                     JClass listAdapter = null;

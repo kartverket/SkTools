@@ -7,7 +7,7 @@ import java.io.Reader;
 /**
  * Felles funksjonalitet for parsing av {@link java.io.Reader tekst-readere}
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 0.1
  */
 public abstract class AbstractParserVisitorFactory implements VisitorFactoryInterface {
@@ -24,14 +24,14 @@ public abstract class AbstractParserVisitorFactory implements VisitorFactoryInte
     public interface Scanner {
         /**
          * @param pattern regEx-pattern
-         * @return dersom påfølgende input matcher pattern
+         * @return dersom pÃ¥fÃ¸lgende input matcher pattern
          */
         boolean nextMatches(String pattern);
 
         /**
          * @param delimiterString
          * @param returnDelimiter
-         * @return påfølgende tekst til enten EOF, eller til {@code delimiterPattern}
+         * @return pÃ¥fÃ¸lgende tekst til enten EOF, eller til {@code delimiterPattern}
          */
         String getInput(String delimiterString, boolean returnDelimiter);
     }

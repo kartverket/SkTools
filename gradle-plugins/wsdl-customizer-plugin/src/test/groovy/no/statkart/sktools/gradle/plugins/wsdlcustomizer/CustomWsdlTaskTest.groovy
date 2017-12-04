@@ -24,7 +24,7 @@ class CustomWsdlTaskTest {
 
         File destDir = project.file('result')
 
-        // Dette virker ikke hvis man skulle finne på å kjøre testene fra jar-fil
+        // Dette virker ikke hvis man skulle finne pÃ¥ Ã¥ kjÃ¸re testene fra jar-fil
         URL handmadeUrl = getClass().getResource("/handmade")
         File handmadeDir = new File(handmadeUrl.toURI())
         URL generatedUrl = getClass().getResource("/fakeGenerated")

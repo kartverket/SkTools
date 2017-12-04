@@ -13,7 +13,7 @@ import org.testng.annotations.Test
  * Tester {@link WSDocProcessor}
  *
  * @since 1.3 - ny grunnbok sprint 30
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 class WSDocProcessorTest {
 
@@ -63,7 +63,7 @@ class WSDocProcessorTest {
             }
         } //end configure
 
-        //utfører task
+        //utfÃ¸rer task
         projectHelper.executeTask('testWSDocProcessor')
 
 
@@ -178,7 +178,7 @@ class WSDocProcessorTest {
             }
         } //end configure
 
-        //utfører task
+        //utfÃ¸rer task
         projectHelper.executeTask('testWSDocProcessor')
 
 
@@ -192,7 +192,7 @@ class WSDocProcessorTest {
             def lines = []
             file.eachLine { lines += it}
 
-            assert lines.find { def line -> line.contains('../uniktNavn/for/test/index.html?')} //forventer å finne denne i output
+            assert lines.find { def line -> line.contains('../uniktNavn/for/test/index.html?')} //forventer Ã¥ finne denne i output
 
         }
 
@@ -273,7 +273,7 @@ class WSDocProcessorTest {
             }
         } //end configure
 
-        //utfører task
+        //utfÃ¸rer task
         projectHelper.executeTask('testWSDocProcessor')
 
 
@@ -287,7 +287,7 @@ class WSDocProcessorTest {
             def lines = []
             file.eachLine { lines += it}
 
-            assert lines.find { def line -> line.contains('long')} //forventer å finne denne i output
+            assert lines.find { def line -> line.contains('long')} //forventer Ã¥ finne denne i output
 
         }
 
@@ -312,10 +312,10 @@ class WSDocProcessorTest {
                 package test1;
 
                 /**
-                 * Service Æøå description.
+                 * Service Ã†Ã¸Ã¥ description.
                  * Second sentence.
                  * @since 1.0 - inception
-                 * @author Leif Lislegård
+                 * @author Leif LislegÃ¥rd
                  **/
                  @javax.jws.WebService(
                          name = "TestService",
@@ -411,7 +411,7 @@ class WSDocProcessorTest {
             }
         } //end configure
 
-        //utfører task
+        //utfÃ¸rer task
         projectHelper.executeTask('testWSDocProcessor')
 
 
@@ -424,7 +424,7 @@ class WSDocProcessorTest {
             GPathResult html = parseXML(file)
 
             //sjekker innhold
-            Assert.assertEquals html.body.span[0].text(), 'Service Æøå description.\nSecond sentence.', "service description"
+            Assert.assertEquals html.body.span[0].text(), 'Service Ã†Ã¸Ã¥ description.\nSecond sentence.', "service description"
 
             //sjekker dokumenterte metoder
             Assert.assertEquals html.body.div[0].div[0].h4[0].text().trim(), 'intToLong', "overskrift"
@@ -458,7 +458,7 @@ class WSDocProcessorTest {
                  * Service description.
                  * Second sentence.
                  * @since 1.0 - inception
-                 * @author Leif Lislegård
+                 * @author Leif LislegÃ¥rd
                  **/
                  @javax.jws.WebService(
                          name = "TestService",
@@ -574,7 +574,7 @@ class WSDocProcessorTest {
             }
         } //end configure
 
-        //utfører task
+        //utfÃ¸rer task
         projectHelper.executeTask('testWSDocProcessor')
 
 
@@ -629,7 +629,7 @@ class WSDocProcessorTest {
                  * Service description.
                  * Second sentence.
                  * @since 1.0 - inception
-                 * @author Leif Lislegård
+                 * @author Leif LislegÃ¥rd
                  **/
                  @javax.jws.WebService(
                          name = "TestService",
@@ -725,7 +725,7 @@ class WSDocProcessorTest {
             }
         } //end configure
 
-        //utfører task
+        //utfÃ¸rer task
         projectHelper.executeTask('testWSDocProcessor')
 
 
@@ -909,7 +909,7 @@ class WSDocProcessorTest {
             }
         } //end configure
 
-        //utfører task
+        //utfÃ¸rer task
         projectHelper.executeTask('testWSDocProcessor')
 
 
@@ -974,7 +974,7 @@ class WSDocProcessorTest {
                  * Service {@code taglet} description.
                  *
                  * @since 1.0 - inception
-                 * @author Leif Lislegård
+                 * @author Leif LislegÃ¥rd
                  **/
                  @javax.jws.WebService(
                          name = "TestService",
@@ -1078,7 +1078,7 @@ class WSDocProcessorTest {
             }
         } //end configure
 
-        //utfører task
+        //utfÃ¸rer task
         projectHelper.executeTask('testWSDocProcessor')
 
 
@@ -1224,7 +1224,7 @@ class WSDocProcessorTest {
             }
         } //end configure
 
-        //utfører task
+        //utfÃ¸rer task
         projectHelper.executeTask('testWSDocProcessor')
 
 
@@ -1425,7 +1425,7 @@ class WSDocProcessorTest {
             }
         } //end configure
 
-        //utfører task
+        //utfÃ¸rer task
         projectHelper.executeTask('testWSDocProcessor')
 
 
@@ -1609,7 +1609,7 @@ class WSDocProcessorTest {
             }
         } //end configure
 
-        //utfører task
+        //utfÃ¸rer task
         projectHelper.executeTask('testWSDocProcessor')
 
 

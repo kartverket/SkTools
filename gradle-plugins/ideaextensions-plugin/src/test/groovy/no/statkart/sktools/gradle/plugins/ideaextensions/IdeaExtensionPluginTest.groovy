@@ -11,7 +11,7 @@ import static InspectionProfileTestContext.buildInspectionProfile
 import static InspectionProfileTestContext.INSPECTION_PROFILE_1_NAME
 
 /**
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 class IdeaExtensionPluginTest {
 
@@ -100,7 +100,7 @@ class IdeaExtensionPluginTest {
     }
 
     /**
-     * Tester angivelse xml for inspection profiles der profiler finnes ifra før (merge)
+     * Tester angivelse xml for inspection profiles der profiler finnes ifra fÃ¸r (merge)
      * @since 1.3
      */
     @Test
@@ -139,7 +139,7 @@ class IdeaExtensionPluginTest {
     }
 
     /**
-     * Tester angivelse xml for inspection profiles der profiler finnes ifra før (merge)
+     * Tester angivelse xml for inspection profiles der profiler finnes ifra fÃ¸r (merge)
      * @since 1.3
      */
     @Test

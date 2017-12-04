@@ -5,7 +5,7 @@ import no.statkart.sktools.utils.databasepatcher.DatabasePatcher
 
 /**
  * @since 1.3
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 class DatabasePatcherTestContext<T extends DatabasePatcherTestContext> extends DbToolsTestContext<T> {
 

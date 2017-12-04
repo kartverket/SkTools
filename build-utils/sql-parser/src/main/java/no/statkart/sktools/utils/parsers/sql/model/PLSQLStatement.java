@@ -3,7 +3,7 @@ package no.statkart.sktools.utils.parsers.sql.model;
 /**
  * Node som representerer et PL/SQL script
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 0.1
  */
 public class PLSQLStatement extends Statement {

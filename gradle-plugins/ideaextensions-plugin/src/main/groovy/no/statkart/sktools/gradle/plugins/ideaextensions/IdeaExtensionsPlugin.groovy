@@ -14,12 +14,12 @@ import org.gradle.api.plugins.JavaPluginConvention
  *   <li>Aktiverer Perforce som default.
  * </ul>
  *
- * Dersom plugin er aktiv for modul/subprosjekt så genereres det opp tomme mapper for alle sourceSets. [SKIF-178]
- *  - Dette gjør da at {@link org.gradle.api.tasks.SourceSet main og test sourceSet} får tagget alle source katalogene sine i IntelliJ prosjektet, selv om de er tomme.
+ * Dersom plugin er aktiv for modul/subprosjekt sÃ¥ genereres det opp tomme mapper for alle sourceSets. [SKIF-178]
+ *  - Dette gjÃ¸r da at {@link org.gradle.api.tasks.SourceSet main og test sourceSet} fÃ¥r tagget alle source katalogene sine i IntelliJ prosjektet, selv om de er tomme.
  *
  * @since 1.0
- * @author Thor Åge Eldby
- * @author Leif Lislegård
+ * @author Thor Ã…ge Eldby
+ * @author Leif LislegÃ¥rd
  * @author Tor Egil R. Strand
  */
 class IdeaExtensionsPlugin implements Plugin<Project> {
@@ -59,7 +59,7 @@ class IdeaExtensionsPlugin implements Plugin<Project> {
                                 project.mkdir(it)
                             }
                         }
-                        //oppretter også mapper for generert kode (introdusert i SKIF-173)
+                        //oppretter ogsÃ¥ mapper for generert kode (introdusert i SKIF-173)
                         it.getOutput().getDirs().each {
                             if (!it.exists()) {
                                 project.logger.quiet("..creating folder {} (output)", project.relativePath(it));
@@ -96,7 +96,7 @@ class IdeaExtensionsPlugin implements Plugin<Project> {
                 component.append(node)
             }
 
-            //legger også til ignore for alle build-kataloger
+            //legger ogsÃ¥ til ignore for alle build-kataloger
             convention.project.getSubprojects().each { subproject ->
                 String relPath = convention.project.relativePath(subproject.buildDir).replaceAll('\\\\', '/') + '/'
                 Node node = NodeBuilder.newInstance().ignored(path: relPath)

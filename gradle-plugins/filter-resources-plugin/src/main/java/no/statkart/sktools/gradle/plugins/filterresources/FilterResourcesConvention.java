@@ -11,7 +11,7 @@ import java.util.Map;
  * Se {@link #filterResources(groovy.lang.Closure)} for konfigurasjon.
  *
  * @since 1.3
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 public class FilterResourcesConvention {
     final transient Project project;

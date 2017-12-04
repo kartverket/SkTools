@@ -15,7 +15,7 @@ import java.sql.SQLSyntaxErrorException
 /**
  * Tester funksjonell plugin funjsonalitet via HSQLDB - en in memory database
  *
- * Testene sjekker her at faktiske sql-setninger blir kjørt mot databasen som forventet.
+ * Testene sjekker her at faktiske sql-setninger blir kjÃ¸rt mot databasen som forventet.
  */
 class DbToolsPluginHSQLDBTest extends HSQLDBTest {
 
@@ -34,8 +34,8 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
      *     prefix_CreateSchema
      *     prefix_CreateSchema2
      *
-     * STEG 4: Tester kjøring av prefix_CreateSchema for bruker 1
-     * STEG 5: Tester kjøring av prefix_CreateSchema2 for bruker 2 som ikke finnes, forventer da en feil.
+     * STEG 4: Tester kjÃ¸ring av prefix_CreateSchema for bruker 1
+     * STEG 5: Tester kjÃ¸ring av prefix_CreateSchema2 for bruker 2 som ikke finnes, forventer da en feil.
      *
      */
     @Test
@@ -99,7 +99,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
 
 
 
-        // STEG 4 - kjøring av tasks for bruker 1
+        // STEG 4 - kjÃ¸ring av tasks for bruker 1
 
         createSchemaTask.execute()
 
@@ -110,7 +110,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
             Assert.fail 'Forventer at tabell finnes'
         }
 
-        // STEG 5 - kjøring av tasks for bruker 2
+        // STEG 5 - kjÃ¸ring av tasks for bruker 2
 
         credentials.username = 'sa2'
         credentials.username = ''
@@ -144,8 +144,8 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
      *     dB1CreateSchema
      *     dB2CreateSchema2
      *
-     * STEG 4: Tester kjøring av dB1CreateSchema
-     * STEG 5: Tester kjøring av dB2CreateSchema
+     * STEG 4: Tester kjÃ¸ring av dB1CreateSchema
+     * STEG 5: Tester kjÃ¸ring av dB2CreateSchema
      *
      */
     @Test
@@ -217,7 +217,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
 
 
 
-        // STEG 4 - kjøring av tasks for DB1
+        // STEG 4 - kjÃ¸ring av tasks for DB1
 
         createSchemaTask.execute()
 
@@ -229,7 +229,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
         }
 
 
-        // STEG 5 - kjøring av tasks for DB2
+        // STEG 5 - kjÃ¸ring av tasks for DB2
 
         createSchema2Task.execute()
 

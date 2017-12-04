@@ -48,7 +48,7 @@ class ClientConfiguration {
     private final List<JnlpConfiguration> jnlpConfigurations = new ArrayList<JnlpConfiguration>();
     private ConfigurableFileCollection jarDependencies
     private Closure mainJar = {
-        project.logger.debug "Treating ${it.name} as main jar in ${name}..." //default s� betraktes alle filer som main jars i #jarDependencies...
+        project.logger.debug "Treating ${it.name} as main jar in ${name}..." //default sï¿½ betraktes alle filer som main jars i #jarDependencies...
         true
     }
 
@@ -58,7 +58,7 @@ class ClientConfiguration {
     String libDir = 'lib'
 
     /**
-     * Angir om jnlp-filene skal legges rett til war-en. Sett til <code>false</code> dersom jnlp-filene skal prosesseres mer p� ett eller annet vis.
+     * Angir om jnlp-filene skal legges rett til war-en. Sett til <code>false</code> dersom jnlp-filene skal prosesseres mer pï¿½ ett eller annet vis.
      */
     boolean warJnlps = true
 

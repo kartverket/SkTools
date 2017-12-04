@@ -14,7 +14,7 @@ class LoadDriversHelper {
 
             final Set<File> files = configuration.files(dependency);
             for (File file : files) {
-                //For å kunne benytte jdbc funksjonalitet, må jdbc klasser være lastet inn i classloader til groovy.
+                //For Ã¥ kunne benytte jdbc funksjonalitet, mÃ¥ jdbc klasser vÃ¦re lastet inn i classloader til groovy.
                 try {
                     addURLClosure.call(file.toURI().toURL());
                 } catch (MalformedURLException e) {

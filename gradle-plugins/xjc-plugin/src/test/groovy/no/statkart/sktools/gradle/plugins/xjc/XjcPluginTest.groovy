@@ -12,7 +12,7 @@ import org.testng.annotations.Test
 /**
  * Test av {@link XjcPlugin}
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 class XjcPluginTest {
 

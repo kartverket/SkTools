@@ -4,7 +4,7 @@ package no.statkart.sktools.utils.parsers.sql.model;
 /**
  * Node som enkapsulerer standard sql-setninger (default)
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 0.1
  */
 public class DefaultStatement extends Statement {

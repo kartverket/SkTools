@@ -7,7 +7,7 @@ import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsConvention
 /**
  * Convention object for HSQLDB database tools
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 1.0
  */
 class HsqldbTasksConvention extends AbstractDatabaseConvention {

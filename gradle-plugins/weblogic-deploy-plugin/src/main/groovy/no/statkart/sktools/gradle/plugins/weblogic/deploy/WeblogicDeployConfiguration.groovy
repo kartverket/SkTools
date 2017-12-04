@@ -7,10 +7,10 @@ import org.gradle.api.file.FileCollection
 import org.gradle.util.ConfigureUtil
 
 /**
- * Konfigurasjon av weblogic-tjeneren det skal deployes på / undeployes fra.
+ * Konfigurasjon av weblogic-tjeneren det skal deployes pÃ¥ / undeployes fra.
  *
  * @author Tor Egil R. Strand
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 1.2
  */
 class WeblogicDeployConfiguration {
@@ -36,12 +36,12 @@ class WeblogicDeployConfiguration {
     protected String password
 
     /**
-     * Navn på deploymenten, slik at undeploy undeployer riktig deployment.
+     * Navn pÃ¥ deploymenten, slik at undeploy undeployer riktig deployment.
      */
     protected String name
 
     /**
-     * Det som skal deployes. Må inneholde bare ett artefakt.
+     * Det som skal deployes. MÃ¥ inneholde bare ett artefakt.
      * @see #getFile()
      */
     protected Object file

@@ -29,14 +29,14 @@ public class WsImportTask extends SourceTask {
     String lastWsdl = null;
 
     /**
-     * Angir hvilken WSDL som skal prosesseres sist. Dette må være den som trekker inn mest.
+     * Angir hvilken WSDL som skal prosesseres sist. Dette mÃ¥ vÃ¦re den som trekker inn mest.
      */
     public void lastWsdl(String lastWsdl) {
         setLastWsdl(lastWsdl)
     }
 
     /**
-     * Angir at exceptions skal samles i denne pakken fremfor å ligge i hver service-pakke.
+     * Angir at exceptions skal samles i denne pakken fremfor Ã¥ ligge i hver service-pakke.
      */
     public void exceptionReusePackage(String packageOrPathString) {
         setPackageOrPathString(packageOrPathString)
@@ -85,7 +85,7 @@ public class WsImportTask extends SourceTask {
 
     /**
      * Samler alle exceptions for services til felles pakke.
-     * Dette da vi ønsker at den genererte klientkoden skal gjenspeile strukturen til serveren, samt at man ønsker å gjenbruke exception klassene.
+     * Dette da vi Ã¸nsker at den genererte klientkoden skal gjenspeile strukturen til serveren, samt at man Ã¸nsker Ã¥ gjenbruke exception klassene.
      */
     protected void reuseExceptions(File genSourceDir) {
         String packageString = getPackageString()
@@ -104,7 +104,7 @@ public class WsImportTask extends SourceTask {
             Files.copy(file.toPath(), exceptionPackageDir.toPath().resolve(file.name), StandardCopyOption.REPLACE_EXISTING)
             file.delete()
 
-            //kjører regexp replace på package statement for flyttet fil
+            //kjÃ¸rer regexp replace pÃ¥ package statement for flyttet fil
             relocatedFile.text = relocatedFile.text.replaceFirst(/(?ms)package[^;]+/, "package " + packageString)
 
         }

@@ -8,8 +8,8 @@ import org.gradle.api.Project
  *
  *
  * @since 1.0
- * @author Thor Åge Eldby
- * @author Leif Lislegård
+ * @author Thor Ã…ge Eldby
+ * @author Leif LislegÃ¥rd
  * @author Tor Egil R. Strand
  */
 class IdeaExtensionsPluginExtension {
@@ -31,7 +31,7 @@ class IdeaExtensionsPluginExtension {
     Map<String, String> vcsDirectoryMappings = new LinkedHashMap<String,String>(1)
 
     /**
-     * Angir om plugin-et skal opprette alle source-kataloger ved kjøring av ideaModule.
+     * Angir om plugin-et skal opprette alle source-kataloger ved kjÃ¸ring av ideaModule.
      * Standardverdi er <code>true</code> for bakoverkompatibilitet.
      *
      * @since 1.2
@@ -49,7 +49,7 @@ class IdeaExtensionsPluginExtension {
 
     /**
      * Angir en valgfri fil som inneholder inspection-instillinger eksportert fra IntelliJ.
-     * Første element i listen settes som default.
+     * FÃ¸rste element i listen settes som default.
      *
      * @since 1.3
      */

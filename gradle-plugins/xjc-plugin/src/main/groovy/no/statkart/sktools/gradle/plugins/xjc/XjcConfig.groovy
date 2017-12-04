@@ -13,9 +13,9 @@ import org.gradle.util.ConfigureUtil
  * Konfigurasjon for en xjc eksekvering.
  * <br />
  *
- * Dersom en ønsker å legge ved kildekode for custom implementasjon så benyttes {@link SourceSet#java}
+ * Dersom en Ã¸nsker Ã¥ legge ved kildekode for custom implementasjon sÃ¥ benyttes {@link SourceSet#java}
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 class XjcConfig implements Serializable {
     static final Logger logger = Logging.getLogger(XjcConfig.class)
@@ -108,7 +108,7 @@ class XjcConfig implements Serializable {
     //ikke eksponert
     private Map skDoc(Map params) {
 
-        // Gjennbruker grunnbokDoc-implementasjon her inntill annen dokumentasjonsgenerering er på plass
+        // Gjennbruker grunnbokDoc-implementasjon her inntill annen dokumentasjonsgenerering er pÃ¥ plass
         // see {@link #GRUNNBOK_DOC}
 
         HashMap grunnbokDocParams = new LinkedHashMap();

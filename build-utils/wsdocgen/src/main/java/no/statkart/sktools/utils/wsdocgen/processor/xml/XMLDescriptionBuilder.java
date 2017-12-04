@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 /**
  * Bygging av {@code <description>}
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 1.3 - SKTOOLS-108
  */
 @SuppressWarnings({"FieldCanBeLocal", "unused"})

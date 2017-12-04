@@ -13,7 +13,7 @@ import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.*
 /**
  *
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 1.2 - SKTOOLS-33
  */
 class PatchConfiguration {

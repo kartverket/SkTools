@@ -6,11 +6,11 @@ import no.statkart.sktools.utils.databasepatcher.DatabasePatcherWrapper
 import no.statkart.sktools.utils.databasepatcher.exception.NotFoundException
 
 /**
- * Verktøy for runtime sjekker mot basen. Disse kan blir utført via deklarasjon av tasker.
+ * VerktÃ¸y for runtime sjekker mot basen. Disse kan blir utfÃ¸rt via deklarasjon av tasker.
  *
  * PS: Deklararert bruk av disse metodene skjer kun innenfor scope for toolset { } -konfigurasjon.
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 1.2
  */
 public class PatchUtil {

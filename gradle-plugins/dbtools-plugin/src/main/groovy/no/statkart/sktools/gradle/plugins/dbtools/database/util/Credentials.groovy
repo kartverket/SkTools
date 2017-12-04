@@ -5,7 +5,7 @@ import org.gradle.api.Project
 /**
  * Setter username og password dersom ikke allerede angitt som parametere.
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 1.0
  */
 class Credentials {

@@ -7,7 +7,7 @@ import org.testng.Assert
  * Test av {@link PatchtypeKode}
  *
  * @since 1.3
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 class PatchtypeKodeTest {
 

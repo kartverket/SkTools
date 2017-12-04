@@ -1,6 +1,6 @@
 package com.sun.tools.xjc.addon.statkart;
 
-/* Work around: klassen må ligge i pakke som starter med com.sun.tools.xjc.addon. Ellers kjører ikke denne sammen med java6 der jaxb 2.0 er pre installert */
+/* Work around: klassen mÃ¥ ligge i pakke som starter med com.sun.tools.xjc.addon. Ellers kjÃ¸rer ikke denne sammen med java6 der jaxb 2.0 er pre installert */
 
 import com.sun.codemodel.*;
 import com.sun.tools.xjc.BadCommandLineException;
@@ -24,17 +24,17 @@ import java.util.List;
  * Plug in som dekorerer genererte java klasser med dokumentasjon.
  * <p/>
  * #doc tag er valgfri
- * #see tag kan enten angis, eller så mappes det til et standard pakkenavn.
+ * #see tag kan enten angis, eller sÃ¥ mappes det til et standard pakkenavn.
  * <p/>
- * Eksempel på bruk:
+ * Eksempel pÃ¥ bruk:
  * <xjc ...>
  * ...
  * <arg line="-grunnbokDoc no.statkart.grunnbok.fast.wsapi.domain no.statkart.grunnbok.fast.domain" />
  * </xjc>
  * <p/>
- * Ovenstående eksempel mapper pakke navn i @see tag fra no.statkart.grunnbok.fast.wsapi.domain.* til no.statkart.grunnbok.fast.domain.*
+ * OvenstÃ¥ende eksempel mapper pakke navn i @see tag fra no.statkart.grunnbok.fast.wsapi.domain.* til no.statkart.grunnbok.fast.domain.*
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 0.3
  */
 public class GrunnbokDocPlugin extends com.sun.tools.xjc.Plugin {
@@ -131,13 +131,13 @@ public class GrunnbokDocPlugin extends com.sun.tools.xjc.Plugin {
             for (FieldOutline fieldOutline : classOutline.getDeclaredFields()) {
                 String privateName = fieldOutline.getPropertyInfo().getName(false);
 
-                // Sett javadoc på feltet (det blir som standard satt på getter)
+                // Sett javadoc pÃ¥ feltet (det blir som standard satt pÃ¥ getter)
                 JFieldVar fieldVar = classOutline.implClass.fields().get(privateName);
                 if (fieldVar != null) {
                     fieldVar.javadoc().append(fieldOutline.getPropertyInfo().javadoc);
                 }
 
-                // Fjern javadoc på getter og setter
+                // Fjern javadoc pÃ¥ getter og setter
                 String publicName = fieldOutline.getPropertyInfo().getName(true);
                 JType type = fieldOutline.getRawType();
 

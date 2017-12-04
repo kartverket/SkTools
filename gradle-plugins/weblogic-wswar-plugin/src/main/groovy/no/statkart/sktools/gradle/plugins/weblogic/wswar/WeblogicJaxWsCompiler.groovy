@@ -13,7 +13,7 @@ import org.gradle.api.tasks.util.PatternSet
 /**
  * Steg for kompilering av JAX-WS implementasjon for server.
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 class WeblogicJaxWsCompiler implements no.statkart.sktools.gradle.plugins.weblogic.compile.Compiler<WeblogicCompileSpec> {
     protected static Logger logger = Logging.getLogger(WeblogicJaxWsCompiler.class)
@@ -58,10 +58,10 @@ class WeblogicJaxWsCompiler implements no.statkart.sktools.gradle.plugins.weblog
         def antTask = ant.jwsc(attributes) {
 
             //todo: context path skal kunne konfigureres (muligens ved deply/pakking av ear?)
-            // - dette for å støtte deploymenter som ikke er exploded
+            // - dette for Ã¥ stÃ¸tte deploymenter som ikke er exploded
             module(name: warName, contextpath: 'notimportantsincewethrowawaytheear', explode: true) {
 
-                //todo: bør kunne parameteriseres?
+                //todo: bÃ¸r kunne parameteriseres?
                 FileTree filteredSourceFiles = spec.source.asFileTree.matching(new PatternSet(includes:['**/*WSBean.java']))
                 FileResolver resolver = fileResolver.withBaseDir(baseDir)
                 filteredSourceFiles.each {

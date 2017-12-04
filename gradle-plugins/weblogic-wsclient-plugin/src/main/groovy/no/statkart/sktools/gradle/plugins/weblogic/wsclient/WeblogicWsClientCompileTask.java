@@ -7,7 +7,7 @@ import org.gradle.api.tasks.compile.JavaCompile;
 /**
  * Task for kompilerings-steg.
  *
- * Dette interfacet kan benyttes for å huke inn xjc funksjonalitet slik at:
+ * Dette interfacet kan benyttes for Ã¥ huke inn xjc funksjonalitet slik at:
  *
  * <pre><code>
  task('gen').description = "Genererte ressurser"
@@ -28,7 +28,7 @@ import org.gradle.api.tasks.compile.JavaCompile;
  *
  *
  * @since 1.2
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 public class WeblogicWsClientCompileTask extends JavaCompile {
     protected static final Logger logger = Logging.getLogger(WeblogicWsClientCompileTask.class);

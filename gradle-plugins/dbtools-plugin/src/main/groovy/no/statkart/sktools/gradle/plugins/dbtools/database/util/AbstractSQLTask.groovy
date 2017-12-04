@@ -7,7 +7,7 @@ import org.gradle.api.tasks.Input
 /**
  * Task for executing av statements over JDBC.
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 1.2
  */
 abstract class AbstractSQLTask extends ConventionTask {
@@ -18,7 +18,7 @@ abstract class AbstractSQLTask extends ConventionTask {
     /**
      * Disse credentials blir benyttet dersom {@code useTaskCredentials == true}
      *
-     * Dersom {@code useDefaultCredentials == true}, så blir konversjonelle verdier benyttet. Dvs credentials ifra koblet dbTool-set
+     * Dersom {@code useDefaultCredentials == true}, sÃ¥ blir konversjonelle verdier benyttet. Dvs credentials ifra koblet dbTool-set
      */
     final Credentials credentials = new Credentials("task:${name}", project.properties)
     Credentials defaultCredentials = null

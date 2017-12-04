@@ -13,7 +13,7 @@ import java.io.File;
  * Kobler inn evt plugin funksjonalitet i hht konfigurasjon av sourceSet. Se {@link XjcConfig } for detaljer.
  *
  * <p>
- * Følgende plugin funksjonalitet er implementert:
+ * FÃ¸lgende plugin funksjonalitet er implementert:
  * <ul>
  *     <li>com.sun.tools.xjc.addon.statkart.GrunnbokDocPlugin
  *     <li>com.sun.tools.xjc.addon.statkart.ListGenPluginTest
@@ -24,8 +24,8 @@ import java.io.File;
  *
  *
  * @since 1.0
- * @author Thor Åge Eldby
- * @author Leif Lislegård
+ * @author Thor Ã…ge Eldby
+ * @author Leif LislegÃ¥rd
  */
 class XjcTask extends SourceTask {
     protected static final Logger logger = Logging.getLogger(XjcTask.class);

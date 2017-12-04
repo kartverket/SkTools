@@ -7,10 +7,10 @@ import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 
 /**
- * Task for å starte en applikasjon.
+ * Task for Ã¥ starte en applikasjon.
  *
  * @since 1.3
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @author Tor Egil R. Strand
  */
 class WeblogicStartTask extends AbstractWeblogicDeployTask {

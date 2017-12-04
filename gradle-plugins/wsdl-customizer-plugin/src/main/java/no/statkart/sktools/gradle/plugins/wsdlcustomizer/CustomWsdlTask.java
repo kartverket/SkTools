@@ -49,7 +49,7 @@ import java.util.Set;
 
 /**
  * Task som erstatter referanser til genererte XSD-filer med de opprinnelige, samt fjerner referanser til de namespace/
- * skjemaer som ikke skal offentliggjøres.
+ * skjemaer som ikke skal offentliggjÃ¸res.
  *
  * @author Tor Egil R. Strand
  */

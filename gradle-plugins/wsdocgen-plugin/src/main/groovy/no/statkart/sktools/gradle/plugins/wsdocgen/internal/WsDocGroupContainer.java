@@ -51,7 +51,7 @@ public class WsDocGroupContainer extends AbstractList<WsDocGroup> {
         return store.add(xjcSchema);
     }
 
-    //besørger optional lik struktur som for konfigurering
+    //besÃ¸rger optional lik struktur som for konfigurering
     public List<WsDocGroup> getSchemas() {
         return this;
     }

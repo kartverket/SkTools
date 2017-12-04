@@ -9,7 +9,7 @@ import no.statkart.sktools.gradle.plugins.weblogic.testtasks.TestClasspathForWeb
 /**
  * Test av {@link WeblogicTaskInterface}.
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 class WeblogicTaskTest {
 
@@ -29,7 +29,7 @@ class WeblogicTaskTest {
         project.apply plugin: WeblogicBasePlugin
         project.apply plugin: JavaPlugin
 
-        //tenker oss at weblogic classpath configurasjon også skal inneholde alle compile time dependencies..
+        //tenker oss at weblogic classpath configurasjon ogsÃ¥ skal inneholde alle compile time dependencies..
         project.configurations.getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME).extendsFrom(project.configurations.getByName(JavaPlugin.COMPILE_CONFIGURATION_NAME))
 
         //configure project

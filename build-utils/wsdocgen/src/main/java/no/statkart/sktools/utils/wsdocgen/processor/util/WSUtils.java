@@ -10,7 +10,7 @@ import javax.lang.model.element.ExecutableElement;
 /**
  * Helper methods for JAX-WS implementations.
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 1.3 - ny grunnbok sprint 30
  */
 public class WSUtils {

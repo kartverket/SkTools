@@ -22,7 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * Er laget for å kunne kjøre database script på en bestemt databasekobling.
+ * Er laget for Ã¥ kunne kjÃ¸re database script pÃ¥ en bestemt databasekobling.
  *
  * @author Jan Holmen
  * @author Henrik Fredholm
@@ -30,7 +30,7 @@ import java.util.List;
 public class SqlExecutor {
     private static Logger logger = Logger.getLogger(SqlExecutor.class);
 
-    //SKTOOLS-84: error håndtering
+    //SKTOOLS-84: error hÃ¥ndtering
     boolean failOnError, failOnWarning;
 
 
@@ -40,10 +40,10 @@ public class SqlExecutor {
      * Hvis parameteren FailOnError er med, vil det bli kastet en exception ved ORACLE SQL error
      * fra feil med andre feilkoder en: 02443, 02275, 00955, 01418, 00942
      * <p/>
-     * Kjører ett sql script på database anngitt som VM-Parametere, parameterebrukt:
+     * KjÃ¸rer ett sql script pÃ¥ database anngitt som VM-Parametere, parameterebrukt:
      * -DFailOnError=true
      *
-     * @param sqlScriptNavn, navn på filen som skal lastes.
+     * @param sqlScriptNavn, navn pÃ¥ filen som skal lastes.
      */
     public void runScript(String sqlScriptNavn) throws Exception {
         Connection con = null;
@@ -61,7 +61,7 @@ public class SqlExecutor {
     /**
      * Leser en fil fra classpath og returnerer den som en String
      *
-     * @param filnavn Navnet på filene som skal leses fra classpath
+     * @param filnavn Navnet pÃ¥ filene som skal leses fra classpath
      * @return filens innhold i en java.lang.String
      */
     public static String lesFilFraClasspath(String filnavn) {
@@ -110,7 +110,7 @@ public class SqlExecutor {
     /**
      * Leser en fil fra classpath og returnerer den som en String
      *
-     * @param filnavn Navnet på filene som skal leses fra classpath
+     * @param filnavn Navnet pÃ¥ filene som skal leses fra classpath
      * @return filens innhold i en java.lang.String
      */
     public static String lesFilFraWorkingDir(String filnavn) {
@@ -156,22 +156,22 @@ public class SqlExecutor {
 
 
     /**
-     * Kjører ett sql script på anngit database kobling.
-     * SqlScript statements som er ommgitt av {} skal kjøres som et prepared statement.
-     * Den som kaller denne metoden må passe på og stenge den gitte connectionen selv,
+     * KjÃ¸rer ett sql script pÃ¥ anngit database kobling.
+     * SqlScript statements som er ommgitt av {} skal kjÃ¸res som et prepared statement.
+     * Den som kaller denne metoden mÃ¥ passe pÃ¥ og stenge den gitte connectionen selv,
      * alle statements blir stengt.
-     * Den som kaller må også passe på å committe.
+     * Den som kaller mÃ¥ ogsÃ¥ passe pÃ¥ Ã¥ committe.
      *
-     * @param connection database koblingen skriptet skal kjøre på.
-     * @param sqlScript  scriptet som skal kjøres.
-     * @return resultSet hvis det er kalt en stored procedure ommgitt av {} som gir resultatsett, gir flere linjer resultatsett blir disse lagt sammen i den rekkefølgen de er laget.
+     * @param connection database koblingen skriptet skal kjÃ¸re pÃ¥.
+     * @param sqlScript  scriptet som skal kjÃ¸res.
+     * @return resultSet hvis det er kalt en stored procedure ommgitt av {} som gir resultatsett, gir flere linjer resultatsett blir disse lagt sammen i den rekkefÃ¸lgen de er laget.
      */
     public java.sql.ResultSet[] runScript(Connection connection, String sqlScript) throws Exception {
         if (connection == null) {
-            throw new ConfigurationException("Kan ikke kjøre databasescript med connection = null");
+            throw new ConfigurationException("Kan ikke kjÃ¸re databasescript med connection = null");
         }
         if (sqlScript == null) {
-            throw new ConfigurationException("Det må angis ett sqlscript, sqlSript = null.");
+            throw new ConfigurationException("Det mÃ¥ angis ett sqlscript, sqlSript = null.");
         }
 
         List<? extends Expression> expressions = SQLStatementParser.parseExpressions(sqlScript);
@@ -186,7 +186,7 @@ public class SqlExecutor {
         int antallWarnings = 0;
         int antallStatements = 0;
 
-        //Kjøre en og en linje i skriptet.
+        //KjÃ¸re en og en linje i skriptet.
         java.sql.Statement statement = null;
         try {
             statement = connection.createStatement();
@@ -196,7 +196,7 @@ public class SqlExecutor {
 
                 if (scriptLine instanceof Comment) {
                     logger.debug("Comment: " + ((Comment) scriptLine).getText());
-                    continue; // gjør ikke noe mer for kommentarer
+                    continue; // gjÃ¸r ikke noe mer for kommentarer
                 }
 
                 if (scriptLine instanceof Statement) {
@@ -215,14 +215,14 @@ public class SqlExecutor {
                                 antallWarnings++;
 
                                 if (failOnWarning) {
-                                    throw new Exception("Feil under kjøring av script.", e);
+                                    throw new Exception("Feil under kjÃ¸ring av script.", e);
                                 }
                             } else {
                                 logger.error("Error: Error executing line#" + scriptLine.getLineNumber() + ". Oracle error: " + e.getMessage());
                                 feilet = true;
                                 antallFeil++;
                                 if (failOnError) {
-                                    throw new Exception("Feil under kjøring av script.", e);
+                                    throw new Exception("Feil under kjÃ¸ring av script.", e);
                                 }
                             }
                             logger.debug("Errors while executing : " + sqlStatement.getSql());
@@ -231,7 +231,7 @@ public class SqlExecutor {
                 }
             }
         } finally {
-            //forsikre seg at de er stengt ved feil. Ok og kalle close på closed connection.
+            //forsikre seg at de er stengt ved feil. Ok og kalle close pÃ¥ closed connection.
             if (statement != null) {
                 JDBCHelper.close(statement);
             }
@@ -255,7 +255,7 @@ public class SqlExecutor {
     }
 
     private static CallableStatement callCallable(String scriptLine, Connection connection, List<java.sql.ResultSet> rsList) throws SQLException {
-        //prøver å ta hensyn til at det kan returneres flere Resultset fra ett storedProcedure kall.
+        //prÃ¸ver Ã¥ ta hensyn til at det kan returneres flere Resultset fra ett storedProcedure kall.
         logger.info("Procedure: " + scriptLine);
         CallableStatement callablStatement = connection.prepareCall(scriptLine);
         boolean isResultset = callablStatement.execute();
@@ -278,15 +278,15 @@ public class SqlExecutor {
      * Hvis parameteren FailOnError er med, vil det bli kastet en exception ved ORACLE SQL error
      * fra feil med andre feilkoder en: 02443, 02275, 00955, 01418, 00942
      * <p/>
-     * Kjører sql script på database anngitt som VM-Parametere, parameterebrukt:
+     * KjÃ¸rer sql script pÃ¥ database anngitt som VM-Parametere, parameterebrukt:
      * -DFailOnError=true
      * -DFailOnWarning=false
      *
-     * @param args navn på filen som skal lastes.
+     * @param args navn pÃ¥ filen som skal lastes.
      */
     public static void main(String[] args) throws Exception {
         if (args == null || args.length < 1) {
-            throw new OperationalException("Scriptfilen(e) som skal kjøres må være anngitt som parameter.");
+            throw new OperationalException("Scriptfilen(e) som skal kjÃ¸res mÃ¥ vÃ¦re anngitt som parameter.");
         }
 
         final SqlExecutor executor = new SqlExecutor();

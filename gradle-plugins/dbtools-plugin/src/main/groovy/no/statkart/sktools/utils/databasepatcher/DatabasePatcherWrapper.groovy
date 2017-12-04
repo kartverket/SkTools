@@ -4,11 +4,11 @@ import java.sql.Connection
 import groovy.sql.Sql
 
 /**
- * Wrapper for å kjøre {@link DatabasePatcher} ifra gradle/groovy
+ * Wrapper for Ã¥ kjÃ¸re {@link DatabasePatcher} ifra gradle/groovy
  * 
- * Wrapperen er ansvarlig for å sette {@link Connection}
+ * Wrapperen er ansvarlig for Ã¥ sette {@link Connection}
  *
- * @author Leif Lislegård 
+ * @author Leif LislegÃ¥rd 
  * @since 1.2
  */
 public class DatabasePatcherWrapper extends DatabasePatcher {

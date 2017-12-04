@@ -6,7 +6,7 @@ import no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractDatabase
  * Tasks for Oracle databases
  *
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 1.0
  */
 class OracleTasks extends AbstractDatabaseTasks<OracleTasksConvention> {

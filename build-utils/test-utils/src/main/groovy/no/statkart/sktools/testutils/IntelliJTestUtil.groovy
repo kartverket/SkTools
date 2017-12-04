@@ -1,9 +1,9 @@
 package no.statkart.sktools.testutils
 
 /**
- * Verktøy som kan avgjøre om en kjører tester ifra IntelliJ eller ikke.
+ * VerktÃ¸y som kan avgjÃ¸re om en kjÃ¸rer tester ifra IntelliJ eller ikke.
  *
- * PS: Dette verktøyet virket pt kun innenfor SKTOOLS prosjektet og kan ikke benyttes ved ekstern testavhengighet.
+ * PS: Dette verktÃ¸yet virket pt kun innenfor SKTOOLS prosjektet og kan ikke benyttes ved ekstern testavhengighet.
  */
 public class IntelliJTestUtil {
 

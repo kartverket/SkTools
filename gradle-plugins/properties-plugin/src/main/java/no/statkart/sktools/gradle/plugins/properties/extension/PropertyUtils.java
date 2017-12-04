@@ -17,9 +17,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Extension for enkel håndtering av properties i prosjekter. Denne kan utvide Gradle sin DSL.
+ * Extension for enkel hÃ¥ndtering av properties i prosjekter. Denne kan utvide Gradle sin DSL.
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 1.2
  */
 public class PropertyUtils {
@@ -52,7 +52,7 @@ public class PropertyUtils {
     /**
      * Leser inn properties ifra fil.
      *
-     * Merk at dersom samme property blir lest inn flere ganger så er det den siste parameteriserte filen som har presedens.
+     * Merk at dersom samme property blir lest inn flere ganger sÃ¥ er det den siste parameteriserte filen som har presedens.
      *
      * @param path Samme som {@link Project#file(Object)}.
      * @return properties lest ifra fil(er), eller tomt map dersom ingen filer funnet.
@@ -73,7 +73,7 @@ public class PropertyUtils {
 
     /**
      * Legger properties til prosjektet.
-     * @param propertiess properties som ønskes satt på prosjektet
+     * @param propertiess properties som Ã¸nskes satt pÃ¥ prosjektet
      */
     @SafeVarargs
     public final void assignPropertiesToProject(Map<String, ?>... propertiess) {
@@ -96,7 +96,7 @@ public class PropertyUtils {
     /**
      * Ekspanderer alle properties registrert for prosjektet.
      * <p/>
-     * Dersom {@link #strict} så vil exception kastes dersom ikke alle properties kunne resolves.
+     * Dersom {@link #strict} sÃ¥ vil exception kastes dersom ikke alle properties kunne resolves.
      */
     public void expandProjectProperties(boolean strict) {
         LOG.debug("expanding properties for project {}", project.getPath());
@@ -128,7 +128,7 @@ public class PropertyUtils {
     }
 
     /**
-     * Ekspanderer alle properties. Verdier vil bli forsøkt søkt opp via parameterisert sett så via prosjektet.
+     * Ekspanderer alle properties. Verdier vil bli forsÃ¸kt sÃ¸kt opp via parameterisert sett sÃ¥ via prosjektet.
      * @param properties properties som skal ekspanderes
      * @throws GradleException dersom {@link #strict} og ikke alle properties kunne expandes
      */
@@ -144,8 +144,8 @@ public class PropertyUtils {
 
 
     /**
-     * TODO: Løse problem med sirkulære property referanser.
-     * Annta at props har følgende verdier:
+     * TODO: LÃ¸se problem med sirkulÃ¦re property referanser.
+     * Annta at props har fÃ¸lgende verdier:
      * key1=${key2}
      * key2=${key3}
      * key3=${key1}

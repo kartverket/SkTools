@@ -10,7 +10,7 @@ import org.gradle.api.Project
 /**
  * Test av {@link PropertyUtils}
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 class PropertyUtilsTest {
 

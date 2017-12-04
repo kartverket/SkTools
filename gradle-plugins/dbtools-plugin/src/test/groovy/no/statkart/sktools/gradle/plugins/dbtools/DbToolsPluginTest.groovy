@@ -36,8 +36,8 @@ class DbToolsPluginTest {
     /**
      * Tester og demonstrerer angivelse av credentials.
      *
-     * Testen illustrerer at credentials på toolset og tasker kan bli satt runtime.
-     * En illustrerer også at disse kan løsrives dersom en ønsker, slik at en kan be brukeren om å tate inn credentials i spesielle tilfeller.
+     * Testen illustrerer at credentials pÃ¥ toolset og tasker kan bli satt runtime.
+     * En illustrerer ogsÃ¥ at disse kan lÃ¸srives dersom en Ã¸nsker, slik at en kan be brukeren om Ã¥ tate inn credentials i spesielle tilfeller.
      */
     @Test
     void testApplyCredentials() {
@@ -71,7 +71,7 @@ class DbToolsPluginTest {
         Assert.assertEquals(convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].username, 'brukernavn')
         Assert.assertEquals(convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].password, 'passord')
 
-        //setter credentials på toolsetet
+        //setter credentials pÃ¥ toolsetet
         testCase.configureProject {
             configureDatabasePlugin {
                 toolset(type: 'hsqldb', name: 'coolDb') {
@@ -81,14 +81,14 @@ class DbToolsPluginTest {
             }
         }
 
-        //sjekker at toolset har fått satt riktige credentials
+        //sjekker at toolset har fÃ¥tt satt riktige credentials
         Assert.assertEquals(convention.dbToolSets.coolDb.credentials.username, 'brukernavn2', "Forventet oppdatert brukernavn")
         Assert.assertEquals(convention.dbToolSets.coolDb.credentials.password, 'passord2', "Forventet oppdatert passord")
         //sjekker at task leser credentials ifra toolset
         Assert.assertEquals(convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].username, 'brukernavn2')
         Assert.assertEquals(convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].password, 'passord2')
 
-        //setter passord på task
+        //setter passord pÃ¥ task
         testCase.project.tasks.'coolDbPleaseAuthenticateMe'.password = 'passord3'
         //setter default brukernavn via project properties
         testCase.project.ext.setProperty 'username', 'projectUser'
@@ -97,10 +97,10 @@ class DbToolsPluginTest {
         Assert.assertEquals(convention.dbToolSets.coolDb.credentials.username, 'brukernavn2', "Forventet samme brukernavn")
         Assert.assertEquals(convention.dbToolSets.coolDb.credentials.password, 'passord2', "Forventet samme passord")
         //sjekker at credentials blir bruk som en anatomisk enhet
-        Assert.assertEquals(convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].username, null /*fungerer kun når Console ikke finnes*/)
+        Assert.assertEquals(convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].username, null /*fungerer kun nÃ¥r Console ikke finnes*/)
         Assert.assertEquals(convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].password, 'passord3')
 
-        //clearer credentials på task
+        //clearer credentials pÃ¥ task
         testCase.project.tasks.'coolDbPleaseAuthenticateMe'.credentials.clear()
 
         Assert.assertEquals(convention.dbToolSets.coolDb.credentials.username, 'brukernavn2', "Forventet samme brukernavn")
@@ -109,7 +109,7 @@ class DbToolsPluginTest {
         Assert.assertEquals(convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].username, 'brukernavn2', "Forventet conventional verdi")
         Assert.assertEquals(convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].password, 'passord2', "Forventet conventional verdi")
 
-        //setter credentials  på task
+        //setter credentials  pÃ¥ task
         testCase.project.tasks.'coolDbPleaseAuthenticateMe'.username = 'brukernavn4'
         testCase.project.tasks.'coolDbPleaseAuthenticateMe'.password = 'passord4'
 
@@ -170,7 +170,7 @@ class DbToolsPluginTest {
                     importTask()
                 }
                 toolset(name: 'db2', type: 'oracle') {
-                    importTask() {  //deklarering via properties på task
+                    importTask() {  //deklarering via properties pÃ¥ task
                         username = 'brukernavn'
                         password = 'passord'
                     }
@@ -208,7 +208,7 @@ class DbToolsPluginTest {
                     exportTask()
                 }
                 toolset(name: 'db2', type: 'oracle') {
-                    exportTask() {  //deklarering via properties på task
+                    exportTask() {  //deklarering via properties pÃ¥ task
                         username = 'brukernavn'
                         password = 'passord'
                     }
@@ -451,7 +451,7 @@ class DbToolsPluginTest {
 
 
     /**
-     * Verifiserer at taskSequence syntax fungerer på project
+     * Verifiserer at taskSequence syntax fungerer pÃ¥ project
      * @since 1.4
      */
     @Test

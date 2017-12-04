@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
 /**
  * Parses blocks of javadoc
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 1.3 - ny grunnbok sprint 30
  */
 public class JavaDocUtils {

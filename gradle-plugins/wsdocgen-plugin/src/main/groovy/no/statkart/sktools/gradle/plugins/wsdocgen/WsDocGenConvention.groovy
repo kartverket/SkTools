@@ -4,8 +4,8 @@ package no.statkart.sktools.gradle.plugins.wsdocgen
 /**
  *
  * @since 1.0
- * @author Thor Åge Eldby
- * @author Leif Lislegård
+ * @author Thor Ã…ge Eldby
+ * @author Leif LislegÃ¥rd
  */
 class WsDocGenConvention implements Serializable {
     private static final long serialVersionUID = 1L; //SKTOOLS-130: remove Serializable in sktools version 2.1

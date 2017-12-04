@@ -13,9 +13,9 @@ public abstract class DatabasePatcherException extends RuntimeException {
     private String errorCode;
 
     /**
-     * Indikerer om exception er håndtert i en VM. Benyttes for eksempel for å unngå å vise samme feilmeldingsdialog
-     * til brukeren flere ganger. Er transient slik at håndtering av feilen f.eks. på tjeneren ikke forhindrer håndtering
-     * på klienten.
+     * Indikerer om exception er hÃ¥ndtert i en VM. Benyttes for eksempel for Ã¥ unngÃ¥ Ã¥ vise samme feilmeldingsdialog
+     * til brukeren flere ganger. Er transient slik at hÃ¥ndtering av feilen f.eks. pÃ¥ tjeneren ikke forhindrer hÃ¥ndtering
+     * pÃ¥ klienten.
      */
     private transient boolean handled;
 
@@ -76,22 +76,22 @@ public abstract class DatabasePatcherException extends RuntimeException {
     }
 
     /**
-     * Er denne feilen allerede håndtert av applikasjonen? På klienten vil normal håndtering være å vise en
-     * feilmeldingsdialog til brukeren og så kaste feilen videre for å terminere aksjonen og evt. også logging
+     * Er denne feilen allerede hÃ¥ndtert av applikasjonen? PÃ¥ klienten vil normal hÃ¥ndtering vÃ¦re Ã¥ vise en
+     * feilmeldingsdialog til brukeren og sÃ¥ kaste feilen videre for Ã¥ terminere aksjonen og evt. ogsÃ¥ logging
      * i Java Web Start sin log-fil.
      *
-     * Håndtering av en feil betyr håndtering innenfor en Java VM. Typisk vil tjeneren og klienten kunne ha forskjellig
-     * håndtering, tjeneren kan logge til spesiell logg-fil mens klienten f.eks. viser en dialog.
+     * HÃ¥ndtering av en feil betyr hÃ¥ndtering innenfor en Java VM. Typisk vil tjeneren og klienten kunne ha forskjellig
+     * hÃ¥ndtering, tjeneren kan logge til spesiell logg-fil mens klienten f.eks. viser en dialog.
      *
-     * @return true dersom denne systemfeilen allerede er "håndtert" av programmet
+     * @return true dersom denne systemfeilen allerede er "hÃ¥ndtert" av programmet
      */
     public boolean isHandled() {
         return handled;
     }
 
     /**
-     * Angi om denne systemfeilen allerede er håndtert av applikasjonen (i kjørende Java VM).
-     * @param b om håndtert
+     * Angi om denne systemfeilen allerede er hÃ¥ndtert av applikasjonen (i kjÃ¸rende Java VM).
+     * @param b om hÃ¥ndtert
      */
     public void setHandled(boolean b) {
         this.handled = b;

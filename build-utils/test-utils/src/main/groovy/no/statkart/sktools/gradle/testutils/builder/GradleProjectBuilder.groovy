@@ -8,11 +8,11 @@ import no.statkart.sktools.gradle.testutils.ProjectHelper
 import org.gradle.api.plugins.WarPlugin
 
 /**
- * Verktøy for bygging av gradle test prosjekter.
+ * VerktÃ¸y for bygging av gradle test prosjekter.
  *
  * Subklasser kan legge til plugin spesifik konfigurasjon.
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 class GradleProjectBuilder<T extends GradleProjectBuilder<T>> {
 

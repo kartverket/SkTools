@@ -212,18 +212,15 @@ subprojects { Project project ->
     }
 
 
+    tasks.withType(JavaCompile) {
+        options.encoding = 'UTF-8' //SKTOOLS-163: java source in UTF-8 encoding
+    }
+
     tasks.withType(GroovyCompile) {
-        groovyOptions.encoding = System.getProperty('file.encoding') //SKTOOLS-83: groovy source files in system encoding (default is UTF-8)
+        options.encoding = 'UTF-8' //SKTOOLS-163: java source in UTF-8 encoding (discriminates java files in the groovy source set)
+        groovyOptions.encoding = 'UTF-8' //SKTOOLS-163: groovy source files in UTF-8 encoding (default is UTF-8)
     }
 
-}
-
-task pelle {
-    doFirst {
-        println "pelle Æ Ø Å"
-        println "pelle æ ø å"
-        println gradle.startParameter.projectProperties.PELLE == 'Æ'
-    }
 }
 
 allprojects {
@@ -281,7 +278,7 @@ afterEvaluate {
                         encoding.appendNode('file')
                     }
                     encoding.file.@url = 'PROJECT'
-                    encoding.file.@charset = 'windows-1252'
+                    encoding.file.@charset = 'utf-8'
                 } else {
                     logger.warn('Not able to configure file encodings for IntelliJ')
                 }

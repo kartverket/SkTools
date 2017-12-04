@@ -11,9 +11,9 @@ import org.gradle.api.Task
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.SequenceTask
 
 /**
- * Pluginen kan konfigureres til å håndtere flere ulike databaser og flere instanser av denne.
+ * Pluginen kan konfigureres til Ã¥ hÃ¥ndtere flere ulike databaser og flere instanser av denne.
  * <p>
- *     For at pluginen kan utføre JDBC kall mot databasen trenger en å registrere driverene. Dette konfigureres via {@link DbtoolsConvention#useDrivers(Object) }
+ *     For at pluginen kan utfÃ¸re JDBC kall mot databasen trenger en Ã¥ registrere driverene. Dette konfigureres via {@link DbtoolsConvention#useDrivers(Object) }
  * </p>
  *
  *
@@ -67,7 +67,7 @@ public class DbtoolsConvention {
 
 
     /**
-     * Følgende toolset er tilgjengelige:
+     * FÃ¸lgende toolset er tilgjengelige:
      *
      * <ul>
      *     <li>'oracle' - se {@link OracleTasksConvention#config(Closure)} </li>
@@ -76,7 +76,7 @@ public class DbtoolsConvention {
      *
      * <p>
      *
-     * Eksempel for å legge til egne oracle targets:
+     * Eksempel for Ã¥ legge til egne oracle targets:
      *
      * <pre><code>
 
@@ -92,15 +92,15 @@ configureDatabasePlugin {
 }
      * </code></pre>
      *
-     * Utifra dette genereres det opp tasks som kan kjøres på bakgrunn av filer som ligger  i ./scr/mineScript/&#42&#42/&#42.sql <br />
+     * Utifra dette genereres det opp tasks som kan kjÃ¸res pÃ¥ bakgrunn av filer som ligger  i ./scr/mineScript/&#42&#42/&#42.sql <br />
      * Taskene vil bli eksekvert med konfigurert url, username og password. <br />
      * Taskene vil bli navngitt <b>&lt;prefix&gt;&lt;filnavn&gt; </b><br />
-     * Standard tasks for import og eksport vil også bli lagt til. <br />
+     * Standard tasks for import og eksport vil ogsÃ¥ bli lagt til. <br />
      *
      *
      * <p>
      * <p>
-     * Pluginen støtter flere samtidige toolset.
+     * Pluginen stÃ¸tter flere samtidige toolset.
      *
      *
      * @param type type toolset (oracle eller hsqldb)
@@ -123,7 +123,7 @@ configureDatabasePlugin {
         } else if ('hsqldb'.equalsIgnoreCase(type)) {
             toolset = addHsqldbToolset(prefix, name, closure)
         } else {
-            throw new GradleException("Ukjent verktøyset/database")
+            throw new GradleException("Ukjent verktÃ¸yset/database")
         }
         return toolset;
 
@@ -131,7 +131,7 @@ configureDatabasePlugin {
 
 
     /**
-     *  For å kunne benytte jdbc funksjonalitet, må jdbc klasser registreres i classloader til groovy.
+     *  For Ã¥ kunne benytte jdbc funksjonalitet, mÃ¥ jdbc klasser registreres i classloader til groovy.
      */
     protected void useDrivers(Object dependencyNotation) {
         [dependencyNotation].flatten().each {

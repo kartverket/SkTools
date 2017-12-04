@@ -9,7 +9,7 @@ import org.gradle.process.JavaExecSpec
 /**
  * Task som setter flagg i databasen om indexer er up-to-date for gjeldende patch eller ikke.
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 1.2
  */
 @SuppressWarnings("UnnecessaryQualifiedReference")

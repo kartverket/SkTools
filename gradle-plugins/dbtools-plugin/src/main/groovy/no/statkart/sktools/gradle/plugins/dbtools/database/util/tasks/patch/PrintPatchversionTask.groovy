@@ -8,7 +8,7 @@ import org.gradle.process.JavaExecSpec
 /**
  * Task som gir deg siste patchversjon.
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 1.2
  */
 @SuppressWarnings("UnnecessaryQualifiedReference")

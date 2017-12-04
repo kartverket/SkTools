@@ -3,7 +3,7 @@ package no.statkart.sktools.utils.parsers.sql.model;
 /**
  * Visitor interface for type
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 1.2
  */
 public interface LineCommentVisitor<T extends LineComment> extends ExpressionVisitor<T> {

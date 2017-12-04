@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * Statiske funksjoner for parsing av sammensatte sql-filer.
  *
- * Innhold til en sql fil blir parset etter følgende definisjon på LL(*) form
+ * Innhold til en sql fil blir parset etter fÃ¸lgende definisjon pÃ¥ LL(*) form
  *
  * <ul>
  *     <li>Expression :: DefaultStatement | PLSQLStatement | Comment </li>
@@ -25,14 +25,14 @@ import java.util.List;
  *     <li>PromptStatement :: "PROMPT " {@code <text>}\n</li>
  * </ul>
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 0.1
  */
 public class SQLStatementParser {
 
     public static List<? extends Expression> parseExpressions(LineNumberReader reader) throws IOException {
 
-        reader.setLineNumber(1);    //begynner på linje 1 ...
+        reader.setLineNumber(1);    //begynner pÃ¥ linje 1 ...
 
         if (!reader.markSupported()) {
             throw new RuntimeException("markSupported a requisite for this parser!");

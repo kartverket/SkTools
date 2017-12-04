@@ -10,7 +10,7 @@ import org.gradle.api.tasks.TaskAction
  * Task for undeploy
  *
  * @since 1.2
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 class WeblogicUndeployTask extends AbstractWeblogicDeployTask {
     protected static final Logger logger = Logging.getLogger(WeblogicUndeployTask.class);

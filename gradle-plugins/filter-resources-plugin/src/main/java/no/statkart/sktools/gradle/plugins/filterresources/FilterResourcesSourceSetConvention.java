@@ -6,7 +6,7 @@ import org.gradle.util.ConfigureUtil;
 import org.gradle.util.GUtil;
 
 /**
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 1.1
  */
 class FilterResourcesSourceSetConvention {
@@ -44,7 +44,7 @@ class FilterResourcesSourceSetConvention {
     }
 
     /**
-     * På samme måte som {@link org.gradle.api.internal.tasks.DefaultSourceSet}
+     * PÃ¥ samme mÃ¥te som {@link org.gradle.api.internal.tasks.DefaultSourceSet}
      *
      * @return sourceSet navn med stor bokstav, eller tom streng for "main"-SourceSet.
      * @param name

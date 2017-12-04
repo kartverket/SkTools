@@ -6,9 +6,9 @@ import org.gradle.api.internal.ConventionTask
 import org.gradle.api.tasks.TaskAction
 
 /**
- * Tester at weblogicClasspath blir satt på Task. Se testng test metode.
+ * Tester at weblogicClasspath blir satt pÃ¥ Task. Se testng test metode.
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 class TestClasspathForWeblogicTask extends ConventionTask implements WeblogicTaskInterface {
 

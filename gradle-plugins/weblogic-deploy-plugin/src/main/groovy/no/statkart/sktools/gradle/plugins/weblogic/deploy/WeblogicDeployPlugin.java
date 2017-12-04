@@ -7,7 +7,7 @@ import org.gradle.api.internal.project.ProjectInternal;
  * Plugin for deployment-tasker til Weblogic Server.
  *
  * @author Tor Egil R. Strand
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 1.2
  */
 public class WeblogicDeployPlugin implements Plugin<ProjectInternal> {

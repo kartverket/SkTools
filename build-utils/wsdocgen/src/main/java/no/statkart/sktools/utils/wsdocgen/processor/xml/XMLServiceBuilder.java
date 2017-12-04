@@ -21,7 +21,7 @@ import java.util.Map;
 /**
  * Builds {@code <service>} elements for parametrized class
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 1.3
  */
 public class XMLServiceBuilder {

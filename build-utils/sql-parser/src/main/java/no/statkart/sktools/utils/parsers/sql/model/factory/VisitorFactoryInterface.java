@@ -5,15 +5,15 @@ import no.statkart.sktools.utils.parsers.sql.model.ExpressionVisitor;
 /**
  * Abstract factory funksjoner for oppsett av visitorer.
  * <p/>
- * Det er tatt høyde for at implementasjonen kan benytte seg av
+ * Det er tatt hÃ¸yde for at implementasjonen kan benytte seg av
  * <a href="http://en.wikipedia.org/wiki/Chain-of-responsibility_pattern">chain of responsibility pattern</a> slik at oppgaven blir delegert til riktig instans av visitor.
  * <p/>
- * Modellen er løsriven ifra visitor implementasjon. Dette tilrettelegger da for minimale endringer i koden ved evt utøkelse/endring av funksjonalitet.
+ * Modellen er lÃ¸sriven ifra visitor implementasjon. Dette tilrettelegger da for minimale endringer i koden ved evt utÃ¸kelse/endring av funksjonalitet.
  * Dette blir tilbudt igjennom <a href="http://en.wikipedia.org/wiki/Abstract_factory_pattern">abstract factory patternet</a>.
  * <p/>
- * Se forøvrigt <a href="http://drjava.sourceforge.net/papers/DP4RDP-final.pdf">"Design patterns for Parsing"</a> av "Dung 'Zung' Nguyen" m.fl.
+ * Se forÃ¸vrigt <a href="http://drjava.sourceforge.net/papers/DP4RDP-final.pdf">"Design patterns for Parsing"</a> av "Dung 'Zung' Nguyen" m.fl.
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @since 0.1
  */
 public interface VisitorFactoryInterface {

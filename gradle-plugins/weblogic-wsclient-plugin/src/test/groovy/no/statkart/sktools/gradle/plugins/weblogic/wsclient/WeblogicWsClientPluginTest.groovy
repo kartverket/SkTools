@@ -15,7 +15,7 @@ import org.gradle.api.tasks.SourceSet
 /**
  * Test  av {@link WeblogicWsClientPlugin}-funksjonalitet.
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 class WeblogicWsClientPluginTest {
 
@@ -37,7 +37,7 @@ class WeblogicWsClientPluginTest {
 
     /**
      *
-     * Tester og demonstrerer ulike måter å konfigurere opp pluginen på.
+     * Tester og demonstrerer ulike mÃ¥ter Ã¥ konfigurere opp pluginen pÃ¥.
      */
     @Test
     void testConventionConfiguration() {
@@ -134,7 +134,7 @@ class WeblogicWsClientPluginTest {
 
         //eksekverer - genererer wsclient artifakt
         wsClientProjectHelper.executeTask('assemble')
-        //forventer at ovenstående kaller {@code WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME }
+        //forventer at ovenstÃ¥ende kaller {@code WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME }
 
         //tester at avhengighet er blit bygd.
         wsWarProjectHelper.assertFileExists('build/libs/wswar-weblogic.war', 'Forventer at war modul er blitt generert og pakket.')

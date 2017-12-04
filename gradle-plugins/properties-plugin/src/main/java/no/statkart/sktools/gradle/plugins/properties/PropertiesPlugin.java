@@ -10,7 +10,7 @@ import org.gradle.api.internal.project.ProjectInternal;
  * SKTOOLS-44: Plugin for setting og ekspandering av properties
  *
  * @since 1.3
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 public class PropertiesPlugin implements Plugin<ProjectInternal> {
     public static final String PROPERTY_UTILS_EXTENSION_NAME = "propertyUtils";

@@ -15,7 +15,7 @@ import org.gradle.api.Project
 /**
  * Test av {@link JarSigner}
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 class JarSignerTest {
 
@@ -85,7 +85,7 @@ class JarSignerTest {
 
 
         Assert.assertEquals(jarSigner2.outputs.files.files, jarSigner1.outputs.files.files, 'forventet samme sett av filer')
-        Assert.assertEquals(modified2, modified1, 'forventer at cached fil er urørt')
+        Assert.assertEquals(modified2, modified1, 'forventer at cached fil er urÃ¸rt')
     }
 
 
@@ -199,7 +199,7 @@ class JarSignerTest {
      * Asserts that the file has the jar extension, and that all the contents are signed.
      */
     public static void assertSignedJar(File file) {
-        Assert.assertTrue(file.getName().endsWith('.jar'), "Jar fil skal ende på '.jar")
+        Assert.assertTrue(file.getName().endsWith('.jar'), "Jar fil skal ende pÃ¥ '.jar")
         JarFile jarFile = new JarFile(file, true);
         Assert.assertEquals(jarFile.manifest.mainAttributes.getValue("Permissions"), "sandbox", "Permissions");
     }

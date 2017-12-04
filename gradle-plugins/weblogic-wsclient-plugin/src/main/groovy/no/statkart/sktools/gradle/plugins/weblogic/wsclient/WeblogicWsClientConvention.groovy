@@ -9,10 +9,10 @@ import org.gradle.api.tasks.util.PatternSet
 /**
  *
  *
- * ps. bruk av transient felter for å styre hva som ikke skal persisteres ved gradles beregning av up to date ved depends on.
+ * ps. bruk av transient felter for Ã¥ styre hva som ikke skal persisteres ved gradles beregning av up to date ved depends on.
  *
  * @since 1.1
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  * @author Tor Egil R. Strand
  */
 @SuppressWarnings("GroovyUnusedDeclaration")
@@ -88,7 +88,7 @@ class WebServiceConfig {
     }
 
     /**
-     * Alternativ spesifisering av wsdl filer dersom en ønsker overstyring av default verdier.
+     * Alternativ spesifisering av wsdl filer dersom en Ã¸nsker overstyring av default verdier.
      *
      * @see Project#files(Object ... paths)
      */
@@ -98,7 +98,7 @@ class WebServiceConfig {
     }
 
     /**
-     * Alternativ spesifisering av wsdl filer dersom en ønsker overstyring av default verdier.
+     * Alternativ spesifisering av wsdl filer dersom en Ã¸nsker overstyring av default verdier.
      */
     public WebServiceConfig schemaFiles(Closure closure) {
         closure.setDelegate(convention) //eksponerer med dette bla convention sin 'project' property
@@ -108,7 +108,7 @@ class WebServiceConfig {
     /**
      * Bestemmer hvor wsdl schema befinner seg.
      *
-     * Legger til en baseWar der {@code dependencyNotation} er på formen beskrevet i {@link org.gradle.api.artifacts.dsl.DependencyHandler}
+     * Legger til en baseWar der {@code dependencyNotation} er pÃ¥ formen beskrevet i {@link org.gradle.api.artifacts.dsl.DependencyHandler}
      */
     public WebServiceConfig baseWar(Closure dependencyNotatonClosure) {
         dependencyNotatonClosure.setResolveStrategy(Closure.DELEGATE_FIRST);

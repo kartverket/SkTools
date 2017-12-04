@@ -3,9 +3,9 @@ package no.statkart.sktools.gradle.testutils.filewriter
 import no.statkart.sktools.gradle.testutils.ProjectHelper
 
 /**
- * Statiske understøttende hjelpemetoder for generering av kildekode for bruk i testing.
+ * Statiske understÃ¸ttende hjelpemetoder for generering av kildekode for bruk i testing.
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 class FilterPropertiesTestutilFilewriter extends AbstractTestutilFilewriter {
 

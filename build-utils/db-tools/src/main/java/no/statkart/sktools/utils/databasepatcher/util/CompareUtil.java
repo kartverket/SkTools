@@ -21,7 +21,7 @@ public class CompareUtil {
        String[] s2 = dbVersion2.split("\\.");
        for( int i = 0; i < s1.length; i++ ) {
           if( i == s2.length ) {
-             return 1; // dbVersion1 er størst siden den har flest "."
+             return 1; // dbVersion1 er stÃ¸rst siden den har flest "."
           }
           int res = 0;
           try {
@@ -38,7 +38,7 @@ public class CompareUtil {
        if( s1.length == s2.length ) {
           return 0;
        } else {
-          return -1;  // dbVersion2 er størst siden den har flest "."
+          return -1;  // dbVersion2 er stÃ¸rst siden den har flest "."
        }
     }
 }

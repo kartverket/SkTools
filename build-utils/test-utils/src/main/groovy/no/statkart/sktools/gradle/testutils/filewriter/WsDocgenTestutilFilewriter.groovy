@@ -3,9 +3,9 @@ package no.statkart.sktools.gradle.testutils.filewriter
 import no.statkart.sktools.gradle.testutils.ProjectHelper
 
 /**
- * Statiske understøttende hjelpemetoder for generering av kildekode for bruk i testing.
+ * Statiske understÃ¸ttende hjelpemetoder for generering av kildekode for bruk i testing.
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 class WsDocgenTestutilFilewriter extends AbstractTestutilFilewriter {
 
@@ -73,14 +73,14 @@ class WsDocgenTestutilFilewriter extends AbstractTestutilFilewriter {
 
     /**
      * Skriver kildekode for en testservice til fil.
-     * Merk at webservicen har dokumentasjon både på interface og implementasjonen.
+     * Merk at webservicen har dokumentasjon bÃ¥de pÃ¥ interface og implementasjonen.
      * <p>
      * <p>
      *  Service : {http://sktools.statkart.no/test/service/interfaceservice} InterfaceService
      * <p>
-     *  Java interface : no.statkart.sktools.interfaceservice.InterfaceServiceInterface - med javadoc på klasse
+     *  Java interface : no.statkart.sktools.interfaceservice.InterfaceServiceInterface - med javadoc pÃ¥ klasse
      * <p>
-     *  Domeneklasse : no.statkart.sktools.interfaceservice.domain.SimpleClass - med javadoc på klasse
+     *  Domeneklasse : no.statkart.sktools.interfaceservice.domain.SimpleClass - med javadoc pÃ¥ klasse
      *
      * Testservice har to metoder definert i interface, samt domenemodell (webservice lag).
      *

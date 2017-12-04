@@ -8,7 +8,7 @@ import org.testng.annotations.Test
 /**
  * Tester funksjonalitet for {@link WeblogicBasePlugin}
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 class WeblogicBasePluginTest {
 
@@ -74,7 +74,7 @@ class WeblogicBasePluginTest {
             }
         }
 
-        //tenker oss at weblogic classpath configurasjon også skal inneholde alle compile time dependencies..
+        //tenker oss at weblogic classpath configurasjon ogsÃ¥ skal inneholde alle compile time dependencies..
         projectHelper.project.configurations.getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME).extendsFrom(projectHelper.project.configurations.getByName(JavaPlugin.COMPILE_CONFIGURATION_NAME))
 
 

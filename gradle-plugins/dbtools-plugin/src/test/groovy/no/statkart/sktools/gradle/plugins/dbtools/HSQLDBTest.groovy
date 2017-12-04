@@ -14,7 +14,7 @@ import org.slf4j.Logger
 /**
  * Testklasse som setter opp en tom database.
  *
- * Hver test får definert opp
+ * Hver test fÃ¥r definert opp
  * <ul>
  *     <li> system-bruker - {@link #systemCredentials}
  *     <li> standard-bruker - {@link #defaultCredentials}
@@ -82,7 +82,7 @@ abstract class HSQLDBTest {
     }
 
     /**
-     * Connection som holder databasen oppe. Kallet gjør at en in memory database blir kreert og vil være tilgjengelig så lenge som denne connectionen lever.
+     * Connection som holder databasen oppe. Kallet gjÃ¸r at en in memory database blir kreert og vil vÃ¦re tilgjengelig sÃ¥ lenge som denne connectionen lever.
      */
     @BeforeTest
     void setupDb() {

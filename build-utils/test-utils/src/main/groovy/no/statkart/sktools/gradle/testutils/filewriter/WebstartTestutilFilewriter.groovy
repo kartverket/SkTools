@@ -4,9 +4,9 @@ import no.statkart.sktools.gradle.testutils.ProjectHelper
 import org.apache.commons.io.FileUtils
 
 /**
- * Statiske understøttende hjelpemetoder for generering av kildekode for bruk i testing.
+ * Statiske understÃ¸ttende hjelpemetoder for generering av kildekode for bruk i testing.
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 class WebstartTestutilFilewriter extends AbstractTestutilFilewriter {
 

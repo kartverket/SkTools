@@ -13,7 +13,7 @@ import java.sql.Statement;
 import java.util.Properties;
 
 /**
- * Hjelpeklasser for bruk av JDBC api'et. Har metoder for å frigjøre JDBC ressurser på korrekt måte.
+ * Hjelpeklasser for bruk av JDBC api'et. Har metoder for Ã¥ frigjÃ¸re JDBC ressurser pÃ¥ korrekt mÃ¥te.
  *
  * @author Aksel Hilde
  */
@@ -27,72 +27,72 @@ public class JDBCHelper {
     }
 
     /**
-     * Frigjør en connection
+     * FrigjÃ¸r en connection
      *
      * @param connection
-     * @throws OperationalException dersom frigjøring av ressurser feilet.
+     * @throws OperationalException dersom frigjÃ¸ring av ressurser feilet.
      */
     public static void close(Connection connection) {
         try {
             if (connection != null) connection.close();
         } catch (SQLException e) {
-            throw new OperationalException(logger, "Frigjøring av JDBC Connection feilet", e);
+            throw new OperationalException(logger, "FrigjÃ¸ring av JDBC Connection feilet", e);
         }
     }
 
     /**
-     * Frigjør en statement og en connection
+     * FrigjÃ¸r en statement og en connection
      *
      * @param statement
      * @param connection
-     * @throws OperationalException dersom frigjøring av ressurser feilet.
+     * @throws OperationalException dersom frigjÃ¸ring av ressurser feilet.
      */
     public static void close(Statement statement, Connection connection) {
         try {
             if (statement != null) statement.close();
             if (connection != null) connection.close();
         } catch (SQLException e) {
-            throw new OperationalException(logger, "Frigjøring av JDBC Statement eller Connection feilet", e);
+            throw new OperationalException(logger, "FrigjÃ¸ring av JDBC Statement eller Connection feilet", e);
         }
     }
 
     /**
-     * Frigjør en statement
+     * FrigjÃ¸r en statement
      *
      * @param statement
-     * @throws OperationalException dersom frigjøring av ressurser feilet.
+     * @throws OperationalException dersom frigjÃ¸ring av ressurser feilet.
      */
     public static void close(Statement statement) {
         try {
             if (statement != null) statement.close();
         } catch (SQLException e) {
-            throw new OperationalException(logger, "Frigjøring av JDBC Statement feilet", e);
+            throw new OperationalException(logger, "FrigjÃ¸ring av JDBC Statement feilet", e);
         }
     }
 
     /**
-     * Frigjør et resultatsett og en statement.
+     * FrigjÃ¸r et resultatsett og en statement.
      *
      * @param resultSet
      * @param statement
-     * @throws OperationalException dersom frigjøring av ressurser feilet.
+     * @throws OperationalException dersom frigjÃ¸ring av ressurser feilet.
      */
     public static void close(ResultSet resultSet, Statement statement) {
         try {
             if (resultSet != null) resultSet.close();
             if (statement != null) statement.close();
         } catch (SQLException e) {
-            throw new OperationalException(logger, "Frigjøring av JDBC ResultSet eller Statement feilet", e);
+            throw new OperationalException(logger, "FrigjÃ¸ring av JDBC ResultSet eller Statement feilet", e);
         }
     }
 
     /**
-     * Frigjør et resultatsett, en statement og en connection
+     * FrigjÃ¸r et resultatsett, en statement og en connection
      *
      * @param resultSet
      * @param statement
      * @param connection
-     * @throws OperationalException dersom frigjøring av ressurser feilet.
+     * @throws OperationalException dersom frigjÃ¸ring av ressurser feilet.
      */
     public static void close(ResultSet resultSet, Statement statement, Connection connection) {
         try {
@@ -100,13 +100,13 @@ public class JDBCHelper {
             if (statement != null) statement.close();
             if (connection != null) connection.close();
         } catch (SQLException e) {
-            throw new OperationalException(logger, "Frigjøring av JDBC ResultSet, Statement eller Connection feilet", e);
+            throw new OperationalException(logger, "FrigjÃ¸ring av JDBC ResultSet, Statement eller Connection feilet", e);
         }
     }
 
 
     /**
-     * Oppretter en connection basert på inputparametere.
+     * Oppretter en connection basert pÃ¥ inputparametere.
      *
      * @param driver, som skal lastes med DriverManager.registerDriver
      * @param url,    url som skal brukes
@@ -123,7 +123,7 @@ public class JDBCHelper {
         } catch (ClassNotFoundException e) {
             throw new OperationalException(logger, "Feil under oppretting, finner ikke klassen: " + driver, e);
         } catch (IllegalAccessException e) {
-            throw new OperationalException(logger, "Har ikke tillgang til konstruktør av klassen: " + driver, e);
+            throw new OperationalException(logger, "Har ikke tillgang til konstruktÃ¸r av klassen: " + driver, e);
         } catch (InstantiationException e) {
             throw new OperationalException(logger, "Feil under oppretting av class: " + driver, e);
         }
@@ -139,7 +139,7 @@ public class JDBCHelper {
     static Properties connectionProperties = System.getProperties();
 
     /**
-     * Oppretter en connection basert på system properties for database connection:
+     * Oppretter en connection basert pÃ¥ system properties for database connection:
      * -Dhibernate.connection.driver_class
      * -Dhibernate.connection.url
      * -Dhibernate.connection.username

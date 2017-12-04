@@ -10,7 +10,7 @@ class JnlpSyntaxUtil {
 
     /**
      * @param mainJarFiles Disse er potensielt usignert, og kan derfor ikke brukes direkte
-     * @param allJarFiles Dette er de jar-filene som skal brukes, både main og de andre
+     * @param allJarFiles Dette er de jar-filene som skal brukes, bÃ¥de main og de andre
      * @return
      */
     static def Node appendJarElementForAllDependencies(Node resourcesNode, Set<File> mainJarFiles, Set<File> allJarFiles, String libPath, String digest) {

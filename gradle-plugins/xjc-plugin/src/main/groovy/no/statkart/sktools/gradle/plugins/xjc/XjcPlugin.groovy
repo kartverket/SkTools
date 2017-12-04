@@ -20,8 +20,8 @@ import org.gradle.api.tasks.compile.AbstractCompile
 import java.util.concurrent.Callable
 
 /**
- * Genererer JAXB java klasser basert på <code>*.xsd<code> filer. <br />
- * Pluginen baserer seg på {@code JavaBasePlugin} og integrerer seg med deklarerte {@link SourceSet}.
+ * Genererer JAXB java klasser basert pÃ¥ <code>*.xsd<code> filer. <br />
+ * Pluginen baserer seg pÃ¥ {@code JavaBasePlugin} og integrerer seg med deklarerte {@link SourceSet}.
  *
  * For hvert {@code SourceSet} plugges det inn mulighet for ekstra konfigurasjon. Se {@link XjcSourceSetConvention }
  *
@@ -32,8 +32,8 @@ import java.util.concurrent.Callable
  * </ul>
  *
  * @since 1.0
- * @author Thor Åge Eldby
- * @author Leif Lislegård
+ * @author Thor Ã…ge Eldby
+ * @author Leif LislegÃ¥rd
  */
 @SuppressWarnings("UnnecessaryQualifiedReference")
 class XjcPlugin implements Plugin<ProjectInternal> {
@@ -65,18 +65,18 @@ class XjcPlugin implements Plugin<ProjectInternal> {
             public void execute(final SourceSet sourceSet) {
                 final XjcSchemaContainer xjcSchemas = new XjcSchemaContainer(sourceSet, project);
 
-                //hekter inn utvidelser på source settet
+                //hekter inn utvidelser pÃ¥ source settet
                 ((HasConvention) sourceSet).getConvention().getPlugins().put(CONVENTION_NAME, new XjcSourceSetConvention(xjcSchemas));
 
                 //hekter inn generert resultat og legger dette compile classpath
                 final FileCollection xjcCompileClasspath = sourceSet.getCompileClasspath();
                 final ConfigurableFileCollection xjcOutputClasses = project.files();
                 sourceSet.setCompileClasspath(xjcCompileClasspath.plus(xjcOutputClasses));
-                //SKTOOLS-129: ikke compile output på compile classpath for xjc.. (ellers vil ikke task bli up-to-date)
+                //SKTOOLS-129: ikke compile output pÃ¥ compile classpath for xjc.. (ellers vil ikke task bli up-to-date)
 
                 xjcSchemas.all(new Action<XjcConfig>() {
                     void execute(XjcConfig xjcConfig) {
-                        //setter ingen default plassering av kildefiler for sourceSet - dette må eksplisitt deklareres i konfigurasjon
+                        //setter ingen default plassering av kildefiler for sourceSet - dette mÃ¥ eksplisitt deklareres i konfigurasjon
 
                         final File genOutputDir = project.file(xjcConfig.genOutputPath)
                         final File buildOutputDir = project.file("${project.getBuildDir()}/classes/${xjcConfig.name}")
@@ -100,11 +100,11 @@ class XjcPlugin implements Plugin<ProjectInternal> {
                         //legger til output katalog til sourceset
                         sourceSet.output.dir(buildOutputDir, builtBy: compileTask)
 
-                        //legger til generert kildekode slik at de kan bli plukket opp av dokumentajonsverktøy, kildekode distribusjon mm
+                        //legger til generert kildekode slik at de kan bli plukket opp av dokumentajonsverktÃ¸y, kildekode distribusjon mm
                         sourceSet.getAllJava().srcDir(genOutputDir);
 
                         project.afterEvaluate {
-                            //legger også til kildekode for xsd filer
+                            //legger ogsÃ¥ til kildekode for xsd filer
                             sourceSet.getAllSource().srcDirs(xjcConfig.source.files as File[]);
                         }
 

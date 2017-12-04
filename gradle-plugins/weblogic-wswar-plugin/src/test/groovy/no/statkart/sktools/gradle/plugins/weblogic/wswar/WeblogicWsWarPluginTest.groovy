@@ -14,7 +14,7 @@ import org.testng.annotations.Test
 /**
  * Test av {@link WeblogicWsWarPlugin}
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 class WeblogicWsWarPluginTest {
 
@@ -75,7 +75,7 @@ class WeblogicWsWarPluginTest {
         AbstractCompile genTask = project.tasks[WeblogicWsWarPlugin.WEBLOGIC_GEN_TASK_NAME]
         SourceSet sourceSet = project.sourceSets[WeblogicWsWarPlugin.WEBLOGIC_SOURCE_SET_NAME]
 
-        assert genTask.classpath.contains(sourceSet.output.classesDir) // forventer kompilerte classfiler på classpath
+        assert genTask.classpath.contains(sourceSet.output.classesDir) // forventer kompilerte classfiler pÃ¥ classpath
 
     }
 
@@ -101,7 +101,7 @@ class WeblogicWsWarPluginTest {
         projectHelper.executeTask(WeblogicWsWarPlugin.WEBLOGIC_GEN_TASK_NAME)
 
         projectHelper.assertTaskExecutedNotSkipped(WeblogicWsWarPlugin.WEBLOGIC_GEN_TASK_NAME, '') { Task task ->
-            assert task.outputs.hasOutput //skal ha fått deklarert at denne tasken har outputs
+            assert task.outputs.hasOutput //skal ha fÃ¥tt deklarert at denne tasken har outputs
             assert !task.outputs.getFiles().isEmpty() //forventer genererte filer
             assert 1 == task.outputs.getFiles().getAsFileTree().findAll {it.name.endsWith('.wsdl')}.size() //antall wsdl filer generert
         }
@@ -218,7 +218,7 @@ class WeblogicWsWarPluginTest {
             assert !project.tasks['processWeblogicResources'].source.contains(it)   //forventer FORTSATT INGEN tilgang til ressursfiler i src/main
         }
         otherResourceFiles.each {
-            assert project.tasks['processWeblogicResources'].source.contains(it)   //forventer NÅ TILGANG tilgang til ressursfiler i src/other
+            assert project.tasks['processWeblogicResources'].source.contains(it)   //forventer NÃ… TILGANG tilgang til ressursfiler i src/other
         }
 
 
@@ -271,10 +271,10 @@ class WeblogicWsWarPluginTest {
             assert project.tasks['compileWeblogicJava'].source.contains(it)    //forventer tilgang til kildekode i weblogic source set
         }
         divSourceFiles.each {
-            assert project.tasks['compileWeblogicJava'].source.contains(it)   //forventer NÅ TILGANG til kildekode i div source set
+            assert project.tasks['compileWeblogicJava'].source.contains(it)   //forventer NÃ… TILGANG til kildekode i div source set
         }
         sourceDirViaSourceSetSourceFiles.each {
-            assert project.tasks['compileWeblogicJava'].source.contains(it)    //forventer NÅ TILGANG til kildekode i weblogic source set
+            assert project.tasks['compileWeblogicJava'].source.contains(it)    //forventer NÃ… TILGANG til kildekode i weblogic source set
         }
 
     }
@@ -282,12 +282,12 @@ class WeblogicWsWarPluginTest {
     /**
      * Tester oppsett av {@code SourceSet} i et tenkt multi build prosjekt.
      *
-     * Tenker at main har paralell kompilering av plattform spesifik kode. Dette kan feks være for Weblogic, JBoss, mm.
+     * Tenker at main har paralell kompilering av plattform spesifik kode. Dette kan feks vÃ¦re for Weblogic, JBoss, mm.
      * Tanken er da at {@source main} inneholder felles kildekode, mens man legger plattfor spsifikk kildekode inn i forskjellige source sets, eks {@source weblogic}.
      *
      *
      * Testen setter opp enn felles resource katalog.
-     * Det blir også demonstrert deklarasjon av avhengighet til 'main'
+     * Det blir ogsÃ¥ demonstrert deklarasjon av avhengighet til 'main'
      *
      *
      */
@@ -326,7 +326,7 @@ class WeblogicWsWarPluginTest {
             }
 
             dependencies {
-                //dette er muligens en knotete måte å deklarere det på..
+                //dette er muligens en knotete mÃ¥te Ã¥ deklarere det pÃ¥..
                 weblogicCompile project(path: ':', configuration: 'runtime')   // rootProject.path == ':'
 
                 //felles bibliotek
@@ -372,7 +372,7 @@ class WeblogicWsWarPluginTest {
         }
 
 
-        //sjekker at artifakt ifra 'main' blir med på classpath
+        //sjekker at artifakt ifra 'main' blir med pÃ¥ classpath
         assert rootProject.tasks['compileWeblogicJava'].classpath.contains(mainJarFile)
 
     }

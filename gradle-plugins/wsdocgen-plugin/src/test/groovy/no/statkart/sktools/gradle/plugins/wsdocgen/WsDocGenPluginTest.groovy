@@ -19,7 +19,7 @@ import static org.testng.Assert.assertTrue
  *     For testing av generering av dokumentasjon se {@link no.statkart.sktools.utils.wsdocgen.processor.WSDocProcessorTest}
  * </p>
  *
- * @author Leif Lislegård
+ * @author Leif LislegÃ¥rd
  */
 class WsDocGenPluginTest {
 
