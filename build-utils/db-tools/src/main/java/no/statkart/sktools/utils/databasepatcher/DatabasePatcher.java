@@ -11,11 +11,21 @@ import no.statkart.sktools.utils.parsers.sql.model.Statement;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
-import java.sql.*;
-import java.util.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
-import java.util.regex.Pattern;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Eksekverer en sql patch fil som er inndelt i patchblokker via patch kommentar direktiver. Patchblokker
@@ -359,14 +369,18 @@ public class DatabasePatcher {
     * @return antall patchblokker påført
     */
    public int patch_impl(String patchFilePath, boolean synchToPatchlevel, Collection<PatchtypeKode> patchtypes) {
-      Connection con = null;
 
-      try {
-         List<? extends Expression> statements = SQLStatementParser.parseExpressions(SqlExecutor.lesFilFraWorkingDir(patchFilePath));
+       LinkedHashMap<PatchVersion, List<? extends Expression>> patches;
+       try {
+           List<? extends Expression> statements = SQLStatementParser.parseExpressions(SqlExecutor.lesFilFraWorkingDir(patchFilePath));
+           patches = parsePatches(statements);
+       } catch (IOException e) {
+           throw new OperationalException(logger, "Feil ved parsing av patch-fil", e);
+       }
 
-         LinkedHashMap<PatchVersion, List<? extends Expression>> patches = parsePatches(statements);
 
-         con = createConnection();
+       try (Connection con = createConnection()) {
+
          PatchInfo currentPatchInfo = getOrCreatePatchInfo(con, getDefaultPatchInfo());
          logger.info("Nåværende patchinformasjon: " + currentPatchInfo);
 
@@ -418,10 +432,6 @@ public class DatabasePatcher {
          return executedPatchesCount;
       } catch( SQLException e ) {
           throw new OperationalException(logger, "Feil ved sql", e);
-      } catch (IOException e) {
-          throw new OperationalException(logger, "Feil ved parsing av sql-fil", e);
-      } finally {
-          JDBCHelper.close(con);
       }
    }
 
@@ -634,58 +644,53 @@ public class DatabasePatcher {
     * @throws NotFoundException if no patchinfo for component exists
     */
    private PatchInfo getOrCreatePatchInfo(Connection con, PatchInfo candidatePatchInfo) throws NotFoundException {
-      PreparedStatement stmt = null;
-      ResultSet rs = null;
       try {
 
           //finner ut om tabell finnes i databasen ved å spørre på metadata
-          {
-              rs = con.getMetaData().getTables(con.getCatalog(), schema, "PATCHINFO", new String[]{"TABLE"});
+          try (ResultSet rs = con.getMetaData().getTables(con.getCatalog(), schema, "PATCHINFO", new String[]{"TABLE"})) {
               boolean patchTableExists = rs.next();
-              JDBCHelper.close(rs, stmt);
               if (!patchTableExists) {
                   createPatchInfoTable(con);
               }
           }
 
           //finner ut om en evt trenger å utvide tabell
-          {
-              rs = con.getMetaData().getColumns(con.getCatalog(), schema, "PATCHINFO", null);
+          try (ResultSet rs = con.getMetaData().getColumns(con.getCatalog(), schema, "PATCHINFO", null)) {
               boolean hasComponentColumn = false;
               while (rs.next()) {
                   if ("COMPONENT".equals(rs.getString("COLUMN_NAME"))) {
                       hasComponentColumn = true;
                   }
               }
-              JDBCHelper.close(rs, stmt);
               if (!hasComponentColumn) {
                   addComponentColumn(con);
-                  JDBCHelper.close(rs, stmt);
               }
           }
 
-         stmt = con.prepareStatement("SELECT count(*) FROM " + patchInfoTableName(con) + " WHERE component=?");
-         stmt.setString(1, component);
-         rs = stmt.executeQuery();
-
-         rs.next();
-         int rowCount = rs.getInt(1);
-         JDBCHelper.close(rs, stmt);
+          int rowCount;
+          try (PreparedStatement stmt = con.prepareStatement("SELECT count(*) FROM " + patchInfoTableName(con) + " WHERE component=?")) {
+              stmt.setString(1, component);
+              try (ResultSet rs = stmt.executeQuery()){
+                  rs.next();
+                  rowCount= rs.getInt(1);
+              }
+          }
 
          if( rowCount == 0 ) {
              if (candidatePatchInfo != null) {
-                 stmt = con.prepareStatement("INSERT INTO " + patchInfoTableName(con) + " (component, dbVersion, patchNo, indexesInSyncWithPatch, kommentar) VALUES (?, ?, ?, ?, ?)");
-                 stmt.setString(1, candidatePatchInfo.component);
-                 stmt.setString(2, candidatePatchInfo.patchVersion.dbVersion);
-                 stmt.setInt(3, candidatePatchInfo.patchVersion.patchNo);
-                 stmt.setInt(4, candidatePatchInfo.indexesInSyncWithPatch ? 1 : 0);
-                 stmt.setString(5, candidatePatchInfo.patchVersion.kommentar);
+                 String sql = "INSERT INTO " + patchInfoTableName(con) + " (component, dbVersion, patchNo, indexesInSyncWithPatch, kommentar) VALUES (?, ?, ?, ?, ?)";
+                 try (PreparedStatement stmt = con.prepareStatement(sql)) {
+                     stmt.setString(1, candidatePatchInfo.component);
+                     stmt.setString(2, candidatePatchInfo.patchVersion.dbVersion);
+                     stmt.setInt(3, candidatePatchInfo.patchVersion.patchNo);
+                     stmt.setInt(4, candidatePatchInfo.indexesInSyncWithPatch ? 1 : 0);
+                     stmt.setString(5, candidatePatchInfo.patchVersion.kommentar);
 
-                 logger.info(String.format("Defining patchInfo: %s", candidatePatchInfo));
+                     logger.info(String.format("Defining patchInfo: %s", candidatePatchInfo));
 
-                 stmt.executeUpdate();
-                 JDBCHelper.close(rs, stmt);
-                 con.commit();
+                     stmt.executeUpdate();
+                     con.commit();
+                 }
              } else {
                  throw new NotFoundException("Fant ikke versjon for komponent: " + component);
              }
@@ -699,8 +704,6 @@ public class DatabasePatcher {
 
       } catch( SQLException e ) {
          throw new RuntimeException(e);
-      } finally {
-         JDBCHelper.close(rs, stmt);
       }
    }
 
@@ -711,29 +714,22 @@ public class DatabasePatcher {
      * @param con connection
      * @return patch info for databasen.
      */
-    private PatchInfo getPatchInfo(Connection con) {
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-        try {
-
-            stmt = con.prepareStatement("SELECT dbVersion, patchNo, indexesInSyncWithPatch, kommentar FROM " + patchInfoTableName(con) + " WHERE component=?");
+    private PatchInfo getPatchInfo(Connection con) throws SQLException {
+        String sql = "SELECT dbVersion, patchNo, indexesInSyncWithPatch, kommentar FROM " + patchInfoTableName(con) + " WHERE component=?";
+        try (PreparedStatement stmt = con.prepareStatement(sql)) {
             stmt.setString(1, component);
-            rs = stmt.executeQuery();
 
-            rs.next();
-            String dbVersion = rs.getString("dbVersion");
-            int patchNo = rs.getInt("patchNo");
-            boolean indexesInSyncWithPatch = rs.getBoolean("indexesInSyncWithPatch");
-            String kommentar = rs.getString("kommentar");
+            try (ResultSet rs = stmt.executeQuery()) {
+                rs.next();
+                String dbVersion = rs.getString("dbVersion");
+                int patchNo = rs.getInt("patchNo");
+                boolean indexesInSyncWithPatch = rs.getBoolean("indexesInSyncWithPatch");
+                String kommentar = rs.getString("kommentar");
 
-            JDBCHelper.close(rs, stmt);
-
-            return new PatchInfo(component, new PatchVersion(dbVersion, patchNo, kommentar), indexesInSyncWithPatch);
-
+                return new PatchInfo(component, new PatchVersion(dbVersion, patchNo, kommentar), indexesInSyncWithPatch);
+            }
         } catch( SQLException e ) {
             throw new RuntimeException(e);
-        } finally {
-            JDBCHelper.close(rs, stmt);
         }
     }
 
@@ -743,16 +739,11 @@ public class DatabasePatcher {
     * @param con connection
     */
    private void createPatchInfoTable(Connection con) {
-      java.sql.Statement stmt = null;
-      ResultSet rs = null;
-      try {
-         stmt = con.createStatement();
-          logger.info("Creating table " + patchInfoTableName(con));
-         stmt.execute("CREATE TABLE " + patchInfoTableName(con) + " (dbVersion varchar(255), patchNo INTEGER NOT NULL, indexesInSyncWithPatch SMALLINT NOT NULL, kommentar VARCHAR(255))");
-      } catch( SQLException e ) {
+       try (java.sql.Statement stmt = con.createStatement()) {
+           logger.info("Creating table " + patchInfoTableName(con));
+           stmt.execute("CREATE TABLE " + patchInfoTableName(con) + " (dbVersion varchar(255), patchNo INTEGER NOT NULL, indexesInSyncWithPatch SMALLINT NOT NULL, kommentar VARCHAR(255))");
+       } catch (SQLException e) {
          throw new RuntimeException(e);
-      } finally {
-         JDBCHelper.close(stmt);
       }
    }
 
@@ -762,16 +753,11 @@ public class DatabasePatcher {
      * @param con connection
      */
     private void addComponentColumn(Connection con) {
-        java.sql.Statement stmt = null;
-        ResultSet rs = null;
-        try {
-            stmt = con.createStatement();
+        try (java.sql.Statement stmt = con.createStatement()) {
             logger.info("Adding column 'component' to " + patchInfoTableName(con));
-        stmt.execute(String.format("ALTER TABLE " + patchInfoTableName(con) + " ADD component VARCHAR(64) DEFAULT '%s' NOT NULL", PatchInfo.DEFAULT_MODULE));
+            stmt.execute(String.format("ALTER TABLE " + patchInfoTableName(con) + " ADD component VARCHAR(64) DEFAULT '%s' NOT NULL", PatchInfo.DEFAULT_MODULE));
         } catch( SQLException e ) {
             throw new RuntimeException(e);
-        } finally {
-            JDBCHelper.close(stmt);
         }
     }
 
@@ -785,9 +771,7 @@ public class DatabasePatcher {
      * @throws NotFoundException if no patchinfo for component exists
      */
     public PatchInfo getOrCreateVersion(PatchInfo patchInfo) throws NotFoundException {
-        Connection con = null;
-        try {
-            con = createConnection();
+        try (Connection con = createConnection()) {
 
             PatchInfo currentPatchInfo = getOrCreatePatchInfo(con, patchInfo);
             logger.info(String.format("Database versjon: component=%s db.version=%s patch.no=%d indexesInSyncWithPatch=%b", currentPatchInfo.component, currentPatchInfo.patchVersion.dbVersion, currentPatchInfo.patchVersion.patchNo, currentPatchInfo.indexesInSyncWithPatch));
@@ -795,8 +779,6 @@ public class DatabasePatcher {
             return currentPatchInfo;
         } catch( SQLException e ) {
             throw new OperationalException(logger, "Feil ved connection", e);
-        } finally {
-            JDBCHelper.close(con);
         }
     }
 
@@ -843,9 +825,7 @@ public class DatabasePatcher {
      * @return {@code false} if the version already exists
      */
     public boolean defineVersion(PatchVersion patchVersion) {
-        Connection con = null;
-        try {
-            con = createConnection();
+        try (Connection con = createConnection()) {
 
             if (hasVersion(con, null)) { //version info for component exists
                 PatchInfo currentPatchInfo = getOrCreatePatchInfo(con, null);
@@ -888,8 +868,6 @@ public class DatabasePatcher {
 
         } catch( SQLException e ) {
             throw new OperationalException(logger, "Feil ved sql-connection", e);
-        } finally {
-            JDBCHelper.close(con);
         }
     }
 
@@ -897,49 +875,38 @@ public class DatabasePatcher {
      *
      * @param dbVersion ignores dbVersion if {@code null}
      */
-    boolean hasVersion(Connection con, String dbVersion) {
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-        try {
-            String sqlString = "SELECT count(*) FROM " + patchInfoTableName(con) + " WHERE component=?";
-            if (dbVersion != null) {
-                sqlString += " AND dbVersion=?";
-            }
-            stmt = con.prepareStatement(sqlString);
+    boolean hasVersion(Connection con, String dbVersion) throws SQLException {
+        String sqlString = "SELECT count(*) FROM " + patchInfoTableName(con) + " WHERE component=?";
+        if (dbVersion != null) {
+            sqlString += " AND dbVersion=?";
+        }
+        try (PreparedStatement stmt = con.prepareStatement(sqlString)) {
             stmt.setString(1, component);
             if (dbVersion != null) {
                 stmt.setString(2, dbVersion);
             }
-            rs = stmt.executeQuery();
 
-            rs.next();
-            return rs.getLong(1) > 0;
-
+            try (ResultSet rs = stmt.executeQuery()) {
+                rs.next();
+                return rs.getLong(1) > 0;
+            }
         } catch( SQLException e ) {
             return false;
-        } finally {
-            JDBCHelper.close(rs, stmt);
         }
     }
 
     public void setIndexesInSyncWithPatch(boolean value) {
-      Connection con = null;
-      try {
-         con = createConnection();
+      try (Connection con = createConnection()) {
          PatchInfo patchInfo = getOrCreatePatchInfo(con, getDefaultPatchInfo()); //oppretter/vedlikeholder patchinfo tabell
          setIndexesInSyncWithPatch(con, value);
       } catch( SQLException e ) {
           throw new OperationalException(logger, "Feil ved sql-connection", e);
-      } finally {
-          JDBCHelper.close(con);
       }
    }
 
-   private void setIndexesInSyncWithPatch(Connection con, boolean value) {
-      PreparedStatement stmt = null;
-      ResultSet rs = null;
-      try {
-         stmt = con.prepareStatement("UPDATE " + patchInfoTableName(con) + " SET indexesInSyncWithPatch=? WHERE component=?");
+   private void setIndexesInSyncWithPatch(Connection con, boolean value) throws SQLException {
+       String sql = "UPDATE " + patchInfoTableName(con) + " SET indexesInSyncWithPatch=? WHERE component=?";
+       try (PreparedStatement stmt = con.prepareStatement(sql)) {
          stmt.setInt(1, value ? 1 : 0);
          stmt.setString(2, component);
 
@@ -950,19 +917,15 @@ public class DatabasePatcher {
          con.commit();
       } catch( SQLException e ) {
          throw new RuntimeException(e);
-      } finally {
-         JDBCHelper.close(rs, stmt);
       }
    }
 
    /**
     * Oppdatere patchinfo rad i databasen
     */
-   private void updatePatchInfo(Connection con, PatchVersion p) {
-      PreparedStatement stmt = null;
-      ResultSet rs = null;
-      try {
-         stmt = con.prepareStatement("UPDATE " + patchInfoTableName(con) + " SET dbVersion=?, patchNo=?, kommentar=? WHERE component=?");
+   private void updatePatchInfo(Connection con, PatchVersion p) throws SQLException {
+       String sql = "UPDATE " + patchInfoTableName(con) + " SET dbVersion=?, patchNo=?, kommentar=? WHERE component=?";
+       try (PreparedStatement stmt = con.prepareStatement(sql)) {
          stmt.setString(1, p.dbVersion);
          stmt.setInt(2, p.patchNo);
          stmt.setString(3, p.kommentar);
@@ -974,8 +937,6 @@ public class DatabasePatcher {
          con.commit();
       } catch( SQLException e ) {
          throw new RuntimeException(e);
-      } finally {
-         JDBCHelper.close(rs, stmt);
       }
    }
 

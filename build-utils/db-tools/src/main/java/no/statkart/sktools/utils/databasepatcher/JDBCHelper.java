@@ -7,9 +7,7 @@ import org.apache.log4j.Logger;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Properties;
 
 /**
@@ -24,84 +22,6 @@ public class JDBCHelper {
      * Tilbyr bare statiske metoder, skal ikke instansieres.
      */
     private JDBCHelper() {
-    }
-
-    /**
-     * Frigjør en connection
-     *
-     * @param connection
-     * @throws OperationalException dersom frigjøring av ressurser feilet.
-     */
-    public static void close(Connection connection) {
-        try {
-            if (connection != null) connection.close();
-        } catch (SQLException e) {
-            throw new OperationalException(logger, "Frigjøring av JDBC Connection feilet", e);
-        }
-    }
-
-    /**
-     * Frigjør en statement og en connection
-     *
-     * @param statement
-     * @param connection
-     * @throws OperationalException dersom frigjøring av ressurser feilet.
-     */
-    public static void close(Statement statement, Connection connection) {
-        try {
-            if (statement != null) statement.close();
-            if (connection != null) connection.close();
-        } catch (SQLException e) {
-            throw new OperationalException(logger, "Frigjøring av JDBC Statement eller Connection feilet", e);
-        }
-    }
-
-    /**
-     * Frigjør en statement
-     *
-     * @param statement
-     * @throws OperationalException dersom frigjøring av ressurser feilet.
-     */
-    public static void close(Statement statement) {
-        try {
-            if (statement != null) statement.close();
-        } catch (SQLException e) {
-            throw new OperationalException(logger, "Frigjøring av JDBC Statement feilet", e);
-        }
-    }
-
-    /**
-     * Frigjør et resultatsett og en statement.
-     *
-     * @param resultSet
-     * @param statement
-     * @throws OperationalException dersom frigjøring av ressurser feilet.
-     */
-    public static void close(ResultSet resultSet, Statement statement) {
-        try {
-            if (resultSet != null) resultSet.close();
-            if (statement != null) statement.close();
-        } catch (SQLException e) {
-            throw new OperationalException(logger, "Frigjøring av JDBC ResultSet eller Statement feilet", e);
-        }
-    }
-
-    /**
-     * Frigjør et resultatsett, en statement og en connection
-     *
-     * @param resultSet
-     * @param statement
-     * @param connection
-     * @throws OperationalException dersom frigjøring av ressurser feilet.
-     */
-    public static void close(ResultSet resultSet, Statement statement, Connection connection) {
-        try {
-            if (resultSet != null) resultSet.close();
-            if (statement != null) statement.close();
-            if (connection != null) connection.close();
-        } catch (SQLException e) {
-            throw new OperationalException(logger, "Frigjøring av JDBC ResultSet, Statement eller Connection feilet", e);
-        }
     }
 
 

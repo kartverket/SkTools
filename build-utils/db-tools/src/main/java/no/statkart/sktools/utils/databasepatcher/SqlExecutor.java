@@ -46,15 +46,9 @@ public class SqlExecutor {
      * @param sqlScriptNavn, navn på filen som skal lastes.
      */
     public void runScript(String sqlScriptNavn) throws Exception {
-        Connection con = null;
-        try {
-            con = JDBCHelper.createConnection();
+        try (Connection con = JDBCHelper.createConnection()) {
             runScript(con, lesFilFraWorkingDir(sqlScriptNavn));
             con.commit();
-        } finally {
-            if (con != null) {
-                con.close();
-            }
         }
     }
 
@@ -65,18 +59,16 @@ public class SqlExecutor {
      * @return filens innhold i en java.lang.String
      */
     public static String lesFilFraClasspath(String filnavn) {
-        InputStream inputStream = null;
-        BufferedReader br = null;
-        try {
-            ClassLoader classLoader = SqlExecutor.class.getClassLoader();
-            StringBuilder tmpScript = new StringBuilder();
-            inputStream = classLoader.getResourceAsStream(filnavn.trim());
+        ClassLoader classLoader = SqlExecutor.class.getClassLoader();
+
+        StringBuilder tmpScript = new StringBuilder();
+        try (InputStream inputStream = classLoader.getResourceAsStream(filnavn.trim())) {
+
             if (inputStream == null) {
                 throw new OperationalException("Finner ikke filen " + filnavn + " i classpath");
             }
 
-            try {
-                br = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"))) {
                 String line;
 
                 line = br.readLine();
@@ -88,23 +80,11 @@ public class SqlExecutor {
                 logger.error("Under lesing av sqlscript " + ioe.getMessage(), ioe);
             }
 
-            return tmpScript.toString();
-        } finally {
-            if (br != null) {
-                try {
-                    br.close();
-                } catch (IOException e) {
-                    logger.error(e);
-                }
-            }
-            if (inputStream != null) {
-                try {
-                    inputStream.close();
-                } catch (IOException e) {
-                    logger.error(e);
-                }
-            }
+        } catch (IOException e) {
+            logger.error(e);
         }
+
+        return tmpScript.toString();
     }
 
     /**
@@ -114,44 +94,26 @@ public class SqlExecutor {
      * @return filens innhold i en java.lang.String
      */
     public static String lesFilFraWorkingDir(String filnavn) {
-        InputStreamReader inputStream = null;
-        BufferedReader br = null;
         StringBuilder tmpScript = new StringBuilder();
-        try {
-            try {
-                inputStream = new FileReader(filnavn.trim());
-            } catch (FileNotFoundException e) {
-                throw new OperationalException("Finner ikke filen " + filnavn);
-            }
-            br = new BufferedReader(inputStream);
-            String line;
-            try {
-                line = br.readLine();
-                while (line != null) {
-                    tmpScript.append(line).append("\n");
+        try (InputStreamReader inputStream = new FileReader(filnavn.trim())){
+            try (BufferedReader br = new BufferedReader(inputStream)) {
+                String line;
+                try {
                     line = br.readLine();
-                }
-            } catch (IOException ioe) {
-                logger.error("Under lesing av sqlscript " + ioe.getMessage(), ioe);
-            }
-            return tmpScript.toString();
-
-        } finally {
-            if (br != null) {
-                try {
-                    br.close();
-                } catch (IOException e) {
-                    logger.error(e);
+                    while (line != null) {
+                        tmpScript.append(line).append("\n");
+                        line = br.readLine();
+                    }
+                } catch (IOException ioe) {
+                    logger.error("Under lesing av sqlscript " + ioe.getMessage(), ioe);
                 }
             }
-            if (inputStream != null) {
-                try {
-                    inputStream.close();
-                } catch (IOException e) {
-                    logger.error(e);
-                }
-            }
+        } catch (FileNotFoundException e) {
+            throw new OperationalException("Finner ikke filen " + filnavn);
+        } catch (IOException ioe) {
+            logger.error("Under lesing av scriptfil " + ioe.getMessage(), ioe);
         }
+        return tmpScript.toString();
     }
 
 
@@ -187,9 +149,7 @@ public class SqlExecutor {
         int antallStatements = 0;
 
         //Kjøre en og en linje i skriptet.
-        java.sql.Statement statement = null;
-        try {
-            statement = connection.createStatement();
+        try (java.sql.Statement statement = connection.createStatement()) {
 
             for (Iterator<? extends Expression> iterator = scriptLines.iterator(); iterator.hasNext(); ) {
                 Expression scriptLine = iterator.next();
@@ -230,11 +190,6 @@ public class SqlExecutor {
                     }
                 }
             }
-        } finally {
-            //forsikre seg at de er stengt ved feil. Ok og kalle close på closed connection.
-            if (statement != null) {
-                JDBCHelper.close(statement);
-            }
         }
         if (feilet) {
             logger.error(String.format("Script had errors! Statements: %d. Warnings: %d, errors: %d.", antallStatements, antallWarnings, antallFeil));
@@ -254,21 +209,20 @@ public class SqlExecutor {
         return msg.contains("02443") || msg.contains("02275") || msg.contains("00955") || msg.contains("01418") || msg.contains("00942");
     }
 
-    private static CallableStatement callCallable(String scriptLine, Connection connection, List<java.sql.ResultSet> rsList) throws SQLException {
+    private static void callCallable(String scriptLine, Connection connection, List<java.sql.ResultSet> rsList) throws SQLException {
         //prøver å ta hensyn til at det kan returneres flere Resultset fra ett storedProcedure kall.
         logger.info("Procedure: " + scriptLine);
-        CallableStatement callablStatement = connection.prepareCall(scriptLine);
-        boolean isResultset = callablStatement.execute();
-        if (isResultset) {
-            java.sql.ResultSet rs = callablStatement.getResultSet();
-            rsList.add(rs);
+        try (CallableStatement callablStatement = connection.prepareCall(scriptLine)) {
+            boolean isResultset = callablStatement.execute();
+            if (isResultset) {
+                java.sql.ResultSet rs = callablStatement.getResultSet();
+                rsList.add(rs);
+            }
+            while (callablStatement.getMoreResults()) {
+                java.sql.ResultSet rs = callablStatement.getResultSet();
+                rsList.add(rs);
+            }
         }
-        while (callablStatement.getMoreResults()) {
-            java.sql.ResultSet rs = callablStatement.getResultSet();
-            rsList.add(rs);
-        }
-        JDBCHelper.close(callablStatement);
-        return callablStatement;
     }
 
 
