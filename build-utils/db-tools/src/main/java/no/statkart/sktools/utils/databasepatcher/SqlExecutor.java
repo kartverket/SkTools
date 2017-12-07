@@ -9,11 +9,12 @@ import no.statkart.sktools.utils.parsers.sql.model.Statement;
 import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -33,14 +34,23 @@ public class SqlExecutor {
     //SKTOOLS-84: error håndtering
     boolean failOnError, failOnWarning;
 
+    //SKTOOLS-21
+    static Charset sqlFileEncoding = Charset.defaultCharset();
+    static {
+        String encoding = System.getProperty("sql.file.encoding");
+        if (encoding != null) {
+            sqlFileEncoding = Charset.forName(encoding);
+        }
+    }
+
 
     /**
      * Denne klassen er brukt i fra Ant.
      * <p/>
      * Hvis parameteren FailOnError er med, vil det bli kastet en exception ved ORACLE SQL error
-     * fra feil med andre feilkoder en: 02443, 02275, 00955, 01418, 00942
+     * fra feil med andre feilkoder enn: 02443, 02275, 00955, 01418, 00942
      * <p/>
-     * Kjører ett sql script på database anngitt som VM-Parametere, parameterebrukt:
+     * Kjører ett sql script på database angitt som VM-Parametere, parametere brukt:
      * -DFailOnError=true
      *
      * @param sqlScriptNavn, navn på filen som skal lastes.
@@ -95,17 +105,19 @@ public class SqlExecutor {
      */
     public static String lesFilFraWorkingDir(String filnavn) {
         StringBuilder tmpScript = new StringBuilder();
-        try (InputStreamReader inputStream = new FileReader(filnavn.trim())){
-            try (BufferedReader br = new BufferedReader(inputStream)) {
-                String line;
-                try {
-                    line = br.readLine();
-                    while (line != null) {
-                        tmpScript.append(line).append("\n");
+        try (FileInputStream fis = new FileInputStream(filnavn.trim())) {
+            try (InputStreamReader inputStream = new InputStreamReader(fis, sqlFileEncoding)) {
+                try (BufferedReader br = new BufferedReader(inputStream)) {
+                    String line;
+                    try {
                         line = br.readLine();
+                        while (line != null) {
+                            tmpScript.append(line).append("\n");
+                            line = br.readLine();
+                        }
+                    } catch (IOException ioe) {
+                        logger.error("Under lesing av sqlscript " + ioe.getMessage(), ioe);
                     }
-                } catch (IOException ioe) {
-                    logger.error("Under lesing av sqlscript " + ioe.getMessage(), ioe);
                 }
             }
         } catch (FileNotFoundException e) {
@@ -230,9 +242,9 @@ public class SqlExecutor {
      * Denne klassen er brukt i fra Ant.
      * <p/>
      * Hvis parameteren FailOnError er med, vil det bli kastet en exception ved ORACLE SQL error
-     * fra feil med andre feilkoder en: 02443, 02275, 00955, 01418, 00942
+     * fra feil med andre feilkoder enn: 02443, 02275, 00955, 01418, 00942
      * <p/>
-     * Kjører sql script på database anngitt som VM-Parametere, parameterebrukt:
+     * Kjører sql script på database angitt som VM-Parametere, parametere brukt:
      * -DFailOnError=true
      * -DFailOnWarning=false
      *

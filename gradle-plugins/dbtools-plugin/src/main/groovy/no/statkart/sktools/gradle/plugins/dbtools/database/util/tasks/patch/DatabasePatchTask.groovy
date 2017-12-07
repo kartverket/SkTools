@@ -1,10 +1,10 @@
 package no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch
 
-import org.gradle.api.tasks.Input
-import org.gradle.process.JavaExecSpec
-import org.gradle.api.file.FileCollection
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractSQLTask
+import org.gradle.api.file.FileCollection
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
+import org.gradle.process.JavaExecSpec
 
 /**
  * Task for patching av schema over JDBC.
@@ -36,7 +36,7 @@ abstract class DatabasePatchTask extends AbstractSQLTask {
 
         spec.setClasspath(getClasspath())
 
-        spec.setDefaultCharacterEncoding(getEncoding())
+        spec.systemProperties.put('sql.file.encoding', getEncoding()); //PS: setter ikke file.encoding da dette forvrenger logging i gradle for forket prosess
 
         spec.systemProperties.put('hibernate.connection.driver_class', getDriver())
         spec.systemProperties.put('hibernate.connection.url', getUrl())

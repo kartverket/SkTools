@@ -1,12 +1,11 @@
 package no.statkart.sktools.gradle.plugins.dbtools.database.util
 
-import org.gradle.api.Project
-import org.gradle.util.ConfigureUtil
-import org.gradle.api.GradleException
-import org.apache.commons.lang3.StringUtils
-import org.gradle.api.Task
-
 import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsConvention
+import org.apache.commons.lang3.StringUtils
+import org.gradle.api.GradleException
+import org.gradle.api.Project
+import org.gradle.api.Task
+import org.gradle.util.ConfigureUtil
 
 /**
  * Felles funksjonalitet for toolsets
@@ -154,7 +153,6 @@ abstract class AbstractDatabaseConvention {
         task.conventionMapping.with {
             map 'url', { this.url }
             map 'driver', { this.driver }
-            map 'encoding', { this.getEncoding() }
         }
         task.defaultCredentials = this.credentials
         task.useDefaultCredentials = true
@@ -235,14 +233,6 @@ abstract class AbstractDatabaseConvention {
 
     }
 
-    //SKTOOLS-21
-    String getEncoding() {
-        Map<String, String> sysProperties = new HashMap<String, String>();
-        sysProperties.putAll((Map) System.getProperties());
-        sysProperties.putAll(project.gradle.startParameter.getSystemPropertiesArgs());
-
-        sysProperties.get('sql.file.encoding') ?: sysProperties.get('file.encoding')
-    }
 
     //registrerer opprettelse av sequence-task til dette toolset
     protected Task taskSequence(String verb, Closure config = null) {

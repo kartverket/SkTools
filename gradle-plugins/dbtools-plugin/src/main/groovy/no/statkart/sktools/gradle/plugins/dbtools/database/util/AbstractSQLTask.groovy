@@ -56,6 +56,19 @@ abstract class AbstractSQLTask extends ConventionTask {
     //SKTOOLS-21
     String encoding
 
+    @Input
+    String getEncoding() {
+        if (encoding != null) {
+            return encoding;
+        } else {
+            Map<String, String> sysProperties = new HashMap<String, String>();
+            sysProperties.putAll((Map) System.getProperties());
+            sysProperties.putAll(project.gradle.startParameter.getSystemPropertiesArgs());
+
+            return sysProperties.get('sql.file.encoding') ?: sysProperties.get('file.encoding')
+        }
+    }
+
 
     abstract File getSqlFile();
 
