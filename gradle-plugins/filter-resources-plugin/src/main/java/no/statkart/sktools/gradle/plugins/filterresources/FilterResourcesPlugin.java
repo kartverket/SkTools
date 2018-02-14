@@ -108,7 +108,7 @@ public class FilterResourcesPlugin implements Plugin<ProjectInternal> {
                     public void execute(Object o) {
                         //default verdier for filterResoruces source set
                         if (sourceSetOutputConvention.getFilterResourcesOutputDir() == null) {
-                            sourceSetOutputConvention.filterResourcesOutput(String.format("build/%s/filteredResources", sourceSet.getName()));
+                            sourceSetOutputConvention.filterResourcesOutput(String.format("build/filteredResources/%s", sourceSet.getName()));
                         }
 
                         //registrerer sourceDir

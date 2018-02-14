@@ -91,13 +91,13 @@ class FilterResourcesPluginTest {
         projectHelper.executeTask(FilterResourcesPlugin.FILTER_MAIN_RESOURCES_TASK_NAME)
         projectHelper.assertTaskExecutedNotSkipped(FilterResourcesPlugin.FILTER_MAIN_RESOURCES_TASK_NAME)
 
-        projectHelper.assertFileExists("gen/main/resources/simpleResource1.txt") { File file ->
+        projectHelper.assertFileExists("build/filteredResources/main/simpleResource1.txt") { File file ->
             assert file.text.contains("name=PropertiesFilterTest")
             assert file.text.contains("version=unspecified")
             assert file.text.contains("myProperty1=@myProperty1@")
         }
 
-        projectHelper.assertFileExists("gen/main/resources/simpleResource2.txt") { File file ->
+        projectHelper.assertFileExists("build/filteredResources/main/simpleResource2.txt") { File file ->
             assert file.text.contains("myProperty1=@myProperty1@")
             assert file.text.contains("myProperty2=testValue")
             assert file.text.contains("myEmail=unittest@statkart.no")
@@ -137,7 +137,7 @@ class FilterResourcesPluginTest {
         projectHelper.executeTask(FilterResourcesPlugin.FILTER_MAIN_RESOURCES_TASK_NAME)
         projectHelper.assertTaskExecutedNotSkipped(FilterResourcesPlugin.FILTER_MAIN_RESOURCES_TASK_NAME)
 
-        projectHelper.assertFileExists("gen/main/resources/simpleResource1.txt") { File file ->
+        projectHelper.assertFileExists("build/filteredResources/main/simpleResource1.txt") { File file ->
             assert file.text.contains("name=overidenName")
             assert file.text.contains("myProperty1=overidenValue")
         }
@@ -165,7 +165,7 @@ class FilterResourcesPluginTest {
 //        projectHelper.assertTaskExecutedNotSkipped("processResources")
         projectHelper.assertTaskExecutedNotSkipped(FilterResourcesPlugin.FILTER_MAIN_RESOURCES_TASK_NAME)
 
-        projectHelper.assertFileExists("gen/main/resources/simpleResource1.txt") { File file ->
+        projectHelper.assertFileExists("build/filteredResources/main/simpleResource1.txt") { File file ->
             assert file.text.contains("myProperty1=testValue")
         }
 
@@ -190,13 +190,13 @@ class FilterResourcesPluginTest {
         projectHelper.executeTask(FilterResourcesPlugin.FILTER_MAIN_RESOURCES_TASK_NAME)
         projectHelper.assertTaskExecutedNotSkipped(FilterResourcesPlugin.FILTER_MAIN_RESOURCES_TASK_NAME)
 
-        projectHelper.assertFileExists("gen/main/resources")
-        projectHelper.assertFileExists("gen/main/resources/simpleResource1.txt")
-        projectHelper.assertFileExists("gen/main/resources/simpleResource2.txt")
+        projectHelper.assertFileExists("build/filteredResources/main")
+        projectHelper.assertFileExists("build/filteredResources/main/simpleResource1.txt")
+        projectHelper.assertFileExists("build/filteredResources/main/simpleResource2.txt")
 
         projectHelper.executeTask(BasePlugin.CLEAN_TASK_NAME)
 
-        projectHelper.assertFileNotExists("gen/main/resources")
+        projectHelper.assertFileNotExists("build/filteredResources/main")
 
 
     }
@@ -344,24 +344,24 @@ class FilterResourcesPluginTest {
 
         //tester main sourceset
         ((SourceSet) project.sourceSets.main).with {
+            assert resources.srcDirs.contains(output.filterResourcesOutputDir)
+
             assert output.contains(output.classesDir)
             assert output.contains(output.resourcesDir)
-            assert output.contains(output.filterResourcesOutputDir)
 
             assert runtimeClasspath.contains(output.classesDir)
             assert runtimeClasspath.contains(output.resourcesDir)
-            assert runtimeClasspath.contains(output.filterResourcesOutputDir)
         }
 
         //tester coolCode sourceset
         ((SourceSet) project.sourceSets.coolCode).with {
+            assert resources.srcDirs.contains(output.filterResourcesOutputDir)
+
             assert output.contains(output.classesDir)
             assert output.contains(output.resourcesDir)
-            assert output.contains(output.filterResourcesOutputDir)
 
             assert runtimeClasspath.contains(output.classesDir)
             assert runtimeClasspath.contains(output.resourcesDir)
-            assert runtimeClasspath.contains(output.filterResourcesOutputDir)
         }
 
 
