@@ -3,15 +3,14 @@ package no.statkart.sktools.gradle.plugins.filterresources;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.Task;
 import org.gradle.api.file.FileTreeElement;
 import org.gradle.api.internal.HasConvention;
 import org.gradle.api.internal.project.ProjectInternal;
-import org.gradle.api.plugins.BasePlugin;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.SourceSet;
+import org.gradle.plugins.ide.idea.IdeaPlugin;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -105,29 +104,28 @@ public class FilterResourcesPlugin implements Plugin<ProjectInternal> {
                 //hekter inn task for filtering
                 project.getTasks().getByName(sourceSet.getProcessResourcesTaskName()).dependsOn(sourceSetConvention.getFilterResourcesTaskName());
 
-                //legger til clean
-                project.getTasks().getByName(BasePlugin.CLEAN_TASK_NAME).doFirst(new Action<Task>() {
-                    public void execute(Task cleanTask) {
-                        cleanTask.getLogger().info("Deleting directory " + filterResourcesTask.getDestinationDir());
-                        cleanTask.getProject().delete(filterResourcesTask.getDestinationDir());
-                    }
-                });
-
-
                 project.afterEvaluate(new Action<Object>() {
                     public void execute(Object o) {
                         //default verdier for filterResoruces source set
                         if (sourceSetOutputConvention.getFilterResourcesOutputDir() == null) {
-                            sourceSetOutputConvention.filterResourcesOutput(String.format("gen/%s/resources", sourceSet.getName()));
+                            sourceSetOutputConvention.filterResourcesOutput(String.format("build/%s/filteredResources", sourceSet.getName()));
                         }
 
-                        //registrerer builtBy
-                        sourceSet.getOutput().dir(Collections.<String, Object>singletonMap("builtBy", sourceSetConvention.getFilterResourcesTaskName()), filterResourcesTask.getDestinationDir());
+                        //registrerer sourceDir
+                        sourceSet.getResources().srcDir(filterResourcesTask.getDestinationDir());
 
                         //registrerre properties til task
                         Map<String, Object> filterProperties = convention.getProperties();
                         filterResourcesTask.getInputs().properties(filterProperties);
                         filterResourcesTask.filter(Collections.singletonMap("tokens", filterProperties), org.apache.tools.ant.filters.ReplaceTokens.class);
+
+                        // Fortell IntelliJ at filene er
+                        project.getPlugins().withType(IdeaPlugin.class, new Action<IdeaPlugin>() {
+                            @Override
+                            public void execute(IdeaPlugin ideaPlugin) {
+                                ideaPlugin.getModel().getModule().getGeneratedSourceDirs().add(filterResourcesTask.getDestinationDir());
+                            }
+                        });
                     }
                 });
 
