@@ -19,8 +19,8 @@ task('testFilterResourcesAsSourceFolders', dependsOn: tasks.ideaModule) {
     doFirst {
         file("${project.name}.iml").text.with { fileContents ->
             [
-                    '$MODULE_DIR$/gen/main/resources',
-                    '$MODULE_DIR$/gen/test/resources',
+                    '$MODULE_DIR$/build/filteredResources/main',
+                    '$MODULE_DIR$/build/filteredResources/main',
             ].each {
                 assert fileContents.contains(it) //forventer at iml fil inneholder filstier
             }
