@@ -105,14 +105,14 @@ public class WsImportTask extends SourceTask {
             file.delete()
 
             //kjører regexp replace på package statement for flyttet fil
-            relocatedFile.text = relocatedFile.text.replaceFirst(/(?ms)package[^;]+/, "package " + packageString)
+            relocatedFile.write relocatedFile.getText(encoding).replaceFirst(/(?ms)package[^;]+/, "package " + packageString), encoding
 
         }
 
         //legger til import statements for de andre java filene
         javaFiles.files.each { File file ->
             logger.debug("adding exception import statement in ${file}")
-            file.text = file.text.replaceFirst('import ', "import ${packageString}.*;\nimport ")
+            file.write file.getText(encoding).replaceFirst('import ', "import ${packageString}.*;\nimport "), encoding
         }
 
 
