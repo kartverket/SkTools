@@ -8,14 +8,12 @@ import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.Dependency
-import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.FileCollection
 import org.gradle.api.internal.HasConvention
 import org.gradle.api.internal.project.ProjectInternal
 import org.gradle.api.plugins.JavaBasePlugin
+import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSet
-import org.gradle.api.tasks.compile.AbstractCompile
 
 import java.util.concurrent.Callable
 
@@ -43,7 +41,7 @@ class XjcPlugin implements Plugin<ProjectInternal> {
 
     @Override
     void apply(ProjectInternal project) {
-        project.apply plugin: JavaBasePlugin.class
+        project.apply plugin: JavaPlugin.class
 
         final Configuration configuration = createConfiguration(project);
         configureSourceSets(project, configuration)
@@ -68,48 +66,22 @@ class XjcPlugin implements Plugin<ProjectInternal> {
                 //hekter inn utvidelser på source settet
                 ((HasConvention) sourceSet).getConvention().getPlugins().put(CONVENTION_NAME, new XjcSourceSetConvention(xjcSchemas));
 
-                //hekter inn generert resultat og legger dette compile classpath
-                final FileCollection xjcCompileClasspath = sourceSet.getCompileClasspath();
-                final ConfigurableFileCollection xjcOutputClasses = project.files();
-                sourceSet.setCompileClasspath(xjcCompileClasspath.plus(xjcOutputClasses));
-                //SKTOOLS-129: ikke compile output på compile classpath for xjc.. (ellers vil ikke task bli up-to-date)
-
                 xjcSchemas.all(new Action<XjcConfig>() {
                     void execute(XjcConfig xjcConfig) {
                         //setter ingen default plassering av kildefiler for sourceSet - dette må eksplisitt deklareres i konfigurasjon
 
                         final File genOutputDir = project.file(xjcConfig.genOutputPath)
-                        final File buildOutputDir = project.file("${project.getBuildDir()}/classes/${xjcConfig.name}")
 
                         Task xjcTask = createXjcTaskForSourceSet(xjcConfig, genOutputDir).dependsOn(
                                 configuration,
                         );
 
-                        AbstractCompile compileTask = createCompileXjcTaskForSchema(xjcConfig, xjcTask, buildOutputDir).dependsOn(
-                                project.getConfigurations().getByName(sourceSet.getCompileConfigurationName()),
-                        )
+                        sourceSet.getJava().srcDir(genOutputDir);
+                        project.tasks.getByName(sourceSet.getCompileJavaTaskName()).dependsOn(xjcTask)
 
-                        sourceSet.compiledBy(compileTask); //SKTOOLS-48
-
-                        compileTask.source(sourceSet.getJava()) //for evt ListAdapter implementasjon osv
-                        project.tasks[sourceSet.getCompileJavaTaskName()].dependsOn(compileTask); //javaCompile depends on this to be compiled
-
-                        //legger til output til classpath
-                        xjcOutputClasses.from(buildOutputDir)
-
-                        //legger til output katalog til sourceset
-                        sourceSet.output.dir(buildOutputDir, builtBy: compileTask)
-
-                        //legger til generert kildekode slik at de kan bli plukket opp av dokumentajonsverktøy, kildekode distribusjon mm
-                        sourceSet.getAllJava().srcDir(genOutputDir);
-
-                        project.afterEvaluate {
-                            //legger også til kildekode for xsd filer
-                            sourceSet.getAllSource().srcDirs(xjcConfig.source.files as File[]);
+                        project.plugins.withId('idea') {
+                            project.idea.module.generatedSourceDirs += genOutputDir
                         }
-
-                        project.tasks.clean.delete(genOutputDir) //SKTOOLS-10: clean sletter genererte filer
-
                     }
 
 
@@ -134,22 +106,6 @@ class XjcPlugin implements Plugin<ProjectInternal> {
                             });
                         }
                         return task
-                    }
-
-                    private AbstractCompile createCompileXjcTaskForSchema(
-                            final XjcConfig config, Task xjcTask, File buildOutputDir) {
-                        final AbstractCompile compile = (AbstractCompile) project.tasks.create(config.compileTaskName, XjcCompile.class);
-
-                        javaBasePlugin.configureForSourceSet(sourceSet, compile);
-
-                        compile.setDescription("Compiles the XCJ generated schema files");
-                        compile.setSource(xjcTask);
-                        compile.setDestinationDir(buildOutputDir);
-                        compile.setClasspath(xjcCompileClasspath);
-
-                        compile.doFirst { project.delete(getDestinationDir()) } //SKTOOLS-48
-
-                        return compile;
                     }
 
 

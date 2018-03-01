@@ -65,7 +65,6 @@ class XjcPluginTest {
         //asserts the results
         projectHelper.project.sourceSets.main.xjc[0].with { def config ->
             projectHelper.assertTaskExecutedNotSkipped(config.genTaskName)
-            projectHelper.assertTaskExecutedNotSkipped(config.compileTaskName)
             projectHelper.assertFileExists("${config.genOutputPath}/no/statkart/sktools/test/SimpleType.java")
         }
 
@@ -225,8 +224,8 @@ class XjcPluginTest {
 
         //tester targetDir
         sourceSets.main.xjc.each { config ->
-            def compileTask = project.tasks[config.compileTaskName]
-            assert sourceSets.main.output.dirs.contains(compileTask.destinationDir)
+            def genTask = project.tasks[config.genTaskName]
+            assert sourceSets.main.java.srcDirs.contains(genTask.outputDirectory)
         }
 
         //tester schema.withGrunnbokDoc
@@ -267,7 +266,7 @@ class XjcPluginTest {
 
         final Project project = projectHelper.project
         final SourceSet sourceSet = project.convention.plugins.java.sourceSets.main
-        assert sourceSet.allSource.srcDirs.contains(project.file('src/main/xsd'))
+        assert project.idea.module.generatedSourceDirs.contains(project.file('build/xjc/main/main0Schema'))
     }
 
 
@@ -291,29 +290,6 @@ class XjcPluginTest {
 
         assert projectHelper.project.convention.plugins.java.sourceSets.main.xjc[0].config.genTaskName == 'genCustom'
         assert projectHelper.project.tasks.findByPath('genCustom')
-    }
-
-
-    @Test
-    void canSpecifyTaskNameForCompile() {
-
-        //forks a new project in a temp folder
-        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
-            apply plugin: 'sktools-xjc-plugin'
-
-            sourceSets {
-                main.xjc {
-                    schema {
-                        config.compileTaskName = 'compileCustom'
-                    }
-                }
-            }
-        }
-
-        projectHelper.initializeProject()
-
-        assert projectHelper.project.convention.plugins.java.sourceSets.main.xjc[0].config.compileTaskName == 'compileCustom'
-        assert projectHelper.project.tasks.findByPath('compileCustom')
     }
 
 
