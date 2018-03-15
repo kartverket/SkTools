@@ -62,6 +62,7 @@ class WebstartPlugin implements Plugin<Project> {
         jarSigner.conventionMapping.password = { clientConfiguration?.signingConfiguration?.password }
         jarSigner.conventionMapping.digestAlgorithm = { clientConfiguration?.signingConfiguration?.digestAlgorithm }
         jarSigner.conventionMapping.manifestAttributes = { clientConfiguration.manifestAttributes }
+        jarSigner.conventionMapping.storetype = { clientConfiguration?.signingConfiguration?.storetype}
 
         return jarSigner
     }

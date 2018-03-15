@@ -48,7 +48,7 @@ class ClientConfiguration {
     private final List<JnlpConfiguration> jnlpConfigurations = new ArrayList<JnlpConfiguration>();
     private ConfigurableFileCollection jarDependencies
     private Closure mainJar = {
-        project.logger.debug "Treating ${it.name} as main jar in ${name}..." //default sï¿½ betraktes alle filer som main jars i #jarDependencies...
+        project.logger.debug "Treating ${it.name} as main jar in ${name}..." //default så betraktes alle filer som main jars i #jarDependencies...
         true
     }
 
@@ -58,7 +58,7 @@ class ClientConfiguration {
     String libDir = 'lib'
 
     /**
-     * Angir om jnlp-filene skal legges rett til war-en. Sett til <code>false</code> dersom jnlp-filene skal prosesseres mer pï¿½ ett eller annet vis.
+     * Angir om jnlp-filene skal legges rett til war-en. Sett til <code>false</code> dersom jnlp-filene skal prosesseres mer på ett eller annet vis.
      */
     boolean warJnlps = true
 
@@ -144,6 +144,12 @@ class SigningConfiguration {
     protected String alias
     protected String password
     protected String digestAlgorithm
+    /**
+     * Standard verdi er PKCS12.
+     * Dette overstyrer standard verdi for JDK7 som er {@literal JKS}. For JDK8 og standard kompatibilitetsmodus vil jarsigner også lese PKCS12 filer.
+     * @see JarSigner#storetype
+     */
+    protected String storetype = "pkcs12";
 
     protected SigningConfiguration(Project project) {
         this.project = project
@@ -185,6 +191,13 @@ class SigningConfiguration {
         return FileHashIdent.createChecksum(keystore, alias);
     }
 
+    String getStoretype() {
+        return storetype
+    }
+
+    void setStoretype(String storetype) {
+        this.storetype = storetype
+    }
 }
 
 class JnlpConfiguration implements Serializable {

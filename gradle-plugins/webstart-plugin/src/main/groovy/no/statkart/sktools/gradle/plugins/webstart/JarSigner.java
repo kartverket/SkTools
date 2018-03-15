@@ -48,6 +48,18 @@ public class JarSigner extends ConventionTask {
     private String password;
     private String alias;
     private String digestAlgorithm;
+    /**
+     * Keystore type. Standard verdi avhenger av JDK og security properties. 
+     * <br> For JDK 8 er det {@literal JKS med PKCS12 i kompatibilitetsmodus} som er standard.
+     * <br> For JDK 7 er det {@literal JKS} som er standard. 
+     * <p>Standard verdi fra jdk fås fra {@link java.security.KeyStore#getDefaultType()}.
+     * Denne property verdien leses ifra {@literal JAVA_HOME/jre/lib/security/java.security} filen på windows. 
+     * <ul>
+     * <li>{@literal keystore.type=jks} bestemmer standard format til keytore dersom ikke definert</li>
+     * <li>{@literal keystore.type.compat=true} When set to 'true', the JKS keystore type supports loading keystore files in either JKS or PKCS12 format.</li>
+     * </ul>
+     */
+    private String storetype;
 
     private final Map<String, String> manifestAttributes = new LinkedHashMap<String, String>();
 
@@ -193,6 +205,10 @@ public class JarSigner extends ConventionTask {
                     execSpec.args("-digestalg", getDigestAlgorithm());
                 }
 
+                if (getStoretype() != null) {
+                    execSpec.args("-storetype", getStoretype());
+                }
+
                 if (getLogger().isInfoEnabled()) {
                     execSpec.args("-verbose");
                 }
@@ -230,6 +246,16 @@ public class JarSigner extends ConventionTask {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    @Input
+    @Optional
+    public String getStoretype() {
+        return storetype;
+    }
+
+    public void setStoretype(String storetype) {
+        this.storetype = storetype;
     }
 
     @Input
