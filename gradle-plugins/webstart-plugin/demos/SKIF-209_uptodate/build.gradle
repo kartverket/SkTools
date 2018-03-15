@@ -29,7 +29,7 @@ webstart {
         }
     }
     signed {
-        sign keystore: rootProject.file('keystore/selfsign.jks'), alias: 'selfsign', password: 'meMyselfAndI'
+        sign keystore: rootProject.file('keystore/selfsign.jks'), alias: 'selfsign', password: 'meMyselfAndI', storetype: 'jks'
         libDir 'signed'
         mainJar 'echo-client'
         jarDependencies configurations.webstartlibs
