@@ -177,7 +177,7 @@ public class CustomWsdlTask extends DefaultTask {
             }
         }
 
-        Map<String, File> generatedSchemaFileMap = readGeneratedSchemas(documentBuilder, generatedSchemas);
+        HashMap<String, Collection<File>> generatedSchemaFileMap = readGeneratedSchemas(documentBuilder, generatedSchemas);
 
         for (File wsdl : wsdls) {
             getLogger().info("Processing " + wsdl);
@@ -193,7 +193,7 @@ public class CustomWsdlTask extends DefaultTask {
         });
     }
 
-    private void processWsdl(DocumentBuilder documentBuilder, Transformer transformer, File wsdl, Map<String, String> namespaceSchemaFileMap, Map<String, File> generatedSchemaFileMap, CopySpec copySpec) {
+    private void processWsdl(DocumentBuilder documentBuilder, Transformer transformer, File wsdl, Map<String, String> namespaceSchemaFileMap, HashMap<String, Collection<File>> generatedSchemaFileMap, CopySpec copySpec) {
         File destinationFile = new File(destinationDir, wsdl.getName());
 
         try {
@@ -219,7 +219,7 @@ public class CustomWsdlTask extends DefaultTask {
                         getLogger().info("Using original schema " + schemaFile + " for " + importNamespace);
                         imp.setAttributeNS(null, "schemaLocation", schemaFile);
                     } else {
-                        File file = generatedSchemaFileMap.get(importNamespace);
+                        Collection<File> file = generatedSchemaFileMap.get(importNamespace);
                         getLogger().info("Using generated schema " + file + " for " + importNamespace);
                         copySpec.from(file);
                     }
@@ -249,28 +249,31 @@ public class CustomWsdlTask extends DefaultTask {
         }
     }
 
-    private void processServiceSchema(DocumentBuilder documentBuilder, Transformer transformer, Map<String, String> namespaceSchemaFileMap, File serviceSchema) {
-        File destinationFile = new File(destinationDir, serviceSchema.getName());
+    private void processServiceSchema(DocumentBuilder documentBuilder, Transformer transformer, Map<String, String> namespaceSchemaFileMap, Collection<File> serviceSchemas) {
 
-        try {
-            Document document = documentBuilder.parse(serviceSchema);
+        for (File serviceSchema : serviceSchemas) {
+            File destinationFile = new File(destinationDir, serviceSchema.getName());
 
-            NodeList imports = document.getElementsByTagNameNS("http://www.w3.org/2001/XMLSchema", "import");
-            for (int i = 0; i < imports.getLength(); ++i) {
-                Element imp = (Element) imports.item(i);
-                String ns = imp.getAttributeNS(null, "namespace");
-                imp.setAttributeNS(null, "schemaLocation", namespaceSchemaFileMap.get(ns));
+            try {
+                Document document = documentBuilder.parse(serviceSchema);
+
+                NodeList imports = document.getElementsByTagNameNS("http://www.w3.org/2001/XMLSchema", "import");
+                for (int i = 0; i < imports.getLength(); ++i) {
+                    Element imp = (Element) imports.item(i);
+                    String ns = imp.getAttributeNS(null, "namespace");
+                    imp.setAttributeNS(null, "schemaLocation", namespaceSchemaFileMap.get(ns));
+                }
+
+                Result output = new StreamResult(destinationFile);
+                Source input = new DOMSource(document);
+                transformer.transform(input, output);
+            } catch (SAXException e) {
+                throw new GradleException("Error parsing " + serviceSchema);
+            } catch (IOException e) {
+                throw new GradleException("Error parsing " + serviceSchema);
+            } catch (TransformerException e) {
+                throw new GradleException("Error writing " + destinationFile);
             }
-
-            Result output = new StreamResult(destinationFile);
-            Source input = new DOMSource(document);
-            transformer.transform(input, output);
-        } catch (SAXException e) {
-            throw new GradleException("Error parsing " + serviceSchema);
-        } catch (IOException e) {
-            throw new GradleException("Error parsing " + serviceSchema);
-        } catch (TransformerException e) {
-            throw new GradleException("Error writing " + destinationFile);
         }
     }
 
@@ -318,8 +321,8 @@ public class CustomWsdlTask extends DefaultTask {
         return namespaceSchemaFileMap;
     }
 
-    private HashMap<String, File> readGeneratedSchemas(DocumentBuilder documentBuilder, Collection<File> schemaFiles) {
-        HashMap<String, File> namespaceSchemaFileMap = new HashMap<String, File>();
+    private HashMap<String, Collection<File>> readGeneratedSchemas(DocumentBuilder documentBuilder, Collection<File> schemaFiles) {
+        HashMap<String, Collection<File>> namespaceSchemaFileMap = new HashMap<String, Collection<File>>();
 
         XPathExpression xPathExpression;
         try {
@@ -335,7 +338,12 @@ public class CustomWsdlTask extends DefaultTask {
             try {
                 Document document = documentBuilder.parse(schemaFile);
                 String targetNamespace = xPathExpression.evaluate(document);
-                namespaceSchemaFileMap.put(targetNamespace, schemaFile);
+                Collection<File> files = namespaceSchemaFileMap.get(targetNamespace);
+                if(files == null) {
+                    files = new HashSet<File>();
+                    namespaceSchemaFileMap.put(targetNamespace, files);
+                }
+                files.add(schemaFile);
             } catch (SAXException e) {
                 throw new GradleException("Error parsing " + schemaFile, e);
             } catch (IOException e) {
