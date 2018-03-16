@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema version="1.0" targetNamespace="http://statkart.no/sktools/wsapi/v1/service/store" xmlns:ns1="http://statkart.no/sktools/wsapi/v1/domain/basistyper" xmlns:tns="http://statkart.no/sktools/wsapi/v1/service/store" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:import namespace="http://statkart.no/sktools/wsapi/v1/domain/basistyper" schemaLocation="StoreService2WS_schema3.xsd"/>
+
+  <xs:element name="doStuff" type="tns:doStuff"/>
+
+  <xs:element name="doStuffResponse" type="tns:doStuffResponse"/>
+
+  <xs:complexType name="doStuff">
+    <xs:sequence>
+      <xs:element name="id" type="ns1:SkToolsBubbleObjectId" minOccurs="0"/>
+      <xs:element name="SkToolsContext" type="ns1:SkToolsContext" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="doStuffResponse">
+    <xs:sequence>
+      <xs:element name="return" type="ns1:SkToolsBubbleObject" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+</xs:schema>
+

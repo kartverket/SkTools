@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema elementFormDefault="qualified" version="1.0" targetNamespace="http://statkart.no/sktools/wsapi/v1/exception" xmlns:tns="http://statkart.no/sktools/wsapi/v1/exception" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:element name="ServiceException" nillable="true" type="tns:ServiceFaultInfo"/>
+
+  <xs:complexType name="ServiceFaultInfo">
+    <xs:sequence>
+      <xs:element name="category" type="xs:string"/>
+      <xs:element name="properties" type="tns:ExceptionProperties"/>
+      <xs:element name="stackTraceText" type="xs:string"/>
+      <xs:element name="exceptionDetail" type="tns:ExceptionDetail"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ExceptionProperties">
+    <xs:sequence>
+      <xs:element name="entry" nillable="true" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="key" type="xs:string"/>
+            <xs:element name="value" type="xs:string"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ExceptionDetail">
+    <xs:sequence>
+      <xs:element name="className" type="xs:string"/>
+      <xs:element name="message" type="xs:string"/>
+      <xs:element name="cause" type="tns:ExceptionDetail" nillable="true"/>
+      <xs:element name="stackTraceElements" type="tns:StackTraceElementList"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="StackTraceElementList">
+    <xs:sequence>
+      <xs:element name="item" type="tns:StackTraceElement" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="StackTraceElement">
+    <xs:sequence>
+      <xs:element name="declaringClass" type="xs:string"/>
+      <xs:element name="methodName" type="xs:string"/>
+      <xs:element name="fileName" type="xs:string" nillable="true"/>
+      <xs:element name="lineNumber" type="xs:int"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:schema>
+
