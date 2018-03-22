@@ -2,17 +2,21 @@
 
 /*
  Multibranch Pipeline for Continuous integration (CI) prosess i Jenkins.
- Her branch har denne innsjekket p� fast plassering: Jenkinsfile
+ Her branch har denne innsjekket på fast plassering: Jenkinsfile
 
- CI prosessen har f�lgende parameteriserbare dimensjoner:
+ CI prosessen har følgende parameteriserbare dimensjoner:
 
-   WEBLOGIC_VERSION : WEBLOGIC_HOME blir utledet via denne. Det kreves tilh�rende env variabel "WEBLOGIC_HOME_${env.WEBLOGIC_VERSION}" peker til weblogic lib-katalog p� byggenode
+   WEBLOGIC_VERSION : WEBLOGIC_HOME blir utledet via denne. Det kreves tilhørende env variabel "WEBLOGIC_HOME_${env.WEBLOGIC_VERSION}" peker til weblogic lib-katalog på byggenode
    sktools_versjon : versjon for publisering til nexus maven repo
-
- Branch navn delegeres av Multibranch Pipeline som variabel BRANCH_NAME
 
  For jenkins pipeline documentation https://jenkins.io/doc/book/pipeline/
  TIP: Import DSL into your IntelliJ from http://jenkins.statkart.no:8021/jenkins/pipeline-syntax/gdsl
+
+ Branch navn delegeres av Multibranch Pipeline som variabel BRANCH_NAME
+
+ Polling skjer via oppsett av multibranch-jobb og defineres derfor ikke her i denne filen.
+
+ Multibranch oppsett sjekker ut kodebasen automatisk. Denne havner som i roten til hvert workspace (som default).
 */
 
 pipeline { //declarative pipeline syntax
@@ -23,7 +27,7 @@ pipeline { //declarative pipeline syntax
     }
 
     parameters {
-        string(name: 'WEBLOGIC_VERSION', defaultValue: '12.1.3.0', description: 'Weblogic versjon. Det kreves tilh�rende env variabel "WEBLOGIC_HOME_${env.WEBLOGIC_VERSION}" peker til weblogic lib-katalog p� byggenode.')
+        string(name: 'WEBLOGIC_VERSION', defaultValue: '12.1.3.0', description: 'Weblogic versjon. Det kreves tilhørende env variabel "WEBLOGIC_HOME_${env.WEBLOGIC_VERSION}" peker til weblogic lib-katalog på byggenode.')
         string(name: 'sktools_versjon', defaultValue: "trunk-build${env.BUILD_NUMBER}", description: 'Versjon for publisert artefakt.')
         string(name: 'BRANCH_NAME', defaultValue: "${env.BRANCH_NAME ?: 'trunk'}", description: 'Branch for kildekode.')
     }
@@ -35,7 +39,7 @@ pipeline { //declarative pipeline syntax
 
     environment {
         //legger gradle til byggenodens workspace - dette forhindrer kollisjoner i tilfeller der man har ibruk flyktige snapshot versjoner slik at to jobber kan komme i konflikt.
-        //PS: erstatter '\' med '/' via char verdier da jenkins parser og kompilerer regex uttrykk p� en h�pl�s m�te...
+        //PS: erstatter '\' med '/' via char verdier da jenkins parser og kompilerer regex uttrykk på en håpløs måte...
         GRADLE_USER_HOME = "${WORKSPACE.replace(0x5c as char, 0x2f as char)}/gradle"
         WEBLOGIC_VERSION = "${params.WEBLOGIC_VERSION}"
         WEBLOGIC_HOME = "${WEBLOGIC_HOME("${params.WEBLOGIC_VERSION}", env)}"
@@ -68,11 +72,11 @@ pipeline { //declarative pipeline syntax
                 }
                 stage('Test gradle latest') {
                     tools {
-                        gradle 'Gradle 2.14' //latest og greatest (kan ogs� v�re neste major versjon)
+                        gradle 'Gradle 2.14' //latest og greatest (kan også være neste major versjon)
                     }
                     steps {
                         bat "gradle --version"
-                        bat "gradle test -DignoreFailures=true ${gradleOptions(params, env)} -DbuildDirName=build/gradle2.14" //buildDirName for � kj�re flere bygg med forskjellige gradle versjoner
+                        bat "gradle test -DignoreFailures=true ${gradleOptions(params, env)} -DbuildDirName=build/gradle2.14" //buildDirName for å kjøre flere bygg med forskjellige gradle versjoner
                         junit '**/build/gradle2.14/test-results/*.xml'
                         //                            step([$class: 'Publisher', reportFilenamePattern: '**/build/gradle2.14/reports/tests/testng-results.xml'])
                     }
@@ -95,7 +99,7 @@ pipeline { //declarative pipeline syntax
                 }
                 stage('Integration Test Latest') {
                     tools {
-                        gradle 'Gradle 2.14' //latest og greatest (kan ogs� v�re neste major versjon)
+                        gradle 'Gradle 2.14' //latest og greatest (kan også være neste major versjon)
                         jdk 'Java 8 Latest' //weblogic krever denne major versjonen av java
                     }
                     steps {
@@ -113,10 +117,6 @@ pipeline { //declarative pipeline syntax
                 bat "gradle uploadArchives ${gradleOptions(params, env)}"
             }
         }
-    }
-
-    triggers {
-        pollSCM('* 6-23 * * 1-6') //hvert minutt mellom kl 06 og 23, ikke s�ndager
     }
 
     post {
@@ -176,7 +176,7 @@ Build : $BUILD_URL <br>
     // The options directive is for configuration that applies to the whole job.
     options {
 
-        // Vi �nsker ikke � fylle opp jenkins master med logger og artefakter av gamle bygg
+        // Vi ønsker ikke å fylle opp jenkins master med logger og artefakter av gamle bygg
         buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '30', daysToKeepStr: '180', numToKeepStr: '90'))
 
         // Skip stages once the build status has gone to UNSTABLE
@@ -197,7 +197,7 @@ static def gradleOptions(params, env) {
     return [
             "-PWEBLOGIC_VERSION=${env.WEBLOGIC_VERSION}",
             "-PWEBLOGIC_HOME=${WEBLOGIC_HOME(env.WEBLOGIC_VERSION, env)}",
-            "-Dmaven.repo.local=${env.BASE}/.m2", //publiserer midlertidigt artefakt til mavenLocal for kj�ring av releasetester
+            "-Dmaven.repo.local=${env.BASE}/.m2", //publiserer midlertidigt artefakt til mavenLocal for kjøring av releasetester
             '-Dorg.gradle.daemon=false',
             '--stacktrace'
     ].join(' ')
@@ -213,7 +213,7 @@ static def WEBLOGIC_HOME(version, env) {
 }
 
 /**
- * Substituerer inn env verdier for vilk�rlig streng med placeholdere p� formen ${VAR}
+ * Substituerer inn env verdier for vilkårlig streng med placeholdere på formen ${VAR}
  */
 static def envExpand(value, env) {
 //    def schema = env.environment.expand(value)
