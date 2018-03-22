@@ -33,7 +33,7 @@ pipeline { //declarative pipeline syntax
     }
 
     tools {
-        gradle 'Gradle 2.4' //kompilerer artefakter til denne versjonen
+        gradle 'Gradle 4.2' //kompilerer artefakter til denne versjonen
         jdk 'Java 7 Latest' //spesifisert java versjon for bygging av release
     }
 
@@ -72,13 +72,13 @@ pipeline { //declarative pipeline syntax
                 }
                 stage('Test gradle latest') {
                     tools {
-                        gradle 'Gradle 2.14' //latest og greatest (kan også være neste major versjon)
+                        gradle 'Gradle 4.6' //latest og greatest (kan også være neste major versjon)
                     }
                     steps {
                         bat "gradle --version"
-                        bat "gradle test -DignoreFailures=true ${gradleOptions(params, env)} -DbuildDirName=build/gradle2.14" //buildDirName for å kjøre flere bygg med forskjellige gradle versjoner
-                        junit '**/build/gradle2.14/test-results/*.xml'
-                        //                            step([$class: 'Publisher', reportFilenamePattern: '**/build/gradle2.14/reports/tests/testng-results.xml'])
+                        bat "gradle test -DignoreFailures=true ${gradleOptions(params, env)} -DbuildDirName=build/gradle4.6" //buildDirName for å kjøre flere bygg med forskjellige gradle versjoner
+                        junit '**/build/gradle4.6/test-results/*.xml'
+                        //                            step([$class: 'Publisher', reportFilenamePattern: '**/build/gradle4.6/reports/tests/testng-results.xml'])
                     }
                 }
             }
@@ -88,7 +88,7 @@ pipeline { //declarative pipeline syntax
             parallel {
                 stage('Integration Test Baseline') {
                     tools {
-                        gradle 'Gradle 2.4' //spesifisert minstekrav
+                        gradle 'Gradle 4.2' //spesifisert minstekrav
                     }
                     steps {
                         withEnv(['WEBLOGIC_VERSION=10.3.5.0', "WEBLOGIC_HOME=${WEBLOGIC_HOME('10.3.5.0', env)}"]) {
@@ -99,13 +99,13 @@ pipeline { //declarative pipeline syntax
                 }
                 stage('Integration Test Latest') {
                     tools {
-                        gradle 'Gradle 2.14' //latest og greatest (kan også være neste major versjon)
+                        gradle 'Gradle 4.6' //latest og greatest (kan også være neste major versjon)
                         jdk 'Java 8 Latest' //weblogic krever denne major versjonen av java
                     }
                     steps {
                         withEnv(['WEBLOGIC_VERSION=12.1.3.0', "WEBLOGIC_HOME=${WEBLOGIC_HOME('12.1.3.0', env)}"]) {
                             bat "gradle --version"
-                            bat "gradle runDemos ${gradleOptions(params, env)} -DbuildDirName=gradle2.14"
+                            bat "gradle runDemos ${gradleOptions(params, env)} -DbuildDirName=gradle4.6"
                         }
                     }
                 }

@@ -1,4 +1,4 @@
-assert GradleVersion.current() >= GradleVersion.version('2.4') //lowest gradle version supported
+assert GradleVersion.current() >= GradleVersion.version('4.2') //lowest gradle version supported
 
 allprojects {
     apply plugin: 'idea'
