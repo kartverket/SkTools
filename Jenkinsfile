@@ -2,17 +2,21 @@
 
 /*
  Multibranch Pipeline for Continuous integration (CI) prosess i Jenkins.
- Her branch har denne innsjekket på fast plassering: Jenkinsfile
+ Her branch har denne innsjekket pÃ¥ fast plassering: Jenkinsfile
 
- CI prosessen har følgende parameteriserbare dimensjoner:
+ CI prosessen har fÃ¸lgende parameteriserbare dimensjoner:
 
-   WEBLOGIC_VERSION : WEBLOGIC_HOME blir utledet via denne. Det kreves tilhørende env variabel "WEBLOGIC_HOME_${env.WEBLOGIC_VERSION}" peker til weblogic lib-katalog på byggenode
+   WEBLOGIC_VERSION : WEBLOGIC_HOME blir utledet via denne. Det kreves tilhÃ¸rende env variabel "WEBLOGIC_HOME_${env.WEBLOGIC_VERSION}" peker til weblogic lib-katalog pÃ¥ byggenode
    sktools_versjon : versjon for publisering til nexus maven repo
-
- Branch navn delegeres av Multibranch Pipeline som variabel BRANCH_NAME
 
  For jenkins pipeline documentation https://jenkins.io/doc/book/pipeline/
  TIP: Import DSL into your IntelliJ from http://jenkins.statkart.no:8021/jenkins/pipeline-syntax/gdsl
+
+ Branch navn delegeres av Multibranch Pipeline som variabel BRANCH_NAME
+
+ Polling skjer via oppsett av multibranch-jobb og defineres derfor ikke her i denne filen.
+
+ Multibranch oppsett sjekker ut kodebasen automatisk. Denne havner som i roten til hvert workspace (som default).
 */
 
 pipeline { //declarative pipeline syntax
@@ -23,7 +27,7 @@ pipeline { //declarative pipeline syntax
     }
 
     parameters {
-        string(name: 'WEBLOGIC_VERSION', defaultValue: '12.1.3.0', description: 'Weblogic versjon. Det kreves tilhørende env variabel "WEBLOGIC_HOME_${env.WEBLOGIC_VERSION}" peker til weblogic lib-katalog på byggenode.')
+        string(name: 'WEBLOGIC_VERSION', defaultValue: '12.1.3.0', description: 'Weblogic versjon. Det kreves tilhÃ¸rende env variabel "WEBLOGIC_HOME_${env.WEBLOGIC_VERSION}" peker til weblogic lib-katalog pÃ¥ byggenode.')
         string(name: 'sktools_versjon', defaultValue: "trunk-build${env.BUILD_NUMBER}", description: 'Versjon for publisert artefakt.')
         string(name: 'BRANCH_NAME', defaultValue: "${env.BRANCH_NAME ?: 'trunk'}", description: 'Branch for kildekode.')
     }
@@ -35,7 +39,7 @@ pipeline { //declarative pipeline syntax
 
     environment {
         //legger gradle til byggenodens workspace - dette forhindrer kollisjoner i tilfeller der man har ibruk flyktige snapshot versjoner slik at to jobber kan komme i konflikt.
-        //PS: erstatter '\' med '/' via char verdier da jenkins parser og kompilerer regex uttrykk på en håpløs måte...
+        //PS: erstatter '\' med '/' via char verdier da jenkins parser og kompilerer regex uttrykk pÃ¥ en hÃ¥plÃ¸s mÃ¥te...
         GRADLE_USER_HOME = "${WORKSPACE.replace(0x5c as char, 0x2f as char)}/gradle"
         WEBLOGIC_VERSION = "${params.WEBLOGIC_VERSION}"
         WEBLOGIC_HOME = "${WEBLOGIC_HOME("${params.WEBLOGIC_VERSION}", env)}"
@@ -45,24 +49,14 @@ pipeline { //declarative pipeline syntax
     }
 
     stages {
-        stage('Checkout') {
-            steps {
-                bat "set"
-                checkout perforce(credential: 'matrikkel-builder' /*krever global credential*/, populate: autoClean(delete: true, modtime: false, parallel: [enable: false, minbytes: '1024', minfiles: '1', threads: '4'], pin: '', quiet: true, replace: true, tidy: false), workspace: manualSpec(charset: 'none', name: 'jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}', pinHost: false, spec: clientSpec(allwrite: false, backup: false, clobber: false, compress: false, line: 'LOCAL', locked: false, modtime: false, rmdir: false, serverID: '', streamName: '', type: 'WRITABLE', view: '//sktools/SKToolsKode/${BRANCH_NAME}/... //jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}/sktools/...')))
-            }
-        }
         stage('Prepare') {
             steps {
-                dir('sktools') {
-                    bat "gradle clean --refresh-dependencies ${gradleOptions(params, env)}"
-                }
+                bat "gradle clean --refresh-dependencies ${gradleOptions(params, env)}"
             }
         }
         stage('Build') {
             steps {
-                dir('sktools') {
-                    bat "gradle assemble install ${gradleOptions(params, env)}"
-                }
+                bat "gradle assemble install ${gradleOptions(params, env)}"
             }
         }
 
@@ -70,25 +64,21 @@ pipeline { //declarative pipeline syntax
             parallel {
                 stage('Test gradle baseline') {
                     steps {
-                        dir('sktools') {
-                            bat "gradle --version"
-                            bat "gradle test -DignoreFailures=true ${gradleOptions(params, env)}"
-                            junit '**/build/test-results/*.xml'
-//                            step([$class: 'Publisher', reportFilenamePattern: '**/build/reports/tests/testng-results.xml'])
-                        }
+                        bat "gradle --version"
+                        bat "gradle test -DignoreFailures=true ${gradleOptions(params, env)}"
+                        junit '**/build/test-results/*.xml'
+                        //                            step([$class: 'Publisher', reportFilenamePattern: '**/build/reports/tests/testng-results.xml'])
                     }
                 }
                 stage('Test gradle latest') {
                     tools {
-                        gradle 'Gradle 2.14' //latest og greatest (kan også være neste major versjon)
+                        gradle 'Gradle 2.14' //latest og greatest (kan ogsÃ¥ vÃ¦re neste major versjon)
                     }
                     steps {
-                        dir('sktools') {
-                            bat "gradle --version"
-                            bat "gradle test -DignoreFailures=true ${gradleOptions(params, env)} -DbuildDirName=build/gradle2.14" //buildDirName for å kjøre flere bygg med forskjellige gradle versjoner
-                            junit '**/build/gradle2.14/test-results/*.xml'
-//                            step([$class: 'Publisher', reportFilenamePattern: '**/build/gradle2.14/reports/tests/testng-results.xml'])
-                        }
+                        bat "gradle --version"
+                        bat "gradle test -DignoreFailures=true ${gradleOptions(params, env)} -DbuildDirName=build/gradle2.14" //buildDirName for Ã¥ kjÃ¸re flere bygg med forskjellige gradle versjoner
+                        junit '**/build/gradle2.14/test-results/*.xml'
+                        //                            step([$class: 'Publisher', reportFilenamePattern: '**/build/gradle2.14/reports/tests/testng-results.xml'])
                     }
                 }
             }
@@ -102,24 +92,20 @@ pipeline { //declarative pipeline syntax
                     }
                     steps {
                         withEnv(['WEBLOGIC_VERSION=10.3.5.0', "WEBLOGIC_HOME=${WEBLOGIC_HOME('10.3.5.0', env)}"]) {
-                            dir('sktools') {
-                                bat "gradle --version"
-                                bat "gradle runDemos ${gradleOptions(params, env)}"
-                            }
+                            bat "gradle --version"
+                            bat "gradle runDemos ${gradleOptions(params, env)}"
                         }
                     }
                 }
                 stage('Integration Test Latest') {
                     tools {
-                        gradle 'Gradle 2.14' //latest og greatest (kan også være neste major versjon)
+                        gradle 'Gradle 2.14' //latest og greatest (kan ogsÃ¥ vÃ¦re neste major versjon)
                         jdk 'Java 8 Latest' //weblogic krever denne major versjonen av java
                     }
                     steps {
                         withEnv(['WEBLOGIC_VERSION=12.1.3.0', "WEBLOGIC_HOME=${WEBLOGIC_HOME('12.1.3.0', env)}"]) {
-                            dir('sktools') {
-                                bat "gradle --version"
-                                bat "gradle runDemos ${gradleOptions(params, env)} -DbuildDirName=gradle2.14"
-                            }
+                            bat "gradle --version"
+                            bat "gradle runDemos ${gradleOptions(params, env)} -DbuildDirName=gradle2.14"
                         }
                     }
                 }
@@ -128,15 +114,9 @@ pipeline { //declarative pipeline syntax
 
         stage('Publish') {
             steps {
-                dir('sktools') {
-                    bat "gradle uploadArchives ${gradleOptions(params, env)}"
-                }
+                bat "gradle uploadArchives ${gradleOptions(params, env)}"
             }
         }
-    }
-
-    triggers {
-        pollSCM('* 6-23 * * 1-6') //hvert minutt mellom kl 06 og 23, ikke søndager
     }
 
     post {
@@ -196,7 +176,7 @@ Build : $BUILD_URL <br>
     // The options directive is for configuration that applies to the whole job.
     options {
 
-        // Vi ønsker ikke å fylle opp jenkins master med logger og artefakter av gamle bygg
+        // Vi Ã¸nsker ikke Ã¥ fylle opp jenkins master med logger og artefakter av gamle bygg
         buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '30', daysToKeepStr: '180', numToKeepStr: '90'))
 
         // Skip stages once the build status has gone to UNSTABLE
@@ -217,7 +197,7 @@ static def gradleOptions(params, env) {
     return [
             "-PWEBLOGIC_VERSION=${env.WEBLOGIC_VERSION}",
             "-PWEBLOGIC_HOME=${WEBLOGIC_HOME(env.WEBLOGIC_VERSION, env)}",
-            "-Dmaven.repo.local=${env.BASE}/.m2", //publiserer midlertidigt artefakt til mavenLocal for kjøring av releasetester
+            "-Dmaven.repo.local=${env.BASE}/.m2", //publiserer midlertidigt artefakt til mavenLocal for kjÃ¸ring av releasetester
             '-Dorg.gradle.daemon=false',
             '--stacktrace'
     ].join(' ')
@@ -233,7 +213,7 @@ static def WEBLOGIC_HOME(version, env) {
 }
 
 /**
- * Substituerer inn env verdier for vilkårlig streng med placeholdere på formen ${VAR}
+ * Substituerer inn env verdier for vilkÃ¥rlig streng med placeholdere pÃ¥ formen ${VAR}
  */
 static def envExpand(value, env) {
 //    def schema = env.environment.expand(value)
