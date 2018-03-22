@@ -6,10 +6,14 @@
 : *******************************************************************************************************************
 : * Gradle & Project Setup
 : *******************************************************************************************************************
-set JAVA_HOME=C:\bin\jdk\jdk1.6.0_45_x86
+set JAVA_HOME=C:\bin\jdk\jdk1.8.0_162
+set JAVA_HOME=C:\bin\jdk\jdk1.7.0_111
+set JAVA_HOME=C:\bin\jdk\jdk1.7.0_171
+
+set GRADLE_HOME=C:\bin\gradle\gradle-2.14.1
 set GRADLE_HOME=C:\bin\gradle\gradle-2.1
 
-@rem bestemmer versjon av prosjektet [optional - må benyttes på ikke numeriske kodebrancher ala trunk]
+@rem bestemmer versjon av prosjektet [optional - mï¿½ benyttes pï¿½ ikke numeriske kodebrancher ala trunk]
 @rem set ORG_GRADLE_PROJECT_sktools_versjon=1.4-SNAPSHOT
 
 
