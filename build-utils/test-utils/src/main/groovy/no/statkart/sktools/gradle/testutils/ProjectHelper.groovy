@@ -160,7 +160,7 @@ class ProjectHelper {
     public synchronized List<File> getGradleJars() {
         if (gradleJars == null) {
             DefaultSelfResolvingDependency dependency = (DefaultSelfResolvingDependency) project.getDependencies().gradleApi()
-            Collection<File> files = dependency.getSource().getAsFileTree().matching(new PatternSet(includes: ['**/*gradle-*.jar'])).getFiles()
+            Collection<File> files = dependency.getFiles().getAsFileTree().matching(new PatternSet(includes: ['**/*gradle-*.jar'])).getFiles()
             gradleJars = new ArrayList<File>(files)
             Collections.sort(gradleJars)
         }
