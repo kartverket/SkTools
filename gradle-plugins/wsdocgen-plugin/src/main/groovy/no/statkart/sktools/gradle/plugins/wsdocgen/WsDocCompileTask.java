@@ -54,13 +54,7 @@ public class WsDocCompileTask extends JavaCompile {
       compilerArgs.add("-processor");
       compilerArgs.add("no.statkart.sktools.utils.wsdocgen.processor.WSDocProcessor"); //Names of the annotation processors to run. This bypasses the default discovery process.
 
-      final FileCollection processorClasspath = getProcessorClasspath();
-      if (!processorClasspath.isEmpty()) {
-         compilerArgs.add("-processorpath");
-         compilerArgs.add(processorClasspath.getAsFileTree().getAsPath());
-      } else {
-         assert true; //ok under testing
-      }
+      //-processorpath settes via CompileOptions#annotationProcessorPath (Gradle 3.4)
 
       final File xsl = getServiceXsltFile();
       if (!xsl.exists()) {
@@ -83,11 +77,11 @@ public class WsDocCompileTask extends JavaCompile {
    }
 
    public FileCollection getProcessorClasspath() {
-      return processorClasspath;
+      return super.getOptions().getAnnotationProcessorPath();
    }
 
    public void setProcessorClasspath(FileCollection processorClasspath) {
-      this.processorClasspath = processorClasspath;
+      super.getOptions().setAnnotationProcessorPath(processorClasspath);
    }
 
    @TaskAction
