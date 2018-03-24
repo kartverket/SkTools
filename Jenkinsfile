@@ -77,7 +77,7 @@ pipeline { //declarative pipeline syntax
                     steps {
                         bat "gradle --version"
                         bat "gradle testGradle4.6 -DignoreFailures=true ${gradleOptions(params, env)} -DbuildDirName=build/gradle4.6" //buildDirName for å kjøre flere bygg med forskjellige gradle versjoner
-                        junit '**test-results/testGradle4.6/*.xml'
+                        junit '**/test-results/testGradle4.6/*.xml'
                         //                            step([$class: 'Publisher', reportFilenamePattern: '**/build/gradle4.6/reports/tests/testng-results.xml'])
                     }
                 }
