@@ -65,8 +65,8 @@ pipeline { //declarative pipeline syntax
                 stage('Test gradle baseline') {
                     steps {
                         bat "gradle --version"
-                        bat "gradle test -DignoreFailures=true ${gradleOptions(params, env)}"
-                        junit '**/build/test-results/*.xml'
+                        bat "gradle testGradle2.4 -DignoreFailures=true ${gradleOptions(params, env)}"
+                        junit '**/test-results/testGradle2.4/*.xml'
                         //                            step([$class: 'Publisher', reportFilenamePattern: '**/build/reports/tests/testng-results.xml'])
                     }
                 }
@@ -76,8 +76,8 @@ pipeline { //declarative pipeline syntax
                     }
                     steps {
                         bat "gradle --version"
-                        bat "gradle test -DignoreFailures=true ${gradleOptions(params, env)} -DbuildDirName=build/gradle2.14" //buildDirName for å kjøre flere bygg med forskjellige gradle versjoner
-                        junit '**/build/gradle2.14/test-results/*.xml'
+                        bat "gradle testGradle2.14.1 -DignoreFailures=true ${gradleOptions(params, env)} -DbuildDirName=build/gradle2.14" //buildDirName for å kjøre flere bygg med forskjellige gradle versjoner
+                        junit '**/test-results/testGradle2.14.1/*.xml'
                         //                            step([$class: 'Publisher', reportFilenamePattern: '**/build/gradle2.14/reports/tests/testng-results.xml'])
                     }
                 }
