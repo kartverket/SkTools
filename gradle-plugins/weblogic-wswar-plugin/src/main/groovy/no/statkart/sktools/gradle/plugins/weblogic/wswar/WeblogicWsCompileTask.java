@@ -14,6 +14,7 @@ import org.gradle.api.tasks.*;
 import org.gradle.api.tasks.compile.AbstractCompile;
 import org.gradle.api.tasks.compile.CompileOptions;
 
+import javax.inject.Inject;
 import java.io.File;
 
 /**
@@ -28,7 +29,7 @@ public class WeblogicWsCompileTask extends AbstractCompile implements WeblogicTa
     protected static final Logger logger = Logging.getLogger(WeblogicWsCompileTask.class);
 
     private final WeblogicJaxWsCompiler compiler = new WeblogicJaxWsCompiler();
-    private final DefaultWeblogicCompileSpec spec = new DefaultWeblogicCompileSpec();
+    private final DefaultWeblogicCompileSpec spec;
 
     private FileCollection weblogicClasspath;
 
@@ -37,7 +38,9 @@ public class WeblogicWsCompileTask extends AbstractCompile implements WeblogicTa
     private File genDir = null;
 
 
-    public WeblogicWsCompileTask() {
+    @Inject
+    public WeblogicWsCompileTask(DefaultWeblogicCompileSpec spec) {
+        this.spec = spec;
         getLogging().captureStandardOutput(LogLevel.INFO);
         getLogging().captureStandardError(LogLevel.DEBUG);
 

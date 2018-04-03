@@ -16,6 +16,8 @@ import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.compile.AbstractCompile;
 import org.gradle.api.tasks.compile.CompileOptions;
 
+import javax.inject.Inject;
+
 /**
  * Task for generering av weblogic webservice klient
  *
@@ -27,7 +29,7 @@ class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInter
     protected static final Logger logger = Logging.getLogger(WeblogicGenClientTask.class);
 
     private WebServiceConfig webServiceConfig;
-    private final DefaultWeblogicCompileSpec spec = new DefaultWeblogicCompileSpec();
+    private final DefaultWeblogicCompileSpec spec;
 
     private FileCollection weblogicClasspath;
     private String packageName;
@@ -35,9 +37,12 @@ class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInter
 
     /**
      * Gradle 1.2/2.0 - no arg constructor or @Inject annotated constructor
+     * @param spec
      */
-    public WeblogicGenClientTask() {
+    @Inject
+    public WeblogicGenClientTask(DefaultWeblogicCompileSpec spec) {
         super();
+        this.spec = spec;
         getLogging().captureStandardOutput(LogLevel.INFO);
         getLogging().captureStandardError(LogLevel.DEBUG);
 

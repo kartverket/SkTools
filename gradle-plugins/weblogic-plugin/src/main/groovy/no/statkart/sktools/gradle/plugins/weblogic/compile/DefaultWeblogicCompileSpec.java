@@ -3,6 +3,7 @@ package no.statkart.sktools.gradle.plugins.weblogic.compile;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.compile.CompileOptions;
 
+import javax.inject.Inject;
 import java.io.File;
 
 /**
@@ -36,8 +37,9 @@ public class DefaultWeblogicCompileSpec implements WeblogicCompileSpec {
     private String targetCompatibility;
 
 
-    public DefaultWeblogicCompileSpec() {
-        setCompileOptions(new CompileOptions());
+    @Inject
+    public DefaultWeblogicCompileSpec(CompileOptions compileOptions) {
+        setCompileOptions(compileOptions);
     }
 
     public CompileOptions getCompileOptions() {
