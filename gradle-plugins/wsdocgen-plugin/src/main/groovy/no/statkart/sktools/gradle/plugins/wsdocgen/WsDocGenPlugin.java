@@ -156,7 +156,7 @@ public class WsDocGenPlugin implements Plugin<ProjectInternal> {
                 task.getOptions().setAnnotationProcessorPath(wsDocGenConfiguration);
 
                 if (runningInIDEATestEnvironment()) {//hacker dette til for testing
-                    ConfigurableFileCollection fileCollection = project.files(((URLClassLoader) WSDocProcessor.class.getClassLoader()).getURLs());
+                    ConfigurableFileCollection fileCollection = project.files((Object[]) ((URLClassLoader) WSDocProcessor.class.getClassLoader()).getURLs());
                     task.getOptions().setAnnotationProcessorPath(fileCollection);
                 }
             }
@@ -164,7 +164,7 @@ public class WsDocGenPlugin implements Plugin<ProjectInternal> {
     }
 
     static Dependency wsDocGenDependency(ProjectInternal project) {
-        HashMap<String, String> props = new HashMap<String, String>();
+        HashMap<String, String> props = new HashMap<>();
         props.put("group", "no.statkart.sktools");
         props.put("name", "wsdocgen");
         props.put("version", WsDocGenPlugin.class.getPackage().getImplementationVersion()); //manifest informasjon satt ifra byggesystem
