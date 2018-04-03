@@ -157,10 +157,10 @@ subprojects { Project project ->
         }
 
 
-        // test artefakter og rapporter havner i egne mapper (me ny plassering i Gradle 3.x)
+        // Test resultater og rapporter havner i egne mapper for paralleliserbarhet i Jenkins.
         // - feks build/reports/tests/<task name>
         // - feks build/test-results/<task name>
-        tasks.create("testGradle${GradleVersion.current().version}", Test)
+        tasks.create("testGradle${GradleVersion.current().baseVersion.version}", Test)
     }
 
     /**
