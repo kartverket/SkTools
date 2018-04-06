@@ -191,6 +191,7 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
         // clean
         compile.doFirst {
             project.delete(compile.getDestinationDir())
+            compile.getDestinationDir().mkdirs()
         }
 
         return compile;
