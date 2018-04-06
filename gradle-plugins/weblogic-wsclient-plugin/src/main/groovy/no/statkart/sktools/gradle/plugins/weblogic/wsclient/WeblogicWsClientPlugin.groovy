@@ -190,8 +190,7 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
 
         // clean
         compile.doFirst {
-            project.delete(compile.getDestinationDir())
-            compile.getDestinationDir().mkdirs()
+            project.delete(project.fileTree(compile.getDestinationDir())) //sletter alle filer i destination dir
         }
 
         return compile;
