@@ -22,7 +22,6 @@ public class WsDocCompileTask extends JavaCompile {
    protected static final Logger logger = Logging.getLogger(WsDocCompileTask.class);
 
    private WsDocGroup docGroup;
-   private FileCollection processorClasspath;
 
    /**
     * Gradle 1.2/2.0 - no arg constructor or @Inject annotated constructor
@@ -76,13 +75,6 @@ public class WsDocCompileTask extends JavaCompile {
       }
    }
 
-   public FileCollection getProcessorClasspath() {
-      return super.getOptions().getAnnotationProcessorPath();
-   }
-
-   public void setProcessorClasspath(FileCollection processorClasspath) {
-      super.getOptions().setAnnotationProcessorPath(processorClasspath);
-   }
 
    @TaskAction
    @Override
