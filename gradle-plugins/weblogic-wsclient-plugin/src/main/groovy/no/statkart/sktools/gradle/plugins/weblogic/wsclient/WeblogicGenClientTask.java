@@ -1,5 +1,6 @@
 package no.statkart.sktools.gradle.plugins.weblogic.wsclient;
 
+import no.statkart.sktools.gradle.plugins.weblogic.compile.CompileOptions;
 import no.statkart.sktools.gradle.plugins.weblogic.compile.DefaultWeblogicCompileSpec;
 import no.statkart.sktools.gradle.plugins.weblogic.compile.WeblogicCompileSpec;
 import no.statkart.sktools.gradle.plugins.weblogic.WeblogicTaskInterface;
@@ -14,9 +15,6 @@ import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.compile.AbstractCompile;
-import org.gradle.api.tasks.compile.CompileOptions;
-
-import javax.inject.Inject;
 
 /**
  * Task for generering av weblogic webservice klient
@@ -29,7 +27,7 @@ class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInter
     protected static final Logger logger = Logging.getLogger(WeblogicGenClientTask.class);
 
     private WebServiceConfig webServiceConfig;
-    private final DefaultWeblogicCompileSpec spec;
+    private final DefaultWeblogicCompileSpec spec = new DefaultWeblogicCompileSpec();
 
     private FileCollection weblogicClasspath;
     private String packageName;
@@ -37,20 +35,16 @@ class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInter
 
     /**
      * Gradle 1.2/2.0 - no arg constructor or @Inject annotated constructor
-     * @param spec
      */
-    @Inject
-    public WeblogicGenClientTask(DefaultWeblogicCompileSpec spec) {
+    public WeblogicGenClientTask() {
         super();
-        this.spec = spec;
         getLogging().captureStandardOutput(LogLevel.INFO);
         getLogging().captureStandardError(LogLevel.DEBUG);
 
-        getOptions().setFork(true);
+        getOptions().setFork(false);
         getOptions().setListFiles(true);
         getOptions().setVerbose(logger.isDebugEnabled());
         getOptions().setFailOnError(true); //defaults to true
-
     }
 
     @TaskAction

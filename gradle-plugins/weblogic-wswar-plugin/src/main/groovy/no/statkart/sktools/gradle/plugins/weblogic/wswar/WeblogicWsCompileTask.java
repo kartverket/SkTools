@@ -1,6 +1,7 @@
 package no.statkart.sktools.gradle.plugins.weblogic.wswar;
 
 import no.statkart.sktools.gradle.plugins.weblogic.WeblogicTaskInterface;
+import no.statkart.sktools.gradle.plugins.weblogic.compile.CompileOptions;
 import no.statkart.sktools.gradle.plugins.weblogic.compile.DefaultWeblogicCompileSpec;
 import org.codehaus.groovy.runtime.MethodClosure;
 import org.gradle.api.Project;
@@ -12,9 +13,7 @@ import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.*;
 import org.gradle.api.tasks.compile.AbstractCompile;
-import org.gradle.api.tasks.compile.CompileOptions;
 
-import javax.inject.Inject;
 import java.io.File;
 
 /**
@@ -29,7 +28,7 @@ public class WeblogicWsCompileTask extends AbstractCompile implements WeblogicTa
     protected static final Logger logger = Logging.getLogger(WeblogicWsCompileTask.class);
 
     private final WeblogicJaxWsCompiler compiler = new WeblogicJaxWsCompiler();
-    private final DefaultWeblogicCompileSpec spec;
+    private final DefaultWeblogicCompileSpec spec = new DefaultWeblogicCompileSpec();
 
     private FileCollection weblogicClasspath;
 
@@ -38,9 +37,7 @@ public class WeblogicWsCompileTask extends AbstractCompile implements WeblogicTa
     private File genDir = null;
 
 
-    @Inject
-    public WeblogicWsCompileTask(DefaultWeblogicCompileSpec spec) {
-        this.spec = spec;
+    public WeblogicWsCompileTask() {
         getLogging().captureStandardOutput(LogLevel.INFO);
         getLogging().captureStandardError(LogLevel.DEBUG);
 
