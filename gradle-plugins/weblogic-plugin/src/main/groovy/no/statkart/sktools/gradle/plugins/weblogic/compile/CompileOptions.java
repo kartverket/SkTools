@@ -2,6 +2,7 @@ package no.statkart.sktools.gradle.plugins.weblogic.compile;
 
 import org.gradle.api.tasks.Console;
 import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.Optional;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -20,6 +21,8 @@ public class CompileOptions implements Serializable {
     boolean debug = true;
     boolean failOnError = true;
 
+    String encoding;
+
 
     public Map<String, Object> optionMap() {
         optionsMap.put("fork", fork);
@@ -29,6 +32,13 @@ public class CompileOptions implements Serializable {
         optionsMap.put("nowarn", nowarn);
         optionsMap.put("debug", debug);
         optionsMap.put("failOnError", failOnError);
+
+        if (encoding == null) {
+            optionsMap.remove("encoding");
+        } else {
+            optionsMap.put("encoding", encoding);
+        }
+
         return optionsMap;
     }
 
@@ -94,6 +104,16 @@ public class CompileOptions implements Serializable {
 
     public void setFailOnError(boolean failOnError) {
         this.failOnError = failOnError;
+    }
+
+    @Input
+    @Optional
+    public String getEncoding() {
+        return encoding;
+    }
+
+    public void setEncoding(String encoding) {
+        this.encoding = encoding;
     }
 
 }
