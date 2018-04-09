@@ -184,15 +184,11 @@ class XjcPluginTest {
                     xjc {
                         schema {
                             srcDir 'src/main/xsd'
-                            config {
-                                withGrunnbokDoc
-                            }
+                            withGrunnbokDoc
                         }
                         schema {
                             srcDir 'src/main/xsd'
-                            config {
-                                withListAdapter
-                            }
+                            withListAdapter
                         }
                     }
                 }
@@ -229,12 +225,12 @@ class XjcPluginTest {
         }
 
         //tester schema.withGrunnbokDoc
-        assert sourceSets.main.xjc.schemas[0].config.xjcOptions.containsKey(XjcConfig.GRUNNBOK_DOC)
-        assert sourceSets.other.xjc.schemas[0].config.xjcOptions.containsKey(XjcConfig.LIST_ADAPTER)
+        assert sourceSets.main.xjc.schemas[0].xjcOptions.containsKey(XjcConfig.GRUNNBOK_DOC)
+        assert sourceSets.other.xjc.schemas[0].xjcOptions.containsKey(XjcConfig.LIST_ADAPTER)
 
         //tester schema.withListAdapter
-        assert sourceSets.main.xjc.schemas[1].config.xjcOptions.containsKey(XjcConfig.LIST_ADAPTER)
-        assert sourceSets.other.xjc.schemas[0].config.xjcOptions[XjcConfig.LIST_ADAPTER] == [baseClass: 'someAdapter.fqn']
+        assert sourceSets.main.xjc.schemas[1].xjcOptions.containsKey(XjcConfig.LIST_ADAPTER)
+        assert sourceSets.other.xjc.schemas[0].xjcOptions[XjcConfig.LIST_ADAPTER] == [baseClass: 'someAdapter.fqn']
 
 
     }
@@ -280,7 +276,7 @@ class XjcPluginTest {
             sourceSets {
                 main.xjc {
                     schema {
-                        config.genTaskName = 'genCustom'
+                        genTaskName = 'genCustom'
                     }
                 }
             }
@@ -288,7 +284,7 @@ class XjcPluginTest {
 
         projectHelper.initializeProject()
 
-        assert projectHelper.project.convention.plugins.java.sourceSets.main.xjc[0].config.genTaskName == 'genCustom'
+        assert projectHelper.project.convention.plugins.java.sourceSets.main.xjc[0].genTaskName == 'genCustom'
         assert projectHelper.project.tasks.findByPath('genCustom')
     }
 
@@ -306,8 +302,8 @@ class XjcPluginTest {
             sourceSets {
                 main.xjc {
                     schema {
-                        config.genTaskName = 'genCustom'
-                        config.genOutputPath = 'generated/custom'
+                        genTaskName = 'genCustom'
+                        genOutputPath = 'generated/custom'
                     }
                 }
             }
@@ -316,11 +312,11 @@ class XjcPluginTest {
         projectHelper.initializeProject()
 
         //preconditions
-        assert projectHelper.project.convention.plugins.java.sourceSets.main.xjc[0].config.genTaskName == 'genCustom'
+        assert projectHelper.project.convention.plugins.java.sourceSets.main.xjc[0].genTaskName == 'genCustom'
         assert projectHelper.project.tasks.findByPath('genCustom')
 
         //tests
-        assert projectHelper.project.convention.plugins.java.sourceSets.main.xjc[0].config.genOutputPath == 'generated/custom'
+        assert projectHelper.project.convention.plugins.java.sourceSets.main.xjc[0].genOutputPath == 'generated/custom'
         assert projectHelper.project.tasks.findByPath('genCustom').outputDirectory == projectHelper.project.file('generated/custom')
 
     }
