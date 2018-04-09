@@ -2,7 +2,40 @@ description = "Eksekverer installerte demoer for plugins. Dette forutsetter at d
 
 defaultTasks 'demo'
 
-task demo(description: "Eksekverer alle demoer i underprosjekter via forket gradle bygg")
+task demo(description: "Eksekverer alle demoer i underprosjekter via forket gradle") {
+    /*
+     * Bruker kommandolinje her for forking av gradle bygg.
+     * Alle egenskaper som skal propagieres til demobygget må spesifiseres her.
+     *
+     * PS: Bruk av GradleExec gir problemer ved kjøring av idea/idea-extensions demo. Bruker derfor kommandolinje her.
+     */
+
+    doLast {
+        project.projectDir.listFiles().each { demoDir ->
+            if (demoDir.isDirectory() && !demoDir.name.startsWith('.') /* excluding folder ".gradle" */) {
+
+                logger.quiet "Starting demo ${demoDir.name} in ${demoDir.absolutePath} ..."
+
+                project.exec {
+                    //windows
+                    commandLine = "${gradle.gradleHomeDir}\\bin\\gradle.bat"
+                    args "-b", "${project.relativePath(demoDir)}/build.gradle"
+                    args "runDemo"
+                    args "-PMAVEN_REPO=${MAVEN_REPO}"
+                    args "-PWEBLOGIC_HOME=${WEBLOGIC_HOME}"
+                    args "-PWEBLOGIC_VERSION=${WEBLOGIC_VERSION}"
+                    args "-PMAVEN_REPO=${MAVEN_REPO}"
+                    args "-Psktools_versjon=${version}" //fra vedlagt gradle.properties
+                    args "--no-daemon"
+                    args "--console=plain"
+                    args "--full-stacktrace"
+
+                    logger.quiet "Running ${commandLine}"
+                }
+            }
+        }
+    }
+}
 
 ext.MAVEN_REPO = rootProject.properties.get('MAVEN_REPO', System.getenv('MAVEN_REPO'))
 if (ext.MAVEN_REPO == null) {
@@ -13,19 +46,6 @@ if (ext.MAVEN_REPO == null) {
 repositories {
     mavenLocal()
     maven { name = 'public'; url = MAVEN_REPO }
-}
-
-project.projectDir.listFiles().each { demoDir ->
-    if (demoDir.isDirectory() && !demoDir.name.startsWith('.') /* excluding folder ".gradle" */) {
-        project.tasks.create(name: demoDir.name, type: GradleBuild) {
-            tasks = ['runDemo']
-            dir = demoDir
-            startParameter.projectProperties.putAll(project.gradle.startParameter.projectProperties)
-            startParameter.projectProperties.put('MAVEN_REPO', MAVEN_REPO)
-
-            project.tasks.demo.dependsOn it
-        }
-    }
 }
 
 
