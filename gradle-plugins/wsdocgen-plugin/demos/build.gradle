@@ -1,7 +1,5 @@
 group = 'no.statkart.sktools.gradle.plugins.wsdocgen-plugin.demos'
 
-assert GradleVersion.current() >= GradleVersion.version('2.4') //lowest gradle version supported
-
 buildscript {
     if (rootProject.ext.has('sktools_versjon')) version = rootProject.ext.get('sktools_versjon')
     if (version == Project.DEFAULT_VERSION) { version = '1.4-SNAPSHOT'; logger.warn "No -Psktools_versjon= defined. Defaulting to \"${version}\""} //nb - dersom ikke default version er satt riktig så blir kjøring ifra demo-katalog feil..

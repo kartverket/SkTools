@@ -1,7 +1,5 @@
 group = 'no.statkart.sktools.gradle.plugins.weblogic-wsclient-plugin.demos'
 
-assert GradleVersion.current() >= GradleVersion.version('2.4') //lowest gradle version supported
-
 //innkobling av plugin jar filer for gradle byggesystem
 buildscript {
     if (rootProject.ext.has('sktools_versjon')) version = rootProject.ext.get('sktools_versjon')
