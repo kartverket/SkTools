@@ -72,13 +72,13 @@ pipeline { //declarative pipeline syntax
                 }
                 stage('Test gradle latest') {
                     tools {
-                        gradle 'Gradle 4.5.1' //latest og greatest (kan også være neste major versjon)
+                        gradle 'Gradle 4.7-rc-1' //latest og greatest (kan også være neste major versjon)
                     }
                     steps {
                         bat "gradle --version"
-                        bat "gradle testGradle4.5.1 -DignoreFailures=true ${gradleOptions(params, env)} -DbuildDirName=build/gradle4.5.1" //buildDirName for å kjøre flere bygg med forskjellige gradle versjoner
-                        junit '**/test-results/testGradle4.5.1/*.xml'
-                        //                            step([$class: 'Publisher', reportFilenamePattern: '**/build/gradle4.5.1/reports/tests/testng-results.xml'])
+                        bat "gradle testGradle4.7 -DignoreFailures=true ${gradleOptions(params, env)} -DbuildDirName=build/gradle4.7" //buildDirName for å kjøre flere bygg med forskjellige gradle versjoner
+                        junit '**/test-results/testGradle4.7/*.xml'
+                        //                            step([$class: 'Publisher', reportFilenamePattern: '**/build/gradle4.7/reports/tests/testng-results.xml'])
                     }
                 }
             }
@@ -99,13 +99,13 @@ pipeline { //declarative pipeline syntax
                 }
                 stage('Integration Test Latest') {
                     tools {
-                        gradle 'Gradle 4.5.1' //latest og greatest (kan også være neste major versjon)
+                        gradle 'Gradle 4.7-rc-1' //latest og greatest (kan også være neste major versjon)
                         jdk 'Java 8 Latest' //weblogic krever denne major versjonen av java
                     }
                     steps {
                         withEnv(['WEBLOGIC_VERSION=12.1.3.0', "WEBLOGIC_HOME=${WEBLOGIC_HOME('12.1.3.0', env)}"]) {
                             bat "gradle --version"
-                            bat "gradle runDemos ${gradleOptions(params, env)} -DbuildDirName=gradle4.5.1"
+                            bat "gradle runDemos ${gradleOptions(params, env)} -DbuildDirName=gradle4.7"
                         }
                     }
                 }
