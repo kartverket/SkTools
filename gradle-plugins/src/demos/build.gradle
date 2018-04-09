@@ -30,6 +30,10 @@ task demo(description: "Eksekverer alle demoer i underprosjekter via forket grad
                     args "--console=plain"
                     args "--full-stacktrace"
 
+                    if (System.getProperty("maven.repo.local")) { //se Jenkinsfile - gradle install
+                        args "-Dmaven.repo.local=${System.getProperty("maven.repo.local")}"
+                    }
+
                     logger.quiet "Running ${commandLine}"
                 }
             }
