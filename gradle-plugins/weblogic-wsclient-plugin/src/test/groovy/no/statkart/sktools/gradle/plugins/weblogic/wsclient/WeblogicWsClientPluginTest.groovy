@@ -145,7 +145,6 @@ class WeblogicWsClientPluginTest {
         wsClientProjectHelper.assertTaskExecutedNotSkipped(WeblogicWsClientPlugin.GEN_CLIENT_TASK_NAME)
         assert wsClientProjectHelper.project.tasks['processResources'].state.executed
         assert wsClientProjectHelper.project.tasks['compileJava'].state.executed
-        assert wsClientProjectHelper.project.tasks['assemble'].state.executed
 
 
         //tester sourceSet
