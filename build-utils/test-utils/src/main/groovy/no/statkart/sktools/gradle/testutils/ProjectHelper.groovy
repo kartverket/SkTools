@@ -39,6 +39,14 @@ class ProjectHelper {
         task.getTaskDependencies().getDependencies(task).each {execute(it, evaluatedTasks)}
         println "..executing task ${task.path}"
         task.execute()
+
+        /* I gradle 4.6 så får man
+         "java.lang.IllegalStateException: Task information is not available, as this task execution graph has not been populated."
+         dersom man forsøker execute() på en task uten actions.
+         */
+        if (!task.getActions().isEmpty()) {
+            task.execute()
+        }
         task
     }
 
