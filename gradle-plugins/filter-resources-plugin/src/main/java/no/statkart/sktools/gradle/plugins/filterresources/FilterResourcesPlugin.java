@@ -138,7 +138,7 @@ public class FilterResourcesPlugin implements Plugin<ProjectInternal> {
      * Convenient way of retrieving project properties
      */
     static Map<String, Object> projectPropertiesFrom(final Project project) {
-        HashMap<String, Object> filteredProjectProperties = new HashMap<String, Object>();
+        HashMap<String, Object> filteredProjectProperties = new HashMap<>();
         for (Map.Entry<String, ?> entry : project.getProperties().entrySet()) {
             if (entry.getValue() instanceof CharSequence) {
                 filteredProjectProperties.put(entry.getKey(), entry.getValue().toString());

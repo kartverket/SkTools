@@ -295,7 +295,7 @@ public class DatabasePatcher {
     }
 
     private static Collection<PatchtypeKode> configurePatchtypeFromArgs(DatabasePatcher databasePatcher, String[] args, boolean mandatory) {
-        HashSet<PatchtypeKode> patchtypeKodeSet = new HashSet<PatchtypeKode>();
+        HashSet<PatchtypeKode> patchtypeKodeSet = new HashSet<>();
         for (int i = 0; i < args.length; i++) {
             String arg = args[i];
             if ("-types".equals(arg) && args.length > i+1) {
@@ -350,7 +350,7 @@ public class DatabasePatcher {
             List<? extends Expression> statements = SQLStatementParser.parseExpressions(SqlExecutor.lesFilFraWorkingDir(patchFilePath));
             LinkedHashMap<PatchVersion, List<? extends Expression>> patches = parsePatches(statements);
 
-            ArrayList<PatchVersion> patchVersions = new ArrayList<PatchVersion>(patches.keySet());
+            ArrayList<PatchVersion> patchVersions = new ArrayList<>(patches.keySet());
             assert !patchVersions.isEmpty(); //skal alltid inneholde minst ett element
 
             return patchVersions.get(patchVersions.size()-1);//returnerer siste element i sortert liste
@@ -473,7 +473,7 @@ public class DatabasePatcher {
     * @param scriptLines list of sql expressions
     */
    static LinkedHashMap<PatchVersion, List<? extends Expression>> parsePatches(List<? extends Expression> scriptLines) {
-      LinkedHashMap<PatchVersion, List<? extends Expression>> result = new LinkedHashMap<PatchVersion, List<? extends Expression>>();
+      LinkedHashMap<PatchVersion, List<? extends Expression>> result = new LinkedHashMap<>();
 
       PatchVersion minDBVersion = new PatchVersion("Unspecified min.version");
       PatchVersion lastPatchVersion = null;
@@ -513,7 +513,7 @@ public class DatabasePatcher {
 
          lastPatchVersion = patchVersion;
          i++;
-         List<Expression> patchScriptLines = new ArrayList<Expression>();
+         List<Expression> patchScriptLines = new ArrayList<>();
          while( i < scriptLines.size() && (isOrdinaryComment(scriptLines.get(i)) || isStatement(scriptLines.get(i))) ) {
             patchScriptLines.add(scriptLines.get(i));
             i++;

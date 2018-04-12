@@ -185,7 +185,7 @@ public class WSDocProcessor extends AbstractProcessor {
     }
 
     static Map<String, Element> findWsiNames(RoundEnvironment roundEnv) {
-        Map<String, Element> wsiByWSBeanName = new HashMap<String, Element>();
+        Map<String, Element> wsiByWSBeanName = new HashMap<>();
         for (Element element : roundEnv.getRootElements()) {
             String simpleName = element.getSimpleName().toString();
             if(simpleName.endsWith("WSI")) {

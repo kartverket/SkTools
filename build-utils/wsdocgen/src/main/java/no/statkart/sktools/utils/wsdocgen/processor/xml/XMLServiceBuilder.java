@@ -83,7 +83,7 @@ public class XMLServiceBuilder {
             }
         }
 
-        Map<String, Element> wsiEnclosedElements = new HashMap<String, Element>();
+        Map<String, Element> wsiEnclosedElements = new HashMap<>();
         if (wsiElement != null) {
             for (Element element1 : wsiElement.getEnclosedElements()) {
                 wsiEnclosedElements.put(element1.getSimpleName().toString(), element1);

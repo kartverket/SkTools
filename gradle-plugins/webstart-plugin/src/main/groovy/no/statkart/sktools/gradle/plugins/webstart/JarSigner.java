@@ -63,7 +63,7 @@ public class JarSigner extends ConventionTask {
      */
     private String storetype;
 
-    private final Map<String, String> manifestAttributes = new LinkedHashMap<String, String>();
+    private final Map<String, String> manifestAttributes = new LinkedHashMap<>();
 
     private final ConfigurableFileCollection jarFilesToSign = getProject().files();
     private final ConfigurableFileCollection signedJarFiles = getProject().files();
@@ -106,7 +106,7 @@ public class JarSigner extends ConventionTask {
 
             Map<String, FileHashIdent> signedArtifacts = getSignedArtifactsForCertificates().get(certificateFileIdent);
             if (signedArtifacts == null) {
-                signedArtifacts = new HashMap<String, FileHashIdent>();
+                signedArtifacts = new HashMap<>();
                 getSignedArtifactsForCertificates().put(certificateFileIdent, signedArtifacts);
             }
 
@@ -311,7 +311,7 @@ public class JarSigner extends ConventionTask {
     }
 
     void initCache() throws IOException {
-        signedArtifactsForCertificates = new HashMap<FileHashIdent, Map<String, FileHashIdent>>();
+        signedArtifactsForCertificates = new HashMap<>();
         getLogger().info("Initializing cache...");
 
         if (getCacheDir().exists()) {
@@ -323,7 +323,7 @@ public class JarSigner extends ConventionTask {
 
                     Map<String, FileHashIdent> signedArtifacts = signedArtifactsForCertificates.get(certFileIdent);
                     if (signedArtifacts == null) {
-                        signedArtifacts = new HashMap<String, FileHashIdent>();
+                        signedArtifacts = new HashMap<>();
                         signedArtifactsForCertificates.put(certFileIdent, signedArtifacts);
                     }
 
@@ -374,7 +374,7 @@ public class JarSigner extends ConventionTask {
             FileHashIdent certificateFileIdent = new FileHashIdent(getCertificateFile(), FileHashIdent.createChecksum(getCertificateFile(), getAlias()));
             File certDirectory = new File(getCacheDir(), certificateFileIdent.hash());
 
-            List<File> signedFiles = new ArrayList<File>(unsignedFiles.size());
+            List<File> signedFiles = new ArrayList<>(unsignedFiles.size());
             for (File unsignedFile : unsignedFiles) {
                 File signedFile = new File(certDirectory, unsignedFile.getName());
                 signedFiles.add(signedFile);

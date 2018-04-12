@@ -57,10 +57,10 @@ public class CustomWsdlTask extends DefaultTask {
     protected static final Logger logger = Logging.getLogger(CustomWsdlTask.class);
     protected static final String xsdNamespace = "http://www.w3.org/2001/XMLSchema";
 
-    private final List<Object> originalSchemaFiles = new ArrayList<Object>();
-    private final List<Object> generatedWsdlAndSchemaFiles = new ArrayList<Object>();
-    private final Set<String> includedNamespaces = new HashSet<String>();
-    private final Set<String> excludedNamespaces = new HashSet<String>();
+    private final List<Object> originalSchemaFiles = new ArrayList<>();
+    private final List<Object> generatedWsdlAndSchemaFiles = new ArrayList<>();
+    private final Set<String> includedNamespaces = new HashSet<>();
+    private final Set<String> excludedNamespaces = new HashSet<>();
 
     private File destinationDir;
 
@@ -154,8 +154,8 @@ public class CustomWsdlTask extends DefaultTask {
 
         Map<String, String> namespaceSchemaFileMap = readOriginalSchemas(documentBuilder, copySpec);
 
-        List<File> wsdls = new ArrayList<File>();
-        List<File> generatedSchemas = new ArrayList<File>();
+        List<File> wsdls = new ArrayList<>();
+        List<File> generatedSchemas = new ArrayList<>();
 
         for (File file1 : getGeneratedWsdlAndSchemaFiles().getFiles()) {
             if (file1.isDirectory()) {
@@ -204,7 +204,7 @@ public class CustomWsdlTask extends DefaultTask {
             String serviceNamespace = root.getAttribute("targetNamespace");
 
             NodeList schemas = root.getElementsByTagNameNS(xsdNamespace, "schema");
-            List<Node> nodesToKill = new ArrayList<Node>();
+            List<Node> nodesToKill = new ArrayList<>();
             for (int i = 0; i < schemas.getLength(); ++i) {
                 Element schema = (Element) schemas.item(i);
                 NodeList imports = schema.getElementsByTagNameNS(xsdNamespace, "import");
@@ -278,7 +278,7 @@ public class CustomWsdlTask extends DefaultTask {
     }
 
     private HashMap<String, String> readOriginalSchemas(DocumentBuilder documentBuilder, CopySpec copySpec) {
-        HashMap<String, String> namespaceSchemaFileMap = new HashMap<String, String>();
+        HashMap<String, String> namespaceSchemaFileMap = new HashMap<>();
 
         XPathExpression xPathExpression;
         try {
@@ -291,7 +291,7 @@ public class CustomWsdlTask extends DefaultTask {
         }
 
         Set<File> filesAndDirs = getOriginalSchemaFiles().getFiles();
-        Set<File> files = new LinkedHashSet<File>(filesAndDirs.size());
+        Set<File> files = new LinkedHashSet<>(filesAndDirs.size());
         for (File fileOrDir : filesAndDirs) {
             if (fileOrDir.isDirectory()) {
                 files.addAll(getProject().fileTree(fileOrDir).getFiles());
@@ -322,7 +322,7 @@ public class CustomWsdlTask extends DefaultTask {
     }
 
     private HashMap<String, Collection<File>> readGeneratedSchemas(DocumentBuilder documentBuilder, Collection<File> schemaFiles) {
-        HashMap<String, Collection<File>> namespaceSchemaFileMap = new HashMap<String, Collection<File>>();
+        HashMap<String, Collection<File>> namespaceSchemaFileMap = new HashMap<>();
 
         XPathExpression xPathExpression;
         try {
@@ -340,7 +340,7 @@ public class CustomWsdlTask extends DefaultTask {
                 String targetNamespace = xPathExpression.evaluate(document);
                 Collection<File> files = namespaceSchemaFileMap.get(targetNamespace);
                 if(files == null) {
-                    files = new HashSet<File>();
+                    files = new HashSet<>();
                     namespaceSchemaFileMap.put(targetNamespace, files);
                 }
                 files.add(schemaFile);

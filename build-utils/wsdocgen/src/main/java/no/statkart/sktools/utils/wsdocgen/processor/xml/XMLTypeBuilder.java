@@ -203,7 +203,7 @@ class XMLTypeBuilder {
     }
 
     private void initializeCommonTypes() {
-        typeCache = new HashMap<TypeMirror, QName>();
+        typeCache = new HashMap<>();
         defineCachedType(String.class,                 new QName(W3C_XML_SCHEMA_NS_URI, "string"));
         defineCachedType(Character.class,              new QName(W3C_XML_SCHEMA_NS_URI, "string"));
         defineCachedType(char.class,                   new QName(W3C_XML_SCHEMA_NS_URI, "string"));

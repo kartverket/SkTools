@@ -61,7 +61,7 @@ public class WsdlCustomizerPlugin implements Plugin<Project> {
             @Override
             public Collection<FileCollection> call() throws Exception {
                 Set<File> files = originalSchemas.getFiles();
-                List<FileCollection> fileCollections = new ArrayList<FileCollection>(files.size());
+                List<FileCollection> fileCollections = new ArrayList<>(files.size());
 
                 for (File file : files) {
                     fileCollections.add(project.zipTree(file));
@@ -86,7 +86,7 @@ public class WsdlCustomizerPlugin implements Plugin<Project> {
             @Override
             public Collection<FileCollection> call() throws Exception {
                 Set<File> files = generatedSchemas.getFiles();
-                List<FileCollection> fileCollections = new ArrayList<FileCollection>(files.size());
+                List<FileCollection> fileCollections = new ArrayList<>(files.size());
 
                 for (File file : files) {
                     fileCollections.add(project.zipTree(file).matching(wsdlAndXsdPattern));
