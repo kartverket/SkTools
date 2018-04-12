@@ -163,9 +163,7 @@ public class SqlExecutor {
         //Kjøre en og en linje i skriptet.
         try (java.sql.Statement statement = connection.createStatement()) {
 
-            for (Iterator<? extends Expression> iterator = scriptLines.iterator(); iterator.hasNext(); ) {
-                Expression scriptLine = iterator.next();
-
+            for (Expression scriptLine : scriptLines) {
                 if (scriptLine instanceof Comment) {
                     logger.debug("Comment: " + ((Comment) scriptLine).getText());
                     continue; // gjør ikke noe mer for kommentarer

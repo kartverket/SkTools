@@ -806,7 +806,7 @@ public class DatabasePatcher {
                 return false;
             }
             if (patchNumber != null ) {
-                if (patchNumber.intValue() != patchInfo.patchVersion.patchNo) {
+                if (patchNumber != patchInfo.patchVersion.patchNo) {
                     return false;
                 }
             }
