@@ -3,10 +3,12 @@ package no.statkart.sktools.gradle.plugins.webstart;
 import groovy.lang.Closure;
 import no.statkart.sktools.gradle.plugins.webstart.util.FileHashIdent;
 import org.apache.commons.io.FileUtils;
+import org.gradle.api.Action;
 import org.gradle.api.GradleException;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.internal.ConventionTask;
+import org.gradle.api.invocation.Gradle;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
@@ -76,6 +78,16 @@ public class JarSigner extends ConventionTask {
         }
 
         return signedArtifactsForCertificates;
+    }
+
+    public JarSigner() {
+        getProject().getGradle().projectsEvaluated(new Action<Gradle>() {
+            @Override
+            public void execute(Gradle gradle) {
+                //sen binding for å unngå deadlock i gradle pga validering av input/output felter på task
+                signedJarFiles.from(collectSignedJars(getJarFilesToSign().getFiles()));
+            }
+        });
     }
 
     /**
@@ -158,12 +170,13 @@ public class JarSigner extends ConventionTask {
                     cachedFileIdent.writeChecksumToFile();
                     signedArtifacts.put(unsignedJar.getName(), cachedFileIdent);
                 }
+
+                //legger til signert fil i eksekvering av task - blir også lagt til ved beregning av output-filer
+                signedJarFiles.from(signedJarFile);
             }
         } else {
             getLogger().warn("Signing of resources disabled - no certificate!");
         }
-
-        signedJarFiles.from(collectSignedJars());
     }
 
     private void signJar(final File jarFile, final File manifestAddendum) {
@@ -218,7 +231,8 @@ public class JarSigner extends ConventionTask {
     }
 
     @InputFile
-    @Optional
+    @Optional //signeringssteg er optional, derfor optional her
+    @SkipWhenEmpty
     public File getCertificateFile() {
         return certificateFile;
     }
@@ -239,7 +253,7 @@ public class JarSigner extends ConventionTask {
     }
 
     @Input
-    @Optional
+    @Optional //signeringssteg er optional, derfor optional her
     public String getPassword() {
         return password;
     }
@@ -259,7 +273,7 @@ public class JarSigner extends ConventionTask {
     }
 
     @Input
-    @Optional
+    @Optional //signeringssteg er optional, derfor optional her
     public String getAlias() {
         return alias;
     }
@@ -341,15 +355,18 @@ public class JarSigner extends ConventionTask {
         jarFilesToSign.from(jarFiles);
     }
 
+    /**
+     * Dersom signering returneres ferdig signerte filer ifra cache-katalog. <br>
+     * Dersom signering ikke er satt opp returneres {@link #jarFilesToSign}
+     */
     @OutputFiles
     public FileCollection getJarFiles() {
         return signedJarFiles;
     }
 
-    private Collection<File> collectSignedJars() {
+    private Collection<File> collectSignedJars(Collection<File> unsignedFiles) {
+        getLogger().lifecycle("PELLE: " + unsignedFiles);
         try {
-            Set<File> unsignedFiles = getProject().files(jarFilesToSign).getFiles();
-
             if (getCertificateFile() == null) {
                 // Kan ikke signere noe uten sertifikat
                 return unsignedFiles;
