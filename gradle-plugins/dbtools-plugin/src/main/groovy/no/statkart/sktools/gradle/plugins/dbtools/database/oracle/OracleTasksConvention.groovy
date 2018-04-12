@@ -247,7 +247,7 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
         return task;
     }
 
-    private String getDateString() {
+    private static String getDateString() {
         return new Date().format('yyyy-MM-dd_hhmmss')
     }
 
