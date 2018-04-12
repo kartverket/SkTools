@@ -154,7 +154,7 @@ public class WSDocProcessor extends AbstractProcessor {
 
                 String xsltFilePath = processingEnv.getOptions().get("xslt");
                 if (xsltFilePath == null) {
-                    throw new RuntimeException(String.format("No xslt file defined! Configure javac with argument -Axslt=<file>"));
+                    throw new RuntimeException("No xslt file defined! Configure javac with argument -Axslt=<file>");
                 }
 
                 writeToFile(xmlBuilder.getDocument(), outputFile, xsltFilePath);
@@ -169,7 +169,7 @@ public class WSDocProcessor extends AbstractProcessor {
 
         //index fil: SKTOOLS-105
         if (roundEnv.processingOver() && generateIndex) {
-            final String fileName = String.format(indexFileNamePattern);
+            final String fileName = indexFileNamePattern;
             FileObject outputFile = null;
 
             try {

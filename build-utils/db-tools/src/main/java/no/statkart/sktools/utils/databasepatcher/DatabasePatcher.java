@@ -276,7 +276,7 @@ public class DatabasePatcher {
                 }
                 case "setLatestVersionFromPatchfile": {
                     PatchVersion patchVersion = parseLatestPatchVersionExisting(args[idx++]);
-                    patchVersion.kommentar += String.format(" (patchversjon satt ifra byggesystem)");
+                    patchVersion.kommentar += " (patchversjon satt ifra byggesystem)";
                     boolean ok = databasePatcher.defineVersion(patchVersion);
                     databasePatcher.setIndexesInSyncWithPatch(true);
                     if (!ok) {
@@ -853,7 +853,7 @@ public class DatabasePatcher {
 
                     } else {
                         //har allerede versjon
-                        logger.info(String.format("Patchversjon allerede definert!"));
+                        logger.info("Patchversjon allerede definert!");
                         return true;
                     }
 
