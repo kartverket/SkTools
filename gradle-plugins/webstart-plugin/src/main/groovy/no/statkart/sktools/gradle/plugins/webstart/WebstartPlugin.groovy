@@ -56,7 +56,7 @@ class WebstartPlugin implements Plugin<Project> {
 
         final JarSigner jarSigner = (JarSigner) project.task(args, makeTaskName('sign', clientConfiguration.name, null));
 
-        jarSigner.jarFilesToSign = clientConfiguration.jarDependencies
+        jarSigner.jarFilesToSign = clientConfiguration.getJarDependencies()
         jarSigner.conventionMapping.certificateFile = { clientConfiguration?.signingConfiguration?.keystore }
         jarSigner.conventionMapping.alias = { clientConfiguration?.signingConfiguration?.alias }
         jarSigner.conventionMapping.password = { clientConfiguration?.signingConfiguration?.password }
@@ -78,11 +78,12 @@ class WebstartPlugin implements Plugin<Project> {
         webstartTask.jarResources(new Callable<Object>() {
             @Override
             Object call() throws Exception {
-                if (jarSigner.getCertificateFile() != null) { //dersom signering
-                    return jarSigner.getJarFiles();
-                } else {
-                    return clientConfiguration.getJarDependencies();
+                if (clientConfiguration.getSigningConfiguration() != null) {
+                    return jarSigner.getJarFiles(); //kan ikke bruke task.outputs da denne vil trekke inn cache-katalog
                 }
+
+                //ingen signering
+                return clientConfiguration.getJarDependencies();
             }
         });
 
@@ -110,7 +111,7 @@ class WebstartPlugin implements Plugin<Project> {
         War war = project.tasks.getByName(WarPlugin.WAR_TASK_NAME) as War
 
         war.from { clientConfiguration.warJnlps ? webstartTask : [] }
-        war.with(jnlpCopySpec(project, { clientConfiguration.libDir }, jarSigner, { clientConfiguration.signingConfiguration?.createDigest() }))
+        war.with(jnlpCopySpec(project, { clientConfiguration.libDir }, webstartTask.getJarResources(), { clientConfiguration.signingConfiguration?.createDigest() }))
     }
 
     private static String makeTaskName(String verb, String client, String postfix) {
