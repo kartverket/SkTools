@@ -240,9 +240,7 @@ public class CustomWsdlTask extends DefaultTask {
             Source input = new DOMSource(document);
             transformer.transform(input, output);
 
-        } catch (SAXException e) {
-            throw new GradleException("Error parsing " + wsdl);
-        } catch (IOException e) {
+        } catch (SAXException | IOException e) {
             throw new GradleException("Error parsing " + wsdl);
         } catch (TransformerException e) {
             throw new GradleException("Error writing " + destinationFile);
@@ -267,9 +265,7 @@ public class CustomWsdlTask extends DefaultTask {
                 Result output = new StreamResult(destinationFile);
                 Source input = new DOMSource(document);
                 transformer.transform(input, output);
-            } catch (SAXException e) {
-                throw new GradleException("Error parsing " + serviceSchema);
-            } catch (IOException e) {
+            } catch (SAXException | IOException e) {
                 throw new GradleException("Error parsing " + serviceSchema);
             } catch (TransformerException e) {
                 throw new GradleException("Error writing " + destinationFile);
@@ -309,11 +305,7 @@ public class CustomWsdlTask extends DefaultTask {
                     copySpec.from(schemaFile);
                     namespaceSchemaFileMap.put(targetNamespace, schemaFile.getName());
                 }
-            } catch (SAXException e) {
-                throw new GradleException("Error parsing " + schemaFile, e);
-            } catch (IOException e) {
-                throw new GradleException("Error parsing " + schemaFile, e);
-            } catch (XPathExpressionException e) {
+            } catch (SAXException | XPathExpressionException | IOException e) {
                 throw new GradleException("Error parsing " + schemaFile, e);
             }
         }
@@ -344,11 +336,7 @@ public class CustomWsdlTask extends DefaultTask {
                     namespaceSchemaFileMap.put(targetNamespace, files);
                 }
                 files.add(schemaFile);
-            } catch (SAXException e) {
-                throw new GradleException("Error parsing " + schemaFile, e);
-            } catch (IOException e) {
-                throw new GradleException("Error parsing " + schemaFile, e);
-            } catch (XPathExpressionException e) {
+            } catch (SAXException | XPathExpressionException | IOException e) {
                 throw new GradleException("Error parsing " + schemaFile, e);
             }
         }
