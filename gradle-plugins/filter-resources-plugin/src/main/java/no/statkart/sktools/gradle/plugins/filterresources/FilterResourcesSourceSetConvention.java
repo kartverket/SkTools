@@ -47,7 +47,7 @@ class FilterResourcesSourceSetConvention {
      * På samme måte som {@link org.gradle.api.internal.tasks.DefaultSourceSet}
      *
      * @return sourceSet navn med stor bokstav, eller tom streng for "main"-SourceSet.
-     * @param name
+     * @param name lokalt navn til task
      */
     static String getTaskBaseName(String name) {
         return name.equals(SourceSet.MAIN_SOURCE_SET_NAME) ? "" : GUtil.toCamelCase(name);

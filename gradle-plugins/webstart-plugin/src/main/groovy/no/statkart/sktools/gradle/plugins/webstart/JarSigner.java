@@ -51,11 +51,11 @@ public class JarSigner extends ConventionTask {
     private String alias;
     private String digestAlgorithm;
     /**
-     * Keystore type. Standard verdi avhenger av JDK og security properties. 
+     * Keystore type. Standard verdi avhenger av JDK og security properties.
      * <br> For JDK 8 er det {@literal JKS med PKCS12 i kompatibilitetsmodus} som er standard.
-     * <br> For JDK 7 er det {@literal JKS} som er standard. 
+     * <br> For JDK 7 er det {@literal JKS} som er standard.
      * <p>Standard verdi fra jdk fås fra {@link java.security.KeyStore#getDefaultType()}.
-     * Denne property verdien leses ifra {@literal JAVA_HOME/jre/lib/security/java.security} filen på windows. 
+     * Denne property verdien leses ifra {@literal JAVA_HOME/jre/lib/security/java.security} filen på windows.
      * <ul>
      * <li>{@literal keystore.type=jks} bestemmer standard format til keytore dersom ikke definert</li>
      * <li>{@literal keystore.type.compat=true} When set to 'true', the JKS keystore type supports loading keystore files in either JKS or PKCS12 format.</li>

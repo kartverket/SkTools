@@ -196,7 +196,7 @@ public class ListGenPlugin extends com.sun.tools.xjc.Plugin {
      * Dersom en vil benytte en egen liste-implementasjon, override denne
      * via {@link #parseArgument(com.sun.tools.xjc.Options, String[], int) parseArgument}
      *
-     * @param targetDir
+     * @param targetDir mappe
      */
     private void generateBaseListClass(File targetDir) {
 

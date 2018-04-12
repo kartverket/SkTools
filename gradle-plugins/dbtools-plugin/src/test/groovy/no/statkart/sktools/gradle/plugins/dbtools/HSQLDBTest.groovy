@@ -20,7 +20,7 @@ import org.slf4j.Logger
  *     <li> standard-bruker - {@link #defaultCredentials}
  * </ul>
  *
- * Ytterlige brukere defineres via {@link #defineDatabaseUser(String, String)}
+ * Ytterlige brukere defineres via {@link #defineDatabaseUser}
  *
  */
 abstract class HSQLDBTest {

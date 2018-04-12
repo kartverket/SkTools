@@ -29,8 +29,8 @@ public abstract class AbstractParserVisitorFactory implements VisitorFactoryInte
         boolean nextMatches(String pattern);
 
         /**
-         * @param delimiterString
-         * @param returnDelimiter
+         * @param delimiterString delimiter
+         * @param returnDelimiter om delimiter skal med eller ikke i resultat
          * @return påfølgende tekst til enten EOF, eller til {@code delimiterPattern}
          */
         String getInput(String delimiterString, boolean returnDelimiter);
