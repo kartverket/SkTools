@@ -114,13 +114,10 @@ public class JarSigner extends ConventionTask {
             if (!getManifestAttributes().isEmpty()) {
                 manifestAddendum = new File(getTemporaryDir(), "addendum.mf");
 
-                PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(manifestAddendum, false), "UTF-8"));
-                try {
+                try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(manifestAddendum, false), "UTF-8"))) {
                     for (Map.Entry<String, String> entry : getManifestAttributes().entrySet()) {
                         writer.format("%s: %s\n", entry.getKey(), entry.getValue());
                     }
-                } finally {
-                    writer.close();
                 }
             }
 
