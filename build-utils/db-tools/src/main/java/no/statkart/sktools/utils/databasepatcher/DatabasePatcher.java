@@ -192,89 +192,99 @@ public class DatabasePatcher {
            hasComponentArg = configureComponentFromArgs(databasePatcher, args, false);
 
             //parser kommando
-           if( commandName.equals("getVersion") ) {
-               try {
-                   databasePatcher.getVersion();
-               } catch (NotFoundException nfe) {
-                   logger.error(String.format("Versjon ikke definert for '%s'", databasePatcher.component), nfe);
-               }
-               System.exit(0);
+            switch (commandName) {
+                case "getVersion": {
+                    try {
+                        databasePatcher.getVersion();
+                    } catch (NotFoundException nfe) {
+                        logger.error(String.format("Versjon ikke definert for '%s'", databasePatcher.component), nfe);
+                    }
+                    System.exit(0);
+                }
+                case "setIndexesInSyncWithPatch": {
+                    if (args.length > idx && ("true".equalsIgnoreCase(args[idx]) || "false".equalsIgnoreCase(args[idx]))) {
+                        boolean value = "true".equalsIgnoreCase(args[idx++]);
+                        databasePatcher.setIndexesInSyncWithPatch(value);
+                        System.exit(0);
+                    }
+                    break;
+                }
+                case "patch": {
+                    configureSinglestepFromArgs(databasePatcher, args, false); //default to false
 
-           } else if( commandName.equals("setIndexesInSyncWithPatch") ) {
-               if (args.length > idx && ("true".equalsIgnoreCase(args[idx]) || "false".equalsIgnoreCase(args[idx]))) {
-                   boolean value = "true".equalsIgnoreCase(args[idx++]);
-                   databasePatcher.setIndexesInSyncWithPatch(value);
-                   System.exit(0);
-               }
+                    databasePatcher.patch(args[idx++]);
+                    System.exit(0);
+                }
+                case "syncPatch": {
+                    configureFailOnWarningFromArgs(databasePatcher, args, false); //SKTOOLS-84: defaults to false
 
-           } else if( commandName.equals("patch") ) {
-               configureSinglestepFromArgs(databasePatcher, args, false); //default to false
-               databasePatcher.patch(args[idx++]);
-               System.exit(0);
+                    configureSinglestepFromArgs(databasePatcher, args, false); //default to false
 
-           } else if( commandName.equals("syncPatch") ) {
-               configureFailOnWarningFromArgs(databasePatcher, args, false); //SKTOOLS-84: defaults to false
-               configureSinglestepFromArgs(databasePatcher, args, false); //default to false
 
-               Collection<PatchtypeKode> patchtypes = configurePatchtypeFromArgs(databasePatcher, args, true);
-               databasePatcher.syncPatch(args[idx++], patchtypes);
-               System.exit(0);
+                    Collection<PatchtypeKode> patchtypes = configurePatchtypeFromArgs(databasePatcher, args, true);
+                    databasePatcher.syncPatch(args[idx++], patchtypes);
+                    System.exit(0);
+                }
+                case "assertVersion": {
+                    if (hasComponentArg && args.length > idx && !args[idx].startsWith("-")) {
+                        String dbVersion = args[idx++];
 
-           } else if( commandName.equals("assertVersion") ) {
-               if (hasComponentArg && args.length > idx && !args[idx].startsWith("-")) {
-                   String dbVersion = args[idx++];
+                        //finner valgfri patch#
+                        Integer patchNumber = null;
+                        if (args.length > idx && !args[idx].startsWith("-")) {
+                            try {
+                                patchNumber = Integer.parseInt(args[idx++]);
+                            } catch (NumberFormatException nfe) {
+                                System.err.println(String.format("Error parsing patch#! (%s)", args[idx - 1]));
+                                printUsage();
+                                System.exit(2);
+                            }
+                        }
 
-                   //finner valgfri patch#
-                   Integer patchNumber = null;
-                   if (args.length > idx && !args[idx].startsWith("-")) {
-                       try {
-                           patchNumber = Integer.parseInt(args[idx++]);
-                       } catch (NumberFormatException nfe) {
-                           System.err.println(String.format("Error parsing patch#! (%s)", args[idx-1]));
-                           printUsage();
-                           System.exit(2);
-                       }
-                   }
+                        boolean noError = databasePatcher.assertVersion(dbVersion, patchNumber);
+                        System.exit(noError ? 0 : 2);
+                    }
+                    break;
+                }
+                case "defineVersion": {
+                    if (hasComponentArg && args.length > idx && !args[idx].startsWith("-")) {
+                        String dbVersion = args[idx++];
 
-                   boolean noError = databasePatcher.assertVersion(dbVersion, patchNumber);
-                   System.exit(noError ? 0 : 2);
-               }
-           } else if( commandName.equals("defineVersion") ) {
-               if (hasComponentArg && args.length > idx && !args[idx].startsWith("-")) {
-                   String dbVersion = args[idx++];
+                        //finner valgfri patch#
+                        int patchNumber = PatchVersion.DEFAULT_PATCH_NO;
+                        if (args.length > idx && !args[idx].startsWith("-")) {
+                            try {
+                                patchNumber = Integer.parseInt(args[idx++]);
+                            } catch (NumberFormatException nfe) {
+                                System.err.println(String.format("Error parsing patch#! (%s)", args[idx - 1]));
+                                printUsage();
+                                System.exit(2);
+                            }
+                        }
 
-                   //finner valgfri patch#
-                   int patchNumber = PatchVersion.DEFAULT_PATCH_NO;
-                   if (args.length > idx && !args[idx].startsWith("-")) {
-                       try {
-                           patchNumber = Integer.parseInt(args[idx++]);
-                       } catch (NumberFormatException nfe) {
-                           System.err.println(String.format("Error parsing patch#! (%s)", args[idx-1]));
-                           printUsage();
-                           System.exit(2);
-                       }
-                   }
+                        PatchVersion patchVersion = databasePatcher.getDefaultPatchVersion();
+                        patchVersion.dbVersion = dbVersion;
+                        patchVersion.patchNo = patchNumber;
+                        boolean ok = databasePatcher.defineVersion(patchVersion);
+                        if (!ok) {
+                            System.exit(2);
+                        }
+                        System.exit(0);
 
-                   PatchVersion patchVersion = databasePatcher.getDefaultPatchVersion();
-                   patchVersion.dbVersion = dbVersion;
-                   patchVersion.patchNo = patchNumber;
-                   boolean ok = databasePatcher.defineVersion(patchVersion);
-                   if (!ok) {
-                       System.exit(2);
-                   }
-                   System.exit(0);
-
-               }
-           } else if( commandName.equals("setLatestVersionFromPatchfile") ) {
-               PatchVersion patchVersion = parseLatestPatchVersionExisting(args[idx++]);
-               patchVersion.kommentar += String.format(" (patchversjon satt ifra byggesystem)");
-               boolean ok = databasePatcher.defineVersion(patchVersion);
-               databasePatcher.setIndexesInSyncWithPatch(true);
-               if (!ok) {
-                   System.exit(2);
-               }
-               System.exit(0);
-           }
+                    }
+                    break;
+                }
+                case "setLatestVersionFromPatchfile": {
+                    PatchVersion patchVersion = parseLatestPatchVersionExisting(args[idx++]);
+                    patchVersion.kommentar += String.format(" (patchversjon satt ifra byggesystem)");
+                    boolean ok = databasePatcher.defineVersion(patchVersion);
+                    databasePatcher.setIndexesInSyncWithPatch(true);
+                    if (!ok) {
+                        System.exit(2);
+                    }
+                    System.exit(0);
+                }
+            }
 
         }
         //feil ved parsing av kommando
