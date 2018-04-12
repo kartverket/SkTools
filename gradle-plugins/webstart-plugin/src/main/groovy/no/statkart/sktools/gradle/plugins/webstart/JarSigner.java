@@ -365,7 +365,6 @@ public class JarSigner extends ConventionTask {
     }
 
     private Collection<File> collectSignedJars(Collection<File> unsignedFiles) {
-        getLogger().lifecycle("PELLE: " + unsignedFiles);
         try {
             if (getCertificateFile() == null) {
                 // Kan ikke signere noe uten sertifikat
