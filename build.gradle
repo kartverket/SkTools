@@ -10,7 +10,7 @@ allprojects {
     project.version = sktools_versjon
 
     // valgfri build katalog - kan benyttes for kompilering for flere samtidige Gradle versjoner..
-    buildDir = gradle.startParameter.systemPropertiesArgs.get('buildDirName', Project.DEFAULT_BUILD_DIR_NAME)
+    buildDir = gradle.startParameter.systemPropertiesArgs.get('buildDirName') ?: Project.DEFAULT_BUILD_DIR_NAME
 
     //kobler inn standard upload repositores ved bruk av maven plugin
     plugins.withType(MavenPlugin) {
@@ -175,7 +175,7 @@ subprojects { Project project ->
 //            listeners << 'org.uncommons.reportng.HTMLReporter' // Gradles innebygde rapport viser ikke skipped
         }
 
-        ignoreFailures = gradle.startParameter.systemPropertiesArgs.get('ignoreFailures', 'false') == 'true' //Gradle feiler ikke dersom denne er true. Kan ikke være true dersom en gjør en install eller uploadArchives
+        ignoreFailures = System.getProperty('ignoreFailures', 'false') == 'true' //Gradle feiler ikke dersom denne er true. Kan ikke være true dersom en gjør en install eller uploadArchives
 
         jvmArgs '-Xmx512m', '-XX:PermSize=128m', '-XX:MaxPermSize=256m'
 //            testLogging.showStandardStreams = true
@@ -218,7 +218,7 @@ allprojects {
                 attributes([
                         'Specification-Title': project.name,
                         'Specification-Vendor': 'Statens kartverk',
-                        'Specification-Version': gradle.startParameter.projectProperties.get('sktools_versjon', "${sktools_versjon}").replace('-SNAPSHOT', ''),
+                        'Specification-Version': (gradle.startParameter.projectProperties.get('sktools_versjon') ?: sktools_versjon).replace('-SNAPSHOT', ''),
 
                         //misc build info
                         'Build-By'     : System.getProperty('user.name'),

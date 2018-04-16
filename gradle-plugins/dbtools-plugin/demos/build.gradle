@@ -46,7 +46,7 @@ allprojects {
 
 }
 
-ext.port = gradle.startParameter.projectProperties.get('port', randomHsqldbPort())
+ext.port = gradle.startParameter.projectProperties.get('port') ?: randomHsqldbPort()
 static int randomHsqldbPort() {
     int port = 9001 /*default port for hsqldb*/
 
