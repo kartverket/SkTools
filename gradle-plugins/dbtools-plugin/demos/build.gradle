@@ -57,9 +57,9 @@ static int randomHsqldbPort() {
         def executorNumber = System.getenv('EXECUTOR_NUMBER') ?: 0 //unikhet muliggjør parallell testing
         port += executorNumber as int
 
-        //for parallelkjøring i jenkins pipelineline settes ingen ytterligere variable, her må man imporovisere.
-        int randomNum = java.util.concurrent.ThreadLocalRandom.current().nextInt(0, 10)
-        port += randomNum
+        //for parallelkjøring i jenkins pipelineline settes ingen ytterligere variable, her improviseres det noe...
+        int randomNum = new java.util.Random().nextInt(10)
+        port += randomNum * 10
     }
     return port
 }
