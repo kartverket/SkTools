@@ -103,6 +103,7 @@ pipeline { //declarative pipeline syntax
                         jdk 'Java 8 Latest' //weblogic krever denne major versjonen av java
                     }
                     steps {
+                        sleep 5 //sleep time in seconds - helps seed randomness in choosing port# in database demos
                         withEnv(['WEBLOGIC_VERSION=12.1.3.0', "WEBLOGIC_HOME=${WEBLOGIC_HOME('12.1.3.0', env)}"]) {
                             bat "gradle --version"
                             bat "gradle runDemos ${gradleOptions(params, env)} -DbuildDirName=gradle4.7"
