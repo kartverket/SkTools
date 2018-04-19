@@ -171,6 +171,7 @@ class Assert {
             tasks = taskNames
             startParameter.projectProperties = [sktools_versjon: "${project.version}"]
             startParameter.projectProperties << project.gradle.startParameter.projectProperties
+            startParameter.projectProperties.port = project.port //random value
             prep.reverseEach { Closure beforeAsserts -> doFirst { beforeAsserts.setDelegate(this); beforeAsserts.run()}}
             doLast { check.setDelegate(this); check.run() }
             doFirst {

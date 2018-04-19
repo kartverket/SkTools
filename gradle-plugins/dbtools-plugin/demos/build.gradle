@@ -52,13 +52,16 @@ ext.port = gradle.startParameter.projectProperties.get('port', randomHsqldbPort(
 static int randomHsqldbPort() {
     int port = 9001 /*default port for hsqldb*/
 
-    //velger en random port for parallel kjøring i jenkins
-    //jenkins freestyle project og pipeline jobber setter env EXECUTOR_NUMBER
-    def executorNumber = System.getenv('EXECUTOR_NUMBER') ?: 0 //unikhet muliggjør parallell testing
-    port += executorNumber as int
+    boolean onJenkins = System.getenv('EXECUTOR_NUMBER');
+    if (onJenkins) {
+        //velger en random port for parallel kjøring i jenkins
+        //jenkins freestyle project og pipeline jobber setter env EXECUTOR_NUMBER
+        def executorNumber = System.getenv('EXECUTOR_NUMBER') ?: 0 //unikhet muliggjør parallell testing
+        port += executorNumber as int
 
-    //for parallelkjøring i jenkins pipelineline settes ingen ytterligere variable, her må man imporovisere.
-    int randomNum = java.util.concurrent.ThreadLocalRandom.current().nextInt(0, 10)
-    port += randomNum
+        //for parallelkjøring i jenkins pipelineline settes ingen ytterligere variable, her må man imporovisere.
+        int randomNum = java.util.concurrent.ThreadLocalRandom.current().nextInt(0, 10)
+        port += randomNum
+    }
     return port
 }
