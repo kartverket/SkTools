@@ -1,12 +1,13 @@
 package no.statkart.sktools.gradle.plugins.weblogic.deploy
 
-import org.gradle.api.AntBuilder
 import org.gradle.api.file.FileCollection
 import org.gradle.api.internal.ConventionTask
 import org.gradle.api.logging.Logger
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.TaskAction
+import org.gradle.process.JavaExecSpec
 
 import java.util.jar.JarFile
 import java.util.jar.Manifest
@@ -63,13 +64,40 @@ abstract class AbstractWeblogicDeployTask extends ConventionTask {
         outputs.upToDateWhen { false }
     }
 
+    @TaskAction
+    final void exec() {
+        def cp = getClasspath()
+        def result = project.javaexec {
+            main = 'weblogic.Deployer'
+            classpath = cp
 
-    @Override
-    AntBuilder getAnt() {
-        AntBuilder ant = super.getAnt()
-        ant.taskdef(name: 'wldeploy', classname: 'weblogic.ant.taskdefs.management.WLDeploy', classpath: getClasspath().asPath)
-        return ant
+            systemProperty('weblogic.security.SSL.hostnameVerifier', 'weblogic.security.utils.SSLWLSWildcardHostnameVerifier')
+
+            args('-adminurl', getUrl())
+            args('-username', getUsername())
+            args('-password', getPassword())
+
+            buildCommandLine(it)
+
+            args('-targets', getTargets())
+            args('-name', getDeploymentName())
+
+            if (isVerbose()) {
+                args('-verbose')
+            }
+
+            if (getTimeout() != null) {
+                args('-timeout', getTimeout())
+            }
+        }
+
+        if (isFailOnError()) {
+            result.assertNormalExitValue()
+        }
     }
+
+    protected abstract void buildCommandLine(JavaExecSpec spec)
+
 
     public abstract Logger getLogger();
 

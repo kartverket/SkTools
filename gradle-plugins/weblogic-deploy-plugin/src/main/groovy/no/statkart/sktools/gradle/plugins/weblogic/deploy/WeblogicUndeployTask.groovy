@@ -5,6 +5,7 @@ import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
+import org.gradle.process.JavaExecSpec
 
 /**
  * Task for undeploy
@@ -24,36 +25,19 @@ class WeblogicUndeployTask extends AbstractWeblogicDeployTask {
     String appversion = null
 
 
-    @TaskAction
-    void deploy() {
+    @Override
+    protected void buildCommandLine(JavaExecSpec execSpec) {
         logger.quiet("Undeployment av ${getDeploymentName()} til Weblogic paa ${getUrl()}")
 
-        def args = [
-                action: 'undeploy',
-                name: getDeploymentName(),
-                targets: getTargets(),
-
-                adminurl: getUrl(),
-                user: getUsername(),
-                password: getPassword(),
-
-                failonerror: getFailOnError(),
-                verbose: getVerbose(),
-        ]
+        execSpec.args('-undeploy')
 
         if (getGraceful() != null) {
-            args.graceful = getGraceful()
+            execSpec.args('-graceful', getGraceful())
         }
 
         if (getAppversion() != null) {
-            args.appversion = getAppversion()
+            execSpec.args('-appversion', getAppversion())
         }
-
-        if (getTimeout() != null) {
-            args.timeout = getTimeout()
-        }
-
-        ant.wldeploy(args)
     }
 
     public Logger getLogger() {

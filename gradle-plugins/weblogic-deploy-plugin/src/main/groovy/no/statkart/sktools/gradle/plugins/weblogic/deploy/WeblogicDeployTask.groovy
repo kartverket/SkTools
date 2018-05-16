@@ -5,8 +5,7 @@ import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.TaskAction
+import org.gradle.process.JavaExecSpec
 
 /**
  * Task for deploy
@@ -26,46 +25,23 @@ class WeblogicDeployTask extends AbstractWeblogicDeployTask {
     @Input
     boolean library = false
 
-    @Input
-    @Optional
-    String appversion = null
-
-    @TaskAction
-    void deploy() {
+    @Override
+    protected void buildCommandLine(JavaExecSpec execSpec) {
         logger.quiet("Deployment av ${getDeploymentName()} til Weblogic paa ${getUrl()}")
 
         checkSourceExists()
 
+        execSpec.args('-deploy', '-version')
 
-        Map args = [
-                action: 'deploy',
-                upload: getUpload(),
-
-                name: getDeploymentName(),
-                source: project.files(getFile()).singleFile,
-                targets: getTargets(),
-
-                adminurl: getUrl(),
-                user: getUsername(),
-                password: getPassword(),
-
-                failonerror: getFailOnError(),
-                verbose: getVerbose(),
-        ]
-
-        if (library) {
-            args.library = true
+        if (isUpload()) {
+            execSpec.args('-upload')
         }
 
-        if (getAppversion() != null) {
-            args.appversion = getAppversion()
-        }
+        execSpec.args('-source', project.files(getFile()).singleFile)
 
-        if (getTimeout() != null) {
-            args.timeout = getTimeout()
+        if (isLibrary()) {
+            execSpec.args('-library')
         }
-
-        ant.wldeploy(args)
     }
 
     public Logger getLogger() {

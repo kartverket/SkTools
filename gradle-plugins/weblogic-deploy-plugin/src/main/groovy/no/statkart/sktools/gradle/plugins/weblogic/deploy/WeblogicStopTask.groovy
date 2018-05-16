@@ -4,7 +4,7 @@ import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.TaskAction
+import org.gradle.process.JavaExecSpec
 
 /**
  * Task for å stoppe en applikasjon.
@@ -25,36 +25,19 @@ class WeblogicStopTask extends AbstractWeblogicDeployTask {
     String appversion = null
 
 
-    @TaskAction
-    void deploy() {
+    @Override
+    protected void buildCommandLine(JavaExecSpec execSpec) {
         logger.quiet("Stopper ${getDeploymentName()} i Weblogic paa ${getUrl()}")
 
-        def args = [
-                action: 'stop',
-                name: getDeploymentName(),
-                targets: getTargets(),
-
-                adminurl: getUrl(),
-                user: getUsername(),
-                password: getPassword(),
-
-                failonerror: getFailOnError(),
-                verbose: getVerbose(),
-        ]
+        execSpec.args('-stop')
 
         if (getGraceful() != null) {
-            args.graceful = getGraceful()
+            execSpec.args('-graceful', getGraceful())
         }
 
         if (getAppversion() != null) {
-            args.appversion = getAppversion()
+            execSpec.args('-appversion', getAppversion())
         }
-
-        if (getTimeout() != null) {
-            args.timeout = getTimeout()
-        }
-
-        ant.wldeploy(args)
     }
 
     public Logger getLogger() {
