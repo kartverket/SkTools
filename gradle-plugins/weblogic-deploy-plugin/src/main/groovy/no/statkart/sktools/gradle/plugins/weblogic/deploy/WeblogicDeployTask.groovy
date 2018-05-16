@@ -14,7 +14,7 @@ import org.gradle.process.JavaExecSpec
  * @author Leif Lislegård
  */
 class WeblogicDeployTask extends AbstractWeblogicDeployTask {
-    protected static final Logger logger = Logging.getLogger(WeblogicDeployTask.class);
+    protected static final Logger logger = Logging.getLogger(WeblogicDeployTask.class)
 
     @InputFiles
     Object file
@@ -31,7 +31,7 @@ class WeblogicDeployTask extends AbstractWeblogicDeployTask {
 
         checkSourceExists()
 
-        execSpec.args('-deploy', '-version')
+        execSpec.args('-deploy')
 
         if (isUpload()) {
             execSpec.args('-upload')
@@ -45,7 +45,7 @@ class WeblogicDeployTask extends AbstractWeblogicDeployTask {
     }
 
     public Logger getLogger() {
-        return logger;
+        return logger
     }
 
     void checkSourceExists() {
@@ -54,13 +54,13 @@ class WeblogicDeployTask extends AbstractWeblogicDeployTask {
             logger.error ''
             logger.error 'ERROR: Ingen fil aa deploye. \nHar du konfigurert opp denne tasken riktigt?'
             logger.error ''
-            throw new RuntimeException("Source for task $name er ikke konfigurert!");
+            throw new RuntimeException("Source for task $name er ikke konfigurert!")
         }
         if (!fileCollection.singleFile.exists()) {
             logger.error ''
             logger.error 'ERROR: Ingen fil aa deploye. \nHar du husket assemble?'
             logger.error ''
-            throw new FileNotFoundException(String.valueOf(getFile()));
+            throw new FileNotFoundException(String.valueOf(getFile()))
         }
     }
 }

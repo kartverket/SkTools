@@ -46,9 +46,9 @@ abstract class AbstractWeblogicDeployTask extends ConventionTask {
     @Optional
     String getTimeout() {
         if (timeout != null) {
-            return isTimeoutInMilliseconds() ? timeout + "000" : timeout;
+            return isTimeoutInMilliseconds() ? timeout + "000" : timeout
         }
-        return null;
+        return null
     }
     String timeout
 
@@ -67,7 +67,7 @@ abstract class AbstractWeblogicDeployTask extends ConventionTask {
     @TaskAction
     final void exec() {
         def cp = getClasspath()
-        def result = project.javaexec {
+        project.javaexec {
             main = 'weblogic.Deployer'
             classpath = cp
 
@@ -89,10 +89,8 @@ abstract class AbstractWeblogicDeployTask extends ConventionTask {
             if (getTimeout() != null) {
                 args('-timeout', getTimeout())
             }
-        }
 
-        if (isFailOnError()) {
-            result.assertNormalExitValue()
+            setIgnoreExitValue(!isFailOnError())
         }
     }
 
@@ -104,18 +102,18 @@ abstract class AbstractWeblogicDeployTask extends ConventionTask {
     protected boolean isTimeoutInMilliseconds() {
         String version = findWeblogicVersion()
         if (version != null && version.startsWith("12.1.3.")) {
-            return true;
+            return true
         }
-        return false;
+        return false
     }
 
     protected String findWeblogicVersion() {
-        final File file = getClasspath().getAsFileTree().filter { "weblogic.jar" == it.name }.getSingleFile();
-        final Manifest manifest = new JarFile(file, false).getManifest();
+        final File file = getClasspath().getAsFileTree().filter { "weblogic.jar" == it.name }.getSingleFile()
+        final Manifest manifest = new JarFile(file, false).getManifest()
         if (manifest != null) {
-            return manifest.getMainAttributes().getValue("Implementation-Version");
+            return manifest.getMainAttributes().getValue("Implementation-Version")
         }
-        return null;
+        return null
     }
 
 }
