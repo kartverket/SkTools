@@ -2,7 +2,7 @@
 
 /*
  Multibranch Pipeline for Continuous integration (CI) prosess i Jenkins.
- Her branch har denne innsjekket på fast plassering: Jenkinsfile
+ Hver branch har denne innsjekket på fast plassering: Jenkinsfile
 
  CI prosessen har følgende parameteriserbare dimensjoner:
 
@@ -118,7 +118,7 @@ pipeline { //declarative pipeline syntax
 
         stage('Publish') {
             steps {
-                bat "gradle uploadArchives ${gradleOptions(params, env)}"
+                bat "gradle publish ${gradleOptions(params, env)} --init-script config/gradle/scripts/mavenPublish.gradle"
             }
         }
     }
