@@ -1,6 +1,5 @@
 package no.statkart.sktools.gradle.plugins.wsdocgen;
 
-import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
@@ -39,6 +38,10 @@ public class WsDocCompileTask extends JavaCompile {
       setDocGroup(docGroup);
       initCompilerArgs(getOptions().getCompilerArgs());
       initEncoding();
+
+      if (getDocGroup().includes != null) {
+         setIncludes(getDocGroup().includes); //up to date affects getSource()
+      }
    }
 
    private void initEncoding() {
@@ -48,7 +51,7 @@ public class WsDocCompileTask extends JavaCompile {
       }
    }
 
-   void initCompilerArgs(final List<String> compilerArgs) {
+   private void initCompilerArgs(final List<String> compilerArgs) {
       compilerArgs.add("-proc:only"); //only annotation processing is done, without any subsequent compilation.
       compilerArgs.add("-processor");
       compilerArgs.add("no.statkart.sktools.utils.wsdocgen.processor.WSDocProcessor"); //Names of the annotation processors to run. This bypasses the default discovery process.
@@ -68,10 +71,6 @@ public class WsDocCompileTask extends JavaCompile {
 
       if (getIndexXsltFile() != null) {
          compilerArgs.add("-AindexXslt=" + getIndexXsltFile().getPath()); //SKTOOLS-105
-      }
-
-      if (getDocGroup().includes != null) {
-         include(getDocGroup().includes); //up to date affects getSource()
       }
    }
 
