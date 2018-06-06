@@ -2,7 +2,7 @@
 
 /*
  Multibranch Pipeline for Continuous integration (CI) prosess i Jenkins.
- Her branch har denne innsjekket på fast plassering: Jenkinsfile
+ Hver branch har denne innsjekket på fast plassering: Jenkinsfile
 
  CI prosessen har følgende parameteriserbare dimensjoner:
 
