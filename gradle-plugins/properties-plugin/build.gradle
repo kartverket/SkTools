@@ -1,5 +1,5 @@
-apply plugin: 'maven'
 apply plugin: 'groovy'
+apply plugin: 'maven-publish'
 
 group = 'no.statkart.sktools.gradle'
 
@@ -12,17 +12,21 @@ dependencies {
 
     //test
     testCompile project(':build-utils:test-utils')
-
 }
 
-task sourcesJar(type: Jar, dependsOn:classes) {
-    classifier = 'sources'
+
+task sourceJar(type: Jar) {
     from sourceSets.main.allSource
-    onlyIf { gradle.taskGraph.hasTask(install) || gradle.taskGraph.hasTask(uploadArchives) } //only when published..
+    classifier 'sources'
 }
 
-
-artifacts {
-    archives sourcesJar
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            artifact sourceJar
+        }
+    }
 }
+
 

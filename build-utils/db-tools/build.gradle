@@ -1,6 +1,6 @@
-apply plugin: 'maven'
 apply plugin: 'java'
 apply plugin: 'groovy'
+apply plugin: 'maven-publish'
 
 dependencies {
     compile project(':build-utils:sql-parser')
@@ -9,5 +9,19 @@ dependencies {
 //    provided libraries.log4j //forutsetter at denne finnes på classpath
 
     testCompile project(':build-utils:test-utils')
+}
 
+
+task sourceJar(type: Jar) {
+    from sourceSets.main.allJava
+    classifier 'sources'
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            artifact sourceJar
+        }
+    }
 }

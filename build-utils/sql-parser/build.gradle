@@ -1,12 +1,19 @@
-apply plugin: 'maven'
 apply plugin: 'java'
 apply plugin: 'groovy'
+apply plugin: 'maven-publish'
 
 dependencies {
 
     //testing...
     testCompile project(':build-utils:test-utils')
+}
 
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
 }
 
 

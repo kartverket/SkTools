@@ -40,12 +40,10 @@ set WEBLOGIC_VERSION=12.1.3
 : * Maven Repo & Nexus Setup  (optional)
 : *******************************************************************************************************************
 : Definer lokal nexus repo for offline utvikling (optional)
-@rem set MAVEN_REPO=http://localhost:8081/nexus/content/repositories/statkart/
+@rem set MAVEN_REPO=http://localhost:8081/repository/public/
 
 : Definerer repo for deploying av bygget applikasjon (nexus)
-@rem set REPO_UPLOAD_RELEASES=http://admin:admin123@nexus.statkart.no:8090/nexus/content/repositories/releases/
-@rem set ORG_GRADLE_PROJECT_REPO_UPLOAD_RELEASES_USERNAME=admin
-@rem set ORG_GRADLE_PROJECT_REPO_UPLOAD_RELEASES_PASSWORD=admin123
+@rem set MAVEN_PUBLISH=http://admin:admin123@nexus.statkart.no:8090/nexus/content/repositories/releases/
 
 
 : *******************************************************************************************************************

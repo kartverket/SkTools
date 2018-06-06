@@ -46,6 +46,9 @@ pipeline { //declarative pipeline syntax
         ORG_GRADLE_PROJECT_sktools_versjon = "${params.sktools_versjon}"
         GRADLE_OPTS = "-XX:MaxPermSize=512m" //java 7 trenger litt mere permGen space
         BRANCH_NAME = "${params.BRANCH_NAME}"
+
+        //for publisering til sentralt maven repo bines opp via jenkins credential (secret text)
+        MAVEN_PUBLISH = credentials('MAVEN_DEPLOY_RELEASES')
     }
 
     stages {
@@ -56,7 +59,7 @@ pipeline { //declarative pipeline syntax
         }
         stage('Build') {
             steps {
-                bat "gradle assemble install ${gradleOptions(params, env)}"
+                bat "gradle assemble publishToMavenLocal ${gradleOptions(params, env)}"
             }
         }
 
