@@ -5,7 +5,7 @@
 @echo off
 @mode con codepage select=865
 
-: Setter hovedkatalog for prosjektet. PROJECT_ROOT inneholder '\' til slutt derfor må det stå en '.' til slutt
+: Setter hovedkatalog for prosjektet. PROJECT_ROOT inneholder '\' til slutt derfor mï¿½ det stï¿½ en '.' til slutt
 rem %~dp0 is name of current script under NT
 set PROJECT_ROOT=%~dp0.
 cd /d %PROJECT_ROOT%
@@ -31,7 +31,7 @@ title %TITLE%
 : Java Setup
 @echo JAVA_HOME=%JAVA_HOME%
 if not "%JAVA_HOME%"=="" goto CONFIGURE_JAVA_HOME
-  @echo   JAVA_HOME environment variable er ikke satt. Har du glem å sette den i setEnv_personal.cmd?
+  @echo   JAVA_HOME environment variable er ikke satt. Har du glem ï¿½ sette den i setEnv_personal.cmd?
   set ERROR=true
   goto END_JAVA_HOME
 :CONFIGURE_JAVA_HOME
@@ -42,7 +42,7 @@ if not "%JAVA_HOME%"=="" goto CONFIGURE_JAVA_HOME
 : Gradle Setup
 @echo GRADLE_HOME=%GRADLE_HOME%
 if not "%GRADLE_HOME%"=="" goto CONFIGURE_GRADLE_HOME
-  @echo   GRADLE_HOME environment variable er ikke satt. Har du glem å sette den i setEnv_personal.cmd?
+  @echo   GRADLE_HOME environment variable er ikke satt. Har du glem ï¿½ sette den i setEnv_personal.cmd?
   set ERROR=true
   goto END_GRADLE_HOME
 :CONFIGURE_GRADLE_HOME
@@ -66,13 +66,7 @@ if "%ORG_GRADLE_PROJECT_sktools_versjon%"=="" (
 : Maven Repo & Nexus Setup
 if "%MAVEN_REPO%"=="" (
    @echo Setter std Maven Repository for utvikling [felles]
-   set MAVEN_REPO=http://nexus.statkart.no:8090/nexus/content/groups/public/
-)
-if "%REPO_UPLOAD_RELEASES%"=="" (
-   @echo Setter std Maven Repository for utvikling releases
-   set REPO_UPLOAD_RELEASES=http://admin:admin123@nexus.statkart.no:8090/nexus/content/repositories/releases/
-   set ORG_GRADLE_PROJECT_REPO_UPLOAD_RELEASES_USERNAME=admin
-   set ORG_GRADLE_PROJECT_REPO_UPLOAD_RELEASES_PASSWORD=admin123
+   set MAVEN_REPO=https://nexus.statkart.no/repository/public/
 )
 
 

@@ -56,7 +56,7 @@ pipeline { //declarative pipeline syntax
         }
         stage('Build') {
             steps {
-                bat "gradle assemble install ${gradleOptions(params, env)}"
+                bat "gradle assemble publishToMavenLocal ${gradleOptions(params, env)}"
             }
         }
 

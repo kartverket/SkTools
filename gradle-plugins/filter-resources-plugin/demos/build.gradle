@@ -16,7 +16,7 @@ buildscript {
         }
     }
 
-    project.ext.set('MAVEN_REPO', project.ext.properties.get('MAVEN_REPO', 'http://nexus.statkart.no:8090/nexus/content/groups/public/'))
+    project.ext.set('MAVEN_REPO', project.ext.properties.get('MAVEN_REPO', 'https://nexus.statkart.no/repository/public/'))
 
     repositories {
         mavenLocal()

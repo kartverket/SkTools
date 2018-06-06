@@ -31,7 +31,9 @@ WEBLOGIC_VERSION=12.1.3
 
 ## Releasetesting 
 For å teste virkemåten til de ulike plugins finnes det noen veldig enkle demo prosjekter. 
-Disse kan kjøres via `gradle install` og `gradle :gradle-demos:runDemos`
+Disse kan kjøres via `gradle publishToMavenLocal :gradle-demos:runDemos` 
+eller kortformen `gradle pTML runDemos`
+
 
 Følgende parametere er aktuelle å teste
 * `WEBLOGIC_VERSION` styrer default veblogic classpath.

@@ -12,14 +12,6 @@ allprojects {
     // valgfri build katalog - kan benyttes for kompilering for flere samtidige Gradle versjoner..
     buildDir = gradle.startParameter.systemPropertiesArgs.get('buildDirName') ?: Project.DEFAULT_BUILD_DIR_NAME
 
-    //kobler inn standard upload repositores ved bruk av maven plugin
-    plugins.withType(MavenPlugin) {
-        uploadArchives.repositories.mavenDeployer {
-            repository(url: uri(REPO_UPLOAD_RELEASES)) {
-                authentication([userName: REPO_UPLOAD_RELEASES_USERNAME, password: REPO_UPLOAD_RELEASES_PASSWORD])
-            }
-        }
-    }
 }
 
 // Optional configuration of library versions to use. (not production)
@@ -175,7 +167,7 @@ subprojects { Project project ->
 //            listeners << 'org.uncommons.reportng.HTMLReporter' // Gradles innebygde rapport viser ikke skipped
         }
 
-        ignoreFailures = System.getProperty('ignoreFailures', 'false') == 'true' //Gradle feiler ikke dersom denne er true. Kan ikke være true dersom en gjør en install eller uploadArchives
+        ignoreFailures = System.getProperty('ignoreFailures', 'false') == 'true' //Gradle feiler ikke dersom denne er true. Kan ikke være true dersom en gjør en publish
 
         jvmArgs '-Xmx512m', '-XX:PermSize=128m', '-XX:MaxPermSize=256m'
 //            testLogging.showStandardStreams = true
@@ -401,24 +393,8 @@ buildscript {
 
     ext.MAVEN_REPO = rootProject.properties.get('MAVEN_REPO', System.getenv('MAVEN_REPO'))
     if (ext.MAVEN_REPO == null) {
-        ext.MAVEN_REPO = 'http://nexus.statkart.no:8090/nexus/content/groups/public/'
+        ext.MAVEN_REPO = 'https://nexus.statkart.no/repository/public/'
         logger.warn "warning: MAVEN_REPO not defined. Defaulting to ${MAVEN_REPO}"
-    }
-
-    ext.REPO_UPLOAD_RELEASES = rootProject.properties.get('REPO_UPLOAD_RELEASES', System.getenv('REPO_UPLOAD_RELEASES'))
-    if (ext.REPO_UPLOAD_RELEASES == null) {
-        ext.REPO_UPLOAD_RELEASES = 'http://nexus.statkart.no:8090/nexus/content/repositories/releases/'
-        logger.warn "warning: REPO_UPLOAD_RELEASES not defined. Defaulting to ${'http://admin:***@nexus.statkart.no:8090/nexus/content/repositories/releases/'}"
-    }
-    ext.REPO_UPLOAD_RELEASES_USERNAME = rootProject.properties.get('REPO_UPLOAD_RELEASES_USERNAME', System.getenv('REPO_UPLOAD_RELEASES_USERNAME'))
-    if (ext.REPO_UPLOAD_RELEASES_USERNAME == null) {
-        ext.REPO_UPLOAD_RELEASES_USERNAME = 'admin'
-        logger.warn "warning: REPO_UPLOAD_RELEASES_USERNAME not defined. Defaulting to admin"
-    }
-    ext.REPO_UPLOAD_RELEASES_PASSWORD = rootProject.properties.get('REPO_UPLOAD_RELEASES_PASSWORD', System.getenv('REPO_UPLOAD_RELEASES_PASSWORD'))
-    if (ext.REPO_UPLOAD_RELEASES_PASSWORD == null) {
-        ext.REPO_UPLOAD_RELEASES_PASSWORD = 'admin123'
-        logger.warn "warning: REPO_UPLOAD_RELEASES_PASSWORD not defined. Defaulting to default admin password"
     }
 
 }

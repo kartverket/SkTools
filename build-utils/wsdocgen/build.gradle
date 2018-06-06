@@ -1,6 +1,6 @@
-apply plugin: 'maven'
 apply plugin: 'java'
 apply plugin: 'groovy'
+apply plugin: 'maven-publish'
 
 dependencies {
 
@@ -14,13 +14,17 @@ dependencies {
 
 }
 
-task sourcesJar(type: Jar, dependsOn:classes) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-    onlyIf { gradle.taskGraph.hasTask(install) || gradle.taskGraph.hasTask(uploadArchives) } //only when published..
+task sourceJar(type: Jar) {
+    from sourceSets.main.allJava
+    classifier "sources"
 }
 
-
-artifacts {
-    archives sourcesJar
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            artifact sourceJar
+        }
+    }
 }
+
