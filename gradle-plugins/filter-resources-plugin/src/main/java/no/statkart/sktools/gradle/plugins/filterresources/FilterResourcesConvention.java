@@ -41,7 +41,7 @@ public class FilterResourcesConvention {
 
     public void properties(Map<String, Object> propertiesToFilter) {
         if (properties == null) {
-            properties = new HashMap<String, Object>(propertiesToFilter);
+            properties = new HashMap<>(propertiesToFilter);
         } else {
             properties.putAll(propertiesToFilter);
         }

@@ -46,7 +46,7 @@ task runDemo() {
         zipTree(tasks.zipSchemas.archivePath).asPath.contains 'simple.xsd'
     }
 
-    Assert.that('clean', sourceSets.main.xjc[0].config.genTaskName).describedAs("schemaGeneratesSourceCode").leadsTo(project).withState {
+    Assert.that('clean', sourceSets.main.xjc[0].genTaskName).describedAs("schemaGeneratesSourceCode").leadsTo(project).withState {
         assertXjcGeneratedSources()
     }
 
@@ -173,7 +173,7 @@ class Assert {
 
 
     void assertXjcGeneratedSources() {
-        assert project.files(project.sourceSets.main.xjc[0].config.genOutputPath).asFileTree.files.find { it.name == 'SimpleType.java' }
+        assert project.files(project.sourceSets.main.xjc[0].genOutputPath).asFileTree.files.find { it.name == 'SimpleType.java' }
     }
 
     void assertXjcClasses() {
@@ -181,7 +181,7 @@ class Assert {
     }
 
     void assertDirtySources() {
-        assert project.files(project.sourceSets.main.xjc[0].config.genOutputPath).asFileTree.files.find { it.name == 'Dirty.java' }
+        assert project.files(project.sourceSets.main.xjc[0].genOutputPath).asFileTree.files.find { it.name == 'Dirty.java' }
     }
 
     void assertDirtyClasses() {
@@ -189,7 +189,7 @@ class Assert {
     }
 
     void assertNoDirtySources() {
-        assert !project.files(project.sourceSets.main.xjc[0].config.genOutputPath).asFileTree.files.find { it.name == 'Dirty.java' } //forventer ikke å finne Dirty.java blandt source
+        assert !project.files(project.sourceSets.main.xjc[0].genOutputPath).asFileTree.files.find { it.name == 'Dirty.java' } //forventer ikke å finne Dirty.java blandt source
     }
 
 //    void assertNoDirtyClasses() {

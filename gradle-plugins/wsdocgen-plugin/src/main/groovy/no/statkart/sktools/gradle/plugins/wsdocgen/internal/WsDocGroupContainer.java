@@ -19,11 +19,11 @@ import java.util.List;
  * @since 2.0
  */
 public class WsDocGroupContainer extends AbstractList<WsDocGroup> {
-    private final List<WsDocGroup> store = new ArrayList<WsDocGroup>();
+    private final List<WsDocGroup> store = new ArrayList<>();
     private final SourceSet sourceSet;
     private final WsDocGenConvention convention;
 
-    private final List<Action<WsDocGroup>> configActions = new ArrayList<Action<WsDocGroup>>();
+    private final List<Action<WsDocGroup>> configActions = new ArrayList<>();
 
     public WsDocGroupContainer(SourceSet sourceSet, WsDocGenConvention convention) {
         this.sourceSet = sourceSet;

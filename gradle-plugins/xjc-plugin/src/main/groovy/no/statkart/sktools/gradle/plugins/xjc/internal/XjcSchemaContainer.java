@@ -19,11 +19,11 @@ import java.util.List;
  * @since 1.2
  */
 public class XjcSchemaContainer extends AbstractList<XjcConfig> {
-    private final List<XjcConfig> store = new ArrayList<XjcConfig>();
+    private final List<XjcConfig> store = new ArrayList<>();
     private final SourceSet sourceSet;
     private final Project project;
 
-    private final List<Action<XjcConfig>> configActions = new ArrayList<Action<XjcConfig>>();
+    private final List<Action<XjcConfig>> configActions = new ArrayList<>();
 
     public XjcSchemaContainer(SourceSet sourceSet, Project project) {
         this.sourceSet = sourceSet;

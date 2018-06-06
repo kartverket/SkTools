@@ -89,6 +89,7 @@ class Assert {
             tasks = taskNames
             startParameter.projectProperties = [sktools_versjon: "${project.version}"]
             startParameter.projectProperties << project.gradle.startParameter.projectProperties
+            startParameter.projectProperties.port = project.port //random value
             prep.reverseEach { Closure beforeAsserts -> doFirst { beforeAsserts.setDelegate(this); beforeAsserts.run()}}
             doLast { check.setDelegate(this); check.run() }
             doFirst {
@@ -112,7 +113,7 @@ class Assert {
 
     void assertTable1AccessForSA() {
         def convention = project.convention.plugins['db'].dbToolSets['sa']
-        def sql = groovy.sql.Sql.newInstance(convention.url, convention.credentials.username, convention.credentials.password, convention.driver)
+        def sql = groovy.sql.Sql.newInstance(url:convention.url, user:convention.credentials.username, password:convention.credentials.password, driverClassName:convention.driver)
         sql.eachRow("select count(*) from BRUKER1.TABLE1") {
             assert it[0] == 0
         }
@@ -120,7 +121,7 @@ class Assert {
 
     void assertTable1AccessForBruker1() {
         def convention = project.convention.plugins['db'].dbToolSets['bruker1']
-        def sql = groovy.sql.Sql.newInstance(convention.url, convention.credentials.username, convention.credentials.password, convention.driver)
+        def sql = groovy.sql.Sql.newInstance(url:convention.url, user:convention.credentials.username, password:convention.credentials.password, driverClassName:convention.driver)
         sql.eachRow("select count(*) from TABLE1") {
             assert it[0] == 0
         }

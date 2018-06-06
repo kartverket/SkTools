@@ -1,4 +1,4 @@
-assert GradleVersion.current() >= GradleVersion.version('2.4') //lowest gradle version supported
+assert GradleVersion.current() >= GradleVersion.version('4.2') //lowest gradle version supported
 
 allprojects {
     apply plugin: 'idea'
@@ -10,16 +10,8 @@ allprojects {
     project.version = sktools_versjon
 
     // valgfri build katalog - kan benyttes for kompilering for flere samtidige Gradle versjoner..
-    buildDir = gradle.startParameter.systemPropertiesArgs.get('buildDirName', Project.DEFAULT_BUILD_DIR_NAME)
+    buildDir = gradle.startParameter.systemPropertiesArgs.get('buildDirName') ?: Project.DEFAULT_BUILD_DIR_NAME
 
-    //kobler inn standard upload repositores ved bruk av maven plugin
-    plugins.withType(MavenPlugin) {
-        uploadArchives.repositories.mavenDeployer {
-            repository(url: uri(REPO_UPLOAD_RELEASES)) {
-                authentication([userName: REPO_UPLOAD_RELEASES_USERNAME, password: REPO_UPLOAD_RELEASES_PASSWORD])
-            }
-        }
-    }
 }
 
 // Optional configuration of library versions to use. (not production)
@@ -157,32 +149,17 @@ subprojects { Project project ->
         }
 
 
-        /**
-         * Testing via TestNG grupper. Se bruk av @Test(groups = "") i koden.
-         *
-         * -DignoreFailures=true stopper ikke eksekvering etter feilende modul og kjører videre. Kjekt for integrasjonstesting som ønsker å kjøre alle tester alltid.
-         */
-        test {
-            ignoreFailures = gradle.startParameter.systemPropertiesArgs.get('ignoreFailures', 'false') == 'true' //Gradle feiler ikke dersom denne er true. Kan ikke være true dersom en gjør en install eller uploadArchives
-
-
-            jvmArgs '-Xmx512m', '-XX:PermSize=128m', '-XX:MaxPermSize=256m'
-//            testLogging.showStandardStreams = true
-
-            inputs.property 'excludedGroups', testFramework.options.includeGroups //trigger re-kjøring av test ved endring av grupper
-            inputs.property 'includedGroups', testFramework.options.excludeGroups //trigger re-kjøring av test ved endring av grupper
-
-            onOutput { descriptor, event ->
-                if (event.destination == TestOutputEvent.Destination.StdErr) {
-                    logger.error('' + descriptor + ", error: " + event.message)
-                } else {
-                    logger.info('\t' + event.message)
-                }
-            }
-
-        }
+        // Test resultater og rapporter havner i egne mapper for paralleliserbarhet i Jenkins.
+        // - feks build/reports/tests/<task name>
+        // - feks build/test-results/<task name>
+        tasks.create("testGradle${GradleVersion.current().baseVersion.version}", Test)
     }
 
+    /**
+     * Testing via TestNG grupper. Se bruk av @Test(groups = "") i koden.
+     *
+     * -DignoreFailures=true stopper ikke eksekvering etter feilende modul og kjører videre. Kjekt for integrasjonstesting som ønsker å kjøre alle tester alltid.
+     */
     project.tasks.withType(Test) { Test test -> //felles for alle test-tasks
 
         useTestNG() {  //benytter kun TestNG over alt
@@ -190,11 +167,14 @@ subprojects { Project project ->
 //            listeners << 'org.uncommons.reportng.HTMLReporter' // Gradles innebygde rapport viser ikke skipped
         }
 
+        ignoreFailures = System.getProperty('ignoreFailures', 'false') == 'true' //Gradle feiler ikke dersom denne er true. Kan ikke være true dersom en gjør en publish
+
+        jvmArgs '-Xmx512m', '-XX:PermSize=128m', '-XX:MaxPermSize=256m'
+//            testLogging.showStandardStreams = true
+
         filterTestGroup(test, 'broken', 'EXCLUDE')
-
-        systemProperties "org.uncommons.reportng.stylesheet": "${project.rootProject.file('all/test/report/reportng-1.1.3/stylesheets/hudsonesque.css')}"
-        systemProperties "org.uncommons.reportng.title": "${project.name} Report"
-
+        inputs.property 'excludedGroups', testFramework.options.includeGroups //trigger re-kjøring av test ved endring av grupper
+        inputs.property 'includedGroups', testFramework.options.excludeGroups //trigger re-kjøring av test ved endring av grupper
 
         if (rootProject.hasProperty('test.remote.debug')) {
             jvmArgs '-Xdebug'
@@ -230,7 +210,7 @@ allprojects {
                 attributes([
                         'Specification-Title': project.name,
                         'Specification-Vendor': 'Statens kartverk',
-                        'Specification-Version': gradle.startParameter.projectProperties.get('sktools_versjon', "${sktools_versjon}").replace('-SNAPSHOT', ''),
+                        'Specification-Version': (gradle.startParameter.projectProperties.get('sktools_versjon') ?: sktools_versjon).replace('-SNAPSHOT', ''),
 
                         //misc build info
                         'Build-By'     : System.getProperty('user.name'),
@@ -413,24 +393,8 @@ buildscript {
 
     ext.MAVEN_REPO = rootProject.properties.get('MAVEN_REPO', System.getenv('MAVEN_REPO'))
     if (ext.MAVEN_REPO == null) {
-        ext.MAVEN_REPO = 'http://nexus.statkart.no:8090/nexus/content/groups/public/'
+        ext.MAVEN_REPO = 'https://nexus.statkart.no/repository/public/'
         logger.warn "warning: MAVEN_REPO not defined. Defaulting to ${MAVEN_REPO}"
-    }
-
-    ext.REPO_UPLOAD_RELEASES = rootProject.properties.get('REPO_UPLOAD_RELEASES', System.getenv('REPO_UPLOAD_RELEASES'))
-    if (ext.REPO_UPLOAD_RELEASES == null) {
-        ext.REPO_UPLOAD_RELEASES = 'http://nexus.statkart.no:8090/nexus/content/repositories/releases/'
-        logger.warn "warning: REPO_UPLOAD_RELEASES not defined. Defaulting to ${'http://admin:***@nexus.statkart.no:8090/nexus/content/repositories/releases/'}"
-    }
-    ext.REPO_UPLOAD_RELEASES_USERNAME = rootProject.properties.get('REPO_UPLOAD_RELEASES_USERNAME', System.getenv('REPO_UPLOAD_RELEASES_USERNAME'))
-    if (ext.REPO_UPLOAD_RELEASES_USERNAME == null) {
-        ext.REPO_UPLOAD_RELEASES_USERNAME = 'admin'
-        logger.warn "warning: REPO_UPLOAD_RELEASES_USERNAME not defined. Defaulting to admin"
-    }
-    ext.REPO_UPLOAD_RELEASES_PASSWORD = rootProject.properties.get('REPO_UPLOAD_RELEASES_PASSWORD', System.getenv('REPO_UPLOAD_RELEASES_PASSWORD'))
-    if (ext.REPO_UPLOAD_RELEASES_PASSWORD == null) {
-        ext.REPO_UPLOAD_RELEASES_PASSWORD = 'admin123'
-        logger.warn "warning: REPO_UPLOAD_RELEASES_PASSWORD not defined. Defaulting to default admin password"
     }
 
 }

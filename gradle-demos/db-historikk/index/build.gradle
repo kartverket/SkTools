@@ -57,7 +57,7 @@ boolean isProductionDeployment() { false }
 // Simply add version properties to your gradle-user.property file to use this feature.
 def libVersion(String name, String defaultValue) {
     if (!isProductionDeployment()) {
-        gradle.startParameter.systemPropertiesArgs.get('libVersion.' + name, defaultValue) //development mode only
+        gradle.startParameter.systemPropertiesArgs.get('libVersion.' + name) ?: defaultValue //development mode only
     } else {
         defaultValue
     }
@@ -113,7 +113,7 @@ buildscript {
     ext.ORA_DEBUG = Boolean.valueOf("${rootProject.properties.get('ORA_DEBUG', System.getenv('ORA_DEBUG')) ?: 'false'}")
     ext.MAVEN_REPO = rootProject.properties.get('MAVEN_REPO', System.getenv('MAVEN_REPO'))
     if (ext.MAVEN_REPO == null) {
-        ext.MAVEN_REPO = 'http://nexus.statkart.no:8090/nexus/content/groups/public/'
+        ext.MAVEN_REPO = 'https://nexus.statkart.no/repository/public/'
         logger.warn "warning: MAVEN_REPO not defined. Defaulting to ${MAVEN_REPO}"
     }
 

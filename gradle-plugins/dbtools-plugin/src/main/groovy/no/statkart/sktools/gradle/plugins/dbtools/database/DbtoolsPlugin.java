@@ -172,7 +172,7 @@ public class DbtoolsPlugin implements Plugin<Project> {
         for (AbstractDatabaseConvention databaseConvention : dbtoolsConvention.dbToolSets.values()) {
             // Setter default properties
             if (databaseConvention.getProperties() == null) {
-                Map<String, Object> props = new HashMap<String, Object>();
+                Map<String, Object> props = new HashMap<>();
                 for (Map.Entry<String, ?> propertyEntry : project.getProperties().entrySet()) {
                     Object value = propertyEntry.getValue();
                     if (value instanceof CharSequence || value instanceof Number || value instanceof Boolean) {

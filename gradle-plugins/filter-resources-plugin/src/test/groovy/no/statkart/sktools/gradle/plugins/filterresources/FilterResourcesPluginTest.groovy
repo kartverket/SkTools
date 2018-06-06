@@ -301,7 +301,8 @@ class FilterResourcesPluginTest {
         //tester resultat
         projectHelper.assertFileExists("gen/main/resources/file1.txt")
         projectHelper.assertFileExists("gen/test/resources/file2.txt")
-        projectHelper.assertFileExists("build/classes/main/file1.class")
+        projectHelper.assertFileExists("${projectHelper.project.sourceSets.main.output.classesDir}/file1.class")
+        projectHelper.assertFileExists("build/classes/java/main/file1.class")
         projectHelper.assertFileExists("build/resources/test/file2.nofilter")
 
         //tester tilsvarende på SourceSet

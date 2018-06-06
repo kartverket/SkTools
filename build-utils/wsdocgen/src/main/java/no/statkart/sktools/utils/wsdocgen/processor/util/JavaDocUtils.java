@@ -73,7 +73,7 @@ public class JavaDocUtils {
     }
 
     public static Map<String, Map<String, String>> parseJavaDocTags(String docComment) {
-        Map<String, Map<String, String>> tags = new HashMap<String, Map<String, String>>();
+        Map<String, Map<String, String>> tags = new HashMap<>();
         if (docComment != null) {
             StringTokenizer st = new StringTokenizer(docComment, "\n", true);
             StringBuilder sb = new StringBuilder();
@@ -86,7 +86,7 @@ public class JavaDocUtils {
                     String type = tagMatcher.group(1);
                     Map<String, String> typeMap = tags.get(type);
                     if (typeMap == null) {
-                        typeMap = new LinkedHashMap<String, String>();
+                        typeMap = new LinkedHashMap<>();
                         tags.put(type, typeMap);
                     }
 

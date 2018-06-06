@@ -10,7 +10,7 @@ import java.util.HashMap;
  * @since 1.3
  */
 public class PatchtypeKode {
-    private final static HashMap<String, PatchtypeKode> _staticLookup = new HashMap<String, PatchtypeKode>();
+    private final static HashMap<String, PatchtypeKode> _staticLookup = new HashMap<>();
 
     /** @since 1.3 */
     public final static PatchtypeKode ALL = new PatchtypeKode("", "Alle patchtyper"); //samme som schema + always

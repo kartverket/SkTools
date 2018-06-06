@@ -154,7 +154,7 @@ public class WSDocProcessor extends AbstractProcessor {
 
                 String xsltFilePath = processingEnv.getOptions().get("xslt");
                 if (xsltFilePath == null) {
-                    throw new RuntimeException(String.format("No xslt file defined! Configure javac with argument -Axslt=<file>"));
+                    throw new RuntimeException("No xslt file defined! Configure javac with argument -Axslt=<file>");
                 }
 
                 writeToFile(xmlBuilder.getDocument(), outputFile, xsltFilePath);
@@ -169,7 +169,7 @@ public class WSDocProcessor extends AbstractProcessor {
 
         //index fil: SKTOOLS-105
         if (roundEnv.processingOver() && generateIndex) {
-            final String fileName = String.format(indexFileNamePattern);
+            final String fileName = indexFileNamePattern;
             FileObject outputFile = null;
 
             try {
@@ -185,7 +185,7 @@ public class WSDocProcessor extends AbstractProcessor {
     }
 
     static Map<String, Element> findWsiNames(RoundEnvironment roundEnv) {
-        Map<String, Element> wsiByWSBeanName = new HashMap<String, Element>();
+        Map<String, Element> wsiByWSBeanName = new HashMap<>();
         for (Element element : roundEnv.getRootElements()) {
             String simpleName = element.getSimpleName().toString();
             if(simpleName.endsWith("WSI")) {
@@ -233,7 +233,7 @@ public class WSDocProcessor extends AbstractProcessor {
     void transform(Source in, Result out, Source transform) {
 //        TransformerFactory factory = TransformerFactory.newInstance();
 
-        /** {@link http://stackoverflow.com/questions/11314604/how-to-set-saxon-as-the-xslt-processor-in-java one of several ways of declaring wich impl to use}  */
+        /* {@link http://stackoverflow.com/questions/11314604/how-to-set-saxon-as-the-xslt-processor-in-java one of several ways of declaring wich impl to use}  */
         TransformerFactory factory = TransformerFactory.newInstance("net.sf.saxon.TransformerFactoryImpl", this.getClass().getClassLoader());
 
         Transformer transformer;

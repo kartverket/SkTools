@@ -1,11 +1,22 @@
 # SkTools - Felles byggeverktøy i kartverket
 
+# Baseline
+Gradle 4.2 og nyere. 
+
+Java 7 og Java 8.
+
+Weblogic 10.3.5.x og nyere.
+
+
+
+Se [jenkinsfile for detaljert oversikt over testede versjoner](Jenkinsfile)
+
 
 ## Utviklingsmiljø
 
 UTF-8 for all kildekode
 
-JDK 7 - 1.7.0_0_111 (latest)
+JDK 7 - 1.7.0_0_171 (latest)
 
 IntelliJ - kjør gradlew og importer versjonert ipr fil
 
@@ -20,7 +31,9 @@ WEBLOGIC_VERSION=12.1.3
 
 ## Releasetesting 
 For å teste virkemåten til de ulike plugins finnes det noen veldig enkle demo prosjekter. 
-Disse kan kjøres via `gradle install` og `gradle :gradle-demos:runDemos`
+Disse kan kjøres via `gradle publishToMavenLocal :gradle-demos:runDemos` 
+eller kortformen `gradle pTML runDemos`
+
 
 Følgende parametere er aktuelle å teste
 * `WEBLOGIC_VERSION` styrer default veblogic classpath.
@@ -31,7 +44,7 @@ Følgende parametere er aktuelle å teste
 
 ### Jenkins pipeline
 Til prosjektet er det intrumentert _continuous integration and testing_ i Jenkins. 
-Jenkins finner du her [http://jenkins.statkart.no:8001/jenkins](http://jenkins.statkart.no:8001/jenkins/view/SKTOOLS) 
+Jenkins finner du her [http://jenkins.statkart.no:8021/jenkins/job/sktools/](http://jenkins.statkart.no:8021/jenkins/job/sktools/) 
 
 Hver jobb automatiserer bygging, enhetstesting og integrasjonstesting av hver versjon.
 

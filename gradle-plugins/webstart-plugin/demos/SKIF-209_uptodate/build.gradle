@@ -79,6 +79,14 @@ task runDemo(dependsOn: ['clean', ':echo-client:clean']) {
         assertWarEchoClientClasses()
         assertSourceFileEchoClientResource(resourceFile, 1)
         assertWarEchoClientResources('addedResource.txt', 1)
+        assertJnlpFileHarJarRessurser("build/webstart/echo-client.jnlp")
+        assertJnlpFileHarJarRessurser("build/webstart/echo-client-signed.jnlp")
+    }
+
+    //en har nå et up to date prosjekt
+    Assert.that('assemble').describedAs('jnlp fil har jar ressurser etter andre gangs assemble [SKTOOLS-174]').leadsTo(project).withState {
+        assertJnlpFileHarJarRessurser("build/webstart/echo-client.jnlp")
+        assertJnlpFileHarJarRessurser("build/webstart/echo-client-signed.jnlp")
     }
 
 }
@@ -169,6 +177,12 @@ class Assert {
     void assertSourceFileEchoClientResource(File sourceFile, int expectedCount) {
         toConsole "asserting ${sourceFile} exists. Expected: ${expectedCount.asBoolean()}, actual: ${sourceFile.exists()}"
         assert !sourceFile.exists() == !expectedCount //xnor expression
+    }
+
+    void assertJnlpFileHarJarRessurser(String path) {
+        File file = project.file(path)
+        assert file.exists() //forventer at jnlp fil er opprettet
+        assert file.text.contains('<jar href="')
     }
 
 }

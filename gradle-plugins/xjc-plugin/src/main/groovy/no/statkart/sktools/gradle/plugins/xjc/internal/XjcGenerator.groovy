@@ -28,6 +28,7 @@ class XjcGenerator {
 
       getConfig().with { XjcConfig s ->
          def antTask = ant.xjc(destDir: getOutputDirectory(), extension: !s.xjcOptions.isEmpty()) {
+            arg(line: "-no-header") //SKTOOLS-172: fjerner timestamp og JAXB versjon brukt fra generert kildekode
             s.xjcOptions.each { k, v ->
                switch (k) {
                   case GRUNNBOK_DOC:

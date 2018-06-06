@@ -3,6 +3,7 @@ package no.statkart.sktools.gradle.plugins.ideaextensions
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPluginConvention
+import org.gradle.plugins.ide.idea.IdeaPlugin
 
 /**
  * Modifiserer iws og ipr filer for IntelliJ
@@ -28,7 +29,7 @@ class IdeaExtensionsPlugin implements Plugin<Project> {
 
     @Override
     void apply(Project project) {
-        project.apply plugin: 'idea'
+        project.getPlugins().apply(IdeaPlugin.class);
 
         IdeaExtensionsPluginExtension extension = project.extensions.create(EXTENSION_NAME, IdeaExtensionsPluginExtension.class, project)
 
@@ -49,8 +50,8 @@ class IdeaExtensionsPlugin implements Plugin<Project> {
             }
 
         } else { //ikke root
-            if (extension.createAllSourceDirs) {
-                project.tasks.ideaModule.doFirst {
+            project.tasks.ideaModule.doFirst {
+                if (extension.createAllSourceDirs) {
                     //SKIF-178: oppretter kataloger for alle sourceSet
                     it.project.getConvention().getPlugin(JavaPluginConvention.class).sourceSets.each {
                         it.getAllSource().srcDirs.each {

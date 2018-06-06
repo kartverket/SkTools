@@ -121,19 +121,6 @@ class XjcConfig implements Serializable {
         return ConfigureUtil.configure(closure, this);
     }
 
-    XjcConfig config(Closure closure) {
-        logger.warn("WARNING: .config closure in XjcConfig is deprecated and is to be removed!")
-        return configure(closure);
-    }
-
-    //bakoverkompabilitet der koden refererer til .config
-    //dette kan trolig tas vekk ved neste korsvei
-    public XjcConfig getConfig() {
-        logger.warn("WARNING: .config attribute in XjcConfig is deprecated and is to be removed!")
-        return this;
-    }
-
-
     public FileCollection srcDir(Object srcDir) {
         return source.from(srcDir);
     }

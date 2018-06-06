@@ -1,6 +1,7 @@
 package no.statkart.sktools.gradle.plugins.weblogic.wswar;
 
 import no.statkart.sktools.gradle.plugins.weblogic.WeblogicTaskInterface;
+import no.statkart.sktools.gradle.plugins.weblogic.compile.CompileOptions;
 import no.statkart.sktools.gradle.plugins.weblogic.compile.DefaultWeblogicCompileSpec;
 import org.codehaus.groovy.runtime.MethodClosure;
 import org.gradle.api.Project;
@@ -12,7 +13,6 @@ import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.*;
 import org.gradle.api.tasks.compile.AbstractCompile;
-import org.gradle.api.tasks.compile.CompileOptions;
 
 import java.io.File;
 

@@ -1,5 +1,6 @@
 package no.statkart.sktools.gradle.plugins.weblogic.wsclient.internal
 
+import no.statkart.sktools.gradle.plugins.weblogic.compile.CompileOptions
 import no.statkart.sktools.gradle.plugins.weblogic.wsclient.ExceptionConfig
 import no.statkart.sktools.gradle.plugins.weblogic.wsclient.WebServiceConfig
 import org.apache.commons.io.FileUtils
@@ -8,7 +9,6 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
-import org.gradle.api.tasks.compile.CompileOptions
 
 /**
  * Logikk for generering av wsClient

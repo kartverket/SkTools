@@ -181,6 +181,7 @@ class Assert {
             tasks = taskNames
             startParameter.projectProperties = [sktools_versjon: "${project.version}"]
             startParameter.projectProperties << project.gradle.startParameter.projectProperties
+            startParameter.projectProperties.port = project.port //random value
             prep.reverseEach { Closure beforeAsserts -> doFirst { beforeAsserts.setDelegate(this); beforeAsserts.run()}}
             doLast { check.setDelegate(this); check.run() }
             doFirst {
@@ -243,7 +244,7 @@ class Assert {
 
     groovy.sql.Sql sqlSA() {
         def convention = project.convention.plugins['db'].dbToolSets['sa']
-        groovy.sql.Sql.newInstance(convention.url, convention.credentials.username, convention.credentials.password, convention.driver)
+        groovy.sql.Sql.newInstance(url:convention.url, user:convention.credentials.username, password:convention.credentials.password, driverClassName:convention.driver)
     }
 
 

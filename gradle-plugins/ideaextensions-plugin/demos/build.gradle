@@ -9,12 +9,10 @@ allprojects {
 apply from:'rootproject.gradle'
 
 
-assert GradleVersion.current() >= GradleVersion.version('2.4') //lowest gradle version supported
-
 //innkobling av plugin jar filer for gradle byggesystem
 buildscript {
     if (rootProject.ext.has('sktools_versjon')) version = rootProject.ext.get('sktools_versjon')
-    if (version == Project.DEFAULT_VERSION) { version = '1.4-SNAPSHOT'; logger.warn "No -Psktools_versjon= defined. Defaulting to \"${version}\""} //nb - dersom ikke default version er satt riktig så blir kjøring ifra demo-katalog feil..
+    if (version == Project.DEFAULT_VERSION) { version = '1.5-SNAPSHOT'; logger.warn "No -Psktools_versjon= defined. Defaulting to \"${version}\""} //nb - dersom ikke default version er satt riktig så blir kjøring ifra demo-katalog feil..
 
     // Variables to grab from environment + defaults
     ['MAVEN_REPO'].each { val ->
@@ -23,7 +21,7 @@ buildscript {
         }
     }
 
-    project.ext.set('MAVEN_REPO', project.ext.properties.get('MAVEN_REPO', 'http://nexus.statkart.no:8090/nexus/content/groups/public/'))
+    project.ext.set('MAVEN_REPO', project.ext.properties.get('MAVEN_REPO', 'https://nexus.statkart.no/repository/public/'))
 
     repositories {
         mavenLocal()

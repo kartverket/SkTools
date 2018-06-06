@@ -1,10 +1,8 @@
 group = 'no.statkart.sktools.gradle.plugins.dbtools-plugin.demos'
 
-assert GradleVersion.current() >= GradleVersion.version('2.4') //lowest gradle version supported
-
 buildscript {
     if (rootProject.ext.has('sktools_versjon')) version = rootProject.ext.get('sktools_versjon')
-    if (version == Project.DEFAULT_VERSION) { version = '1.4-SNAPSHOT'; logger.warn "No -Psktools_versjon= defined. Defaulting to \"${version}\""} //nb - dersom ikke default version er satt riktig så blir kjøring ifra demo-katalog feil..
+    if (version == Project.DEFAULT_VERSION) { version = '1.5-SNAPSHOT'; logger.warn "No -Psktools_versjon= defined. Defaulting to \"${version}\""} //nb - dersom ikke default version er satt riktig så blir kjøring ifra demo-katalog feil..
 
     // Variables to grab from environment + defaults
     ['MAVEN_REPO'].each { val ->
@@ -12,7 +10,7 @@ buildscript {
             rootProject.ext.set(val, System.getenv(val))
         }
     }
-    project.ext.set('MAVEN_REPO', project.ext.properties.get('MAVEN_REPO', 'http://nexus.statkart.no:8090/nexus/content/groups/public/'))
+    project.ext.set('MAVEN_REPO', project.ext.properties.get('MAVEN_REPO', 'https://nexus.statkart.no/repository/public/'))
 
     repositories {
         mavenLocal()
@@ -48,17 +46,20 @@ allprojects {
 
 }
 
-ext.port = gradle.startParameter.projectProperties.get('port', randomHsqldbPort())
+ext.port = gradle.startParameter.projectProperties.get('port') ?: randomHsqldbPort()
 static int randomHsqldbPort() {
     int port = 9001 /*default port for hsqldb*/
 
-    //velger en random port for parallel kjøring i jenkins
-    //jenkins freestyle project og pipeline jobber setter env EXECUTOR_NUMBER
-    def executorNumber = System.getenv('EXECUTOR_NUMBER') ?: 0 //unikhet muliggjør parallell testing
-    port += executorNumber as int
+    boolean onJenkins = System.getenv('EXECUTOR_NUMBER');
+    if (onJenkins) {
+        //velger en random port for parallel kjøring i jenkins
+        //jenkins freestyle project og pipeline jobber setter env EXECUTOR_NUMBER
+        def executorNumber = System.getenv('EXECUTOR_NUMBER') ?: 0 //unikhet muliggjør parallell testing
+        port += executorNumber as int
 
-    //for parallelkjøring i jenkins pipelineline settes ingen ytterligere variable, her må man imporovisere.
-    int randomNum = java.util.concurrent.ThreadLocalRandom.current().nextInt(0, 10)
-    port += randomNum
+        //for parallelkjøring i jenkins pipelineline settes ingen ytterligere variable, her improviseres det noe...
+        int randomNum = new java.util.Random().nextInt(10)
+        port += randomNum * 10
+    }
     return port
 }

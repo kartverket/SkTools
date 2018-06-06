@@ -7,7 +7,7 @@ apply plugin: 'sktools-weblogic-wsclient-plugin'
  * Det demonstreres også eksempel implementasjon av 'gen' target
  ******************************************************************************************************************** */
 
-
+//todo: mangler en god måte å sette riktig encoding på. Bruker utf-8 i demoprosjektet her!
 tasks.withType(AbstractCompile) { options.encoding = 'utf-8' }
 
 weblogicWsClient {

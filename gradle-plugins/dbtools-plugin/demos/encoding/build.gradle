@@ -45,7 +45,7 @@ task runDemo() {
 
         logger.quiet('Verifiserer data med riktig tegnsett i databasen...')
         def convention = project.convention.plugins.db.dbToolSets['UTF8']
-        def sql = groovy.sql.Sql.newInstance(convention.url, convention.credentials.username, convention.credentials.password, convention.driver)
+        def sql = groovy.sql.Sql.newInstance(url:convention.url, user:convention.credentials.username, password:convention.credentials.password, driverClassName:convention.driver)
         sql.eachRow("select ID, TEXT from TABLE1") {
             logger.quiet("..asserting row {}, text={}", it[0], it[1])
 //            logger.quiet it[1].bytes.collect {"$it"}
@@ -86,6 +86,7 @@ class Assert {
             tasks = taskNames
             startParameter.projectProperties = [sktools_versjon: "${project.version}"]
             startParameter.projectProperties << project.gradle.startParameter.projectProperties
+            startParameter.projectProperties.port = project.port //random value
             prep.reverseEach { Closure beforeAsserts -> doFirst { beforeAsserts.setDelegate(this); beforeAsserts.run()}}
             doLast { check.setDelegate(this); check.run() }
             doFirst {

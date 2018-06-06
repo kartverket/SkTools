@@ -2,12 +2,14 @@ package no.statkart.sktools.gradle.plugins.wsdocgen;
 
 import no.statkart.sktools.gradle.plugins.wsdocgen.internal.WsDocGroupContainer;
 import no.statkart.sktools.gradle.plugins.wsdocgen.internal.WsDocSourceSetExtension;
+import no.statkart.sktools.utils.wsdocgen.processor.WSDocProcessor;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.initialization.dsl.ScriptHandler;
 import org.gradle.api.internal.HasConvention;
 import org.gradle.api.internal.artifacts.publish.ArchivePublishArtifact;
@@ -20,6 +22,7 @@ import org.gradle.api.tasks.bundling.Zip;
 import org.gradle.api.tasks.compile.AbstractCompile;
 import org.gradle.util.GUtil;
 
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.Callable;
@@ -145,26 +148,23 @@ public class WsDocGenPlugin implements Plugin<ProjectInternal> {
      */
     private static void configureDocgenDependencies(final ProjectInternal project) {
         final ScriptHandler buildscript = project.getRootProject().getBuildscript(); //root projects repo configuration
-        final Configuration wsDocGenConfiguration = buildscript.getConfigurations().detachedConfiguration(wsDocgenDependency(project));
+        final Configuration wsDocGenConfiguration = buildscript.getConfigurations().detachedConfiguration(wsDocGenDependency(project));
 
         project.getTasks().withType(WsDocCompileTask.class, new Action<WsDocCompileTask>() {
             @Override
             public void execute(WsDocCompileTask task) {
-                task.setProcessorClasspath(wsDocGenConfiguration);
+                task.getOptions().setAnnotationProcessorPath(wsDocGenConfiguration);
+
+                if (runningInIDEATestEnvironment()) {//hacker dette til for testing
+                    ConfigurableFileCollection fileCollection = project.files((Object[]) ((URLClassLoader) WSDocProcessor.class.getClassLoader()).getURLs());
+                    task.getOptions().setAnnotationProcessorPath(fileCollection);
+                }
             }
         });
     }
 
-    static Dependency[] wsDocgenDependency(ProjectInternal project) {
-        ArrayList<Dependency> dependencies = new ArrayList<Dependency>(1);
-        if (!runningInIDEATestEnvironment()) {
-            dependencies.add(wsDocGenDependency(project));
-        }
-        return dependencies.toArray(new Dependency[dependencies.size()]);
-    }
-
-    private static Dependency wsDocGenDependency(ProjectInternal project) {
-        HashMap<String, String> props = new HashMap<String, String>();
+    static Dependency wsDocGenDependency(ProjectInternal project) {
+        HashMap<String, String> props = new HashMap<>();
         props.put("group", "no.statkart.sktools");
         props.put("name", "wsdocgen");
         props.put("version", WsDocGenPlugin.class.getPackage().getImplementationVersion()); //manifest informasjon satt ifra byggesystem

@@ -3,10 +3,12 @@ package no.statkart.sktools.gradle.plugins.webstart;
 import groovy.lang.Closure;
 import no.statkart.sktools.gradle.plugins.webstart.util.FileHashIdent;
 import org.apache.commons.io.FileUtils;
+import org.gradle.api.Action;
 import org.gradle.api.GradleException;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.internal.ConventionTask;
+import org.gradle.api.invocation.Gradle;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
@@ -49,11 +51,11 @@ public class JarSigner extends ConventionTask {
     private String alias;
     private String digestAlgorithm;
     /**
-     * Keystore type. Standard verdi avhenger av JDK og security properties. 
+     * Keystore type. Standard verdi avhenger av JDK og security properties.
      * <br> For JDK 8 er det {@literal JKS med PKCS12 i kompatibilitetsmodus} som er standard.
-     * <br> For JDK 7 er det {@literal JKS} som er standard. 
+     * <br> For JDK 7 er det {@literal JKS} som er standard.
      * <p>Standard verdi fra jdk fås fra {@link java.security.KeyStore#getDefaultType()}.
-     * Denne property verdien leses ifra {@literal JAVA_HOME/jre/lib/security/java.security} filen på windows. 
+     * Denne property verdien leses ifra {@literal JAVA_HOME/jre/lib/security/java.security} filen på windows.
      * <ul>
      * <li>{@literal keystore.type=jks} bestemmer standard format til keytore dersom ikke definert</li>
      * <li>{@literal keystore.type.compat=true} When set to 'true', the JKS keystore type supports loading keystore files in either JKS or PKCS12 format.</li>
@@ -61,7 +63,7 @@ public class JarSigner extends ConventionTask {
      */
     private String storetype;
 
-    private final Map<String, String> manifestAttributes = new LinkedHashMap<String, String>();
+    private final Map<String, String> manifestAttributes = new LinkedHashMap<>();
 
     private final ConfigurableFileCollection jarFilesToSign = getProject().files();
     private final ConfigurableFileCollection signedJarFiles = getProject().files();
@@ -76,6 +78,16 @@ public class JarSigner extends ConventionTask {
         }
 
         return signedArtifactsForCertificates;
+    }
+
+    public JarSigner() {
+        getProject().getGradle().projectsEvaluated(new Action<Gradle>() {
+            @Override
+            public void execute(Gradle gradle) {
+                //sen binding for å unngå deadlock i gradle pga validering av input/output felter på task
+                signedJarFiles.from(collectSignedJars(getJarFilesToSign().getFiles()));
+            }
+        });
     }
 
     /**
@@ -94,7 +106,7 @@ public class JarSigner extends ConventionTask {
 
             Map<String, FileHashIdent> signedArtifacts = getSignedArtifactsForCertificates().get(certificateFileIdent);
             if (signedArtifacts == null) {
-                signedArtifacts = new HashMap<String, FileHashIdent>();
+                signedArtifacts = new HashMap<>();
                 getSignedArtifactsForCertificates().put(certificateFileIdent, signedArtifacts);
             }
 
@@ -102,13 +114,10 @@ public class JarSigner extends ConventionTask {
             if (!getManifestAttributes().isEmpty()) {
                 manifestAddendum = new File(getTemporaryDir(), "addendum.mf");
 
-                PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(manifestAddendum, false), "UTF-8"));
-                try {
+                try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(manifestAddendum, false), "UTF-8"))) {
                     for (Map.Entry<String, String> entry : getManifestAttributes().entrySet()) {
                         writer.format("%s: %s\n", entry.getKey(), entry.getValue());
                     }
-                } finally {
-                    writer.close();
                 }
             }
 
@@ -158,12 +167,13 @@ public class JarSigner extends ConventionTask {
                     cachedFileIdent.writeChecksumToFile();
                     signedArtifacts.put(unsignedJar.getName(), cachedFileIdent);
                 }
+
+                //legger til signert fil i eksekvering av task - blir også lagt til ved beregning av output-filer
+                signedJarFiles.from(signedJarFile);
             }
         } else {
             getLogger().warn("Signing of resources disabled - no certificate!");
         }
-
-        signedJarFiles.from(collectSignedJars());
     }
 
     private void signJar(final File jarFile, final File manifestAddendum) {
@@ -218,7 +228,8 @@ public class JarSigner extends ConventionTask {
     }
 
     @InputFile
-    @Optional
+    @Optional //signeringssteg er optional, derfor optional her
+    @SkipWhenEmpty
     public File getCertificateFile() {
         return certificateFile;
     }
@@ -239,7 +250,7 @@ public class JarSigner extends ConventionTask {
     }
 
     @Input
-    @Optional
+    @Optional //signeringssteg er optional, derfor optional her
     public String getPassword() {
         return password;
     }
@@ -259,7 +270,7 @@ public class JarSigner extends ConventionTask {
     }
 
     @Input
-    @Optional
+    @Optional //signeringssteg er optional, derfor optional her
     public String getAlias() {
         return alias;
     }
@@ -297,7 +308,7 @@ public class JarSigner extends ConventionTask {
     }
 
     void initCache() throws IOException {
-        signedArtifactsForCertificates = new HashMap<FileHashIdent, Map<String, FileHashIdent>>();
+        signedArtifactsForCertificates = new HashMap<>();
         getLogger().info("Initializing cache...");
 
         if (getCacheDir().exists()) {
@@ -309,7 +320,7 @@ public class JarSigner extends ConventionTask {
 
                     Map<String, FileHashIdent> signedArtifacts = signedArtifactsForCertificates.get(certFileIdent);
                     if (signedArtifacts == null) {
-                        signedArtifacts = new HashMap<String, FileHashIdent>();
+                        signedArtifacts = new HashMap<>();
                         signedArtifactsForCertificates.put(certFileIdent, signedArtifacts);
                     }
 
@@ -341,15 +352,17 @@ public class JarSigner extends ConventionTask {
         jarFilesToSign.from(jarFiles);
     }
 
+    /**
+     * Dersom signering returneres ferdig signerte filer ifra cache-katalog. <br>
+     * Dersom signering ikke er satt opp returneres {@link #jarFilesToSign}
+     */
     @OutputFiles
     public FileCollection getJarFiles() {
         return signedJarFiles;
     }
 
-    private Collection<File> collectSignedJars() {
+    private Collection<File> collectSignedJars(Collection<File> unsignedFiles) {
         try {
-            Set<File> unsignedFiles = getProject().files(jarFilesToSign).getFiles();
-
             if (getCertificateFile() == null) {
                 // Kan ikke signere noe uten sertifikat
                 return unsignedFiles;
@@ -358,7 +371,7 @@ public class JarSigner extends ConventionTask {
             FileHashIdent certificateFileIdent = new FileHashIdent(getCertificateFile(), FileHashIdent.createChecksum(getCertificateFile(), getAlias()));
             File certDirectory = new File(getCacheDir(), certificateFileIdent.hash());
 
-            List<File> signedFiles = new ArrayList<File>(unsignedFiles.size());
+            List<File> signedFiles = new ArrayList<>(unsignedFiles.size());
             for (File unsignedFile : unsignedFiles) {
                 File signedFile = new File(certDirectory, unsignedFile.getName());
                 signedFiles.add(signedFile);

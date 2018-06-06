@@ -27,7 +27,7 @@ public class CompareUtil {
           try {
              int int1 = Integer.parseInt(s1[i]);
              int int2 = Integer.parseInt(s2[i]);
-             res = (int1 == int2) ? 0 : (int1 < int2) ? -1 : 1;
+             res = Integer.compare(int1, int2);
           } catch( NumberFormatException e ) {
               res = s1[i].compareTo(s2[i]);  //sammenligner leksografisk dersom numerisk sammenligning feiler
           }

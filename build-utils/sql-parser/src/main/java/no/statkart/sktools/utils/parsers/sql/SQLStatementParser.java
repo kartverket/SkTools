@@ -38,7 +38,7 @@ public class SQLStatementParser {
             throw new RuntimeException("markSupported a requisite for this parser!");
         }
 
-        ArrayList<Expression> expressions = new ArrayList<Expression>();
+        ArrayList<Expression> expressions = new ArrayList<>();
         DefaultSQLParserVisitorFactory visitorFactory = new DefaultSQLParserVisitorFactory(reader);
 
         boolean eof = false;
@@ -120,7 +120,7 @@ public class SQLStatementParser {
      * Parser ut typer kun av subtype {@link Statement}
      */
     public static List<? extends Statement> parseStatements(String sqlString) throws IOException {
-        List<Statement> expressions = new ArrayList<Statement>();
+        List<Statement> expressions = new ArrayList<>();
         for (Expression expression : parseExpressions(sqlString)) {
             if (expression instanceof Statement) {
                 expressions.add((Statement) expression);
@@ -133,7 +133,7 @@ public class SQLStatementParser {
      * Parser ut typer kun av subtype {@link Statement}
      */
     public static List<? extends Statement> parseStatements(File file, String charsetName) throws IOException {
-        List<Statement> expressions = new ArrayList<Statement>();
+        List<Statement> expressions = new ArrayList<>();
         for (Expression expression : parseExpressions(file, charsetName)) {
             if (expression instanceof Statement) {
                 expressions.add((Statement) expression);

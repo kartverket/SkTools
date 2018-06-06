@@ -1,6 +1,5 @@
 package no.statkart.sktools.gradle.plugins.wsdocgen;
 
-import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
@@ -22,7 +21,6 @@ public class WsDocCompileTask extends JavaCompile {
    protected static final Logger logger = Logging.getLogger(WsDocCompileTask.class);
 
    private WsDocGroup docGroup;
-   private FileCollection processorClasspath;
 
    /**
     * Gradle 1.2/2.0 - no arg constructor or @Inject annotated constructor
@@ -40,6 +38,10 @@ public class WsDocCompileTask extends JavaCompile {
       setDocGroup(docGroup);
       initCompilerArgs(getOptions().getCompilerArgs());
       initEncoding();
+
+      if (getDocGroup().includes != null) {
+         setIncludes(getDocGroup().includes); //up to date affects getSource()
+      }
    }
 
    private void initEncoding() {
@@ -49,18 +51,12 @@ public class WsDocCompileTask extends JavaCompile {
       }
    }
 
-   void initCompilerArgs(final List<String> compilerArgs) {
+   private void initCompilerArgs(final List<String> compilerArgs) {
       compilerArgs.add("-proc:only"); //only annotation processing is done, without any subsequent compilation.
       compilerArgs.add("-processor");
       compilerArgs.add("no.statkart.sktools.utils.wsdocgen.processor.WSDocProcessor"); //Names of the annotation processors to run. This bypasses the default discovery process.
 
-      final FileCollection processorClasspath = getProcessorClasspath();
-      if (!processorClasspath.isEmpty()) {
-         compilerArgs.add("-processorpath");
-         compilerArgs.add(processorClasspath.getAsFileTree().getAsPath());
-      } else {
-         assert true; //ok under testing
-      }
+      //-processorpath settes via CompileOptions#annotationProcessorPath (Gradle 3.4)
 
       final File xsl = getServiceXsltFile();
       if (!xsl.exists()) {
@@ -76,19 +72,8 @@ public class WsDocCompileTask extends JavaCompile {
       if (getIndexXsltFile() != null) {
          compilerArgs.add("-AindexXslt=" + getIndexXsltFile().getPath()); //SKTOOLS-105
       }
-
-      if (getDocGroup().includes != null) {
-         include(getDocGroup().includes); //up to date affects getSource()
-      }
    }
 
-   public FileCollection getProcessorClasspath() {
-      return processorClasspath;
-   }
-
-   public void setProcessorClasspath(FileCollection processorClasspath) {
-      this.processorClasspath = processorClasspath;
-   }
 
    @TaskAction
    @Override

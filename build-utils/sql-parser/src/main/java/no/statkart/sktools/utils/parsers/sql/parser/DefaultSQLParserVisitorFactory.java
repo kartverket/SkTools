@@ -21,7 +21,7 @@ public class DefaultSQLParserVisitorFactory extends AbstractParserVisitorFactory
     /**
      * Factory chain der første element er siste ledd i hht chain of responsibility pattern.
      */
-    private ArrayList<AbstractParserVisitorFactory> factories = new ArrayList<AbstractParserVisitorFactory>();
+    private ArrayList<AbstractParserVisitorFactory> factories = new ArrayList<>();
 
     public DefaultSQLParserVisitorFactory(LineNumberReader reader) {
         super(reader);

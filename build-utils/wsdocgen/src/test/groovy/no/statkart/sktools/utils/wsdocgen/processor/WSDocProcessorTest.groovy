@@ -59,7 +59,7 @@ class WSDocProcessorTest {
                 include('**/*WSBean.java')
 
                 classpath = configurations.compile
-
+                options.annotationProcessorPath = files(((URLClassLoader)WSDocProcessor.class.getClassLoader()).getURLs()) //hacker dette til for test
             }
         } //end configure
 
@@ -174,6 +174,7 @@ class WSDocProcessorTest {
                 include('**/*WSBean.java')
 
                 classpath = configurations.compile
+                options.annotationProcessorPath = files(((URLClassLoader)WSDocProcessor.class.getClassLoader()).getURLs()) //hacker dette til for test
 
             }
         } //end configure
@@ -269,6 +270,7 @@ class WSDocProcessorTest {
                 include('**/*WSBean.java')
 
                 classpath = configurations.compile
+                options.annotationProcessorPath = files(((URLClassLoader)WSDocProcessor.class.getClassLoader()).getURLs()) //hacker dette til for test
 
             }
         } //end configure
@@ -407,6 +409,7 @@ class WSDocProcessorTest {
                 include('**/*WSBean.java')
 
                 classpath = configurations.compile
+                options.annotationProcessorPath = files(((URLClassLoader)WSDocProcessor.class.getClassLoader()).getURLs()) //hacker dette til for test
 
             }
         } //end configure
@@ -570,6 +573,7 @@ class WSDocProcessorTest {
                 include('**/*WSBean.java')
 
                 classpath = configurations.compile
+                options.annotationProcessorPath = files(((URLClassLoader)WSDocProcessor.class.getClassLoader()).getURLs()) //hacker dette til for test
 
             }
         } //end configure
@@ -721,6 +725,7 @@ class WSDocProcessorTest {
                 include('**/*WSBean.java')
 
                 classpath = configurations.compile
+                options.annotationProcessorPath = files(((URLClassLoader)WSDocProcessor.class.getClassLoader()).getURLs()) //hacker dette til for test
 
             }
         } //end configure
@@ -905,6 +910,7 @@ class WSDocProcessorTest {
                 include('**/*WSBean.java')
 
                 classpath = configurations.compile
+                options.annotationProcessorPath = files(((URLClassLoader)WSDocProcessor.class.getClassLoader()).getURLs()) //hacker dette til for test
 
             }
         } //end configure
@@ -1074,6 +1080,7 @@ class WSDocProcessorTest {
                 include('**/*WSBean.java')
 
                 classpath = configurations.compile
+                options.annotationProcessorPath = files(((URLClassLoader)WSDocProcessor.class.getClassLoader()).getURLs()) //hacker dette til for test
 
             }
         } //end configure
@@ -1220,6 +1227,7 @@ class WSDocProcessorTest {
                 include('**/*WSBean.java')
 
                 classpath = configurations.compile
+                options.annotationProcessorPath = files(((URLClassLoader)WSDocProcessor.class.getClassLoader()).getURLs()) //hacker dette til for test
 
             }
         } //end configure
@@ -1421,7 +1429,7 @@ class WSDocProcessorTest {
                 include('**/*WSBean.java')
 
                 classpath = configurations.compile
-
+                options.annotationProcessorPath = files(((URLClassLoader)WSDocProcessor.class.getClassLoader()).getURLs()) //hacker dette til for test
             }
         } //end configure
 
@@ -1605,7 +1613,7 @@ class WSDocProcessorTest {
                 include('**/*WSBean.java')
 
                 classpath = configurations.compile
-
+                options.annotationProcessorPath = files(((URLClassLoader)WSDocProcessor.class.getClassLoader()).getURLs()) //hacker dette til for test
             }
         } //end configure
 

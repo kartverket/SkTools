@@ -13,7 +13,7 @@ import org.gradle.api.Project
  * @author Tor Egil R. Strand
  */
 class IdeaExtensionsPluginExtension {
-    final Project project
+    final transient Project project
 
     IdeaExtensionsPluginExtension(Project project) {
         this.project = project

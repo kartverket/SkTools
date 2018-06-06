@@ -10,11 +10,7 @@ task runDemos(description: 'Eksekverer alle demoer i underprosjekter via forket 
             WEBLOGIC_VERSION: WEBLOGIC_VERSION,
     ]
 
-    if (GradleVersion.current() >= GradleVersion.version('2.10')) {
-        startParameter.showStacktrace = ShowStacktrace.ALWAYS_FULL
-    } else {
-        startParameter.showStacktrace = org.gradle.logging.ShowStacktrace.ALWAYS_FULL //endret pakkenavn i gradle 2.10
-    }
+    startParameter.showStacktrace = ShowStacktrace.ALWAYS
 
 
     doFirst {

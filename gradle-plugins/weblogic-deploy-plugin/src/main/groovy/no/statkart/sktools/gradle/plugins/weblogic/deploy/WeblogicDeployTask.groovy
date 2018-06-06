@@ -5,8 +5,7 @@ import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.TaskAction
+import org.gradle.process.JavaExecSpec
 
 /**
  * Task for deploy
@@ -15,7 +14,7 @@ import org.gradle.api.tasks.TaskAction
  * @author Leif Lislegård
  */
 class WeblogicDeployTask extends AbstractWeblogicDeployTask {
-    protected static final Logger logger = Logging.getLogger(WeblogicDeployTask.class);
+    protected static final Logger logger = Logging.getLogger(WeblogicDeployTask.class)
 
     @InputFiles
     Object file
@@ -26,50 +25,27 @@ class WeblogicDeployTask extends AbstractWeblogicDeployTask {
     @Input
     boolean library = false
 
-    @Input
-    @Optional
-    String appversion = null
-
-    @TaskAction
-    void deploy() {
+    @Override
+    protected void buildCommandLine(JavaExecSpec execSpec) {
         logger.quiet("Deployment av ${getDeploymentName()} til Weblogic paa ${getUrl()}")
 
         checkSourceExists()
 
+        execSpec.args('-deploy')
 
-        Map args = [
-                action: 'deploy',
-                upload: getUpload(),
-
-                name: getDeploymentName(),
-                source: project.files(getFile()).singleFile,
-                targets: getTargets(),
-
-                adminurl: getUrl(),
-                user: getUsername(),
-                password: getPassword(),
-
-                failonerror: getFailOnError(),
-                verbose: getVerbose(),
-        ]
-
-        if (library) {
-            args.library = true
+        if (isUpload()) {
+            execSpec.args('-upload')
         }
 
-        if (getAppversion() != null) {
-            args.appversion = getAppversion()
-        }
+        execSpec.args('-source', project.files(getFile()).singleFile)
 
-        if (getTimeout() != null) {
-            args.timeout = getTimeout()
+        if (isLibrary()) {
+            execSpec.args('-library')
         }
-
-        ant.wldeploy(args)
     }
 
     public Logger getLogger() {
-        return logger;
+        return logger
     }
 
     void checkSourceExists() {
@@ -78,13 +54,13 @@ class WeblogicDeployTask extends AbstractWeblogicDeployTask {
             logger.error ''
             logger.error 'ERROR: Ingen fil aa deploye. \nHar du konfigurert opp denne tasken riktigt?'
             logger.error ''
-            throw new RuntimeException("Source for task $name er ikke konfigurert!");
+            throw new RuntimeException("Source for task $name er ikke konfigurert!")
         }
         if (!fileCollection.singleFile.exists()) {
             logger.error ''
             logger.error 'ERROR: Ingen fil aa deploye. \nHar du husket assemble?'
             logger.error ''
-            throw new FileNotFoundException(String.valueOf(getFile()));
+            throw new FileNotFoundException(String.valueOf(getFile()))
         }
     }
 }

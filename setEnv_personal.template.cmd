@@ -6,11 +6,12 @@
 : *******************************************************************************************************************
 : * Gradle & Project Setup
 : *******************************************************************************************************************
-set JAVA_HOME=C:\bin\jdk\jdk1.6.0_45_x86
-set GRADLE_HOME=C:\bin\gradle\gradle-2.1
+set JAVA_HOME=C:\bin\jdk\jdk1.8.0_162
+set JAVA_HOME=C:\bin\jdk\jdk1.7.0_171
+set GRADLE_HOME=C:\bin\gradle\gradle-4.2.1
 
-@rem bestemmer versjon av prosjektet [optional - må benyttes på ikke numeriske kodebrancher ala trunk]
-@rem set ORG_GRADLE_PROJECT_sktools_versjon=1.4-SNAPSHOT
+@rem bestemmer versjon av prosjektet [optional - mï¿½ benyttes pï¿½ ikke numeriske kodebrancher ala trunk]
+@rem set ORG_GRADLE_PROJECT_sktools_versjon=1.5-SNAPSHOT
 
 
 : *******************************************************************************************************************
@@ -36,12 +37,10 @@ set WEBLOGIC_VERSION=12.1.3
 : * Maven Repo & Nexus Setup  (optional)
 : *******************************************************************************************************************
 : Definer lokal nexus repo for offline utvikling (optional)
-@rem set MAVEN_REPO=http://localhost:8081/nexus/content/repositories/statkart/
+@rem set MAVEN_REPO=http://localhost:8081/repository/public/
 
 : Definerer repo for deploying av bygget applikasjon (nexus)
-@rem set REPO_UPLOAD_RELEASES=http://admin:admin123@nexus.statkart.no:8090/nexus/content/repositories/releases/
-@rem set ORG_GRADLE_PROJECT_REPO_UPLOAD_RELEASES_USERNAME=admin
-@rem set ORG_GRADLE_PROJECT_REPO_UPLOAD_RELEASES_PASSWORD=admin123
+@rem set MAVEN_PUBLISH=http://admin:admin123@nexus.statkart.no:8090/nexus/content/repositories/releases/
 
 
 : *******************************************************************************************************************
