@@ -118,7 +118,7 @@ pipeline { //declarative pipeline syntax
 
         stage('Publish') {
             steps {
-                bat "gradle uploadArchives ${gradleOptions(params, env)}"
+                bat "gradle publish ${gradleOptions(params, env)} --init-script config/gradle/scripts/mavenPublish.gradle"
             }
         }
     }
