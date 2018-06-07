@@ -366,28 +366,3 @@ rootProject.idea.workspace.iws.withXml { provider ->
 
 }
 
-buildscript {
-
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // Miljøvariable for konfigurasjon av byggemiljø
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    [
-            'WEBLOGIC_HOME',
-            'WEBLOGIC_VERSION',
-    ].each { key ->
-        if (!project.hasProperty(key) && System.getenv(key) != null) {
-            project.ext.setProperty(key, System.getenv(key))
-        }
-    }
-
-    if (!project.hasProperty('sktools_versjon')) {
-        project.ext.setProperty('sktools_versjon', Project.DEFAULT_VERSION)
-    }
-
-    ext.MAVEN_REPO = rootProject.properties.get('MAVEN_REPO', System.getenv('MAVEN_REPO'))
-    if (ext.MAVEN_REPO == null) {
-        ext.MAVEN_REPO = 'https://nexus.statkart.no/repository/public/'
-        logger.warn "warning: MAVEN_REPO not defined. Defaulting to ${MAVEN_REPO}"
-    }
-
-}
