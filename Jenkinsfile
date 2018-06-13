@@ -69,8 +69,11 @@ pipeline { //declarative pipeline syntax
                     steps {
                         bat "gradle --version"
                         bat "gradle testGradle4.2 -DignoreFailures=true ${gradleOptions(this)}"
-                        junit '**/test-results/testGradle4.2/*.xml'
-                        //                            step([$class: 'Publisher', reportFilenamePattern: '**/build/reports/tests/testng-results.xml'])
+                    }
+                    post {
+                        always {
+                            junit '**/test-results/testGradle4.2/*.xml'
+                        }
                     }
                 }
                 stage('Test gradle latest') {
@@ -80,8 +83,11 @@ pipeline { //declarative pipeline syntax
                     steps {
                         bat "gradle --version"
                         bat "gradle testGradle4.8 -DignoreFailures=true ${gradleOptions(this)} -DbuildDirName=build/gradle4.8" //buildDirName for å kjøre flere bygg med forskjellige gradle versjoner
-                        junit '**/test-results/testGradle4.8/*.xml'
-                        //                            step([$class: 'Publisher', reportFilenamePattern: '**/build/gradle4.8/reports/tests/testng-results.xml'])
+                    }
+                    post {
+                        always {
+                            junit '**/test-results/testGradle4.8/*.xml'
+                        }
                     }
                 }
             }
