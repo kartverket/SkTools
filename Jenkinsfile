@@ -82,11 +82,11 @@ pipeline { //declarative pipeline syntax
                     }
                     steps {
                         bat "gradle --version"
-                        bat "gradle testGradle4.8 -DignoreFailures=true ${gradleOptions(this)} -DbuildDirName=build/gradle4.8" //buildDirName for å kjøre flere bygg med forskjellige gradle versjoner
+                        bat "gradle testGradle4.8.1 -DignoreFailures=true ${gradleOptions(this)} -DbuildDirName=build/gradle4.8.1" //buildDirName for å kjøre flere bygg med forskjellige gradle versjoner
                     }
                     post {
                         always {
-                            junit '**/test-results/testGradle4.8/*.xml'
+                            junit '**/test-results/testGradle4.8.1/*.xml'
                         }
                     }
                 }
@@ -115,7 +115,7 @@ pipeline { //declarative pipeline syntax
                         sleep 5 //sleep time in seconds - helps seed randomness in choosing port# in database demos
                         withEnv(['WEBLOGIC_VERSION=12.1.3.0', "WEBLOGIC_HOME=${WEBLOGIC_HOME('12.1.3.0', env)}"]) {
                             bat "gradle --version"
-                            bat "gradle runDemos ${gradleOptions(this)} -DbuildDirName=gradle4.8"
+                            bat "gradle runDemos ${gradleOptions(this)} -DbuildDirName=gradle4.8.1"
                         }
                     }
                 }
