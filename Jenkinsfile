@@ -78,7 +78,7 @@ pipeline { //declarative pipeline syntax
                 }
                 stage('Test gradle latest') {
                     tools {
-                        gradle 'Gradle 4.8' //latest og greatest (kan også være neste major versjon)
+                        gradle 'Gradle 4.8.1' //latest og greatest (kan også være neste major versjon)
                     }
                     steps {
                         bat "gradle --version"
@@ -108,7 +108,7 @@ pipeline { //declarative pipeline syntax
                 }
                 stage('Integration Test Latest') {
                     tools {
-                        gradle 'Gradle 4.8' //latest og greatest (kan også være neste major versjon)
+                        gradle 'Gradle 4.8.1' //latest og greatest (kan også være neste major versjon)
                         jdk 'Java 8 Latest' //weblogic krever denne major versjonen av java
                     }
                     steps {
