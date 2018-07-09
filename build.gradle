@@ -1,3 +1,4 @@
+import org.gradle.util.GradleVersion
 assert GradleVersion.current() >= GradleVersion.version('4.2') //lowest gradle version supported
 
 allprojects {

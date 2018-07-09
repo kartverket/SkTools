@@ -1,3 +1,5 @@
+import org.gradle.util.GradleVersion
+
 assert GradleVersion.version('2.1').compareTo(GradleVersion.current()) <= 0 //lowest gradle version supported
 
 description = "Performance for ulike index valg"
