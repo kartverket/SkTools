@@ -45,8 +45,8 @@ public class WsImportTask extends SourceTask {
     @TaskAction
     protected void genServices() {
         ant.taskdef(name: 'wsimport', classname: 'com.sun.tools.ws.ant.WsImport', classpath: getJaxwsClasspath().getAsPath())
-        ant.delete(dir: getDestinationDir(), quiet: 'true')
-        ant.mkdir(dir: getDestinationDir())
+        getProject().delete(getDestinationDir())
+        getProject().mkdir(getDestinationDir())
 
         def wsdls = getSource().matching { include '**/*.wsdl' }
 
