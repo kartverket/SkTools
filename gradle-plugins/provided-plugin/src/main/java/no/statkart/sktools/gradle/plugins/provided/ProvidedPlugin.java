@@ -22,40 +22,23 @@ public class ProvidedPlugin implements Plugin<Project> {
 
     @Override
     public void apply(final Project project) {
+        project.getPlugins().apply(JavaPlugin.class);
+
         final Configuration providedConfiguration = project.getConfigurations().create(PROVIDED_CONFIGURATION_NAME);
         providedConfiguration.setVisible(true);
         providedConfiguration.setTransitive(true);
         providedConfiguration.setDescription("Configuration for dependencies needed when compiling and when running locally, but not when deploying to JEE container.");
 
+        project.getConfigurations().getByName(JavaPlugin.COMPILE_ONLY_CONFIGURATION_NAME).extendsFrom(providedConfiguration);
+        // Egentlig skulle også testImplementation vært her, men det kommer via singlevm, så det er overflødig
+
         final Configuration singlevmConfiguration = project.getConfigurations().create(SINGLEVM_CONFIGURATION_NAME);
         singlevmConfiguration.setVisible(true);
         singlevmConfiguration.setTransitive(true);
         singlevmConfiguration.setDescription("Configuration for dependencies needed when when running in Single-VM, but not when running against a server, or that are deployed to JEE container by other means.");
+        singlevmConfiguration.extendsFrom(providedConfiguration);
 
-        // Koble opp for main og test source set fra Java Plugin
-        project.getPlugins().withType(JavaPlugin.class).all(new Action<JavaPlugin>() {
-            @Override
-            public void execute(JavaPlugin javaPlugin) {
-                JavaPluginConvention javaPluginConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
-
-                SourceSet mainSourceSet = javaPluginConvention.getSourceSets().getByName(SourceSet.MAIN_SOURCE_SET_NAME);
-                mainSourceSet.setCompileClasspath(mainSourceSet.getCompileClasspath().plus(providedConfiguration));
-                mainSourceSet.setRuntimeClasspath(mainSourceSet.getRuntimeClasspath().plus(singlevmConfiguration));
-
-                SourceSet testSourceSet = javaPluginConvention.getSourceSets().getByName(SourceSet.TEST_SOURCE_SET_NAME);
-                testSourceSet.setCompileClasspath(testSourceSet.getCompileClasspath().plus(providedConfiguration));
-                testSourceSet.setRuntimeClasspath(testSourceSet.getRuntimeClasspath().plus(providedConfiguration).plus(singlevmConfiguration));
-
-                // Legg til for Idea Plugin
-                project.getPlugins().withType(IdeaPlugin.class).all(new Action<IdeaPlugin>() {
-                    @Override
-                    public void execute(IdeaPlugin ideaPlugin) {
-                        IdeaModel ideaModel = project.getExtensions().getByType(IdeaModel.class);
-                        ideaModel.getModule().getScopes().get("COMPILE").get("plus").add(providedConfiguration);
-                        ideaModel.getModule().getScopes().get("RUNTIME").get("plus").add(singlevmConfiguration);
-                        }
-                });
-            }
-        });
+        project.getConfigurations().getByName(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME).extendsFrom(singlevmConfiguration);
+        project.getConfigurations().getByName(JavaPlugin.TEST_IMPLEMENTATION_CONFIGURATION_NAME).extendsFrom(singlevmConfiguration);
     }
 }
