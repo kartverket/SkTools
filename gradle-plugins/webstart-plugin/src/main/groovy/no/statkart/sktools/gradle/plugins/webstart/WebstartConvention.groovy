@@ -207,10 +207,13 @@ class JnlpConfiguration implements Named {
     @Input
     String jnlpFilename;
     @Input
+    @Optional
     String title;
     @Input
+    @Optional
     String vendor;
     @Input
+    @Optional
     String description;
     @Input
     @Optional
@@ -317,8 +320,7 @@ class JnlpConfiguration implements Named {
         withXml = closure
     }
 
-    @Input
-    @Optional
+    //denne kan ikke være @Input da gradle vil eksekvere closure ved å sende inn null som parameter
     protected Closure getWithXml() {
         return withXml
     }
