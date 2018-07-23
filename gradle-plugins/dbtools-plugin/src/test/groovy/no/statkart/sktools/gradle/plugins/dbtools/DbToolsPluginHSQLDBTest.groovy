@@ -380,4 +380,53 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
     }
 
 
+
+    @Test
+    void tasknameForPatch() {
+        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-dbtools-plugin'
+        };
+
+        testCase.configureProject {
+            configureDatabasePlugin {
+                toolset(name: 'Prefix', type: 'hsqldb', prefix: 'Prefix') {
+
+                    credentials.username = defaultCredentials.username
+                    credentials.password = defaultCredentials.password
+
+                    url = sql.connection.properties.URL
+                    driver = jdbcDriverClassString
+
+                    patch {
+                        patchTask('TestSchema', sqlFile:file("."))
+                    }
+                }
+            }
+        }
+        Assert.assertNotNull(testCase.project.tasks.findByName("prefixPatchTestSchema"), "Forventer task med navn")
+    }
+
+    @Test
+    void tasknameForNull() {
+        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-dbtools-plugin'
+        };
+
+        testCase.configureProject {
+            configureDatabasePlugin {
+                toolset(name: 'main', type: 'hsqldb', prefix: '') {
+
+                    credentials.username = defaultCredentials.username
+                    credentials.password = defaultCredentials.password
+
+                    url = sql.connection.properties.URL
+                    driver = jdbcDriverClassString
+
+                    sqlTask('TestSchema', sqlFile:file("."))
+                }
+            }
+        }
+        Assert.assertNotNull(testCase.project.tasks.findByName("testSchema"), "Forventer task med navn")
+    }
+
 }

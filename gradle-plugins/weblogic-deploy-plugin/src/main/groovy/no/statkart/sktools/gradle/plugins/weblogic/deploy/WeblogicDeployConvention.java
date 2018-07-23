@@ -1,11 +1,11 @@
 package no.statkart.sktools.gradle.plugins.weblogic.deploy;
 
 import groovy.lang.Closure;
-import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
 import org.gradle.util.ConfigureUtil;
+import org.gradle.util.GUtil;
 
 import java.util.concurrent.Callable;
 
@@ -43,8 +43,8 @@ public class WeblogicDeployConvention {
         return getTaskName(verb, project.getName());
     }
 
-    public String getTaskName(String verb, String target) {
-        return StringUtils.uncapitalize(String.format("%s%s", verb, StringUtils.capitalize(target)));
+    public static String getTaskName(String verb, String target) {
+        return GUtil.toLowerCamelCase(verb + ' ' + target);
     }
 
     Action<AbstractWeblogicDeployTask> conventionalValuesForAbstractWeblogicDeployTask() {

@@ -1,7 +1,6 @@
 package no.statkart.sktools.gradle.plugins.webstart
 
 import no.statkart.sktools.gradle.plugins.webstart.util.ArtifactMatcher
-import org.apache.commons.lang3.StringUtils
 import org.gradle.api.Action
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -116,9 +115,9 @@ class WebstartPlugin implements Plugin<Project> {
 
     private static String makeTaskName(String verb, String client, String postfix) {
         if (postfix != null) {
-            return StringUtils.uncapitalize(String.format("%s%s%s", verb, GUtil.toCamelCase(client), StringUtils.capitalize(postfix)));
+            return GUtil.toLowerCamelCase(verb + ' ' + client + ' ' + postfix);
         } else {
-            return StringUtils.uncapitalize(String.format("%s%s", verb, GUtil.toCamelCase(client)));
+            return GUtil.toLowerCamelCase(verb + ' ' + client);
         }
     }
 

@@ -3,12 +3,14 @@ package no.statkart.sktools.gradle.plugins.dbtools.database.util
 import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsConvention
 import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsPlugin
 import no.statkart.sktools.utils.databasepatcher.exception.ConfigurationException
-import org.apache.commons.lang3.StringUtils
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.file.FileCollection
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.*
+import org.gradle.util.GUtil
+
+import static no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractDatabaseConvention.capitalize
 
 /**
  *
@@ -58,7 +60,11 @@ class PatchConfiguration {
 
 
     String getTaskName(String verb, String target = '') {
-        String.format("%s%s%s", StringUtils.capitalize(verb), 'null'.equals(name) ? '' : StringUtils.capitalize(name), StringUtils.capitalize(target))
+        if ('null'.equals(name) || name == null) {
+            return GUtil.toCamelCase(verb) + capitalize(target);
+        } else {
+            return GUtil.toCamelCase(verb + ' ' + name) + capitalize(target);
+        }
     }
 
     String getName() {

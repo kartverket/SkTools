@@ -9,7 +9,6 @@ dependencies {
 
     //gradle api til byggesystemm blir benyttet som std
     compile gradleApi()
-    compile libraries.commons_lang3
 
     compile project(':build-utils:wsdocgen')
 

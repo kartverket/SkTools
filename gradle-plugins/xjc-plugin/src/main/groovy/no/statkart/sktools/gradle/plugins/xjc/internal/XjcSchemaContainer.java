@@ -2,13 +2,13 @@ package no.statkart.sktools.gradle.plugins.xjc.internal;
 
 import groovy.lang.Closure;
 import no.statkart.sktools.gradle.plugins.xjc.XjcConfig;
-import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.Action;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.util.ConfigureUtil;
+import org.gradle.util.GUtil;
 
 import java.util.AbstractList;
 import java.util.ArrayList;
@@ -31,7 +31,7 @@ public class XjcSchemaContainer extends AbstractList<XjcConfig> {
     }
 
     protected XjcConfig create(String name) throws InvalidUserDataException {
-        String schemaName = sourceSet.getName() + StringUtils.capitalize(name);
+        String schemaName = sourceSet.getName() + GUtil.toCamelCase(name);
         ConfigurableFileCollection sourceFiles = project.files();
         return new XjcConfig(sourceSet, schemaName, sourceFiles);
     }
@@ -65,7 +65,7 @@ public class XjcSchemaContainer extends AbstractList<XjcConfig> {
 
     //for configuration
     public XjcConfig schema(Closure configureClosure) {
-        String schemaName = String.format("%dSchema", size());
+        String schemaName = String.valueOf(size()) + "Schema";
         XjcConfig schema = create(schemaName, configureClosure);
         add(schema);
         return schema;

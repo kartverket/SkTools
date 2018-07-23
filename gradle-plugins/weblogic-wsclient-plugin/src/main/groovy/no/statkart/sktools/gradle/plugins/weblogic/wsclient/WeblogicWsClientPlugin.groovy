@@ -1,6 +1,5 @@
 package no.statkart.sktools.gradle.plugins.weblogic.wsclient
 
-import org.apache.commons.lang3.StringUtils
 import org.gradle.api.Project
 import org.gradle.api.Plugin
 import org.gradle.api.artifacts.Configuration
@@ -15,6 +14,7 @@ import org.gradle.api.tasks.compile.AbstractCompile
 
 import org.gradle.api.plugins.BasePlugin
 import org.gradle.api.internal.ConventionMapping
+import org.gradle.util.GUtil
 
 import java.util.concurrent.Callable
 import org.gradle.api.tasks.SourceSetContainer
@@ -75,7 +75,7 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
 
     private Task createCollectSchemaTask(Project project, WebServiceConfig webService) {
 
-        String taskName = String.format("collect%sSchema", StringUtils.capitalize(webService.name));
+        String taskName = "collect" + GUtil.toCamelCase(webService.name) + "Schema";
 
         Sync task = project.tasks.replace(taskName, Sync);
         task.setFileMode(0755);  //SKTOOLS-123 no read only generated files i linux
@@ -108,7 +108,7 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
      * TaskOutput blir lagt til som javasource for sourceSet. NB: denne FileCollection kan kun inneholde Dirs (ikke filer osv.)
      */
     private WeblogicGenClientTask createGenerateSourceTask(Project project, WebServiceConfig webServiceConfig, Task collectSchemaTask) {
-        String taskName = String.format('gen%sWsClientSource', StringUtils.capitalize(webServiceConfig.name))
+        String taskName = "gen" + GUtil.toCamelCase(webServiceConfig.name) + "WsClientSource";
         WeblogicGenClientTask genTask = (WeblogicGenClientTask) project.task(type: WeblogicGenClientTask.class, taskName)
         genTask.setDescription(String.format("Generates WS-client source based on Weblogic tools for " + webServiceConfig.name));
         genTask.setGroup(BasePlugin.BUILD_GROUP);
