@@ -29,6 +29,8 @@ project.ext.libraries = [
 
         log4j: "log4j:log4j:${libVersion('log4j', '1.2.17')}@jar",
 
+        saxon : 'net.sf.saxon:Saxon-HE:9.8.0-12', //xslt 2.0
+
         commons_io  : 'commons-io:commons-io:1.3.2@jar', //"org.apache.commons:commons-io" is relocated to "commons-io:commons-io"
         commons_lang3: 'org.apache.commons:commons-lang3:3.4',
         guava: 'com.google.guava:guava:19.0',
