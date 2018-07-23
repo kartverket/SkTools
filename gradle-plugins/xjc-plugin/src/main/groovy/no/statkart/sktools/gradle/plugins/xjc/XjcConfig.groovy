@@ -3,8 +3,6 @@ package no.statkart.sktools.gradle.plugins.xjc
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
-import org.gradle.api.logging.Logger
-import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.SourceSet
 import org.gradle.util.ConfigureUtil
@@ -17,9 +15,7 @@ import org.gradle.util.ConfigureUtil
  *
  * @author Leif Lislegård
  */
-class XjcConfig implements Serializable {
-    static final Logger logger = Logging.getLogger(XjcConfig.class)
-
+class XjcConfig {
     /**
      * For lovlige parametere se {@link com.sun.tools.xjc.addon.statkart.ListGenPlugin#parseArgument(com.sun.tools.xjc.Options, String[], int)
      */

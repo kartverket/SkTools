@@ -54,7 +54,7 @@ class WebstartTask extends ConventionTask {
         mainJar.from(files)
     }
 
-    @Input
+    @Nested
     List<JnlpConfiguration> getJnlpConfigurations() {
         return jnlpConfigurations
     }

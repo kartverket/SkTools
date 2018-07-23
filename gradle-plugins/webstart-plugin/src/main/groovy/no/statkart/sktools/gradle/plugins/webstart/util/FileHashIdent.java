@@ -9,9 +9,7 @@ import java.security.MessageDigest;
 /**
  * Helper class for identification and maintaining hash codes of files.
  */
-public class FileHashIdent implements Serializable {
-    private static final long serialVersionUID = 1L;
-
+public class FileHashIdent {
     private transient File file;
     private String hash;
 

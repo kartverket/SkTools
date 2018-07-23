@@ -1,15 +1,16 @@
 package no.statkart.sktools.gradle.plugins.webstart
 
 import no.statkart.sktools.gradle.plugins.webstart.util.FileHashIdent
-import org.apache.commons.lang3.builder.EqualsBuilder
-import org.apache.commons.lang3.builder.HashCodeBuilder
+import org.gradle.api.Named
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.NamedDomainObjectFactory
 import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Nested
+import org.gradle.api.tasks.Optional
 import org.gradle.util.ConfigureUtil
-import org.gradle.util.DeprecationLogger
 
 /**
  * Extension for webstart plugin.
@@ -200,16 +201,24 @@ class SigningConfiguration {
     }
 }
 
-class JnlpConfiguration implements Serializable {
-    private static final long serialVersionUID = 1L;
-
+class JnlpConfiguration implements Named {
     protected final transient Project project
+
+    @Input
     String jnlpFilename;
+    @Input
     String title;
+    @Input
     String vendor;
+    @Input
     String description;
+    @Input
+    @Optional
     String homepage = null; //optional
+    @Input
+    @Optional
     String version = null; //optional
+    @Input
     boolean addServerURLArgument = false
     protected ApplicationConfiguration application = null;  //might be null
     protected final List<ResourcesConfiguration> resourcesList = new ArrayList<ResourcesConfiguration>();
@@ -279,8 +288,9 @@ class JnlpConfiguration implements Serializable {
         return app
     }
 
+    @Nested
     public ApplicationConfiguration getApplication() {
-        if (application == null) {
+        if (application == null) { //mulighet for dotting ala "application.mainClass xxx"
             application = new ApplicationConfiguration(this);
         }
         return application;
@@ -298,6 +308,7 @@ class JnlpConfiguration implements Serializable {
         return resourcesConfiguration;
     }
 
+    @Nested
     protected List<ResourcesConfiguration> getResources() {
         return resourcesList;
     }
@@ -306,6 +317,8 @@ class JnlpConfiguration implements Serializable {
         withXml = closure
     }
 
+    @Input
+    @Optional
     protected Closure getWithXml() {
         return withXml
     }
@@ -320,20 +333,16 @@ class JnlpConfiguration implements Serializable {
         return this;
     }
 
-    public boolean equals(Object other) {
-        return EqualsBuilder.reflectionEquals(this, other);
-
-    }
-
-    public int hashCode() {
-        return HashCodeBuilder.reflectionHashCode(this);
+    @Override
+    String getName() {
+        return "\"" + jnlpFilename + "\"";
     }
 }
 
-class ApplicationConfiguration implements Serializable {
-    private static final long serialVersionUID = 1L;
+class ApplicationConfiguration {
     protected final transient JnlpConfiguration jnlp;
 
+    @Input
     protected String mainClass;
 
 
@@ -352,21 +361,12 @@ class ApplicationConfiguration implements Serializable {
         closure.call();
         return this;
     }
-
-    public boolean equals(Object other) {
-        return EqualsBuilder.reflectionEquals(this, other);
-    }
-
-    public int hashCode() {
-        return HashCodeBuilder.reflectionHashCode(this);
-    }
 }
 
 /**
  * Represents the {@code <resource>} elements in a jnlp file.
  */
-class ResourcesConfiguration implements Serializable {
-    private static final long serialVersionUID = 1L;
+class ResourcesConfiguration {
     protected final transient JnlpConfiguration jnlp;
 
     protected final Map<String, Object> systemProperties = new LinkedHashMap();
@@ -446,23 +446,24 @@ class ResourcesConfiguration implements Serializable {
         return this;
     }
 
-    public boolean equals(Object other) {
-        return EqualsBuilder.reflectionEquals(this, other);
+    @Nested
+    Map<String, Object> getSystemProperties() {
+        return systemProperties
     }
 
-    public int hashCode() {
-        return HashCodeBuilder.reflectionHashCode(this);
+    @Nested
+    List<RuntimeConfiguration> getRuntimes() {
+        return runtimes
     }
 }
 
 abstract class RuntimeConfiguration {
-    private static final long serialVersionUID = 1L;
-    def final transient ResourcesConfiguration resources;
+    protected final transient ResourcesConfiguration resources;
 
     /**
      * {@code resources = null} denotes default constructor needed for serializing/de-serializing in gradle task up-to-date checks
      */
-    def RuntimeConfiguration(ResourcesConfiguration resources = null) {
+    protected RuntimeConfiguration(ResourcesConfiguration resources = null) {
         this.resources = resources
     }
 }
@@ -470,9 +471,11 @@ abstract class RuntimeConfiguration {
 /**
  * Represents the {@code <jfx:javafx-runtime>} elements in a jnlp file
  */
-class JavaFxRuntimeConfiguration extends RuntimeConfiguration implements Serializable {
-    private static final long serialVersionUID = 1L;
+class JavaFxRuntimeConfiguration extends RuntimeConfiguration {
+    @Input
     String version;
+    @Input
+    @Optional
     String href = null;   //optional
 
 
@@ -490,27 +493,27 @@ class JavaFxRuntimeConfiguration extends RuntimeConfiguration implements Seriali
         return this;
     }
 
-
-    public boolean equals(Object other) {
-        return EqualsBuilder.reflectionEquals(this, other);
-    }
-
-    public int hashCode() {
-        return HashCodeBuilder.reflectionHashCode(this);
-    }
 }
 
 /**
  * Represents the {@code <j2se>} elements in a jnlp file
  */
-class JavaRuntimeConfiguration extends RuntimeConfiguration implements Serializable {
-    private static final long serialVersionUID = 1L;
+class JavaRuntimeConfiguration extends RuntimeConfiguration {
+    @Input
     String version;
+    @Input
+    @Optional
     String href = null;   //optional
+    @Input
+    @Optional
     /** initial-heap-size   */
     String xms = null;    //optional
+    @Input
+    @Optional
     /** max-heap-size   */
     String xmx = null;    //optional
+    @Input
+    @Optional
     String vmArgs = null; //optional
 
 
@@ -543,11 +546,4 @@ class JavaRuntimeConfiguration extends RuntimeConfiguration implements Serializa
         return this;
     }
 
-    public boolean equals(Object other) {
-        return EqualsBuilder.reflectionEquals(this, other);
-    }
-
-    public int hashCode() {
-        return HashCodeBuilder.reflectionHashCode(this);
-    }
 }
