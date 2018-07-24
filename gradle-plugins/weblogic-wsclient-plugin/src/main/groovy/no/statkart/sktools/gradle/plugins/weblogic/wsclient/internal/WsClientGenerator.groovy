@@ -3,8 +3,9 @@ package no.statkart.sktools.gradle.plugins.weblogic.wsclient.internal
 import no.statkart.sktools.gradle.plugins.weblogic.compile.CompileOptions
 import no.statkart.sktools.gradle.plugins.weblogic.wsclient.ExceptionConfig
 import no.statkart.sktools.gradle.plugins.weblogic.wsclient.WebServiceConfig
-import org.apache.commons.io.FileUtils
+import org.gradle.api.Action
 import org.gradle.api.Project
+import org.gradle.api.file.CopySpec
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.api.logging.Logger
@@ -159,8 +160,14 @@ class WsClientGenerator {
             File relocatedFile = new File(exceptionPackageDir, file.getName())
             logger.info("merging exception ${relocatedFile} <- ${file}")
 
-            FileUtils.copyFileToDirectory(file, exceptionPackageDir)
-            file.delete()
+            project.copy(new Action<CopySpec>() {
+                @Override
+                void execute(CopySpec copySpec) {
+                    copySpec.from(file)
+                    copySpec.into(exceptionPackageDir)
+                }
+            })
+            file.delete();
 
             //kjører regexp replace på package statement for flyttet fil
             relocatedFile.text = relocatedFile.text.replaceFirst(/(?ms)package[^;]+/, "package " + packageString)
