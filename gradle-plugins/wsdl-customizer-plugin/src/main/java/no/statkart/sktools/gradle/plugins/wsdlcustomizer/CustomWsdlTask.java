@@ -1,6 +1,6 @@
 package no.statkart.sktools.gradle.plugins.wsdlcustomizer;
 
-import groovy.lang.Closure;
+import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.file.CopySpec;
@@ -183,9 +183,9 @@ public class CustomWsdlTask extends DefaultTask {
             processWsdl(documentBuilder, transformer, wsdl, namespaceSchemaFileMap, generatedSchemaFileMap, copySpec);
         }
 
-        getProject().copy(new Closure(getProject()) {
-            @SuppressWarnings("UnusedDeclaration")
-            public void doCall(CopySpec spec) {
+        getProject().copy(new Action<CopySpec>() {
+            @Override
+            public void execute(CopySpec spec) {
                 spec.with(copySpec);
                 spec.into(destinationDir);
             }
