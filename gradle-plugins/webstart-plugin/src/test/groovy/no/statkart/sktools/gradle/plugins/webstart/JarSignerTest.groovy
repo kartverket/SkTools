@@ -1,6 +1,7 @@
 package no.statkart.sktools.gradle.plugins.webstart
 
 import no.statkart.sktools.gradle.plugins.webstart.util.FileHashIdent
+import org.apache.commons.codec.binary.Hex
 import org.assertj.core.api.Assertions
 
 import java.util.jar.JarFile
@@ -191,7 +192,12 @@ class JarSignerTest {
      * Beregner md5 hash verdi utifra filens innhold og asserter den mot forventet verdi
      */
     public static void assertMd5(File file, String expected) {
-        Assert.assertEquals(FileHashIdent.createChecksum(file), expected, "Forventet hash verdi (MD5)")
+        def digest = FileHashIdent.createDigest(file)
+        Assertions.assertThat(FileHashIdent.hexEncoded(digest)).
+                as("Forventet hex representasjon").isEqualTo(new String(Hex.encodeHex(digest)))
+
+        Assertions.assertThat(FileHashIdent.createChecksum(file)).
+                as("Forventet hash verdi (MD5)").isEqualTo(expected);
     }
 
     /**

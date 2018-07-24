@@ -9,11 +9,11 @@ dependencies {
 
     //gradle api til byggesystemm blir benyttet som std
     compile gradleApi()
-    compile 'commons-codec:commons-codec:1.2@jar'
 
 
     //test
     testCompile project(':build-utils:test-utils')
+    testCompile 'commons-codec:commons-codec:1.2@jar'
 }
 
 task sourceJar(type: Jar) {

@@ -1,8 +1,9 @@
 package no.statkart.sktools.gradle.plugins.webstart.util;
 
-import org.apache.commons.codec.binary.Hex;
-
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.MessageDigest;
@@ -22,7 +23,25 @@ public class FileHashIdent {
         this.hash = hash;
     }
 
+    public static String hexEncoded(byte[] digest) {
+        StringBuilder hexString = new StringBuilder();
+        //noinspection ForLoopReplaceableByForEach
+        for (int i = 0; i < digest.length; i++) {
+            String hex = Integer.toHexString(0xFF & digest[i]);
+            if (hex.length() == 1) {
+                hexString.append('0');
+            }
+            hexString.append(hex);
+        }
+        return hexString.toString();
+    }
+
     public static String createChecksum(File file, String... beacon) throws Exception {
+        byte[] digest = createDigest(file, beacon);
+        return hexEncoded(digest);
+    }
+
+    public static byte[] createDigest(File file, String[] beacon) throws Exception {
         InputStream fis = new FileInputStream(file.getCanonicalFile());
 
         byte[] buffer = new byte[1024];
@@ -48,7 +67,7 @@ public class FileHashIdent {
         fis.close();
 
 
-        return String.valueOf(Hex.encodeHex(complete.digest()));
+        return complete.digest();
     }
 
     @Override
