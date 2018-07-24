@@ -149,8 +149,7 @@ public class CustomWsdlTask extends DefaultTask {
         //noinspection ResultOfMethodCallIgnored
         destinationDir.mkdirs();
 
-        //noinspection RedundantCast gradle 2.x compatibility
-        final CopySpec copySpec = getProject().copySpec((Closure) null);
+        final CopySpec copySpec = getProject().copySpec();
 
         Map<String, String> namespaceSchemaFileMap = readOriginalSchemas(documentBuilder, copySpec);
 
