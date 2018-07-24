@@ -1,8 +1,6 @@
 package no.statkart.sktools.gradle.plugins.webstart;
 
-import groovy.lang.Closure;
 import no.statkart.sktools.gradle.plugins.webstart.util.FileHashIdent;
-import org.apache.commons.io.FileUtils;
 import org.gradle.api.Action;
 import org.gradle.api.GradleException;
 import org.gradle.api.file.ConfigurableFileCollection;
@@ -23,6 +21,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -144,14 +144,13 @@ public class JarSigner extends ConventionTask {
 
 
                     //kopiere via URL for å overkomme evt symlink filer.
-                    FileUtils.copyURLToFile(unsignedJar.toURI().toURL(), tempFile);
+                    Files.copy(unsignedJar.toPath(), tempFile.toPath());
 
                     //signing jar
                     try {
                         signJar(tempFile, manifestAddendum);
 
-                        signedJarFile.delete(); //SKIF-209: sletter evt eksisterende fil før move..
-                        tempFile.renameTo(signedJarFile);
+                        Files.move(tempFile.toPath(), signedJarFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
                     } finally {
                         if (tempFile.exists()) {
@@ -181,9 +180,9 @@ public class JarSigner extends ConventionTask {
         if (manifestAddendum != null) {
             getLogger().info(String.format("Updating manifest for %s ...", jarFile.getPath()));
 
-            getProject().exec(new Closure(this) {
-                public void doCall() {
-                    ExecSpec execSpec = (ExecSpec) getDelegate();
+            getProject().exec(new Action<ExecSpec>() {
+                @Override
+                public void execute(ExecSpec execSpec) {
 
                     execSpec.setWorkingDir(jarFile.getParent());
                     execSpec.setIgnoreExitValue(false);
@@ -197,10 +196,9 @@ public class JarSigner extends ConventionTask {
 
         getLogger().lifecycle(String.format("Signing file %s ...", getProject().relativePath(jarFile)));
 
-        getProject().exec(new Closure(this) {
-            public void doCall() {
-                ExecSpec execSpec = (ExecSpec) getDelegate();
-
+        getProject().exec(new Action<ExecSpec>() {
+            @Override
+            public void execute(ExecSpec execSpec) {
                 execSpec.setWorkingDir(jarFile.getParentFile());
                 execSpec.setIgnoreExitValue(false);
                 execSpec.setExecutable("jarsigner");

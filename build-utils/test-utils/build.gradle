@@ -8,7 +8,6 @@ dependencies {
 
     //gradle api til byggesystemm blir benyttet som std
     compile gradleApi()
-    compile libraries.commons_io
     compile libraries.guava
     compile libraries.testng
 }

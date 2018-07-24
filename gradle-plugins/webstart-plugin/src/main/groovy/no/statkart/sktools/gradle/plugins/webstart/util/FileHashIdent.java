@@ -1,9 +1,10 @@
 package no.statkart.sktools.gradle.plugins.webstart.util;
 
 import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.io.FileUtils;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.security.MessageDigest;
 
 /**
@@ -92,7 +93,7 @@ public class FileHashIdent {
      */
     public FileHashIdent writeChecksumToFile() throws IOException {
         File md5File = new File(file.getParent(), file.getName() + ".md5");
-        FileUtils.writeStringToFile(md5File, hash);
+        Files.write(md5File.toPath(), hash.getBytes(StandardCharsets.UTF_8));
         return this;
     }
 
@@ -106,7 +107,7 @@ public class FileHashIdent {
         FileHashIdent signedArtifactFileIdent = null;
         String md5 = null;
         try {
-            md5 = FileUtils.readFileToString(md5File);
+            md5 = new String(Files.readAllBytes(md5File.toPath()), StandardCharsets.UTF_8);
 
             String jarFilename = md5File.getName().substring(0, md5File.getName().length()-4);
             File jarFile = new File(md5File.getParentFile(), jarFilename);

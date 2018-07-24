@@ -31,12 +31,11 @@ project.ext.libraries = [
 
         saxon : 'net.sf.saxon:Saxon-HE:9.8.0-12', //xslt 2.0
 
-        commons_io  : 'commons-io:commons-io:1.3.2@jar', //"org.apache.commons:commons-io" is relocated to "commons-io:commons-io"
         guava: 'com.google.guava:guava:19.0',
 
         // Testing
-        assertj: 'org.assertj:assertj-core:2.8.0', /* AssertJ 2.x for Java 7, 3.x for Java8 */
-        testng: 'org.testng:testng:6.9.10',
+        assertj: 'org.assertj:assertj-core:2.9.1', /* AssertJ 2.x for Java 7, 3.x for Java8 */
+        testng: 'org.testng:testng:6.14.3',
         hsqldb: 'org.hsqldb:hsqldb:2.2.8',
         jaxws: 'com.sun.xml.ws:jaxws-tools:2.2.10',
 ]

@@ -1,13 +1,12 @@
 package no.statkart.sktools.gradle.plugins.webstart
 
 import no.statkart.sktools.gradle.plugins.webstart.util.FileHashIdent
+import org.assertj.core.api.Assertions
 
-import java.util.jar.JarEntry
 import java.util.jar.JarFile
 import no.statkart.sktools.gradle.testutils.ProjectHelper
 import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
 import no.statkart.sktools.gradle.testutils.filewriter.WebstartTestutilFilewriter
-import org.apache.commons.io.FileUtils
 import org.testng.Assert
 import org.testng.annotations.Test
 import org.gradle.api.Project
@@ -169,8 +168,8 @@ class JarSignerTest {
 
         //updating 'java1' project jar by swapping it with jar produced by 'java2'
         File oldFile = new File(java1JarFile.parentFile, java1JarFile.getName() + ".old")
-        FileUtils.copyFile(java1JarFile, oldFile)
-        FileUtils.copyFile(java2JarFile, java1JarFile)
+        ProjectHelper.copyFile(java1JarFile, oldFile)
+        ProjectHelper.copyFile(java2JarFile, java1JarFile)
         Assert.assertTrue(java1JarFile.exists())
 
         //testing signed file - java1 should now ble updated
@@ -201,7 +200,12 @@ class JarSignerTest {
     public static void assertSignedJar(File file) {
         Assert.assertTrue(file.getName().endsWith('.jar'), "Jar fil skal ende på '.jar")
         JarFile jarFile = new JarFile(file, true);
-        Assert.assertEquals(jarFile.manifest.mainAttributes.getValue("Permissions"), "sandbox", "Permissions");
+        try {
+            Assertions.assertThat(jarFile.manifest.mainAttributes.getValue("Permissions"))
+                    .describedAs("Permissions").isEqualTo("sandbox");
+        } finally {
+            if (jarFile != null) jarFile.close()
+        }
     }
 
     /**
@@ -210,12 +214,22 @@ class JarSignerTest {
      * This so that <code>'base' ? 'intersect' = 'intersect'</code>
      */
     public static void assertJarFileContainsAllEntries(File base, File intersect) {
-        List<String> baseEntries = new JarFile(base).entries().collect() {it.name}
-        List<String> intersectEntries = new JarFile(intersect).entries().collect() {it.name}
+        JarFile jarFileBase, jarFileIntersect;
+        try {
+            jarFileBase = new JarFile(base)
+            jarFileIntersect = new JarFile(intersect)
 
-        intersectEntries.removeAll(baseEntries)
-        if (!intersectEntries.isEmpty()) {
-            Assert.fail("Forventet at filen ${base} inneholder aller entries ifra ${intersect}. Overflytende entries: ${intersectEntries}")
+            List<String> baseEntries = jarFileBase.entries().collect() {it.name}
+            List<String> intersectEntries = jarFileIntersect.entries().collect() {it.name}
+
+            Assertions.assertThat(baseEntries).containsAll(intersectEntries)
+        } finally {
+            if (jarFileBase != null) {
+                jarFileBase.close()
+            }
+            if (jarFileIntersect != null) {
+                jarFileIntersect.close()
+            }
         }
 
     }
