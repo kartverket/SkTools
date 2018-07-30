@@ -25,7 +25,11 @@ import java.util.concurrent.Callable
  * <p> En trenger en versjon av xjc verktøyet sammen med jaxb implementasjon for kjøring av verktøyet.
  * Disse finner man i konfigurasjon med navn {@value #JAXB_CONFIGURATION_NAME}.
  * Dersom ikke noe angis, brukes en versjon av glassfish for xjc og jaxb.
- * For sktools prosjektet, se "default_xjc_implementation" og "default_jaxb_ri_implementation" og referanse til "libraries.jaxb_xjc" og "libraries.jaxb_rt"
+ * For sktools prosjektet, se "default_xjc_implementation" og "default_jaxb_ri_implementation" og referanse til
+ * <pre>
+ libraries.jaxb_xjc ->  'org.glassfish.jaxb:jaxb-xjc'
+ libraries.jaxb_rt -> 'org.glassfish.jaxb:jaxb-runtime'
+ * </pre>
  * </p>
  *
  * <br>
