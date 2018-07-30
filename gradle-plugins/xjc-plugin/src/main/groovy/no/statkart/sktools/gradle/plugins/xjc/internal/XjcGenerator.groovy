@@ -1,6 +1,7 @@
 package no.statkart.sktools.gradle.plugins.xjc.internal
 
 import no.statkart.sktools.gradle.plugins.xjc.XjcConfig
+import org.gradle.api.AntBuilder
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
@@ -22,6 +23,7 @@ class XjcGenerator {
 
    void gen() {
       final AntBuilder ant = project.getAnt()
+      println ("xjc classpath : ${getClasspath().getAsPath()}")
       ant.taskdef(name: 'xjc', classname: 'com.sun.tools.xjc.XJCTask', classpath: getClasspath().getAsPath())
 
       getOutputDirectory().mkdirs()

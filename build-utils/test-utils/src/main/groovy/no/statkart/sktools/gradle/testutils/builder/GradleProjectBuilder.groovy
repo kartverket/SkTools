@@ -15,6 +15,10 @@ import org.gradle.api.plugins.WarPlugin
  * @author Leif Lislegård
  */
 class GradleProjectBuilder<T extends GradleProjectBuilder<T>> {
+    static final Properties testProperties = new Properties();
+    static {
+        testProperties.load(GradleProjectBuilder.class.getResourceAsStream("/no/statkart/sktools/test.properties"))
+    }
 
     protected ProjectHelper projectHelper
     private ProjectBuilder builder
@@ -28,6 +32,13 @@ class GradleProjectBuilder<T extends GradleProjectBuilder<T>> {
      */
     protected GradleProjectBuilder() {
         builder = ProjectBuilder.builder().withName(getClass().getSimpleName())
+        closures.add {
+            allprojects {
+                repositories {
+                    maven { name = 'kartverket'; url = "${testProperties.MAVEN_REPO}" }
+                }
+            }
+        }
     }
 
     public static GradleProjectBuilder<? extends GradleProjectBuilder> builder() {

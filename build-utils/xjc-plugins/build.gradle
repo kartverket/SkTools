@@ -2,18 +2,25 @@ apply plugin: 'java'
 apply plugin: 'groovy'
 apply plugin: 'maven-publish'
 
+/**
+ * Nye koordinater for XJC og JAXB2 er i følge https://stackoverflow.com/questions/26413431/which-artifacts-should-i-use-for-jaxb-ri-in-my-maven-project
+ * org.glassfish.jaxb:jaxb-runtime - Runtime
+ * org.glassfish.jaxb:jaxb-xjc - Schema compiler
+ *
+ * Disse er de gamle modulene som glassfish 2.2.10+ erstatter:
+ * com.sun.xml.bind:jaxb-impl - Runtime
+ * com.sun.xml.bind:jaxb-core - Runtime
+ * com.sun.xml.bind:jaxb-xjc - Schema compiler
+ */
+
 dependencies {
     //xjc
-    compile 'com.sun.xml.bind:jaxb-xjc:2.2.11'
-    compile 'org.glassfish.jaxb:jaxb-xjc:2.2.11', {
+    implementation libraries.jaxb_xjc, {
         exclude group: 'org.apache.ant', module: 'ant' //ant from gradle api - this resolves version conflicts on classpath for testing..
     }
 
-    //jaxb impl og runtime
-    compile 'com.sun.xml.bind:jaxb-impl:2.2.11'
-    compile 'org.glassfish.jaxb:jaxb-runtime:2.2.11', {
-        exclude group: 'org.apache.ant', module: 'ant' //ant from gradle api - this resolves version conflicts on classpath for testing..
-    }
+    //jaxb runtime
+    testRuntimeOnly libraries.jaxb_rt
 
     //testing...
     testCompile project(':build-utils:test-utils')
@@ -32,6 +39,10 @@ publishing {
         mavenJava(MavenPublication) {
             from components.java
             artifact sourceJar
+
+            pom.withXml {
+                asNode().dependencies.dependency.findAll { 'jaxb-xjc' == it.artifactId.text() }.each { it.appendNode('optional', 'true') } //markers som optional slik at en kan velge implementasjon av verktøy (feks gammel com.sun.xml.bind:jaxb-xjc eller noe annet)
+            }
         }
     }
 }
