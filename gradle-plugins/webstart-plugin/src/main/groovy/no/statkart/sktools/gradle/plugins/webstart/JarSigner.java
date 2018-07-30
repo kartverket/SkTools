@@ -30,6 +30,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
 /**
  * Steg for signering av alle jar avhengigheter.
@@ -81,11 +82,11 @@ public class JarSigner extends ConventionTask {
     }
 
     public JarSigner() {
-        getProject().getGradle().projectsEvaluated(new Action<Gradle>() {
+        //sen binding for å unngå deadlock i gradle pga validering av input/output felter på task
+        signedJarFiles.from(new Callable() {
             @Override
-            public void execute(Gradle gradle) {
-                //sen binding for å unngå deadlock i gradle pga validering av input/output felter på task
-                signedJarFiles.from(collectSignedJars(getJarFilesToSign().getFiles()));
+            public Object call() throws Exception {
+                return collectSignedJars(getJarFilesToSign().getFiles());
             }
         });
     }
