@@ -221,8 +221,6 @@ class JnlpConfiguration implements Named {
     @Input
     @Optional
     String version = null; //optional
-    @Input
-    boolean addServerURLArgument = false
     protected ApplicationConfiguration application = null;  //might be null
     protected final List<ResourcesConfiguration> resourcesList = new ArrayList<ResourcesConfiguration>();
     private transient Closure withXml;
@@ -238,11 +236,6 @@ class JnlpConfiguration implements Named {
 
     public JnlpConfiguration title(String title) {
         this.title = title;
-        return this;
-    }
-
-    public JnlpConfiguration addServerURLArgument(boolean addServerURLArgument) {
-        this.addServerURLArgument = addServerURLArgument;
         return this;
     }
 
@@ -347,6 +340,12 @@ class ApplicationConfiguration {
     @Input
     protected String mainClass;
 
+    /**
+     * Man kan legge til server url som argument via streng verdi '$$site'. Denne vil ekspanderes av jnlpservlet.
+     */
+    @Input
+    protected List<String> args = new ArrayList<>();
+
 
     ApplicationConfiguration(JnlpConfiguration jnlp) {
         this.jnlp = jnlp;
@@ -354,6 +353,11 @@ class ApplicationConfiguration {
 
     public ApplicationConfiguration mainClass(String fqn) {
         mainClass = fqn;
+        return this;
+    }
+
+    public ApplicationConfiguration arg(String argument) {
+        args.add(argument);
         return this;
     }
 

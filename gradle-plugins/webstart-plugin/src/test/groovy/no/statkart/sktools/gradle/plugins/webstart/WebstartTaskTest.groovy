@@ -46,7 +46,10 @@ class WebstartTaskTest {
                         title 'Client2 title'
                         vendor 'SomeCompany'
                         homepage '\\\\intra\\somefolder\\someproject\\index.html'
-                        application.mainClass 'AnotherLauncher'
+                        application {
+                            mainClass 'AnotherLauncher'
+                            arg 'argument1'
+                        }
                         resources {
                             javaRuntime '1.6+', '128m', '256m', 'http://some.download/location' //shortcut notation
                             javaRuntime {   //same as above but only with vmArgs set.
@@ -86,6 +89,7 @@ class WebstartTaskTest {
 
         Assert.assertEquals(configurations[0].application.mainClass, 'some.pkg.MyApplicationLauncher')
         Assert.assertEquals(configurations[1].application.mainClass, 'AnotherLauncher')
+        Assert.assertEquals(configurations[1].application.args[0], 'argument1')
 
         configurations[0].resources.runtimes.flatten().with { ArrayList<JavaRuntimeConfiguration> runtimesConfiguration0 ->
             Assert.assertEquals(runtimesConfiguration0.size(), 1)

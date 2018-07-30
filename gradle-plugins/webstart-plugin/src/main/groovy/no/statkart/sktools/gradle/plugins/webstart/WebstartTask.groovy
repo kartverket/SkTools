@@ -136,8 +136,8 @@ class WebstartTask extends ConventionTask {
 
             if (jnlp.hasApplication()) {
                 def applicationDescNode = jnlpNode.appendNode('application-desc', ['main-class': jnlp.application.mainClass])
-                if (jnlp.addServerURLArgument) {
-                    applicationDescNode.appendNode('argument', '$$site')
+                for (String arg : jnlp.application.args) {
+                    applicationDescNode.appendNode('argument', arg)
                 }
             }
 
