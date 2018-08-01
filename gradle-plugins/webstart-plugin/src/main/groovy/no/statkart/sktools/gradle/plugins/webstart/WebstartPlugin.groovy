@@ -32,7 +32,7 @@ class WebstartPlugin implements Plugin<Project> {
     protected static Logger logger = Logging.getLogger(WebstartPlugin.class)
 
     public static final String WEBSTART_CONVENTION_NAME = 'webstart';
-    public static final String CLEAN_JARSIGNER_CACHES_TASK_NAME = 'CLEAN_JARSIGNER_CACHES_TASK_NAME'
+    public static final String CLEAN_JARSIGNER_CACHES_TASK_NAME = 'cleanJarSignerCaches'
 
 
     @Override

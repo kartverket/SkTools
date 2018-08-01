@@ -448,7 +448,7 @@ class WebstartPluginTest {
 
         projectHelper.initializeProject()
 
-        projectHelper.executeTask('CLEAN_JARSIGNER_CACHES_TASK_NAME')
+        projectHelper.executeTask('cleanJarSignerCaches')
 
         //sjekker at filer er blitt opprettet
         projectHelper.assertFileNotExists(customCacheDir)
