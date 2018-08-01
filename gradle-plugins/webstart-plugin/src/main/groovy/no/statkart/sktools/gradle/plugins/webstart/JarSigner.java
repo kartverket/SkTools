@@ -177,7 +177,7 @@ public class JarSigner extends ConventionTask {
     private void signJar(final File jarFile, final File manifestAddendum) {
 
         if (manifestAddendum != null) {
-            getLogger().info(String.format("Updating manifest for %s ...", jarFile.getPath()));
+            getLogger().info("Updating manifest for {} ...", jarFile.getPath());
 
             getProject().exec(new Action<ExecSpec>() {
                 @Override
@@ -193,7 +193,7 @@ public class JarSigner extends ConventionTask {
             getLogger().debug("No additional manifest attributes specified. Using original manifest...");
         }
 
-        getLogger().lifecycle(String.format("Signing file %s ...", getProject().relativePath(jarFile)));
+        getLogger().lifecycle("Signing file {} ...", getProject().relativePath(jarFile));
 
         getProject().exec(new Action<ExecSpec>() {
             @Override
@@ -325,7 +325,7 @@ public class JarSigner extends ConventionTask {
                 if (certDirectory.isDirectory()) {
                     FileHashIdent certFileIdent = new FileHashIdent(certDirectory, certDirectory.getName());
 
-                    getLogger().debug(String.format("Found cache-dir for certificate with hash = %s", certDirectory.getName()));
+                    getLogger().debug("Found cache-dir for certificate with hash = {}", certDirectory.getName());
 
                     Map<String, FileHashIdent> signedArtifacts = signedArtifactsForCertificates.get(certFileIdent);
                     if (signedArtifacts == null) {
@@ -339,7 +339,7 @@ public class JarSigner extends ConventionTask {
                             if (signedArtifactFileIdent != null) {
                                 String unsignedFileName = signedArtifactFileIdent.getFile().getName();
                                 signedArtifacts.put(unsignedFileName, signedArtifactFileIdent);
-                                getLogger().debug(String.format("   found cached file %s", signedArtifactFileIdent.getFile().getAbsolutePath()));
+                                getLogger().debug("   found cached file {}", signedArtifactFileIdent.getFile().getAbsolutePath());
                             }
                         }
                     }

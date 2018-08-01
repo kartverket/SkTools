@@ -88,7 +88,7 @@ public class DbtoolsPlugin implements Plugin<Project> {
 
             @Override
             public void execute(Task task) {
-                logger.quiet(String.format("Dbtools configuration for %s", project.getPath()));
+                logger.quiet("Dbtools configuration for {}", project.getPath());
 
                 for (Map.Entry<String, ? extends AbstractDatabaseConvention> entry : dbtoolsConvention.dbToolSets.entrySet()) {
                     logger.quiet("\n\nInfo for toolset {}.dbToolSets['{}'] (prefix: '{}')", CONVENTION_NAME, entry.getKey(), entry.getValue());
