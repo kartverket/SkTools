@@ -2,14 +2,14 @@ package no.statkart.sktools.gradle.plugins.webstart;
 
 import no.statkart.sktools.gradle.plugins.webstart.util.FileHashIdent;
 import org.gradle.api.Action;
-import org.gradle.api.GradleException;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.FileTree;
 import org.gradle.api.internal.ConventionTask;
-import org.gradle.api.invocation.Gradle;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFiles;
 import org.gradle.api.tasks.SkipWhenEmpty;
@@ -23,14 +23,10 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
 
 /**
  * Steg for signering av alle jar avhengigheter.
@@ -67,7 +63,8 @@ public class JarSigner extends ConventionTask {
     private final Map<String, String> manifestAttributes = new LinkedHashMap<>();
 
     private final ConfigurableFileCollection jarFilesToSign = getProject().files();
-    private final ConfigurableFileCollection signedJarFiles = getProject().files();
+    private final FileTree signedJarFiles;
+    private final File signedJarFilesDir;
 
     public Map<FileHashIdent, Map<String, FileHashIdent>> getSignedArtifactsForCertificates() {
         if (signedArtifactsForCertificates == null) {
@@ -82,13 +79,9 @@ public class JarSigner extends ConventionTask {
     }
 
     public JarSigner() {
-        //sen binding for å unngå deadlock i gradle pga validering av input/output felter på task
-        signedJarFiles.from(new Callable() {
-            @Override
-            public Object call() throws Exception {
-                return collectSignedJars(getJarFilesToSign().getFiles());
-            }
-        });
+        super();
+        signedJarFilesDir = new File(new File(getProject().getBuildDir(), "signedJars"), getName());
+        signedJarFiles = getProject().files(signedJarFilesDir).getAsFileTree();
     }
 
     /**
@@ -100,9 +93,9 @@ public class JarSigner extends ConventionTask {
     public void signJars() throws Exception {
         if (getCertificateFile() != null) {
             //sertifikat ident er streng representasjon av hash verdi + alias  - dette danner da mappenavn i cache dir
-            FileHashIdent certificateFileIdent = new FileHashIdent(getCertificateFile(), FileHashIdent.createChecksum(getCertificateFile(), getAlias()));
+            FileHashIdent certificateFileIdent = getCertificateHashIdent();
 
-            File certDirectory = new File(getCacheDir(), certificateFileIdent.hash());
+            File certDirectory = getCertificateCacheDir(certificateFileIdent);
             certDirectory.mkdirs();
 
             Map<String, FileHashIdent> signedArtifacts = getSignedArtifactsForCertificates().get(certificateFileIdent);
@@ -164,12 +157,17 @@ public class JarSigner extends ConventionTask {
                         getLogger().debug("updating cache-entry for " + unsignedJar);
                     }
                     cachedFileIdent = new FileHashIdent(signedJarFile, jarFileIdent.hash());
-                    cachedFileIdent.writeChecksumToFile();
+                    cachedFileIdent.writeChecksumToFile(new File(certDirectory, signedJarFile.getName() + ".md5"));
                     signedArtifacts.put(unsignedJar.getName(), cachedFileIdent);
                 }
 
                 //legger til signert fil i eksekvering av task - blir også lagt til ved beregning av output-filer
-                signedJarFiles.from(signedJarFile);
+                signedJarFilesDir.mkdirs();
+                Files.copy(signedJarFile.toPath(), new File(signedJarFilesDir, signedJarFile.getName()).toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+                //kan ikke bruke symlink pga kartverkets UAC policy -- kan evt kjøres med admin privilegier
+                // se også https://stackoverflow.com/questions/23217460/how-to-create-soft-symbolic-link-using-java-nio-files
+//                Files.createSymbolicLink(new File(signedJarFilesDir, signedJarFile.getName()).toPath(), signedJarFile.toPath());
             }
         } else {
             getLogger().warn("Signing of resources disabled - no certificate!");
@@ -237,6 +235,18 @@ public class JarSigner extends ConventionTask {
         this.certificateFile = certificateFile;
     }
 
+
+    @Internal
+    public FileHashIdent getCertificateHashIdent() throws Exception {
+        return new FileHashIdent(getCertificateFile(), FileHashIdent.createChecksum(getCertificateFile(), getAlias()));
+    }
+
+    @Internal
+    public File getCertificateCacheDir(FileHashIdent certificateFileIdent) throws Exception {
+        return new File(getCacheDir(), certificateFileIdent.hash());
+    }
+
+    @Internal
     public File getCacheDir() {
         if (cacheDir == null) {
             cacheDir = new File(getProject().getBuildDir(), "sign-cache");
@@ -360,26 +370,5 @@ public class JarSigner extends ConventionTask {
         return signedJarFiles;
     }
 
-    private Collection<File> collectSignedJars(Collection<File> unsignedFiles) {
-        try {
-            if (getCertificateFile() == null) {
-                // Kan ikke signere noe uten sertifikat
-                return unsignedFiles;
-            }
-
-            FileHashIdent certificateFileIdent = new FileHashIdent(getCertificateFile(), FileHashIdent.createChecksum(getCertificateFile(), getAlias()));
-            File certDirectory = new File(getCacheDir(), certificateFileIdent.hash());
-
-            List<File> signedFiles = new ArrayList<>(unsignedFiles.size());
-            for (File unsignedFile : unsignedFiles) {
-                File signedFile = new File(certDirectory, unsignedFile.getName());
-                signedFiles.add(signedFile);
-            }
-
-            return signedFiles;
-        } catch (Exception e) {
-            throw new GradleException("Error calculating (un)signed output files from " + JarSigner.class.getName(), e);
-        }
-    }
 
 }

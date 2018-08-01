@@ -110,15 +110,14 @@ public class FileHashIdent {
      *
      * @see #fileHashIdentFromChecksumFile(java.io.File)
      */
-    public FileHashIdent writeChecksumToFile() throws IOException {
-        File md5File = new File(file.getParent(), file.getName() + ".md5");
+    public FileHashIdent writeChecksumToFile(File md5File) throws IOException {
         Files.write(md5File.toPath(), hash.getBytes(StandardCharsets.UTF_8));
         return this;
     }
 
     /**
      * Creates a fileIdent based on stored cache data
-     * @see FileHashIdent#writeChecksumToFile()
+     * @see FileHashIdent#writeChecksumToFile(File)
      *
      * @return {@code null} if corresponding files are not found
      */
