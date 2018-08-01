@@ -66,6 +66,8 @@ public class JarSigner extends ConventionTask {
     private final FileTree signedJarFiles;
     private final File signedJarFilesDir;
 
+    transient boolean didSignJarFile = false;
+
     public Map<FileHashIdent, Map<String, FileHashIdent>> getSignedArtifactsForCertificates() {
         if (signedArtifactsForCertificates == null) {
             try {
@@ -182,7 +184,6 @@ public class JarSigner extends ConventionTask {
             getProject().exec(new Action<ExecSpec>() {
                 @Override
                 public void execute(ExecSpec execSpec) {
-
                     execSpec.setWorkingDir(jarFile.getParent());
                     execSpec.setIgnoreExitValue(false);
                     execSpec.setExecutable("jar");
@@ -221,6 +222,8 @@ public class JarSigner extends ConventionTask {
                 }
             }
         });
+
+        didSignJarFile = true;
 
     }
 

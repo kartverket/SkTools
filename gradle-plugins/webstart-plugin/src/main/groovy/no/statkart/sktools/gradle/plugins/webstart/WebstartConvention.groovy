@@ -1,5 +1,6 @@
 package no.statkart.sktools.gradle.plugins.webstart
 
+import groovy.transform.CompileStatic
 import no.statkart.sktools.gradle.plugins.webstart.util.FileHashIdent
 import org.gradle.api.Named
 import org.gradle.api.NamedDomainObjectContainer
@@ -138,6 +139,7 @@ class ClientConfiguration {
     }
 }
 
+@CompileStatic
 class SigningConfiguration {
     protected final transient Project project;
 
@@ -151,9 +153,14 @@ class SigningConfiguration {
      * @see JarSigner#storetype
      */
     protected String storetype = "pkcs12";
+    /**
+     * Plassering av mapper for signerings-cache. Denne legges til rotprosjektet som standard for deling dersom det finnes flere prosjekt som deler signerings-attributter og avhengigheter.
+     */
+    private File cacheDir;
 
     protected SigningConfiguration(Project project) {
         this.project = project
+        cacheDir = new File(project.getRootProject().buildDir, 'jarsigner-cache');
     }
 
     File getKeystore() {
@@ -198,6 +205,14 @@ class SigningConfiguration {
 
     void setStoretype(String storetype) {
         this.storetype = storetype
+    }
+
+    File getCacheDir() {
+        return cacheDir
+    }
+
+    void setCacheDir(File cacheDir) {
+        this.cacheDir = cacheDir
     }
 }
 
