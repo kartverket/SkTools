@@ -252,6 +252,7 @@ public class JarSigner extends ConventionTask {
     @Internal
     public File getCacheDir() {
         if (cacheDir == null) {
+            //for tilfeller der convention verdi ikke er satt...
             cacheDir = new File(getProject().getBuildDir(), "sign-cache");
         }
         return cacheDir;
@@ -323,7 +324,8 @@ public class JarSigner extends ConventionTask {
         signedArtifactsForCertificates = new HashMap<>();
         getLogger().info("Initializing cache...");
 
-        if (getCacheDir().exists()) {
+        File cacheDir = getCacheDir();
+        if (cacheDir.exists()) {
             for (File certDirectory : cacheDir.listFiles()) {
                 if (certDirectory.isDirectory()) {
                     FileHashIdent certFileIdent = new FileHashIdent(certDirectory, certDirectory.getName());
