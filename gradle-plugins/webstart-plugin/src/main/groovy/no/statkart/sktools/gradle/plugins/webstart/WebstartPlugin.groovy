@@ -23,7 +23,15 @@ import java.util.concurrent.Callable
  * <br>
  * <br>
  * Signerte filer legges som standard til mappen {@link SigningConfiguration#cacheDir}.
- * Cleaning av denne gjøres via task med navn {@value #CLEAN_JARSIGNER_CACHES_TASK_NAME}
+ * Cleaning av denne gjøres via task med navn {@value #CLEAN_JARSIGNER_CACHES_TASK_NAME} -> <code>cleanJarSignerCaches<code>.
+ * <p>
+ * <p>
+ * Toggle av sign cache som overlever clean kan gjøres via system property.
+ * Denne kan feks angis i gradle.properties ved <br>
+ * <code>
+ *     systemProp.jarsigner.cache=true
+ * </code>
+ * <p>
  *
  * @since 1.2
  * @author Tor Egil R. Strand

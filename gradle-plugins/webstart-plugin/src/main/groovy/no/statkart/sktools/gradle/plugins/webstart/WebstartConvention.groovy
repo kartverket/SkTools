@@ -160,7 +160,11 @@ class SigningConfiguration {
 
     protected SigningConfiguration(Project project) {
         this.project = project
-        cacheDir = new File(project.getRootProject().buildDir, 'jarsigner-cache');
+        if (System.getProperty("jarsigner.cache", 'false').equalsIgnoreCase('true')) {
+            cacheDir = new File(project.getGradle().getGradleUserHomeDir(), 'jarsigner-cache');
+        } else {
+            cacheDir = new File(project.getBuildDir(), 'jarsigner-cache');
+        }
     }
 
     File getKeystore() {
