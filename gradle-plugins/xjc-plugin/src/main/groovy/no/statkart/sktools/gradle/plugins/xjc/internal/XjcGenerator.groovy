@@ -23,7 +23,6 @@ class XjcGenerator {
 
    void gen() {
       final AntBuilder ant = project.getAnt()
-      println ("xjc classpath : ${getClasspath().getAsPath()}")
       ant.taskdef(name: 'xjc', classname: 'com.sun.tools.xjc.XJCTask', classpath: getClasspath().getAsPath())
 
       getOutputDirectory().mkdirs()
