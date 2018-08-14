@@ -151,7 +151,12 @@ class XjcPlugin implements Plugin<ProjectInternal> {
                 dependencies.add(project.getDependencies().create(xjcNotation));
                 /* As of jaxb 2.2.7 they have split the jaxb libraries into several components. xjc is now decoupled from any particular jaxb runtime. To fix this issue, ensure a jaxb runtime is made available on the classpath when executing xjc */
                 def jaxbNotation = Objects.requireNonNull(pluginProperties.getProperty("default_jaxb_ri_implementation"), "Skal settes av byggesystem")
-                dependencies.add(project.getDependencies().create(jaxbNotation));
+                def jaxbDependency = project.getDependencies().create(jaxbNotation)
+                dependencies.add(jaxbDependency);
+
+                if (jaxbDependency.getVersion() < '2.3.1') { // workaround [SKTOOLS-185]
+                    dependencies.add(project.getDependencies().create('com.sun.activation:javax.activation:1.2.0'))
+                }
             }
         })
         return configuration;
