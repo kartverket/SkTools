@@ -23,7 +23,6 @@ import org.gradle.api.tasks.compile.AbstractCompile;
 import org.gradle.util.GUtil;
 
 import java.net.URLClassLoader;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.Callable;
 
@@ -70,7 +69,8 @@ public class WsDocGenPlugin implements Plugin<ProjectInternal> {
 
                 container.all(new Action<WsDocGroup>() {
                     //samletask for alle grupper for dette source settet
-                    final String commonSourceSetTaskName = String.format(convention.GEN_TASK_NAME_PATTERN, GUtil.toCamelCase(sourceSet.getName()), "");
+                    /** @see WsDocGenConvention#GEN_TASK_NAME_PATTERN */
+                    final String commonSourceSetTaskName = "gen" + GUtil.toCamelCase(sourceSet.getName()) + "Wsdoc";
 
                     @Override
                     public void execute(final WsDocGroup group) {
@@ -80,7 +80,7 @@ public class WsDocGenPlugin implements Plugin<ProjectInternal> {
                             group.include("**/*Bean.java");
                         }
                         if (group.targetPath == null) {
-                            group.targetPath(String.format("%s/%s/wsdoc/%s", project.relativePath(project.getBuildDir()), sourceSet.getName(), group.name));
+                            group.targetPath(project.relativePath(project.getBuildDir()) + "/" + sourceSet.getName() + "/wsdoc/" + group.name);
                         }
 
 

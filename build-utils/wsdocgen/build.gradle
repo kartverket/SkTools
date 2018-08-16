@@ -4,6 +4,9 @@ apply plugin: 'maven-publish'
 
 dependencies {
 
+    implementation libraries.jaxb_api
+    implementation libraries.jaxws_annotations
+
     //Saxon for xslt 2.0
     //Saxon HE is the open source version
     runtime libraries.saxon

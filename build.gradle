@@ -36,6 +36,9 @@ project.ext.libraries = [
         jaxb_xjc : 'org.glassfish.jaxb:jaxb-xjc:2.2.11',
         jaxb_rt : 'org.glassfish.jaxb:jaxb-runtime:2.2.11',
 
+        jaxb_api : 'javax.xml.bind:jaxb-api:2.3.0@jar',
+        jaxws_annotations : 'javax.jws:jsr181-api:1.0-MR1@jar',
+
         // Testing
         assertj: 'org.assertj:assertj-core:2.9.1', /* AssertJ 2.x for Java 7, 3.x for Java8 */
         testng: 'org.testng:testng:6.14.3',
