@@ -198,7 +198,7 @@ static def gradleOptions(script) {
             "-PWEBLOGIC_HOME=${WEBLOGIC_HOME(script.env.WEBLOGIC_VERSION, script.env)}",
             "-Dmaven.repo.local=${script.env.BASE}/.m2", //publiserer midlertidigt artefakt til mavenLocal for kjøring av releasetester
             '-Dorg.gradle.daemon=false',
-            "-Djava.io.tmpdir=${pwd(tmp: true)}", //temp dir settes til samme mappe som jenkins (<workspace name>@tmp)
+            "-Djava.io.tmpdir=${script.pwd(tmp: true)}", //temp dir settes til samme mappe som jenkins (<workspace name>@tmp)
             '--stacktrace'
     ].join(' ')
 }
