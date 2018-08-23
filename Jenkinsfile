@@ -41,11 +41,10 @@ pipeline { //declarative pipeline syntax
         //legger gradle til byggenodens workspace - dette forhindrer kollisjoner i tilfeller der man har ibruk flyktige snapshot versjoner slik at to jobber kan komme i konflikt.
         //PS: erstatter '\' med '/' via char verdier da jenkins parser og kompilerer regex uttrykk på en håpløs måte...
         GRADLE_USER_HOME = "${WORKSPACE.replace(0x5c as char, 0x2f as char)}/gradle"
-        TMP = "${WORKSPACE.replace(0x5c as char, 0x2f as char)}/temp"
         WEBLOGIC_VERSION = "${params.WEBLOGIC_VERSION}"
         WEBLOGIC_HOME = "${WEBLOGIC_HOME("${params.WEBLOGIC_VERSION}", env)}"
         ORG_GRADLE_PROJECT_sktools_versjon = "${params.sktools_versjon}"
-        GRADLE_OPTS = "-XX:MaxPermSize=512m -Djava.io.tmpdir=${TMP}" //java 7 trenger litt mere permGen space
+        GRADLE_OPTS = "-XX:MaxPermSize=512m" //java 7 trenger litt mere permGen space
         BRANCH_NAME = "${params.BRANCH_NAME}"
 
         //for publisering til sentralt maven repo bines opp via jenkins credential (secret text)
@@ -55,9 +54,6 @@ pipeline { //declarative pipeline syntax
     stages {
         stage('Prepare') {
             steps {
-                dir(TMP) {
-                    deleteDir() //sletter evt tidligere filer i temp katalog
-                }
                 bat "gradle clean --refresh-dependencies ${gradleOptions(this)}"
             }
         }
@@ -202,6 +198,7 @@ static def gradleOptions(script) {
             "-PWEBLOGIC_HOME=${WEBLOGIC_HOME(script.env.WEBLOGIC_VERSION, script.env)}",
             "-Dmaven.repo.local=${script.env.BASE}/.m2", //publiserer midlertidigt artefakt til mavenLocal for kjøring av releasetester
             '-Dorg.gradle.daemon=false',
+            "-Djava.io.tmpdir=${pwd(tmp: true)}", //temp dir settes til samme mappe som jenkins (<workspace name>@tmp)
             '--stacktrace'
     ].join(' ')
 }
