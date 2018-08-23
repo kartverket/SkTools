@@ -30,7 +30,7 @@ include ':gradle-plugins:filter-resources-plugin'
 
 rootProject.name = 'sktools'
 
-gradle.beforeProject { project ->
+gradle.rootProject { project -> //nested projects fallback to properties of root project
     [
             'WEBLOGIC_HOME',
             'WEBLOGIC_VERSION',
