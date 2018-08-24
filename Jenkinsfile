@@ -203,6 +203,7 @@ static def gradleOptions(params, env) {
             "-PWEBLOGIC_HOME=${WEBLOGIC_HOME(env.WEBLOGIC_VERSION, env)}",
             "-Dmaven.repo.local=${env.BASE}/.m2", //publiserer midlertidigt artefakt til mavenLocal for kjøring av releasetester
             '-Dorg.gradle.daemon=false',
+            "-Djava.io.tmpdir=${script.pwd(tmp: true)}", //temp dir settes til samme mappe som jenkins (<workspace name>@tmp)
             '--stacktrace'
     ].join(' ')
 }

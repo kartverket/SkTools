@@ -173,6 +173,7 @@ subprojects { Project project ->
         }
 
         ignoreFailures = System.getProperty('ignoreFailures', 'false') == 'true' //Gradle feiler ikke dersom denne er true. Kan ikke være true dersom en gjør en publish
+        systemProperty 'java.io.tmpdir', System.getProperty('java.io.tmpdir')
 
         jvmArgs '-Xmx512m', '-XX:PermSize=128m', '-XX:MaxPermSize=256m'
 //            testLogging.showStandardStreams = true
