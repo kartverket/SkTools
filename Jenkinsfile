@@ -54,12 +54,12 @@ pipeline { //declarative pipeline syntax
     stages {
         stage('Prepare') {
             steps {
-                bat "gradle clean --refresh-dependencies ${gradleOptions(params, env)}"
+                bat "gradle clean --refresh-dependencies ${gradleOptions(this)}"
             }
         }
         stage('Build') {
             steps {
-                bat "gradle assemble publishToMavenLocal ${gradleOptions(params, env)}"
+                bat "gradle assemble publishToMavenLocal ${gradleOptions(this)}"
             }
         }
 
@@ -68,9 +68,13 @@ pipeline { //declarative pipeline syntax
                 stage('Test gradle baseline') {
                     steps {
                         bat "gradle --version"
-                        bat "gradle testGradle2.4 -DignoreFailures=true ${gradleOptions(params, env)}"
-                        junit '**/test-results/testGradle2.4/*.xml'
-                        //                            step([$class: 'Publisher', reportFilenamePattern: '**/build/reports/tests/testng-results.xml'])
+                        bat "gradle testGradle2.4 -DignoreFailures=true ${gradleOptions(this)}"
+                    }
+                    post {
+                        always {
+                            junit '**/test-results/testGradle2.4/*.xml'
+                            //                            step([$class: 'Publisher', reportFilenamePattern: '**/build/reports/tests/testng-results.xml'])
+                        }
                     }
                 }
                 stage('Test gradle latest') {
@@ -79,9 +83,13 @@ pipeline { //declarative pipeline syntax
                     }
                     steps {
                         bat "gradle --version"
-                        bat "gradle testGradle2.14.1 -DignoreFailures=true ${gradleOptions(params, env)} -DbuildDirName=build/gradle2.14" //buildDirName for å kjøre flere bygg med forskjellige gradle versjoner
-                        junit '**/test-results/testGradle2.14.1/*.xml'
-                        //                            step([$class: 'Publisher', reportFilenamePattern: '**/build/gradle2.14/reports/tests/testng-results.xml'])
+                        bat "gradle testGradle2.14.1 -DignoreFailures=true ${gradleOptions(this)} -DbuildDirName=build/gradle2.14" //buildDirName for å kjøre flere bygg med forskjellige gradle versjoner
+                    }
+                    post {
+                        always {
+                            junit '**/test-results/testGradle2.14.1/*.xml'
+                            //                            step([$class: 'Publisher', reportFilenamePattern: '**/build/gradle2.14/reports/tests/testng-results.xml'])
+                        }
                     }
                 }
             }
@@ -96,7 +104,7 @@ pipeline { //declarative pipeline syntax
                     steps {
                         withEnv(['WEBLOGIC_VERSION=10.3.5.0', "WEBLOGIC_HOME=${WEBLOGIC_HOME('10.3.5.0', env)}"]) {
                             bat "gradle --version"
-                            bat "gradle runDemos ${gradleOptions(params, env)}"
+                            bat "gradle runDemos ${gradleOptions(this)}"
                         }
                     }
                 }
@@ -109,7 +117,7 @@ pipeline { //declarative pipeline syntax
                         sleep 5 //sleep time in seconds - helps seed randomness in choosing port# in database demos
                         withEnv(['WEBLOGIC_VERSION=12.1.3.0', "WEBLOGIC_HOME=${WEBLOGIC_HOME('12.1.3.0', env)}"]) {
                             bat "gradle --version"
-                            bat "gradle runDemos ${gradleOptions(params, env)} -DbuildDirName=gradle2.14"
+                            bat "gradle runDemos ${gradleOptions(this)} -DbuildDirName=gradle2.14"
                         }
                     }
                 }
@@ -118,15 +126,13 @@ pipeline { //declarative pipeline syntax
 
         stage('Publish') {
             steps {
-                bat "gradle publish ${gradleOptions(params, env)} --init-script config/gradle/scripts/mavenPublish.gradle"
+                bat "gradle publish ${gradleOptions(this)} --init-script config/gradle/scripts/mavenPublish.gradle"
             }
         }
     }
 
     post {
         always {
-            echo 'pelle **always**'
-
             //for mulig substituert innhold se https://github.com/jenkinsci/email-ext-plugin/tree/master/src/main/java/hudson/plugins/emailext/plugins/content
             emailext to: 'lislei@kartverket.no',
                     subject: '$PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS!',
@@ -164,16 +170,7 @@ Build : $BUILD_URL <br>
         }
 
         changed {
-            echo 'build status changed pelle'
-        }
-        failure {
-            echo 'build Failed pelle'
-        }
-        success {
-            echo 'build is a success pelle'
-        }
-        unstable {
-            echo 'build is not good AKA unstable'
+            echo 'build status changed'
         }
     }
 
@@ -197,11 +194,11 @@ Build : $BUILD_URL <br>
 }
 
 
-static def gradleOptions(params, env) {
+static def gradleOptions(script) {
     return [
-            "-PWEBLOGIC_VERSION=${env.WEBLOGIC_VERSION}",
-            "-PWEBLOGIC_HOME=${WEBLOGIC_HOME(env.WEBLOGIC_VERSION, env)}",
-            "-Dmaven.repo.local=${env.BASE}/.m2", //publiserer midlertidigt artefakt til mavenLocal for kjøring av releasetester
+            "-PWEBLOGIC_VERSION=${script.env.WEBLOGIC_VERSION}",
+            "-PWEBLOGIC_HOME=${WEBLOGIC_HOME(script.env.WEBLOGIC_VERSION, script.env)}",
+            "-Dmaven.repo.local=${script.env.BASE}/.m2", //publiserer midlertidigt artefakt til mavenLocal for kjøring av releasetester
             '-Dorg.gradle.daemon=false',
             "-Djava.io.tmpdir=${script.pwd(tmp: true)}", //temp dir settes til samme mappe som jenkins (<workspace name>@tmp)
             '--stacktrace'
@@ -215,16 +212,4 @@ static def WEBLOGIC_HOME(version, env) {
     def path = env."WEBLOGIC_HOME_${version}"
     Objects.requireNonNull(path, "Missing env var for '${'WEBLOGIC_HOME_' + version}' on Jenkins node!")
     return path
-}
-
-/**
- * Substituerer inn env verdier for vilkårlig streng med placeholdere på formen ${VAR}
- */
-static def envExpand(value, env) {
-//    def schema = env.environment.expand(value)
-    value = value.replace('${EXECUTOR_NUMBER}', env.EXECUTOR_NUMBER)
-    value = value.replace('${COMPUTERNAME}', env.COMPUTERNAME)
-    value = value.replace('${NODE_NAME}', env.NODE_NAME)
-    value = value.replace('${USERNAME}', env.USERNAME)
-    return value
 }
