@@ -99,10 +99,8 @@ public class WeblogicDeployConvention {
 
     static FileCollection findAntClasspath(Project project) {
         if (project.hasProperty("WEBLOGIC_HOME")) {
-            if (project.hasProperty("WEBLOGIC_VERSION")) {
-                Object wlsVersion = project.property("WEBLOGIC_VERSION");
-                return weblogicClasspathFor(String.valueOf(wlsVersion), project);
-            }
+            Object wlsVersion = project.findProperty("WEBLOGIC_VERSION");
+            return weblogicClasspathFor(String.valueOf(wlsVersion), project);
         }
         return project.files();
     }
@@ -115,11 +113,15 @@ public class WeblogicDeployConvention {
             return project.files(WEBLOGIC_HOME + "/wlserver_10.3/server/lib/weblogic.jar");
         }
 
-
-        if (!wlsVersion.startsWith("12.")) {
-            project.getLogger().warn("WARNING: no classpath defined for weblogic version " + wlsVersion + " - defaulting to WLS 12.x");
+        if (wlsVersion.startsWith("12.1")) {
+            return project.files(WEBLOGIC_HOME + "/wlserver/server/lib/weblogic.jar");
         }
 
+        if (wlsVersion.startsWith("12.2")) {
+            return project.files(WEBLOGIC_HOME + "/wlserver/modules/features/wlst.wls.classpath.jar");
+        }
+
+        project.getLogger().warn("WARNING: no classpath defined for weblogic version " + wlsVersion + " - defaulting to WLS 12.x");
         ConfigurableFileCollection wls12 = project.files(WEBLOGIC_HOME + "/wlserver/server/lib/weblogic.jar"); //12.1
         wls12.from(WEBLOGIC_HOME + "/wlserver/modules/features/wlst.wls.classpath.jar"); //12.2
         return wls12;
