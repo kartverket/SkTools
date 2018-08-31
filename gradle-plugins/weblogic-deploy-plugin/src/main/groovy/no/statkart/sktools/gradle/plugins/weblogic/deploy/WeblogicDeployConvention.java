@@ -3,6 +3,7 @@ package no.statkart.sktools.gradle.plugins.weblogic.deploy;
 import groovy.lang.Closure;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.util.ConfigureUtil;
 import org.gradle.util.GUtil;
@@ -110,21 +111,18 @@ public class WeblogicDeployConvention {
     static FileCollection weblogicClasspathFor(String wlsVersion, Project project) {
         Object WEBLOGIC_HOME = project.property("WEBLOGIC_HOME");
 
-        if (wlsVersion.startsWith("12.")) {
-            if (wlsVersion.startsWith("12.1")) {
-                return project.files(WEBLOGIC_HOME + "/wlserver/server/lib/weblogic.jar");
-            }
-
-            project.getLogger().warn("WARNING: no optimalization found for weblogic version " + wlsVersion);
-            return project.files(WEBLOGIC_HOME + "/wlserver/server/lib/weblogic.jar");
-        }
-
-
         if (wlsVersion.startsWith("10.3")) {
             return project.files(WEBLOGIC_HOME + "/wlserver_10.3/server/lib/weblogic.jar");
         }
 
-        throw new RuntimeException("Unsupported weblogic version found - please add support for " + wlsVersion);
+
+        if (!wlsVersion.startsWith("12.")) {
+            project.getLogger().warn("WARNING: no classpath defined for weblogic version " + wlsVersion + " - defaulting to WLS 12.x");
+        }
+
+        ConfigurableFileCollection wls12 = project.files(WEBLOGIC_HOME + "/wlserver/server/lib/weblogic.jar"); //12.1
+        wls12.from(WEBLOGIC_HOME + "/wlserver/modules/features/wlst.wls.classpath.jar"); //12.2
+        return wls12;
     }
 
 }

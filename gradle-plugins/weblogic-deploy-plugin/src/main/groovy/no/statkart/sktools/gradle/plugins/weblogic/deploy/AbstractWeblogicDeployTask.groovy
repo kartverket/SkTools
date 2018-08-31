@@ -11,6 +11,14 @@ import org.gradle.process.JavaExecSpec
 
 /**
  * Alt som er felles for deploying og undeploying.
+ * <br>
+ * <p>
+ * Dokumentasjon for {@code weblogic.Deployer}:
+ * <ul>
+ * <li> <a href="https://docs.oracle.com/middleware/12213/wls/DEPGD/wldeployer.htm">Oracle® Fusion Middleware Deploying Applications to Oracle WebLogic Server 12.2.1.3</a> </li>
+ * <li> <a href="https://docs.oracle.com/middleware/1213/wls/DEPGD/wldeployer.htm">Fusion Middleware Deploying Applications to Oracle WebLogic Server 12.1.3</a> </li>
+ * <li> <a href="https://docs.oracle.com/middleware/11119/wls/DEPGD/wldeployer.htm">Fusion Middleware Deploying Applications to Oracle WebLogic Server 10.3.6</a> </li>
+ * <ul>
  *
  * @author Tor Egil R. Strand
  * @since 1.2
