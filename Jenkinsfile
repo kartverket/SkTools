@@ -78,15 +78,15 @@ pipeline { //declarative pipeline syntax
                 }
                 stage('Test gradle latest') {
                     tools {
-                        gradle 'Gradle 4.10.1' //latest og greatest (kan også være neste major versjon)
+                        gradle 'Gradle 4.10.2' //latest og greatest (kan også være neste major versjon)
                     }
                     steps {
                         bat "gradle --version"
-                        bat "gradle testGradle4.10.1 -DignoreFailures=true ${gradleOptions(this)} -DbuildDirName=build/gradle4.10.1" //buildDirName for å kjøre flere bygg med forskjellige gradle versjoner
+                        bat "gradle testGradle4.10.2 -DignoreFailures=true ${gradleOptions(this)} -DbuildDirName=build/gradle4.10.2" //buildDirName for å kjøre flere bygg med forskjellige gradle versjoner
                     }
                     post {
                         always {
-                            junit '**/test-results/testGradle4.10.1/*.xml'
+                            junit '**/test-results/testGradle4.10.2/*.xml'
                         }
                     }
                 }
@@ -108,14 +108,14 @@ pipeline { //declarative pipeline syntax
                 }
                 stage('Integration Test Latest') {
                     tools {
-                        gradle 'Gradle 4.10.1' //latest og greatest (kan også være neste major versjon)
+                        gradle 'Gradle 4.10.2' //latest og greatest (kan også være neste major versjon)
                         jdk 'Java 8 Latest' //weblogic krever denne major versjonen av java
                     }
                     steps {
                         sleep 5 //sleep time in seconds - helps seed randomness in choosing port# in database demos
                         withEnv(['WEBLOGIC_VERSION=12.1.3.0', "WEBLOGIC_HOME=${WEBLOGIC_HOME('12.1.3.0', env)}"]) {
                             bat "gradle --version"
-                            bat "gradle runDemos ${gradleOptions(this)} -DbuildDirName=gradle4.10.1"
+                            bat "gradle runDemos ${gradleOptions(this)} -DbuildDirName=gradle4.10.2"
                         }
                     }
                 }
