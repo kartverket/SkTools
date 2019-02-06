@@ -19,6 +19,10 @@ sourceSets {
     }
 }
 
+repositories {
+    maven { name = 'public'; url = rootProject.MAVEN_REPO }
+}
+
 task('gen').description = "Genererte ressurser for alle sourceSets"
 
 task zipSchemas(type: Zip) {

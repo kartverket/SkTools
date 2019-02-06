@@ -19,8 +19,8 @@ public class WsdlGenTask extends SourceTask {
     @TaskAction
     protected void genWsdl() {
         ant.taskdef(name: 'wsgen', classname: 'com.sun.tools.ws.ant.WsGen', classpath: getJaxwsClasspath().getAsPath())
-        ant.delete(dir: getDestinationDir(), quiet: 'true')
-        ant.mkdir(dir: getDestinationDir())
+        getProject().delete(getDestinationDir())
+        getProject().mkdir(getDestinationDir())
 
         def wsBeans = getSource().matching { include '**/*WSBean.class' }
 

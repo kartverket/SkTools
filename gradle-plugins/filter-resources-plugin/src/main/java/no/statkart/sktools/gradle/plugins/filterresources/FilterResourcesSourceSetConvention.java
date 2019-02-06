@@ -3,7 +3,6 @@ package no.statkart.sktools.gradle.plugins.filterresources;
 import groovy.lang.Closure;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.util.ConfigureUtil;
-import org.gradle.util.GUtil;
 
 /**
  * @author Leif Lislegård
@@ -39,18 +38,10 @@ class FilterResourcesSourceSetConvention {
     }
 
 
-    static public String getFilterResourcesTaskName(SourceSet sourceSet) {
-        return String.format(FILTER_RESOURCES_TASK_NAME_PATTERN, getTaskBaseName(sourceSet.getName()));
-    }
-
     /**
-     * På samme måte som {@link org.gradle.api.internal.tasks.DefaultSourceSet}
-     *
-     * @return sourceSet navn med stor bokstav, eller tom streng for "main"-SourceSet.
-     * @param name lokalt navn til task
+     * @see #FILTER_RESOURCES_TASK_NAME_PATTERN
      */
-    static String getTaskBaseName(String name) {
-        return name.equals(SourceSet.MAIN_SOURCE_SET_NAME) ? "" : GUtil.toCamelCase(name);
+    static public String getFilterResourcesTaskName(SourceSet sourceSet) {
+        return sourceSet.getTaskName("filter", "Resources");
     }
-
 }

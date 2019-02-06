@@ -1,6 +1,7 @@
 package no.statkart.sktools.gradle.plugins.xjc.internal
 
 import no.statkart.sktools.gradle.plugins.xjc.XjcConfig
+import org.gradle.api.AntBuilder
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree

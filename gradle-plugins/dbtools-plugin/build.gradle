@@ -12,7 +12,6 @@ dependencies {
 
     //gradle api til byggesystemm blir benyttet som std
     compile gradleApi()
-    compile libraries.commons_lang3
 
     //test
     testCompile project(':build-utils:test-utils')

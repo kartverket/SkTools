@@ -104,8 +104,12 @@ public class WsDocGroup {
       return this;
    }
 
+   /**
+    * @see WsDocGenConvention#GEN_TASK_NAME_PATTERN
+    * @return {@link WsDocGenConvention#GEN_TASK_NAME_PATTERN}
+    */
    public String getWsdocTaskName() {
-      return String.format(convention.GEN_TASK_NAME_PATTERN, GUtil.toCamelCase(sourceSet.getName()), name);
+      return "gen" + GUtil.toCamelCase(sourceSet.getName() + " Wsdoc " + name)
    }
 
 }

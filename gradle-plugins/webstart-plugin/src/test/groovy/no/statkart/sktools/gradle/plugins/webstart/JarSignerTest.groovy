@@ -1,16 +1,18 @@
 package no.statkart.sktools.gradle.plugins.webstart
 
 import no.statkart.sktools.gradle.plugins.webstart.util.FileHashIdent
+import org.apache.commons.codec.binary.Hex
+import org.assertj.core.api.Assertions
 
-import java.util.jar.JarEntry
 import java.util.jar.JarFile
 import no.statkart.sktools.gradle.testutils.ProjectHelper
 import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
 import no.statkart.sktools.gradle.testutils.filewriter.WebstartTestutilFilewriter
-import org.apache.commons.io.FileUtils
 import org.testng.Assert
 import org.testng.annotations.Test
 import org.gradle.api.Project
+
+import static org.assertj.core.util.Preconditions.checkState
 
 /**
  * Test av {@link JarSigner}
@@ -29,7 +31,7 @@ class JarSignerTest {
             projectHelper.writeKodesignerinSertifikat('.')
         }
         File certificateFile = projectHelper.project.file('kodesignering.jks')
-        Assert.assertTrue(certificateFile.exists());
+        checkState(certificateFile.exists(), "kodesignering.jks available as test resources");
 
         //configures the jar signer
         return projectHelper.project.task(name, type: JarSigner) { JarSigner task ->
@@ -65,7 +67,8 @@ class JarSignerTest {
             Assert.assertEquals(jarSigner.signedArtifactsForCertificates.size(), 1)
             Assert.assertEquals(jarSigner.signedArtifactsForCertificates.values().asList()[0].size(), 1)
             Assert.assertEquals(jarSigner.signedArtifactsForCertificates.values().asList()[0].values().collect {it.file}.size(), 1)
-            Assert.assertTrue(jarSigner.signedArtifactsForCertificates.values().asList()[0].values().collect {it.file}.containsAll(jarSigner1.outputs.files.files))
+            Assertions.assertThat(jarSigner.signedArtifactsForCertificates.values().asList()[0].values().collect {it.file.name}).
+                    containsAll(jarSigner.outputs.files.collect {it.name})
         }
 
         JarSigner jarSigner2 = buildDefaultJarSigner(projectHelper, 'sign2')
@@ -74,7 +77,8 @@ class JarSignerTest {
             Assert.assertEquals(jarSigner.signedArtifactsForCertificates.size(), 1)
             Assert.assertEquals(jarSigner.signedArtifactsForCertificates.values().asList()[0].size(), 1)
             Assert.assertEquals(jarSigner.signedArtifactsForCertificates.values().asList()[0].values().collect {it.file}.size(), 1)
-            Assert.assertTrue(jarSigner.signedArtifactsForCertificates.values().asList()[0].values().collect {it.file}.containsAll(jarSigner1.outputs.files.files))
+            Assertions.assertThat(jarSigner.signedArtifactsForCertificates.values().asList()[0].values().collect {it.file.name}).
+                    containsAll(jarSigner.outputs.files.collect {it.name})
         }
 
         Thread.sleep(1000) //venter ett sekund for evt ulik timestamp
@@ -84,7 +88,7 @@ class JarSignerTest {
         long modified2 = jarSigner2.outputs.files.singleFile.lastModified()
 
 
-        Assert.assertEquals(jarSigner2.outputs.files.files, jarSigner1.outputs.files.files, 'forventet samme sett av filer')
+        Assert.assertEquals(jarSigner2.outputs.files.collect {it.name}, jarSigner1.outputs.files.collect {it.name}, 'forventet samme sett av filer')
         Assert.assertEquals(modified2, modified1, 'forventer at cached fil er urørt')
     }
 
@@ -115,7 +119,7 @@ class JarSignerTest {
             Assert.assertTrue(jarNames.contains(signedFile.name))
             assertSignedJar(signedFile)
 
-            String md5 = new File("${signedFile.path}.md5").text
+            String md5 = new File(getCertificateCacheDir(jarSigner), signedFile.name+'.md5').text
             File unsignedFile = jarFilesToSign.find {it.name == signedFile.name}
             assertMd5(unsignedFile, md5)
         }
@@ -160,18 +164,18 @@ class JarSignerTest {
         File unsignedFile1 = java1JarFile
         File signedFile1 = jarSigner.outputs.files.singleFile
 
-        Assert.assertTrue(jarFilesToSign.contains(unsignedFile1))
+        checkState(jarFilesToSign.contains(unsignedFile1), "jarFilesToSign contains unsigned file");
         assertSignedJar(signedFile1)
         assertJarFileContainsAllEntries(signedFile1, unsignedFile1)
 
-        String md51 = new File(signedFile1.getPath()+'.md5').text
+        String md51 = new File(getCertificateCacheDir(jarSigner), signedFile1.getName()+'.md5').text
         assertMd5(unsignedFile1, md51)
 
         //updating 'java1' project jar by swapping it with jar produced by 'java2'
         File oldFile = new File(java1JarFile.parentFile, java1JarFile.getName() + ".old")
-        FileUtils.copyFile(java1JarFile, oldFile)
-        FileUtils.copyFile(java2JarFile, java1JarFile)
-        Assert.assertTrue(java1JarFile.exists())
+        ProjectHelper.copyFile(java1JarFile, oldFile)
+        ProjectHelper.copyFile(java2JarFile, java1JarFile)
+        checkState(java1JarFile.exists(), "java1JarFile should be have been copied and exist")
 
         //testing signed file - java1 should now ble updated
         jarSigner.signJars()
@@ -179,11 +183,11 @@ class JarSignerTest {
         File unsignedFile2 = java1JarFile
         File signedFile2 = jarSigner.outputs.files.singleFile
 
-        Assert.assertTrue(jarFilesToSign.contains(unsignedFile2))
+        checkState(jarFilesToSign.contains(unsignedFile2), "jarFilesToSign contains unsigned file");
         assertSignedJar(signedFile2)
         assertJarFileContainsAllEntries(signedFile2, unsignedFile2)
 
-        String md52 = new File(signedFile2.getPath()+'.md5').text
+        String md52 = new File(getCertificateCacheDir(jarSigner), signedFile2.getName()+'.md5').text
         assertMd5(unsignedFile2, md52)
 
     }
@@ -192,7 +196,12 @@ class JarSignerTest {
      * Beregner md5 hash verdi utifra filens innhold og asserter den mot forventet verdi
      */
     public static void assertMd5(File file, String expected) {
-        Assert.assertEquals(FileHashIdent.createChecksum(file), expected, "Forventet hash verdi (MD5)")
+        def digest = FileHashIdent.createDigest(file)
+        Assertions.assertThat(FileHashIdent.hexEncoded(digest)).
+                as("Forventet hex representasjon").isEqualTo(new String(Hex.encodeHex(digest)))
+
+        Assertions.assertThat(FileHashIdent.createChecksum(file)).
+                as("Forventet hash verdi (MD5)").isEqualTo(expected);
     }
 
     /**
@@ -201,7 +210,12 @@ class JarSignerTest {
     public static void assertSignedJar(File file) {
         Assert.assertTrue(file.getName().endsWith('.jar'), "Jar fil skal ende på '.jar")
         JarFile jarFile = new JarFile(file, true);
-        Assert.assertEquals(jarFile.manifest.mainAttributes.getValue("Permissions"), "sandbox", "Permissions");
+        try {
+            Assertions.assertThat(jarFile.manifest.mainAttributes.getValue("Permissions"))
+                    .describedAs("Permissions").isEqualTo("sandbox");
+        } finally {
+            if (jarFile != null) jarFile.close()
+        }
     }
 
     /**
@@ -210,13 +224,27 @@ class JarSignerTest {
      * This so that <code>'base' ? 'intersect' = 'intersect'</code>
      */
     public static void assertJarFileContainsAllEntries(File base, File intersect) {
-        List<String> baseEntries = new JarFile(base).entries().collect() {it.name}
-        List<String> intersectEntries = new JarFile(intersect).entries().collect() {it.name}
+        JarFile jarFileBase, jarFileIntersect;
+        try {
+            jarFileBase = new JarFile(base)
+            jarFileIntersect = new JarFile(intersect)
 
-        intersectEntries.removeAll(baseEntries)
-        if (!intersectEntries.isEmpty()) {
-            Assert.fail("Forventet at filen ${base} inneholder aller entries ifra ${intersect}. Overflytende entries: ${intersectEntries}")
+            List<String> baseEntries = jarFileBase.entries().collect() {it.name}
+            List<String> intersectEntries = jarFileIntersect.entries().collect() {it.name}
+
+            Assertions.assertThat(baseEntries).containsAll(intersectEntries)
+        } finally {
+            if (jarFileBase != null) {
+                jarFileBase.close()
+            }
+            if (jarFileIntersect != null) {
+                jarFileIntersect.close()
+            }
         }
 
+    }
+
+    static File getCertificateCacheDir(JarSigner jarSigner) {
+        jarSigner.getCertificateCacheDir(jarSigner.getCertificateHashIdent());
     }
 }

@@ -36,8 +36,8 @@ public class ArtifactMatcher {
 
     public static String findImplementationVersionInManifest(File file) {
 
-        try {
-            Object value = new JarFile(file).getManifest().getMainAttributes().get(new Attributes.Name("Implementation-Version"));
+        try (JarFile jarFile = new JarFile(file)) {
+            Object value = jarFile.getManifest().getMainAttributes().get(new Attributes.Name("Implementation-Version"));
             return value != null ? value.toString() : null;
         } catch (IOException e) {
             //dont care

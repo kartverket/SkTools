@@ -54,40 +54,46 @@ pipeline { //declarative pipeline syntax
     stages {
         stage('Prepare') {
             steps {
-                bat "gradle clean --refresh-dependencies ${gradleOptions(params, env)}"
+                bat "gradle clean --refresh-dependencies ${gradleOptions(this)}"
             }
         }
         stage('Build') {
             steps {
-                bat "gradle assemble publishToMavenLocal ${gradleOptions(params, env)}"
+                bat "gradle assemble publishToMavenLocal ${gradleOptions(this)}"
             }
         }
 
-        stage('Unit test stage') {
+        stage('Unit tests') {
             parallel {
                 stage('Test gradle baseline') {
                     steps {
                         bat "gradle --version"
-                        bat "gradle testGradle4.2 -DignoreFailures=true ${gradleOptions(params, env)}"
-                        junit '**/test-results/testGradle4.2/*.xml'
-                        //                            step([$class: 'Publisher', reportFilenamePattern: '**/build/reports/tests/testng-results.xml'])
+                        bat "gradle testGradle4.2 -DignoreFailures=true ${gradleOptions(this)}"
+                    }
+                    post {
+                        always {
+                            junit '**/test-results/testGradle4.2/*.xml'
+                        }
                     }
                 }
                 stage('Test gradle latest') {
                     tools {
-                        gradle 'Gradle 4.8' //latest og greatest (kan også være neste major versjon)
+                        gradle 'Gradle 4.10.2' //latest og greatest (kan også være neste major versjon)
                     }
                     steps {
                         bat "gradle --version"
-                        bat "gradle testGradle4.8 -DignoreFailures=true ${gradleOptions(params, env)} -DbuildDirName=build/gradle4.8" //buildDirName for å kjøre flere bygg med forskjellige gradle versjoner
-                        junit '**/test-results/testGradle4.8/*.xml'
-                        //                            step([$class: 'Publisher', reportFilenamePattern: '**/build/gradle4.8/reports/tests/testng-results.xml'])
+                        bat "gradle testGradle4.10.2 -DignoreFailures=true ${gradleOptions(this)} -DbuildDirName=build/gradle4.10.2" //buildDirName for å kjøre flere bygg med forskjellige gradle versjoner
+                    }
+                    post {
+                        always {
+                            junit '**/test-results/testGradle4.10.2/*.xml'
+                        }
                     }
                 }
             }
         }
 
-        stage('Integration test stage') {
+        stage('Integration tests') {
             parallel {
                 stage('Integration Test Baseline') {
                     tools {
@@ -96,20 +102,20 @@ pipeline { //declarative pipeline syntax
                     steps {
                         withEnv(['WEBLOGIC_VERSION=10.3.5.0', "WEBLOGIC_HOME=${WEBLOGIC_HOME('10.3.5.0', env)}"]) {
                             bat "gradle --version"
-                            bat "gradle runDemos ${gradleOptions(params, env)}"
+                            bat "gradle runDemos ${gradleOptions(this)}"
                         }
                     }
                 }
                 stage('Integration Test Latest') {
                     tools {
-                        gradle 'Gradle 4.8' //latest og greatest (kan også være neste major versjon)
+                        gradle 'Gradle 4.10.2' //latest og greatest (kan også være neste major versjon)
                         jdk 'Java 8 Latest' //weblogic krever denne major versjonen av java
                     }
                     steps {
                         sleep 5 //sleep time in seconds - helps seed randomness in choosing port# in database demos
                         withEnv(['WEBLOGIC_VERSION=12.1.3.0', "WEBLOGIC_HOME=${WEBLOGIC_HOME('12.1.3.0', env)}"]) {
                             bat "gradle --version"
-                            bat "gradle runDemos ${gradleOptions(params, env)} -DbuildDirName=gradle4.8"
+                            bat "gradle runDemos ${gradleOptions(this)} -DbuildDirName=gradle4.10.2"
                         }
                     }
                 }
@@ -118,7 +124,7 @@ pipeline { //declarative pipeline syntax
 
         stage('Publish') {
             steps {
-                bat "gradle publish ${gradleOptions(params, env)} --init-script config/gradle/scripts/mavenPublish.gradle"
+                bat "gradle publish ${gradleOptions(this)} --init-script config/gradle/scripts/mavenPublish.gradle"
             }
         }
     }
@@ -164,15 +170,6 @@ Build : $BUILD_URL <br>
         changed {
             echo 'build status changed'
         }
-        failure {
-            echo 'build status is failed'
-        }
-        success {
-            echo 'build status is success'
-        }
-        unstable {
-            echo 'build status is unstable'
-        }
     }
 
     // The options directive is for configuration that applies to the whole job.
@@ -195,12 +192,13 @@ Build : $BUILD_URL <br>
 }
 
 
-static def gradleOptions(params, env) {
+static def gradleOptions(script) {
     return [
-            "-PWEBLOGIC_VERSION=${env.WEBLOGIC_VERSION}",
-            "-PWEBLOGIC_HOME=${WEBLOGIC_HOME(env.WEBLOGIC_VERSION, env)}",
-            "-Dmaven.repo.local=${env.BASE}/.m2", //publiserer midlertidigt artefakt til mavenLocal for kjøring av releasetester
+            "-PWEBLOGIC_VERSION=${script.env.WEBLOGIC_VERSION}",
+            "-PWEBLOGIC_HOME=${WEBLOGIC_HOME(script.env.WEBLOGIC_VERSION, script.env)}",
+            "-Dmaven.repo.local=${script.env.BASE}/.m2", //publiserer midlertidigt artefakt til mavenLocal for kjøring av releasetester
             '-Dorg.gradle.daemon=false',
+            "-Djava.io.tmpdir=${script.pwd(tmp: true)}", //temp dir settes til samme mappe som jenkins (<workspace name>@tmp)
             '--stacktrace'
     ].join(' ')
 }

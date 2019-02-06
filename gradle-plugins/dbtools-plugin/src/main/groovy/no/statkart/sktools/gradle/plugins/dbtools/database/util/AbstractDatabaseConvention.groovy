@@ -1,11 +1,11 @@
 package no.statkart.sktools.gradle.plugins.dbtools.database.util
 
 import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsConvention
-import org.apache.commons.lang3.StringUtils
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.util.ConfigureUtil
+import org.gradle.util.GUtil
 
 /**
  * Felles funksjonalitet for toolsets
@@ -99,10 +99,30 @@ abstract class AbstractDatabaseConvention {
     }
 
     public String getTaskName(String target) {
-        if (target != null) {
-            return StringUtils.uncapitalize(String.format("%s%s", prefix, StringUtils.capitalize(target)));
+        if (target == null) {
+            return null;
         }
-        return null
+        //kan ikke bruke GUtil.toLowerCamelCase(prefix + ' ' + target) da target kan inneholde "." og andre spesialtegn (ikke anbefalt, men støttet)
+        if (prefix != null && !prefix.isEmpty()) {
+            return GUtil.toLowerCamelCase(prefix) + capitalize(target);
+        } else {
+            return uncapitalize(target);
+        }
+    }
+
+    //beholder gammel oppførsel for navngivning (punktum "." beholdes)
+    static String capitalize(String self) {
+        if (self == null || self.isEmpty() || Character.isUpperCase(self.charAt(0))) {
+            return self;
+        }
+        return String.valueOf(Character.toUpperCase(self.charAt(0))) + self.subSequence(1, self.length());
+    }
+
+    static String uncapitalize(String self) {
+        if (self == null || self.isEmpty() || Character.isLowerCase(self.charAt(0))) {
+            return self;
+        }
+        return String.valueOf(Character.toLowerCase(self.charAt(0))) + self.subSequence(1, self.length());
     }
 
     /**

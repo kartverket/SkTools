@@ -4,13 +4,10 @@ import org.gradle.api.tasks.Console;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Optional;
 
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-public class CompileOptions implements Serializable {
-    private static final long serialVersionUID = 0;
-    
+public class CompileOptions {
     private final Map<String, Object> optionsMap = new HashMap<>(16);
 
     private boolean fork;

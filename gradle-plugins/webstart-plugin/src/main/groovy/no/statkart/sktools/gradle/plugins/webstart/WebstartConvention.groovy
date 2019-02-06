@@ -1,15 +1,17 @@
 package no.statkart.sktools.gradle.plugins.webstart
 
+import groovy.transform.CompileStatic
 import no.statkart.sktools.gradle.plugins.webstart.util.FileHashIdent
-import org.apache.commons.lang3.builder.EqualsBuilder
-import org.apache.commons.lang3.builder.HashCodeBuilder
+import org.gradle.api.Named
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.NamedDomainObjectFactory
 import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Nested
+import org.gradle.api.tasks.Optional
 import org.gradle.util.ConfigureUtil
-import org.gradle.util.DeprecationLogger
 
 /**
  * Extension for webstart plugin.
@@ -137,6 +139,7 @@ class ClientConfiguration {
     }
 }
 
+@CompileStatic
 class SigningConfiguration {
     protected final transient Project project;
 
@@ -150,9 +153,18 @@ class SigningConfiguration {
      * @see JarSigner#storetype
      */
     protected String storetype = "pkcs12";
+    /**
+     * Plassering av mapper for signerings-cache. Denne legges til rotprosjektet som standard for deling dersom det finnes flere prosjekt som deler signerings-attributter og avhengigheter.
+     */
+    private File cacheDir;
 
     protected SigningConfiguration(Project project) {
         this.project = project
+        if (System.getProperty("jarsigner.cache", 'false').equalsIgnoreCase('true')) {
+            cacheDir = new File(project.getGradle().getGradleUserHomeDir(), 'jarsigner-cache');
+        } else {
+            cacheDir = new File(project.getBuildDir(), 'jarsigner-cache');
+        }
     }
 
     File getKeystore() {
@@ -198,19 +210,36 @@ class SigningConfiguration {
     void setStoretype(String storetype) {
         this.storetype = storetype
     }
+
+    File getCacheDir() {
+        return cacheDir
+    }
+
+    void setCacheDir(File cacheDir) {
+        this.cacheDir = cacheDir
+    }
 }
 
-class JnlpConfiguration implements Serializable {
-    private static final long serialVersionUID = 1L;
-
+class JnlpConfiguration implements Named {
     protected final transient Project project
+
+    @Input
     String jnlpFilename;
+    @Input
+    @Optional
     String title;
+    @Input
+    @Optional
     String vendor;
+    @Input
+    @Optional
     String description;
+    @Input
+    @Optional
     String homepage = null; //optional
+    @Input
+    @Optional
     String version = null; //optional
-    boolean addServerURLArgument = false
     protected ApplicationConfiguration application = null;  //might be null
     protected final List<ResourcesConfiguration> resourcesList = new ArrayList<ResourcesConfiguration>();
     private transient Closure withXml;
@@ -226,11 +255,6 @@ class JnlpConfiguration implements Serializable {
 
     public JnlpConfiguration title(String title) {
         this.title = title;
-        return this;
-    }
-
-    public JnlpConfiguration addServerURLArgument(boolean addServerURLArgument) {
-        this.addServerURLArgument = addServerURLArgument;
         return this;
     }
 
@@ -279,8 +303,9 @@ class JnlpConfiguration implements Serializable {
         return app
     }
 
+    @Nested
     public ApplicationConfiguration getApplication() {
-        if (application == null) {
+        if (application == null) { //mulighet for dotting ala "application.mainClass xxx"
             application = new ApplicationConfiguration(this);
         }
         return application;
@@ -298,6 +323,7 @@ class JnlpConfiguration implements Serializable {
         return resourcesConfiguration;
     }
 
+    @Nested
     protected List<ResourcesConfiguration> getResources() {
         return resourcesList;
     }
@@ -306,6 +332,7 @@ class JnlpConfiguration implements Serializable {
         withXml = closure
     }
 
+    //denne kan ikke være @Input da gradle vil eksekvere closure ved å sende inn null som parameter
     protected Closure getWithXml() {
         return withXml
     }
@@ -320,21 +347,23 @@ class JnlpConfiguration implements Serializable {
         return this;
     }
 
-    public boolean equals(Object other) {
-        return EqualsBuilder.reflectionEquals(this, other);
-
-    }
-
-    public int hashCode() {
-        return HashCodeBuilder.reflectionHashCode(this);
+    @Override
+    String getName() {
+        return "\"" + jnlpFilename + "\"";
     }
 }
 
-class ApplicationConfiguration implements Serializable {
-    private static final long serialVersionUID = 1L;
+class ApplicationConfiguration {
     protected final transient JnlpConfiguration jnlp;
 
+    @Input
     protected String mainClass;
+
+    /**
+     * Man kan legge til server url som argument via streng verdi '$$site'. Denne vil ekspanderes av jnlpservlet.
+     */
+    @Input
+    protected List<String> args = new ArrayList<>();
 
 
     ApplicationConfiguration(JnlpConfiguration jnlp) {
@@ -346,27 +375,23 @@ class ApplicationConfiguration implements Serializable {
         return this;
     }
 
+    public ApplicationConfiguration arg(String argument) {
+        args.add(argument);
+        return this;
+    }
+
     protected ApplicationConfiguration configure(Closure closure) {
         closure.setDelegate(this);
         closure.resolveStrategy = Closure.DELEGATE_FIRST;
         closure.call();
         return this;
     }
-
-    public boolean equals(Object other) {
-        return EqualsBuilder.reflectionEquals(this, other);
-    }
-
-    public int hashCode() {
-        return HashCodeBuilder.reflectionHashCode(this);
-    }
 }
 
 /**
  * Represents the {@code <resource>} elements in a jnlp file.
  */
-class ResourcesConfiguration implements Serializable {
-    private static final long serialVersionUID = 1L;
+class ResourcesConfiguration {
     protected final transient JnlpConfiguration jnlp;
 
     protected final Map<String, Object> systemProperties = new LinkedHashMap();
@@ -446,23 +471,24 @@ class ResourcesConfiguration implements Serializable {
         return this;
     }
 
-    public boolean equals(Object other) {
-        return EqualsBuilder.reflectionEquals(this, other);
+    @Nested
+    Map<String, Object> getSystemProperties() {
+        return systemProperties
     }
 
-    public int hashCode() {
-        return HashCodeBuilder.reflectionHashCode(this);
+    @Nested
+    List<RuntimeConfiguration> getRuntimes() {
+        return runtimes
     }
 }
 
 abstract class RuntimeConfiguration {
-    private static final long serialVersionUID = 1L;
-    def final transient ResourcesConfiguration resources;
+    protected final transient ResourcesConfiguration resources;
 
     /**
      * {@code resources = null} denotes default constructor needed for serializing/de-serializing in gradle task up-to-date checks
      */
-    def RuntimeConfiguration(ResourcesConfiguration resources = null) {
+    protected RuntimeConfiguration(ResourcesConfiguration resources = null) {
         this.resources = resources
     }
 }
@@ -470,9 +496,11 @@ abstract class RuntimeConfiguration {
 /**
  * Represents the {@code <jfx:javafx-runtime>} elements in a jnlp file
  */
-class JavaFxRuntimeConfiguration extends RuntimeConfiguration implements Serializable {
-    private static final long serialVersionUID = 1L;
+class JavaFxRuntimeConfiguration extends RuntimeConfiguration {
+    @Input
     String version;
+    @Input
+    @Optional
     String href = null;   //optional
 
 
@@ -490,27 +518,27 @@ class JavaFxRuntimeConfiguration extends RuntimeConfiguration implements Seriali
         return this;
     }
 
-
-    public boolean equals(Object other) {
-        return EqualsBuilder.reflectionEquals(this, other);
-    }
-
-    public int hashCode() {
-        return HashCodeBuilder.reflectionHashCode(this);
-    }
 }
 
 /**
  * Represents the {@code <j2se>} elements in a jnlp file
  */
-class JavaRuntimeConfiguration extends RuntimeConfiguration implements Serializable {
-    private static final long serialVersionUID = 1L;
+class JavaRuntimeConfiguration extends RuntimeConfiguration {
+    @Input
     String version;
+    @Input
+    @Optional
     String href = null;   //optional
+    @Input
+    @Optional
     /** initial-heap-size   */
     String xms = null;    //optional
+    @Input
+    @Optional
     /** max-heap-size   */
     String xmx = null;    //optional
+    @Input
+    @Optional
     String vmArgs = null; //optional
 
 
@@ -543,11 +571,4 @@ class JavaRuntimeConfiguration extends RuntimeConfiguration implements Serializa
         return this;
     }
 
-    public boolean equals(Object other) {
-        return EqualsBuilder.reflectionEquals(this, other);
-    }
-
-    public int hashCode() {
-        return HashCodeBuilder.reflectionHashCode(this);
-    }
 }

@@ -4,9 +4,12 @@ apply plugin: 'maven-publish'
 
 dependencies {
 
+    implementation libraries.jaxb_api
+    implementation libraries.jaxws_annotations
+
     //Saxon for xslt 2.0
     //Saxon HE is the open source version
-    runtime 'net.sf.saxon:Saxon-HE:9.5.1-8'
+    runtime libraries.saxon
 
     //testing...
     testCompile gradleApi()

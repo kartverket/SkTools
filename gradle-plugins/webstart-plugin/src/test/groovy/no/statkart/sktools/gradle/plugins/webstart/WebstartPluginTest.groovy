@@ -223,6 +223,9 @@ class WebstartPluginTest {
 
         Set<String> entryNames2 = new HashSet<String>(entryNames)
         Assert.assertEquals(entryNames2.size(), entryNames.size())
+
+        Assertions.assertThat(project.tasks.withType(JarSigner.class)).describedAs("Jar signer eksekvert nr 2 skal kun ha brukt cache [SKTOOLS-184]").isNotEmpty()
+                .extracting("didSignJarFile").contains(false);
     }
 
 
@@ -418,4 +421,37 @@ class WebstartPluginTest {
 
         Assertions.assertThat(projectHelper.findDependsOnTaskNames('genClientJnlp')).contains('signClient')
     }
+
+    /**
+     * Clean task sletter cache dir for signerte jar filer
+     */
+    @Test
+    void cleanJarSignerCacheDeletesCacheDir() {
+
+        //forks a new project in a temp folder
+        ProjectHelper projectHelper = GradleProjectBuilder.builder('root').build {
+            apply plugin: 'sktools-webstart-plugin'
+            version = 101
+        }
+
+        File customCacheDir = projectHelper.project.file("customCacheDir")
+        customCacheDir.mkdirs()
+        new File(customCacheDir, "willBeDeleted.txt").createNewFile()
+
+        projectHelper.configureProject {
+            webstart {
+                client {
+                    sign(cacheDir: customCacheDir)
+                }
+            }
+        }
+
+        projectHelper.initializeProject()
+
+        projectHelper.executeTask('cleanJarSignerCaches')
+
+        //sjekker at filer er blitt opprettet
+        projectHelper.assertFileNotExists(customCacheDir)
+    }
+
 }

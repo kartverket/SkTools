@@ -3,6 +3,7 @@ package no.statkart.sktools.gradle.plugins.xjc
 import no.statkart.sktools.gradle.testutils.ProjectHelper
 import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
 import no.statkart.sktools.gradle.testutils.filewriter.XjcTestutilFilewriter
+import org.assertj.core.api.Assertions
 import org.gradle.api.Project
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
@@ -365,6 +366,23 @@ class XjcPluginTest {
             assertFilesInFileTree config.source.asFileTree;
         }
 
+    }
+
+
+    /**
+     * jaxb-xjc har ANT som optional avhengighet.
+     * Denne skal en ikke trenge å laste ned.
+     */
+    @Test
+    void doesNotHaveAntOnClasspath() {
+        //forks a new project in a temp folder
+        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+            apply plugin: 'sktools-xjc-plugin'
+        }
+
+        Assertions.assertThat(projectHelper.project.configurations.jaxb.resolvedConfiguration.getResolvedArtifacts()).
+                extracting("artifact.name").
+                contains("jaxb-xjc").doesNotContain("ant")
     }
 
 }

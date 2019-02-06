@@ -2,6 +2,7 @@ package no.statkart.sktools.gradle.plugins.filterresources;
 
 import groovy.lang.Closure;
 import org.gradle.api.Project;
+import org.gradle.util.ConfigureUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,9 +28,7 @@ public class FilterResourcesConvention {
      * Konfigurasjon av convention skjer her.
      */
     public Object filterResources(Closure closure) {
-        closure.setResolveStrategy(Closure.DELEGATE_FIRST);
-        closure.setDelegate(this);
-        return closure.call();
+        return ConfigureUtil.configure(closure, this);
     }
 
 
@@ -50,12 +49,6 @@ public class FilterResourcesConvention {
 
     Map<String, Object> getProperties() {
         return properties;
-    }
-
-
-
-    private static void logDeprecation(String oldSyntax, String newSyntax) {
-        System.out.println(String.format("%s in %s is now deprecated \n\t\t-use %s instead!", oldSyntax, FilterResourcesConvention.class.getSimpleName(), newSyntax));
     }
 
 }

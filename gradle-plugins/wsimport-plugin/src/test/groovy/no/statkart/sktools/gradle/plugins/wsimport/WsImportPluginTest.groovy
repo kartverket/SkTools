@@ -1,12 +1,12 @@
 package no.statkart.sktools.gradle.plugins.wsimport
 
 import no.statkart.sktools.gradle.testutils.ProjectHelper
-import org.apache.commons.io.FileUtils;
-import org.gradle.api.Project;
-import org.gradle.testfixtures.ProjectBuilder;
-import org.testng.annotations.Test;
+import org.gradle.api.Project
+import org.gradle.testfixtures.ProjectBuilder
+import org.testng.annotations.Test
 
-import static org.testng.Assert.*
+import static org.testng.Assert.assertNotNull
+import static org.testng.Assert.assertTrue
 
 public class WsImportPluginTest {
     /**
@@ -35,12 +35,11 @@ public class WsImportPluginTest {
         Project project = ProjectBuilder.builder().build()
         project.apply plugin: 'sktools-wsimport-plugin'
 
-        def wsdlDir = project.file('src/main/resources/META-INF/wsdls')
-        wsdlDir.mkdirs()
+        def wsdlDir = project.mkdir('src/main/resources/META-INF/wsdls')
 
-        FileUtils.copyURLToFile(getClass().getResource('/TestServiceWS.wsdl'), new File(wsdlDir, 'TestServiceWS.wsdl'))
-        FileUtils.copyURLToFile(getClass().getResource('/TestServiceWS_schema1.xsd'), new File(wsdlDir, 'TestServiceWS_schema1.xsd'))
-        FileUtils.copyURLToFile(getClass().getResource('/TestServiceWS_schema2.xsd'), new File(wsdlDir, 'TestServiceWS_schema2.xsd'))
+        ProjectHelper.copyFile(getClass().getResourceAsStream('/TestServiceWS.wsdl'), new File(wsdlDir, 'TestServiceWS.wsdl'))
+        ProjectHelper.copyFile(getClass().getResourceAsStream('/TestServiceWS_schema1.xsd'), new File(wsdlDir, 'TestServiceWS_schema1.xsd'))
+        ProjectHelper.copyFile(getClass().getResourceAsStream('/TestServiceWS_schema2.xsd'), new File(wsdlDir, 'TestServiceWS_schema2.xsd'))
 
         ProjectHelper projectHelper = new ProjectHelper(project)
         projectHelper.executeTask('wsimport')

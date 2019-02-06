@@ -1,5 +1,6 @@
 package no.statkart.sktools.gradle.plugins.provided;
 
+import org.assertj.core.api.Assertions;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.plugins.JavaPluginConvention;
@@ -42,12 +43,37 @@ public class ProvidedPluginTest {
 
         Assert.assertTrue(project.getConfigurations().getByName("default").isEmpty(), "default er ikke tom");
 
-        JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
         Configuration provided = project.getConfigurations().getByName("provided");
-        Assert.assertTrue(javaConvention.getSourceSets().getByName(SourceSet.MAIN_SOURCE_SET_NAME).getCompileClasspath().getFiles().containsAll(provided.getFiles()), "Main compile classpath inneholder ikke provided");
-        Assert.assertFalse(javaConvention.getSourceSets().getByName(SourceSet.MAIN_SOURCE_SET_NAME).getRuntimeClasspath().getFiles().containsAll(provided.getFiles()), "Main runtime classpath inneholder provided");
-        Assert.assertTrue(javaConvention.getSourceSets().getByName(SourceSet.TEST_SOURCE_SET_NAME).getCompileClasspath().getFiles().containsAll(provided.getFiles()), "Test compile classpath inneholder ikke provided");
-        Assert.assertTrue(javaConvention.getSourceSets().getByName(SourceSet.TEST_SOURCE_SET_NAME).getRuntimeClasspath().getFiles().containsAll(provided.getFiles()), "Test runtime classpath inneholder ikke provided");
+
+        Assertions.assertThat(project.getConfigurations().getByName("compileClasspath").getFiles())
+                .withFailMessage("compileClasspath inneholder ikke provided")
+                .containsAll(provided.getFiles());
+        Assertions.assertThat(project.getConfigurations().getByName("runtimeClasspath").getFiles())
+                .withFailMessage("runtimeClasspath inneholder ikke provided")
+                .containsAll(provided.getFiles());
+        Assertions.assertThat(project.getConfigurations().getByName("runtimeElements").getAllDependencies())
+                .withFailMessage("runtimeElements inneholder provided")
+                .isEmpty();
+        Assertions.assertThat(project.getConfigurations().getByName("testCompileClasspath").getFiles())
+                .withFailMessage("testCompileClasspath inneholder ikke provided")
+                .containsAll(provided.getFiles());
+        Assertions.assertThat(project.getConfigurations().getByName("testRuntimeClasspath").getFiles())
+                .withFailMessage("testRuntimeClasspath inneholder ikke provided")
+                .containsAll(provided.getFiles());
+
+        JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
+        Assertions.assertThat(javaConvention.getSourceSets().getByName(SourceSet.MAIN_SOURCE_SET_NAME).getCompileClasspath().getFiles())
+                .withFailMessage("Main compile classpath inneholder ikke provided")
+                .containsAll(provided.getFiles());
+        Assertions.assertThat(javaConvention.getSourceSets().getByName(SourceSet.MAIN_SOURCE_SET_NAME).getRuntimeClasspath().getFiles())
+                .withFailMessage("Main runtime classpath inneholder provided")
+                .containsAll(provided.getFiles());
+        Assertions.assertThat(javaConvention.getSourceSets().getByName(SourceSet.TEST_SOURCE_SET_NAME).getCompileClasspath().getFiles())
+                .withFailMessage("Test compile classpath inneholder ikke provided")
+                .containsAll(provided.getFiles());
+        Assertions.assertThat(javaConvention.getSourceSets().getByName(SourceSet.TEST_SOURCE_SET_NAME).getRuntimeClasspath().getFiles())
+                .withFailMessage("Test runtime classpath inneholder ikke provided")
+                .containsAll(provided.getFiles());
     }
 
     @Test
@@ -61,11 +87,36 @@ public class ProvidedPluginTest {
 
         Assert.assertTrue(project.getConfigurations().getByName("default").isEmpty(), "default er ikke tom");
 
-        JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
         Configuration provided = project.getConfigurations().getByName("singlevm");
-        Assert.assertFalse(javaConvention.getSourceSets().getByName(SourceSet.MAIN_SOURCE_SET_NAME).getCompileClasspath().getFiles().containsAll(provided.getFiles()), "Main compile classpath inneholder singlevm");
-        Assert.assertTrue(javaConvention.getSourceSets().getByName(SourceSet.MAIN_SOURCE_SET_NAME).getRuntimeClasspath().getFiles().containsAll(provided.getFiles()), "Main runtime classpath inneholder ikke singlevm");
-        Assert.assertFalse(javaConvention.getSourceSets().getByName(SourceSet.TEST_SOURCE_SET_NAME).getCompileClasspath().getFiles().containsAll(provided.getFiles()), "Test compile classpath inneholder singlevm");
-        Assert.assertTrue(javaConvention.getSourceSets().getByName(SourceSet.TEST_SOURCE_SET_NAME).getRuntimeClasspath().getFiles().containsAll(provided.getFiles()), "Test runtime classpath inneholder ikke singlevm");
+
+        Assertions.assertThat(project.getConfigurations().getByName("compileClasspath").getFiles())
+                .withFailMessage("compileClasspath inneholder singlevm")
+                .doesNotContainAnyElementsOf(provided.getFiles());
+        Assertions.assertThat(project.getConfigurations().getByName("runtimeClasspath").getFiles())
+                .withFailMessage("runtimeClasspath inneholder ikke singlevm")
+                .containsAll(provided.getFiles());
+        Assertions.assertThat(project.getConfigurations().getByName("runtimeElements").getAllDependencies())
+                .withFailMessage("runtimeElements inneholder singlevm")
+                .isEmpty();
+        Assertions.assertThat(project.getConfigurations().getByName("testCompileClasspath").getFiles())
+                .withFailMessage("testCompileClasspath inneholder ikke singlevm")
+                .containsAll(provided.getFiles());
+        Assertions.assertThat(project.getConfigurations().getByName("testRuntimeClasspath").getFiles())
+                .withFailMessage("testRuntimeClasspath inneholder ikke singlevm")
+                .containsAll(provided.getFiles());
+
+        JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
+        Assertions.assertThat(javaConvention.getSourceSets().getByName(SourceSet.MAIN_SOURCE_SET_NAME).getCompileClasspath().getFiles())
+                .withFailMessage("Main compile classpath inneholder singlevm")
+                .doesNotContainAnyElementsOf(provided.getFiles());
+        Assertions.assertThat(javaConvention.getSourceSets().getByName(SourceSet.MAIN_SOURCE_SET_NAME).getRuntimeClasspath().getFiles())
+                .withFailMessage("Main runtime classpath inneholder ikke singlevm")
+                .containsAll(provided.getFiles());
+        Assertions.assertThat(javaConvention.getSourceSets().getByName(SourceSet.TEST_SOURCE_SET_NAME).getCompileClasspath().getFiles())
+                .withFailMessage("Test compile classpath inneholder singlevm")
+                .containsAll(provided.getFiles());
+        Assertions.assertThat(javaConvention.getSourceSets().getByName(SourceSet.TEST_SOURCE_SET_NAME).getRuntimeClasspath().getFiles())
+                .withFailMessage("Test runtime classpath inneholder ikke singlevm")
+                .containsAll(provided.getFiles());
     }
 }

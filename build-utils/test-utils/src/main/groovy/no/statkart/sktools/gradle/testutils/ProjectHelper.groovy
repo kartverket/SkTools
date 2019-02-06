@@ -11,6 +11,9 @@ import org.gradle.api.tasks.util.PatternSet
 import org.gradle.api.internal.artifacts.dependencies.DefaultSelfResolvingDependency
 import org.gradle.api.plugins.ExtraPropertiesExtension
 
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
+
 /**
  * Hjelpemetoder til bruk i testing
  *
@@ -267,4 +270,15 @@ class ProjectHelper {
     public String toString() {
         return project.getProjectDir()
     }
+
+    public static void copyFile(File srcFile, File destFile) throws IOException {
+        destFile.getParentFile().mkdirs()
+        Files.copy(srcFile.toPath(), destFile.toPath(), StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING)
+    }
+
+    public static void copyFile(InputStream srcStream, File destFile) throws IOException {
+        destFile.getParentFile().mkdirs()
+        Files.copy(srcStream, destFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
+    }
+
 }

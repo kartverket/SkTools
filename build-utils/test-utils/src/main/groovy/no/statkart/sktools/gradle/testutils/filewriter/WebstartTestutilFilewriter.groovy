@@ -1,7 +1,9 @@
 package no.statkart.sktools.gradle.testutils.filewriter
 
 import no.statkart.sktools.gradle.testutils.ProjectHelper
-import org.apache.commons.io.FileUtils
+
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 
 /**
  * Statiske understøttende hjelpemetoder for generering av kildekode for bruk i testing.
@@ -20,8 +22,8 @@ class WebstartTestutilFilewriter extends AbstractTestutilFilewriter {
     public static Collection<File> writeKodesignerinSertifikat(ProjectHelper projectHelper, String targetPath) {
         ArrayList<File> generatedFiles = new ArrayList<File>()
 
-        File certFile = projectHelper.project.file("${targetPath}/kodesignering.jks")
-        FileUtils.copyURLToFile(getClass().getResource(KeystorePath), certFile)
+        File certFile = new File(projectHelper.project.mkdir(targetPath), "kodesignering.jks")
+        Files.copy(getClass().getResourceAsStream(KeystorePath), certFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
         generatedFiles.add(certFile)
 
         return generatedFiles;

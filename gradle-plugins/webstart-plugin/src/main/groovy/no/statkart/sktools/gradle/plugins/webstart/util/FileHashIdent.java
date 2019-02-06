@@ -1,17 +1,17 @@
 package no.statkart.sktools.gradle.plugins.webstart.util;
 
-import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.io.FileUtils;
-
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.security.MessageDigest;
 
 /**
  * Helper class for identification and maintaining hash codes of files.
  */
-public class FileHashIdent implements Serializable {
-    private static final long serialVersionUID = 1L;
-
+public class FileHashIdent {
     private transient File file;
     private String hash;
 
@@ -23,7 +23,25 @@ public class FileHashIdent implements Serializable {
         this.hash = hash;
     }
 
+    public static String hexEncoded(byte[] digest) {
+        StringBuilder hexString = new StringBuilder();
+        //noinspection ForLoopReplaceableByForEach
+        for (int i = 0; i < digest.length; i++) {
+            String hex = Integer.toHexString(0xFF & digest[i]);
+            if (hex.length() == 1) {
+                hexString.append('0');
+            }
+            hexString.append(hex);
+        }
+        return hexString.toString();
+    }
+
     public static String createChecksum(File file, String... beacon) throws Exception {
+        byte[] digest = createDigest(file, beacon);
+        return hexEncoded(digest);
+    }
+
+    public static byte[] createDigest(File file, String[] beacon) throws Exception {
         InputStream fis = new FileInputStream(file.getCanonicalFile());
 
         byte[] buffer = new byte[1024];
@@ -49,7 +67,7 @@ public class FileHashIdent implements Serializable {
         fis.close();
 
 
-        return String.valueOf(Hex.encodeHex(complete.digest()));
+        return complete.digest();
     }
 
     @Override
@@ -92,15 +110,14 @@ public class FileHashIdent implements Serializable {
      *
      * @see #fileHashIdentFromChecksumFile(java.io.File)
      */
-    public FileHashIdent writeChecksumToFile() throws IOException {
-        File md5File = new File(file.getParent(), file.getName() + ".md5");
-        FileUtils.writeStringToFile(md5File, hash);
+    public FileHashIdent writeChecksumToFile(File md5File) throws IOException {
+        Files.write(md5File.toPath(), hash.getBytes(StandardCharsets.UTF_8));
         return this;
     }
 
     /**
      * Creates a fileIdent based on stored cache data
-     * @see FileHashIdent#writeChecksumToFile()
+     * @see FileHashIdent#writeChecksumToFile(File)
      *
      * @return {@code null} if corresponding files are not found
      */
@@ -108,7 +125,7 @@ public class FileHashIdent implements Serializable {
         FileHashIdent signedArtifactFileIdent = null;
         String md5 = null;
         try {
-            md5 = FileUtils.readFileToString(md5File);
+            md5 = new String(Files.readAllBytes(md5File.toPath()), StandardCharsets.UTF_8);
 
             String jarFilename = md5File.getName().substring(0, md5File.getName().length()-4);
             File jarFile = new File(md5File.getParentFile(), jarFilename);
