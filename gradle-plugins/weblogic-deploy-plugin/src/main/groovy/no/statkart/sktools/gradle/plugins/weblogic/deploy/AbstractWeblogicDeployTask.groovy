@@ -46,10 +46,12 @@ abstract class AbstractWeblogicDeployTask extends ConventionTask {
     @Input
     String password
 
-
+    /**
+     * Timeout for WebLogic-verktøyet, til forskjell fra Gradles egen {@code timeout}.
+     */
     @Input
     @Optional
-    String timeout
+    String deployerTimeout
 
     @Input
     boolean failOnError = false
@@ -85,8 +87,8 @@ abstract class AbstractWeblogicDeployTask extends ConventionTask {
                 args('-verbose')
             }
 
-            if (getTimeout() != null) {
-                args('-timeout', getTimeout())
+            if (getDeployerTimeout() != null) {
+                args('-timeout', getDeployerTimeout())
             }
 
             setIgnoreExitValue(!isFailOnError())
