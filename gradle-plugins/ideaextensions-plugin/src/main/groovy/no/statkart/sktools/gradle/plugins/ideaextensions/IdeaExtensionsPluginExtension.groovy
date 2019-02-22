@@ -58,11 +58,6 @@ class IdeaExtensionsPluginExtension {
         inspectionProfiles.clear()
         inspectionProfiles.add(path)
     }
-    /** @since 1.2 */
-    void setInspectionsFile(def path) {
-        project.logger.warn("Deprecation: ideaExtensions.inspectionsFile is deprecated and will be removed in sktools 1.4")
-        setInspectionProfile(path)
-    }
 
     /**
      * Setter default VCS mapping
@@ -79,7 +74,6 @@ class IdeaExtensionsPluginExtension {
     void vcsMapping(String path, String vcsName) {
         vcsDirectoryMappings[path] = vcsName
     }
-
 
 
 }
