@@ -42,30 +42,26 @@ public class FileHashIdent {
     }
 
     public static byte[] createDigest(File file, String[] beacon) throws Exception {
-        InputStream fis = new FileInputStream(file.getCanonicalFile());
-
-        byte[] buffer = new byte[1024];
-
         MessageDigest complete = MessageDigest.getInstance("MD5");
 
-        // leser inn eventuelle beacons
-        if (beacon != null) {
-            for (String s : beacon) {
-                complete.update(s.getBytes());
+        try (InputStream fis = new FileInputStream(file.getCanonicalFile())) {
+            byte[] buffer = new byte[1024];
+
+            // leser inn eventuelle beacons
+            if (beacon != null) {
+                for (String s : beacon) {
+                    complete.update(s.getBytes());
+                }
             }
+
+            int numRead;
+            do {
+                numRead = fis.read(buffer);
+                if (numRead > 0) {
+                    complete.update(buffer, 0, numRead);
+                }
+            } while (numRead != -1);
         }
-
-        int numRead;
-
-        do {
-            numRead = fis.read(buffer);
-            if (numRead > 0) {
-                complete.update(buffer, 0, numRead);
-            }
-        } while (numRead != -1);
-
-        fis.close();
-
 
         return complete.digest();
     }
@@ -121,9 +117,9 @@ public class FileHashIdent {
      *
      * @return {@code null} if corresponding files are not found
      */
-    public static FileHashIdent fileHashIdentFromChecksumFile(File md5File) throws IOException {
+    public static FileHashIdent fileHashIdentFromChecksumFile(File md5File) {
         FileHashIdent signedArtifactFileIdent = null;
-        String md5 = null;
+        String md5;
         try {
             md5 = new String(Files.readAllBytes(md5File.toPath()), StandardCharsets.UTF_8);
 
@@ -132,8 +128,8 @@ public class FileHashIdent {
             if (jarFile.exists() && jarFile.isFile()) {
                 signedArtifactFileIdent = new FileHashIdent(jarFile, md5);
             }
-        } catch (Exception e) {
-            //file not exists
+        } catch (Exception ignored) {
+            return null; //file not exists
         }
         return signedArtifactFileIdent;
     }
