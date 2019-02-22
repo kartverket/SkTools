@@ -29,7 +29,7 @@ public class PropertiesPlugin implements Plugin<ProjectInternal> {
 
     private static void augmentProjectWithExtension(Project project) {
         final PropertyUtils propertyUtils = new PropertyUtils(project);
-        project.getLogger().debug(String.format("assigning extension %s to project %s", PROPERTY_UTILS_EXTENSION_NAME, project.getPath()));
+        project.getLogger().debug("assigning extension {} to project {}", PROPERTY_UTILS_EXTENSION_NAME, project.getPath());
         project.getExtensions().add(PROPERTY_UTILS_EXTENSION_NAME, propertyUtils);
     }
 }

@@ -50,7 +50,7 @@ class ClientConfiguration {
     private final List<JnlpConfiguration> jnlpConfigurations = new ArrayList<JnlpConfiguration>();
     private ConfigurableFileCollection jarDependencies
     private Closure mainJar = {
-        project.logger.debug "Treating ${it.name} as main jar in ${name}..." //default så betraktes alle filer som main jars i #jarDependencies...
+        project.getLogger().debug('Treating {} as main jar in {}...', it.name, name) //default så betraktes alle filer som main jars i #jarDependencies...
         true
     }
 

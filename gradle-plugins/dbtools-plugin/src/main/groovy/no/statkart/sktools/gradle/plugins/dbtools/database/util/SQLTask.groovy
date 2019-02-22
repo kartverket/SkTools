@@ -32,7 +32,7 @@ public class SQLTask extends AbstractSQLTask {
         validate()
 
         if (getSqlFile()) {
-            logger.info("parsing statements from file: ${getSqlFile()}");
+            logger.info('parsing statements from file: {}', getSqlFile());
             executor.statements = SQLStatementParser.parseStatements(getSqlFile(), getEncoding());
         } else {
             executor.statements = SQLStatementParser.parseStatements(getSqlString());

@@ -128,7 +128,9 @@ public class JarSigner extends ConventionTask {
                 if (cachedFileIdent != null) {
                     if (cachedFileIdent.equals(jarFileIdent)) {
                         signedJarFile = cachedFileIdent.getFile();
-                        getLogger().info("...using cached jar " + signedJarFile.getAbsolutePath());
+                        if (getLogger().isInfoEnabled()) {
+                            getLogger().info("...using cached jar " + signedJarFile.getAbsolutePath());
+                        }
                     }
                 }
 
@@ -156,7 +158,7 @@ public class JarSigner extends ConventionTask {
 
                     //updating cache...
                     if (cachedFileIdent != null) {
-                        getLogger().debug("updating cache-entry for " + unsignedJar);
+                        getLogger().debug("updating cache-entry for {}", unsignedJar);
                     }
                     cachedFileIdent = new FileHashIdent(signedJarFile, jarFileIdent.hash());
                     cachedFileIdent.writeChecksumToFile(new File(certDirectory, signedJarFile.getName() + ".md5"));
@@ -344,7 +346,9 @@ public class JarSigner extends ConventionTask {
                             if (signedArtifactFileIdent != null) {
                                 String unsignedFileName = signedArtifactFileIdent.getFile().getName();
                                 signedArtifacts.put(unsignedFileName, signedArtifactFileIdent);
-                                getLogger().debug("   found cached file {}", signedArtifactFileIdent.getFile().getAbsolutePath());
+                                if (getLogger().isDebugEnabled()) {
+                                    getLogger().debug("   found cached file {}", signedArtifactFileIdent.getFile().getAbsolutePath());
+                                }
                             }
                         }
                     }

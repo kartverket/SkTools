@@ -92,8 +92,9 @@ class OracleImportTask extends ConventionTask {
 
         logger.lifecycle('Kaller impdp.exe med bruker ' + getUsername() + ', tns ' + getTns());
 
-        logger.info 'Executing command: \n' + command.join(' ').replace(getPassword(), getPassword().replaceAll(/./, "*"))
-
+        if (logger.isInfoEnabled()) {
+            logger.info('Executing command: \n' + command.join(' ').replace(getPassword(), getPassword().replaceAll(/./, "*")))
+        }
         def impdb = Runtime.runtime.exec(command as String[], null, getProject().getProjectDir())
 
         def running = true

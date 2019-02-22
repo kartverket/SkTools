@@ -27,7 +27,6 @@ class DependencyUtil {
      * Gir deg dependenices avhengig av om det kjøres som test eller ikke.
      * Antakelse om at dersom man kjører ifra jar fil (ikke exploded) så er man i produksjonssammenheng.
      * @param project
-     * @return
      */
     public static FileCollection getDatabasePatcherClasspath(Project project) {
         if (isClasspathExploded == false) {
@@ -46,7 +45,7 @@ class DependencyUtil {
             ClassLoader classLoader = Thread.currentThread().getContextClassLoader()
             println 'Warning: Benytter beregnet classpath for testformaal i dbtools'
             return project.files(classLoader.properties['URLs'])
-        } catch (IOException e1) {
+        } catch (IOException ignored) {
             throw new RuntimeException("Feil ved beregning av classpath for testformaal");
         }
     }
@@ -80,10 +79,10 @@ class DependencyUtil {
                     if (is != null) {
                         Manifest manifest = new Manifest(is);
                         Attributes mainAttributes = manifest.getMainAttributes();
-                        if (mainAttributes.getValue("Implementation-Vendor") == 'Statens kartverk') {
-                            String version = mainAttributes.getValue("Implementation-Version");
+                        if (mainAttributes.getValue('Implementation-Vendor') == 'Statens kartverk') {
+                            String version = mainAttributes.getValue('Implementation-Version');
                             if (version != null) {
-                                project.logger.info("Found sktools version: ${version}")
+                                project.logger.info('Found sktools version: {}', version)
                                 return version;
                             }
                         }

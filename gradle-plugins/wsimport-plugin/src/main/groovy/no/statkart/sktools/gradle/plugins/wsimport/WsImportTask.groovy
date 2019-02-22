@@ -99,7 +99,7 @@ public class WsImportTask extends SourceTask {
         //flytter alle exceptions til felles katalog
         javaFiles.matching(getExceptionFilePatternSet()).files.each { File file ->
             File relocatedFile = new File(exceptionPackageDir, file.getName())
-            logger.info("merging exception ${relocatedFile} <- ${file}")
+            logger.info('merging exception {} <- {}', relocatedFile, file)
 
             Files.copy(file.toPath(), exceptionPackageDir.toPath().resolve(file.name), StandardCopyOption.REPLACE_EXISTING)
             file.delete()
@@ -111,7 +111,7 @@ public class WsImportTask extends SourceTask {
 
         //legger til import statements for de andre java filene
         javaFiles.files.each { File file ->
-            logger.debug("adding exception import statement in ${file}")
+            logger.debug('adding exception import statement in {}', file)
             file.write file.getText(encoding).replaceFirst('import ', "import ${packageString}.*;\nimport "), encoding
         }
 

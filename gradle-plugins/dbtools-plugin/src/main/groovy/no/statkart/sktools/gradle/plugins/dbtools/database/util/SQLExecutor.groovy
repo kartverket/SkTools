@@ -43,26 +43,26 @@ class SQLExecutor {
         waitForConnectionRate(15)
 
         def sql = Sql.newInstance(specs.url, specs.username, specs.password, specs.driver)
-        logger.lifecycle("connected to database: {} [{}]", specs.url, specs.username);
+        logger.lifecycle('connected to database: {} [{}]', specs.url, specs.username);
 
         setAutoCommit(sql.getConnection(), specs.getAutoCommit());
 
         statements.each() { Statement statement ->
 
-            logger.info("Executing ${statement.class.simpleName}: \n${statement.sql}")
+            logger.info('Executing {}: \n{}', statement.class.simpleName, statement.sql)
 
             try {
                 sql.execute(statement.sql)
             } catch (SQLException sqle) {
 
                 if (specs.failOnError) {
-                    logger.info("Exception: ", sqle)
+                    logger.info('Exception: ', sqle)
                     if (!logger.isInfoEnabled()) {
                         logger.error("Statement: \n${statement.sql.trim()}\n")
                     }
                     logger.error("Message: \n${sqle.message}\n")
                 } else {
-                    logger.debug("Exception: ", sqle)
+                    logger.debug('Exception: ', sqle)
                     logger.warn("Message: \n${sqle.message}\n")
                 }
 
@@ -92,7 +92,7 @@ class SQLExecutor {
 
         while (INVOCATIONS.size() >= rateLimit) {
             if (!messageLogged) {
-                logger.debug "slowing down due to RATE_LIMIT=${rateLimit}..." //SKTOOLS-59
+                logger.debug('slowing down due to RATE_LIMIT={}...', rateLimit) //SKTOOLS-59
                 messageLogged = true;
             }
 

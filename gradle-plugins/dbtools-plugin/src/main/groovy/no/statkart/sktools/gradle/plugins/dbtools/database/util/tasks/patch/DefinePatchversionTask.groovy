@@ -39,7 +39,9 @@ class DefinePatchversionTask  extends DatabasePatchTask {
 
             configureDefaultSpec(spec)
 
-            logger.debug("Executing databasepatcher with command: " + (spec.getArgs() + spec.getAllJvmArgs()).join('\n\t'))
+            if (logger.isDebugEnabled()) {
+                logger.debug('Executing databasepatcher with command: ' + (spec.getArgs() + spec.getAllJvmArgs()).join('\n\t'))
+            }
         }
     }
 
