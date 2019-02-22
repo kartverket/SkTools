@@ -792,8 +792,8 @@ public class DatabasePatcher {
         }
     }
 
-    PatchVersion getDefaultPatchVersion() {
-        return new PatchVersion(String.format("Automatisk opprettet patchistorikk den %s", new Date()));
+    static PatchVersion getDefaultPatchVersion() {
+        return new PatchVersion("Automatisk opprettet patchistorikk den " + new Date());
     }
 
     PatchInfo getDefaultPatchInfo() {

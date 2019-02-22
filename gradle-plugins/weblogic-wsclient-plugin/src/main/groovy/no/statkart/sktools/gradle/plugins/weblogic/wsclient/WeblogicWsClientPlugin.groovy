@@ -107,7 +107,7 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
      *
      * TaskOutput blir lagt til som javasource for sourceSet. NB: denne FileCollection kan kun inneholde Dirs (ikke filer osv.)
      */
-    private WeblogicGenClientTask createGenerateSourceTask(Project project, WebServiceConfig webServiceConfig, Task collectSchemaTask) {
+    private static WeblogicGenClientTask createGenerateSourceTask(Project project, WebServiceConfig webServiceConfig, Task collectSchemaTask) {
         String taskName = "gen" + GUtil.toCamelCase(webServiceConfig.name) + "WsClientSource";
         WeblogicGenClientTask genTask = (WeblogicGenClientTask) project.task(type: WeblogicGenClientTask.class, taskName)
         genTask.setDescription(String.format("Generates WS-client source based on Weblogic tools for " + webServiceConfig.name));
@@ -198,7 +198,7 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
 
 
 
-    private SourceSet configureSourceSet(final JavaPluginConvention javaConvention) {
+    private static SourceSet configureSourceSet(final JavaPluginConvention javaConvention) {
         SourceSetContainer sourceSets = javaConvention.getSourceSets()
 
         SourceSet sourceSet = sourceSets.findByName(SourceSet.MAIN_SOURCE_SET_NAME)

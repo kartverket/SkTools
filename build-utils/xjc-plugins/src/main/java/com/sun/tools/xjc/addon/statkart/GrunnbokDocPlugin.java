@@ -167,7 +167,7 @@ public class GrunnbokDocPlugin extends com.sun.tools.xjc.Plugin {
     /**
      * Adds optional documentation to the javadoc
      */
-    private void handleDocCustomization(JDocComment doc, CCustomizations customizations) {
+    private static void handleDocCustomization(JDocComment doc, CCustomizations customizations) {
         CPluginCustomization c = customizations.find(NS, "doc");
         if (c != null) { // customization found for this class outline
             c.markAsAcknowledged();

@@ -56,7 +56,7 @@ public class WsDocGenPlugin implements Plugin<ProjectInternal> {
         configureDocgenDependencies(project);
     }
 
-    private void configureSourceSetDefaults(final ProjectInternal project, final WsDocGenConvention convention) {
+    private static void configureSourceSetDefaults(final ProjectInternal project, final WsDocGenConvention convention) {
         final AbstractArchiveTask archiveTask = (AbstractArchiveTask) project.getTasks().getByName(ARCHIVE_TASK_NAME);
 
         //for hvert source sett som finnes/blir lagt til

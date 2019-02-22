@@ -45,14 +45,14 @@ public class WsdlCustomizerPlugin implements Plugin<Project> {
         project.getArtifacts().add(wsdls.getName(), zipTask);
     }
 
-    private Zip configureZipTask(Project project, CustomWsdlTask customWsdlTask) {
+    private static Zip configureZipTask(Project project, CustomWsdlTask customWsdlTask) {
         Zip zipTask = project.getTasks().replace("zipCustomizedWsdls", Zip.class);
         zipTask.setClassifier("wsdls");
         zipTask.from(customWsdlTask);
         return zipTask;
     }
 
-    private Copy configureSchemaExtractionTask(final Project project, final Configuration originalSchemas) {
+    private static Copy configureSchemaExtractionTask(final Project project, final Configuration originalSchemas) {
         // Bruker replace() siden add() er depracated og create() ikke fantes før
         Copy extractSchemas = project.getTasks().replace("extractSchemas", Copy.class);
         extractSchemas.setDestinationDir(new File(project.getBuildDir(), extractSchemas.getName()));
@@ -74,7 +74,7 @@ public class WsdlCustomizerPlugin implements Plugin<Project> {
         return extractSchemas;
     }
 
-    private Copy configureWsdlExctractionTask(final Project project, final Configuration generatedSchemas) {
+    private static Copy configureWsdlExctractionTask(final Project project, final Configuration generatedSchemas) {
         final PatternSet wsdlAndXsdPattern = new PatternSet();
         wsdlAndXsdPattern.include("**/*.wsdl", "**/*.xsd");
 
@@ -99,7 +99,7 @@ public class WsdlCustomizerPlugin implements Plugin<Project> {
         return extractWsdls;
     }
 
-    private CustomWsdlTask configureWsdlCustomizerTask(Project project, Task schemaTask, Task wsdlTask) {
+    private static CustomWsdlTask configureWsdlCustomizerTask(Project project, Task schemaTask, Task wsdlTask) {
         CustomWsdlTask customWsdlTask = project.getTasks().replace("customizeWsdls", CustomWsdlTask.class);
         customWsdlTask.setDestinationDir(new File(project.getBuildDir(), customWsdlTask.getName()));
         customWsdlTask.originalSchemaFiles(schemaTask);
