@@ -19,7 +19,7 @@ import java.io.File;
  *   apply plugin: 'sktools-wsimport-plugin'
  *
  *   dependencies {
- *      jaxws 'com.sun.xml.ws:wstools:2.2.10'
+ *      jaxws 'com.sun.xml.ws:wscompile:2.2.10'
  *   }
  * </pre>
  *
