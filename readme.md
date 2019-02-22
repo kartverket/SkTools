@@ -1,11 +1,11 @@
 # SkTools - Felles byggeverktøy i kartverket
 
 # Baseline
-Gradle 4.2 og nyere. 
+Gradle 4.10.2 og nyere. 
 
-Java 7 og Java 8.
+Java 8.
 
-Weblogic 10.3.5.x og nyere.
+Weblogic 12.1.3.x og nyere.
 
 
 
@@ -16,7 +16,7 @@ Se [jenkinsfile for detaljert oversikt over testede versjoner](Jenkinsfile)
 
 UTF-8 for all kildekode
 
-JDK 7 - 1.7.0_0_171 (latest)
+JDK 8 - 1.8.0_202 (latest)
 
 IntelliJ - kjør gradlew og importer versjonert ipr fil
 

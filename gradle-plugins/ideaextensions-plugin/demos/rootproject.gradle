@@ -1,8 +1,6 @@
 apply plugin: 'sktools-ideaextensions-plugin'
 apply plugin: 'groovy'
 
-sourceCompatibility = '1.7'
-targetCompatibility = '1.7'
 
 /**
  * Tester at filer maskeres bort

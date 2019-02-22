@@ -1,5 +1,5 @@
 import org.gradle.util.GradleVersion
-assert GradleVersion.current() >= GradleVersion.version('4.2') //lowest gradle version supported
+assert GradleVersion.current() >= GradleVersion.version('4.10') //lowest gradle version supported
 
 allprojects {
     apply plugin: 'idea'
@@ -31,7 +31,7 @@ project.ext.libraries = [
 
         saxon : 'net.sf.saxon:Saxon-HE:9.8.0-12', //xslt 2.0
 
-        guava: 'com.google.guava:guava:19.0',
+        guava: 'com.google.guava:guava:27.0.1-jre',
 
         jaxb_xjc : 'org.glassfish.jaxb:jaxb-xjc:2.2.11',
         jaxb_rt : 'org.glassfish.jaxb:jaxb-runtime:2.2.11',
@@ -40,7 +40,7 @@ project.ext.libraries = [
         jaxws_annotations : 'javax.jws:jsr181-api:1.0-MR1@jar',
 
         // Testing
-        assertj: 'org.assertj:assertj-core:2.9.1', /* AssertJ 2.x for Java 7, 3.x for Java8 */
+        assertj: 'org.assertj:assertj-core:3.12.0',
         testng: 'org.testng:testng:6.14.3',
         hsqldb: 'org.hsqldb:hsqldb:2.2.8',
         jaxws: 'com.sun.xml.ws:jaxws-tools:2.2.10',
@@ -96,8 +96,8 @@ subprojects { Project project ->
 
     project.plugins.withType(JavaPlugin) {
 
-        sourceCompatibility = '1.7'
-        targetCompatibility = '1.7'
+        sourceCompatibility = '1.8'
+        targetCompatibility = '1.8'
 
         // appropriately inject common dependencies into each sub-project
         dependencies {
@@ -177,7 +177,7 @@ subprojects { Project project ->
         ignoreFailures = System.getProperty('ignoreFailures', 'false') == 'true' //Gradle feiler ikke dersom denne er true. Kan ikke være true dersom en gjør en publish
         systemProperty 'java.io.tmpdir', System.getProperty('java.io.tmpdir')
 
-        jvmArgs '-Xmx512m', '-XX:PermSize=128m', '-XX:MaxPermSize=256m'
+        jvmArgs '-Xmx512m'
 //            testLogging.showStandardStreams = true
 
         filterTestGroup(test, 'broken', 'EXCLUDE')
@@ -238,8 +238,8 @@ allprojects {
 afterEvaluate {
 
     idea.project {
-        jdkName = '1.7'
-        languageLevel = '1.7'
+        jdkName = '1.8'
+        languageLevel = '1.8'
 
         ipr {
             //Perforce as default vcs by tinkering with the output *.ipr file before it's written out

@@ -33,8 +33,8 @@ pipeline { //declarative pipeline syntax
     }
 
     tools {
-        gradle 'Gradle 4.2' //kompilerer artefakter til denne versjonen
-        jdk 'Java 7 Latest' //spesifisert java versjon for bygging av release
+        gradle 'Gradle 4.10.2' //kompilerer artefakter til denne versjonen
+        jdk 'Java 8 Latest' //spesifisert java versjon for bygging av release
     }
 
     environment {
@@ -44,7 +44,6 @@ pipeline { //declarative pipeline syntax
         WEBLOGIC_VERSION = "${params.WEBLOGIC_VERSION}"
         WEBLOGIC_HOME = "${WEBLOGIC_HOME("${params.WEBLOGIC_VERSION}", env)}"
         ORG_GRADLE_PROJECT_sktools_versjon = "${params.sktools_versjon}"
-        GRADLE_OPTS = "-XX:MaxPermSize=512m" //java 7 trenger litt mere permGen space
         BRANCH_NAME = "${params.BRANCH_NAME}"
 
         //for publisering til sentralt maven repo bines opp via jenkins credential (secret text)
@@ -68,11 +67,11 @@ pipeline { //declarative pipeline syntax
                 stage('Test gradle baseline') {
                     steps {
                         bat "gradle --version"
-                        bat "gradle testGradle4.2 -DignoreFailures=true ${gradleOptions(this)}"
+                        bat "gradle testGradle4.10.2 -DignoreFailures=true ${gradleOptions(this)}"
                     }
                     post {
                         always {
-                            junit '**/test-results/testGradle4.2/*.xml'
+                            junit '**/test-results/testGradle4.10.2/*.xml'
                         }
                     }
                 }
@@ -97,10 +96,10 @@ pipeline { //declarative pipeline syntax
             parallel {
                 stage('Integration Test Baseline') {
                     tools {
-                        gradle 'Gradle 4.2' //spesifisert minstekrav
+                        gradle 'Gradle 4.10.2' //spesifisert minstekrav
                     }
                     steps {
-                        withEnv(['WEBLOGIC_VERSION=10.3.5.0', "WEBLOGIC_HOME=${WEBLOGIC_HOME('10.3.5.0', env)}"]) {
+                        withEnv(['WEBLOGIC_VERSION=12.1.3.0', "WEBLOGIC_HOME=${WEBLOGIC_HOME('12.1.3.0', env)}"]) {
                             bat "gradle --version"
                             bat "gradle runDemos ${gradleOptions(this)}"
                         }
