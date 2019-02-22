@@ -27,7 +27,9 @@ def libVersion(String name, String defaultValue) {
 // use. In that respect it serves a role similar to <dependencyManagement> in Maven
 project.ext.libraries = [
 
-        log4j: "log4j:log4j:${libVersion('log4j', '1.2.17')}@jar",
+        // Logging
+        slf4j_api: "org.slf4j:slf4j-api:${libVersion('slf4j', '1.7.26')}",
+        slf4j_simple: "org.slf4j:slf4j-simple:${libVersion('slf4j', '1.7.26')}",
 
         saxon : 'net.sf.saxon:Saxon-HE:9.8.0-12', //xslt 2.0
 

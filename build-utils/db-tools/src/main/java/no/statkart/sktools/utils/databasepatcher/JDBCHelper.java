@@ -1,8 +1,8 @@
 package no.statkart.sktools.utils.databasepatcher;
 
 import no.statkart.sktools.utils.databasepatcher.exception.OperationalException;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.Driver;
@@ -12,11 +12,9 @@ import java.util.Properties;
 
 /**
  * Hjelpeklasser for bruk av JDBC api'et. Har metoder for å frigjøre JDBC ressurser på korrekt måte.
- *
- * @author Aksel Hilde
  */
 public class JDBCHelper {
-    private static Logger logger = LogManager.getLogger(JDBCHelper.class);
+    private static final Logger logger = LoggerFactory.getLogger(JDBCHelper.class);
 
     /**
      * Tilbyr bare statiske metoder, skal ikke instansieres.
@@ -35,7 +33,7 @@ public class JDBCHelper {
      * @return connection
      */
     public static Connection createConnection(String driver, String url, String user, String pwd) throws SQLException {
-        Connection connection = null;
+        Connection connection;
         try {
             Class claz = Class.forName(driver);
             DriverManager.registerDriver((Driver) claz.newInstance());

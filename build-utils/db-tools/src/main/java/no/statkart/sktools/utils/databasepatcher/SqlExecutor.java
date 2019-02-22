@@ -5,8 +5,10 @@ import no.statkart.sktools.utils.databasepatcher.exception.OperationalException;
 import no.statkart.sktools.utils.parsers.sql.SQLStatementParser;
 import no.statkart.sktools.utils.parsers.sql.model.Comment;
 import no.statkart.sktools.utils.parsers.sql.model.Expression;
+import no.statkart.sktools.utils.parsers.sql.model.PromptStatement;
 import no.statkart.sktools.utils.parsers.sql.model.Statement;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -19,7 +21,6 @@ import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -29,7 +30,7 @@ import java.util.List;
  * @author Henrik Fredholm
  */
 public class SqlExecutor {
-    private static Logger logger = Logger.getLogger(SqlExecutor.class);
+    private static final Logger logger = LoggerFactory.getLogger(SqlExecutor.class);
 
     //SKTOOLS-84: error håndtering
     boolean failOnError, failOnWarning;
@@ -86,12 +87,10 @@ public class SqlExecutor {
                     tmpScript.append(line).append("\n");
                     line = br.readLine();
                 }
-            } catch (IOException ioe) {
-                logger.error("Under lesing av sqlscript " + ioe.getMessage(), ioe);
             }
 
-        } catch (IOException e) {
-            logger.error(e);
+        } catch (IOException ioe) {
+            logger.error("Under lesing av sqlscript " + ioe.getMessage(), ioe);
         }
 
         return tmpScript.toString();
@@ -165,7 +164,11 @@ public class SqlExecutor {
 
             for (Expression scriptLine : scriptLines) {
                 if (scriptLine instanceof Comment) {
-                    logger.debug("Comment: " + ((Comment) scriptLine).getText());
+                    if (scriptLine instanceof PromptStatement) {
+                        logger.info(((Comment) scriptLine).getText()); //inneholder allerede "PROMPT: "
+                    } else {
+                        logger.debug("comment: {}", ((Comment) scriptLine).getText());
+                    }
                     continue; // gjør ikke noe mer for kommentarer
                 }
 
@@ -177,8 +180,8 @@ public class SqlExecutor {
                         callCallable(sqlStatement.getSql(), connection, rsList);
                     } else {
                         try {
+                            logger.debug("Executing :\n{}", sqlStatement.getSql());
                             statement.executeUpdate(sqlStatement.getSql());
-                            logger.debug("Executed : " + sqlStatement.getSql());
                         } catch (SQLException e) {
                             if (isWarning(e)) {
                                 logger.warn("Warning: Error executing line#" + scriptLine.getLineNumber() + ". Oracle error: " + e.getMessage());
@@ -195,7 +198,7 @@ public class SqlExecutor {
                                     throw new Exception("Feil under kjøring av script.", e);
                                 }
                             }
-                            logger.debug("Errors while executing : " + sqlStatement.getSql());
+                            logger.debug("Errors while executing : {}",  sqlStatement.getSql());
                         }
                     }
                 }

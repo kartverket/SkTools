@@ -55,7 +55,7 @@ class DependencyUtil {
         if (version != null) {
             return [
                     project.buildscript.dependencies.create("no.statkart.sktools:db-tools:${version}"),
-                    project.buildscript.dependencies.create("log4j:log4j:1.2.15@jar")   //todo: denne burde vert gitt via konfigurasjon
+                    project.buildscript.dependencies.create('org.slf4j:slf4j-simple')   //styres via POM til no.statkart.sktools:db-tools
             ]
         }
         return null

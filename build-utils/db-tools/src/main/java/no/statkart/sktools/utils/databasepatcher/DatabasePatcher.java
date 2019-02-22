@@ -8,7 +8,8 @@ import no.statkart.sktools.utils.parsers.sql.SQLStatementParser;
 import no.statkart.sktools.utils.parsers.sql.model.Comment;
 import no.statkart.sktools.utils.parsers.sql.model.Expression;
 import no.statkart.sktools.utils.parsers.sql.model.Statement;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -34,7 +35,7 @@ import java.util.regex.Pattern;
  * eldre patch blokker skippet.
  */
 public class DatabasePatcher {
-   private static Logger logger = Logger.getLogger(DatabasePatcher.class);
+   private static final Logger logger = LoggerFactory.getLogger(DatabasePatcher.class);
    static Pattern pPatchDBVersion = Pattern.compile("^--\\s*PATCH\\s+(\\w+)\\s+DB\\.VERSION");
    static Pattern pParsePatchDBVersion = Pattern.compile("^--\\s*PATCH\\s+(\\w+)\\s+DB\\.VERSION\\s*=\\s*\"([\\w\\.-]+)\"\\s+PATCH\\.NO\\s*=\\s*\"(-?\\d+)\"(\\s*(.*))?");
    static Pattern pPatchDBMinVersion = Pattern.compile("^--\\s*PATCH\\s+DB\\.MIN\\.VERSION");
@@ -455,7 +456,7 @@ public class DatabasePatcher {
             updatePatchInfo(con, p);
          } else {
              if (p.patchtype != PatchtypeKode.ALWAYS) {
-                 logger.info(String.format("Utfører %s patchblokk på nytt. Noen statements kan feile : %s", p.patchtype.name, p));
+                 logger.info("Utfører {} patchblokk på nytt. Noen statements kan feile : {}", p.patchtype.name, p);
              } else {
                  logger.info("Utfører patchblokk: " + p + ((p.kommentar == null) ? "" : " " + p.kommentar));
              }
@@ -696,7 +697,7 @@ public class DatabasePatcher {
                      stmt.setInt(4, candidatePatchInfo.indexesInSyncWithPatch ? 1 : 0);
                      stmt.setString(5, candidatePatchInfo.patchVersion.kommentar);
 
-                     logger.info(String.format("Defining patchInfo: %s", candidatePatchInfo));
+                     logger.info("Defining patchInfo: {}", candidatePatchInfo);
 
                      stmt.executeUpdate();
                      con.commit();

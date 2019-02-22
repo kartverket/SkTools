@@ -1,6 +1,7 @@
 package no.statkart.sktools.utils.databasepatcher.exception;
 
-import org.apache.log4j.Logger;
+
+import org.slf4j.Logger;
 
 /**
  * Thrown to indicate that a system error has occured which has been caused either
@@ -35,20 +36,6 @@ public abstract class DatabasePatcherException extends RuntimeException {
             logger.error(message, cause);
     }
 
-    public DatabasePatcherException(Logger logger, String message, String errorCode, Throwable cause) {
-        super(message, cause);
-        if( logger != null )
-            logger.error(message + " ErrorCode: " + errorCode, cause);
-        this.errorCode = errorCode;
-    }
-
-    public DatabasePatcherException(Logger logger, String message, String errorCode, String detailMessage, Throwable cause) {
-        super(message, cause);
-        if( logger != null )
-            logger.error(message + " ErrorCode: " + errorCode + " Details: " + detailMessage, cause);
-        this.errorCode = errorCode;
-        this.extraDetailMessage = detailMessage;
-    }
 
     public String getDetailMessage() {
         return extraDetailMessage;
@@ -67,8 +54,8 @@ public abstract class DatabasePatcherException extends RuntimeException {
      *
      * @param detailMessage a string to be append to the detail message
      */
-    public void appendDetailMessage(String detailMessage){
-        if (detailMessage==null) {
+    public void appendDetailMessage(String detailMessage) {
+        if (detailMessage == null) {
             this.extraDetailMessage = detailMessage;
         } else {
             this.extraDetailMessage = this.extraDetailMessage + "\n " + detailMessage + "\n";
@@ -79,7 +66,7 @@ public abstract class DatabasePatcherException extends RuntimeException {
      * Er denne feilen allerede håndtert av applikasjonen? På klienten vil normal håndtering være å vise en
      * feilmeldingsdialog til brukeren og så kaste feilen videre for å terminere aksjonen og evt. også logging
      * i Java Web Start sin log-fil.
-     *
+     * <p>
      * Håndtering av en feil betyr håndtering innenfor en Java VM. Typisk vil tjeneren og klienten kunne ha forskjellig
      * håndtering, tjeneren kan logge til spesiell logg-fil mens klienten f.eks. viser en dialog.
      *
@@ -91,6 +78,7 @@ public abstract class DatabasePatcherException extends RuntimeException {
 
     /**
      * Angi om denne systemfeilen allerede er håndtert av applikasjonen (i kjørende Java VM).
+     *
      * @param b om håndtert
      */
     public void setHandled(boolean b) {
