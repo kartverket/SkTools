@@ -17,7 +17,6 @@ import org.gradle.api.internal.ConventionMapping
 import org.gradle.util.GUtil
 
 import java.util.concurrent.Callable
-import org.gradle.api.tasks.SourceSetContainer
 
 /**
  * Baserer seg på {@code JavaBasePlugin} og integrerer med {@code JavaPlugin} dersom denne aktiveres.
@@ -41,17 +40,17 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
         project.getDependencies().add(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME, WeblogicBasePlugin.toolsJar(project))
         project.getDependencies().add(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME, conventionalWeblogicDependencies(project))
 
-        final JavaPluginConvention javaConvention = project.getConvention().getPlugins().get("java") as JavaPluginConvention;
+        final JavaPluginConvention javaConvention = project.getConvention().getPlugins().get('java') as JavaPluginConvention;
         final Configuration weblogicProvidedConfiguration = project.getConfigurations().getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME)
 
         //konfigurerer opp et source sett
-        final SourceSet sourceSet = configureSourceSet(javaConvention);
+        final SourceSet sourceSet = javaConvention.getSourceSets().maybeCreate(SourceSet.MAIN_SOURCE_SET_NAME);
 
         WeblogicWsClientConvention wsClientConvention = new WeblogicWsClientConvention(project);
         project.convention.plugins.put(CONVENTION_NAME, wsClientConvention);
         wsClientConvention.genDir = "gen/${sourceSet.name}/wsclient"
 
-        def compileTask = createCompileTask(wsClientConvention, sourceSet, javaConvention)
+        def compileTask = createCompileTask(wsClientConvention, sourceSet)
 
         wsClientConvention.webService.all { WebServiceConfig webService ->
             Task collectSchemaTask = createCollectSchemaTask(project, webService)
@@ -140,7 +139,7 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
      *
      * @see WeblogicWsClientPlugin#GEN_CLIENT_TASK_NAME
      */
-    private AbstractCompile createCompileTask(final WeblogicWsClientConvention wsClientConvention, final SourceSet sourceSet, final JavaPluginConvention javaConvention) {
+    private AbstractCompile createCompileTask(final WeblogicWsClientConvention wsClientConvention, final SourceSet sourceSet) {
         final Project project = wsClientConvention.project
 
         final AbstractCompile compile = (AbstractCompile) project.tasks.create(GEN_CLIENT_TASK_NAME, WeblogicWsClientCompileTask.class);
@@ -197,17 +196,6 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
     }
 
 
-
-    private static SourceSet configureSourceSet(final JavaPluginConvention javaConvention) {
-        SourceSetContainer sourceSets = javaConvention.getSourceSets()
-
-        SourceSet sourceSet = sourceSets.findByName(SourceSet.MAIN_SOURCE_SET_NAME)
-        if (!sourceSet) {
-            sourceSet = sourceSets.create(SourceSet.MAIN_SOURCE_SET_NAME) //legger til nytt sourcesett
-        }
-
-        return sourceSet;
-    }
 
     public static FileCollection conventionalWeblogicDependencies(Project project) {
         if (project.hasProperty("WEBLOGIC_HOME")) {
