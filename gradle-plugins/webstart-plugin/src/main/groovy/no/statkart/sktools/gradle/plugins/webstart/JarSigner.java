@@ -21,6 +21,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
@@ -110,7 +111,7 @@ public class JarSigner extends ConventionTask {
             if (!getManifestAttributes().isEmpty()) {
                 manifestAddendum = new File(getTemporaryDir(), "addendum.mf");
 
-                try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(manifestAddendum, false), "UTF-8"))) {
+                try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(manifestAddendum, false), StandardCharsets.UTF_8))) {
                     for (Map.Entry<String, String> entry : getManifestAttributes().entrySet()) {
                         writer.format("%s: %s\n", entry.getKey(), entry.getValue());
                     }

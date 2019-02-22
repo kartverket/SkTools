@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -79,7 +80,7 @@ public class SqlExecutor {
                 throw new OperationalException("Finner ikke filen " + filnavn + " i classpath");
             }
 
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"))) {
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
                 String line;
 
                 line = br.readLine();
