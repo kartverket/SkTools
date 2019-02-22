@@ -42,7 +42,7 @@ public class PatchUtil {
 
         try {
             return databasePatcher.getVersion().patchVersion.dbVersion
-        } catch (NotFoundException nfe) {
+        } catch (NotFoundException ignored) {
             return null;
         }
     }
