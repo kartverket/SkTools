@@ -6,7 +6,6 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.testfixtures.ProjectBuilder;
-import org.testng.Assert;
 import org.testng.annotations.Test;
 
 
@@ -28,8 +27,11 @@ public class ProvidedPluginTest {
         //konfigurerer project
         project.getPlugins().apply("sktools-provided-plugin");
 
-        Assert.assertFalse(project.getPlugins().withType(ProvidedPlugin.class).isEmpty(), "Plugin ikke registrert");
-        Assert.assertNotNull(project.getConfigurations().findByName(ProvidedPlugin.PROVIDED_CONFIGURATION_NAME), "Configuration ikke registrert");
+        Assertions.assertThat(project.getPlugins().withType(ProvidedPlugin.class))
+                .withFailMessage("Plugin er registrert").isNotEmpty();
+
+        Assertions.assertThat(project.getConfigurations().findByName(ProvidedPlugin.PROVIDED_CONFIGURATION_NAME))
+                .as("Configuration er registrert").isNotNull();
     }
 
     @Test
@@ -41,7 +43,8 @@ public class ProvidedPluginTest {
         //en eller annen dependency - dersom ikke denne fungerer bør testen skrives om til en demo
         project.getDependencies().add("provided", project.getDependencies().localGroovy());
 
-        Assert.assertTrue(project.getConfigurations().getByName("default").isEmpty(), "default er ikke tom");
+        Assertions.assertThat(project.getConfigurations().getByName("default"))
+                .as("'default' configuraration").isEmpty();
 
         Configuration provided = project.getConfigurations().getByName("provided");
 
@@ -85,7 +88,8 @@ public class ProvidedPluginTest {
         //en eller annen dependency - dersom ikke denne fungerer bør testen skrives om til en demo
         project.getDependencies().add("singlevm", project.getDependencies().localGroovy());
 
-        Assert.assertTrue(project.getConfigurations().getByName("default").isEmpty(), "default er ikke tom");
+        Assertions.assertThat(project.getConfigurations().getByName("default"))
+                .as("'default' configuraration").isEmpty();
 
         Configuration provided = project.getConfigurations().getByName("singlevm");
 

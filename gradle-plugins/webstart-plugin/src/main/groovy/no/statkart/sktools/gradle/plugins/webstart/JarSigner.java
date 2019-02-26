@@ -21,6 +21,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
@@ -110,7 +111,7 @@ public class JarSigner extends ConventionTask {
             if (!getManifestAttributes().isEmpty()) {
                 manifestAddendum = new File(getTemporaryDir(), "addendum.mf");
 
-                try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(manifestAddendum, false), "UTF-8"))) {
+                try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(manifestAddendum, false), StandardCharsets.UTF_8))) {
                     for (Map.Entry<String, String> entry : getManifestAttributes().entrySet()) {
                         writer.format("%s: %s\n", entry.getKey(), entry.getValue());
                     }
@@ -128,7 +129,9 @@ public class JarSigner extends ConventionTask {
                 if (cachedFileIdent != null) {
                     if (cachedFileIdent.equals(jarFileIdent)) {
                         signedJarFile = cachedFileIdent.getFile();
-                        getLogger().info("...using cached jar " + signedJarFile.getAbsolutePath());
+                        if (getLogger().isInfoEnabled()) {
+                            getLogger().info("...using cached jar " + signedJarFile.getAbsolutePath());
+                        }
                     }
                 }
 
@@ -156,7 +159,7 @@ public class JarSigner extends ConventionTask {
 
                     //updating cache...
                     if (cachedFileIdent != null) {
-                        getLogger().debug("updating cache-entry for " + unsignedJar);
+                        getLogger().debug("updating cache-entry for {}", unsignedJar);
                     }
                     cachedFileIdent = new FileHashIdent(signedJarFile, jarFileIdent.hash());
                     cachedFileIdent.writeChecksumToFile(new File(certDirectory, signedJarFile.getName() + ".md5"));
@@ -344,7 +347,9 @@ public class JarSigner extends ConventionTask {
                             if (signedArtifactFileIdent != null) {
                                 String unsignedFileName = signedArtifactFileIdent.getFile().getName();
                                 signedArtifacts.put(unsignedFileName, signedArtifactFileIdent);
-                                getLogger().debug("   found cached file {}", signedArtifactFileIdent.getFile().getAbsolutePath());
+                                if (getLogger().isDebugEnabled()) {
+                                    getLogger().debug("   found cached file {}", signedArtifactFileIdent.getFile().getAbsolutePath());
+                                }
                             }
                         }
                     }

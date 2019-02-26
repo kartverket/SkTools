@@ -85,7 +85,9 @@ abstract class AbstractDatabaseConvention {
     protected void addPropertyIfNotExist(String key, Object value) {
         if (!this.properties.containsKey(key.toString())) {
             this.properties.put(key.toString(), value);
-            project.logger.info "setting dbToolSets[${name != '' ? name : "''"}] property ${key} to ${value}"
+            if (project.logger.isInfoEnabled()) {
+                project.logger.info("setting dbToolSets[${name != '' ? name : "''"}] property ${key} to ${value}")
+            }
         }
     }
 

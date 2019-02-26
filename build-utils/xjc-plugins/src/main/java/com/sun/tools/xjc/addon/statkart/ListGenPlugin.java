@@ -176,7 +176,7 @@ public class ListGenPlugin extends com.sun.tools.xjc.Plugin {
         return true;
     }
 
-    private void applyListAdapter(JClass adapterClass, ClassOutline classOutline, Outline outline) throws ClassNotFoundException {
+    private static void applyListAdapter(JClass adapterClass, ClassOutline classOutline, Outline outline) throws ClassNotFoundException {
         String className = classOutline.target.getSqueezedName();
         className = className.substring(0, className.length() - 4);
 

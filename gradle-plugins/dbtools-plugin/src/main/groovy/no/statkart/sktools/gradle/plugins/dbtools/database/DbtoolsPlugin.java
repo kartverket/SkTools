@@ -61,7 +61,7 @@ public class DbtoolsPlugin implements Plugin<Project> {
         dbtoolsConvention = new DbtoolsConvention(project);
         project.getConvention().getPlugins().put(CONVENTION_NAME, dbtoolsConvention);
 
-        final Configuration configuration = configureConfiguration(project);
+        final Configuration configuration = project.getConfigurations().create(DBTOOLS_CONFIGURATION);
         assignConventionMappings(project);
 
         configureTest(project); //SKTOOLS-81
@@ -104,13 +104,11 @@ public class DbtoolsPlugin implements Plugin<Project> {
     /**
      * @since 1.3 - SKTOOLS-81
      **/
-    private Task configureTest(final Project project) {
+    private static Task configureTest(final Project project) {
         final Task checkSQLTasks = project.task("checkSQLTasks");
         checkSQLTasks.setDescription("Verifies configuration of SQLTasks");
         checkSQLTasks.setGroup(JavaBasePlugin.VERIFICATION_GROUP);
         checkSQLTasks.doLast(new Action<Task>() {
-            final Logger logger = project.getLogger();
-
             @Override
             public void execute(Task task) {
                 task.getProject().getTasks().withType(AbstractSQLTask.class, new Action<AbstractSQLTask>() {
@@ -119,7 +117,7 @@ public class DbtoolsPlugin implements Plugin<Project> {
                         try {
                             task.validate(); //SKTOOLS-81
                         } catch (Throwable t) {
-                            logger.error("Error when validating task %s", task.getPath());
+                            task.getProject().getLogger().error("Error when validating task %s", task.getPath());
                         }
                     }
                 });
@@ -142,11 +140,7 @@ public class DbtoolsPlugin implements Plugin<Project> {
         return checkSQLTasks;
     }
 
-    private Configuration configureConfiguration(Project project) {
-        return project.getConfigurations().create(DBTOOLS_CONFIGURATION);
-    }
-
-    void assignConventionMappings(Project project) {
+    static void assignConventionMappings(Project project) {
         PatchConfiguration.assignConventionMappings(project);
         //SKTOOLS-40: setter parallell dersom -Dparallel=<nr> er angitt
         final Map<String, String> systemPropertiesArgs = project.getGradle().getStartParameter().getSystemPropertiesArgs();
@@ -184,7 +178,7 @@ public class DbtoolsPlugin implements Plugin<Project> {
         }
     }
 
-    private void loadDrivers(final Configuration configuration, final Project project) {
+    private static void loadDrivers(final Configuration configuration, final Project project) {
         // Konfigurasjon skal IKKE resolves i konfigurasjonsfasen (Gradle 3.x)
         // - resolver configuration etter at prosjektet er initialisert
         project.getGradle().getTaskGraph().addTaskExecutionGraphListener(new TaskExecutionGraphListener() {

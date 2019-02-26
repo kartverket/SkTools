@@ -14,7 +14,6 @@ import org.gradle.api.Project
 class DependencyUtil {
 
     private static Boolean _isClasspathExploded
-
     synchronized static boolean getIsClasspathExploded() {
         if (_isClasspathExploded == null) {
             String resourceName = "${DependencyUtil.class.name.replaceAll(/\./, '/')}.class"
@@ -24,39 +23,37 @@ class DependencyUtil {
     }
 
     /**
-     * Gir deg dependenices avhengig av om det kjøres som test eller ikke.
+     * Gir deg dependencies avhengig av om det kjøres som test eller ikke.
      * Antakelse om at dersom man kjører ifra jar fil (ikke exploded) så er man i produksjonssammenheng.
-     * @param project
-     * @return
      */
     public static FileCollection getDatabasePatcherClasspath(Project project) {
-        if (isClasspathExploded == false) {
-            List<Dependency> dependencies = getDatabasePatcherDependencies(project)
+        if (!getIsClasspathExploded()) {
+            Dependency[] dependencies = getDatabasePatcherDependencies(project)
             if (dependencies != null) {
-                return project.buildscript.configurations.detachedConfiguration(dependencies.toArray(new Dependency[dependencies.size()]))
+                return project.buildscript.configurations.detachedConfiguration(dependencies)
             }
             throw new RuntimeException("Feil ved beregning av dependencies for DatabasePatcher")
         } else {
-            return findRutimeClasspathForTesting(project)
+            return findRuntimeClasspathForTesting(project)
         }
     }
 
-    static FileCollection findRutimeClasspathForTesting(Project project) {
+    static FileCollection findRuntimeClasspathForTesting(Project project) {
         try {
             ClassLoader classLoader = Thread.currentThread().getContextClassLoader()
             println 'Warning: Benytter beregnet classpath for testformaal i dbtools'
             return project.files(classLoader.properties['URLs'])
-        } catch (IOException e1) {
+        } catch (IOException ignored) {
             throw new RuntimeException("Feil ved beregning av classpath for testformaal");
         }
     }
 
-    public static List<Dependency> getDatabasePatcherDependencies(Project project) {
+    public static Dependency[] getDatabasePatcherDependencies(Project project) {
         def version = getSktoolsVersion(project)
         if (version != null) {
             return [
                     project.buildscript.dependencies.create("no.statkart.sktools:db-tools:${version}"),
-                    project.buildscript.dependencies.create("log4j:log4j:1.2.15@jar")   //todo: denne burde vert gitt via konfigurasjon
+                    project.buildscript.dependencies.create('org.slf4j:slf4j-simple')   //styres via POM til no.statkart.sktools:db-tools
             ]
         }
         return null
@@ -67,12 +64,11 @@ class DependencyUtil {
      * @return versjon eller {@code null} dersom ingen relevante jar-filer eksisterer på classpath (IntelliJ)
      */
     public static String getSktoolsVersion(Project project) {
-        Enumeration resEnum;
         try {
 //            ClassLoader classLoader = Thread.currentThread().getContextClassLoader()
 //            ClassLoader classLoader = DependencyUtil.getClass().getClassLoader();
             ClassLoader classLoader = DependencyUtil.getClassLoader();
-            resEnum = classLoader.getResources(JarFile.MANIFEST_NAME);
+            Enumeration resEnum = classLoader.getResources(JarFile.MANIFEST_NAME);
             while (resEnum.hasMoreElements()) {
                 try {
                     URL url = (URL) resEnum.nextElement();
@@ -80,10 +76,10 @@ class DependencyUtil {
                     if (is != null) {
                         Manifest manifest = new Manifest(is);
                         Attributes mainAttributes = manifest.getMainAttributes();
-                        if (mainAttributes.getValue("Implementation-Vendor") == 'Statens kartverk') {
-                            String version = mainAttributes.getValue("Implementation-Version");
+                        if (mainAttributes.getValue('Implementation-Vendor') == 'Statens kartverk') {
+                            String version = mainAttributes.getValue('Implementation-Version');
                             if (version != null) {
-                                project.logger.info("Found sktools version: ${version}")
+                                project.logger.info('Found sktools version: {}', version)
                                 return version;
                             }
                         }

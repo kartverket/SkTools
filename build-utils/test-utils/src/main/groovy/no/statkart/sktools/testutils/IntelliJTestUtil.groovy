@@ -18,7 +18,7 @@ public class IntelliJTestUtil {
     public static boolean hasIntelliJScope() {
         try {
             return IntelliJTestUtil.class.getClassLoader().loadClass("IntelliJDummy") != null
-        } catch (ClassNotFoundException cnfe) {
+        } catch (ClassNotFoundException ignored) {
             return false
         }
     }
@@ -26,7 +26,7 @@ public class IntelliJTestUtil {
     public static boolean hasIntelliJTestScope() {
         try {
             return IntelliJTestUtil.class.getClassLoader().loadClass("IntelliJTestDummy") != null
-        } catch (ClassNotFoundException cnfe) {
+        } catch (ClassNotFoundException ignored) {
             return false
         }
     }

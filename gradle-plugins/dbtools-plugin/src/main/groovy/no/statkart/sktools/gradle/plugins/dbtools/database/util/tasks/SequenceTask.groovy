@@ -53,7 +53,7 @@ class SequenceTask extends DefaultTask {
                 if (childTask != null) {
                     def mySequence = new ArrayList(sequence)
 
-                    logger.info "...modding $childTask mustRunAfter ${mySequence}"
+                    logger.info('...modding {} mustRunAfter {}', childTask, mySequence)
                     childTask.mustRunAfter(sequence.clone())
 
                     processChildrenOf(childTask, mySequence, context)
@@ -90,7 +90,7 @@ class SequenceTask extends DefaultTask {
                     if (runAfter.contains(task)) {
                         logger.error "CYCLE DETECTED ${context}\n on ${task.path} mustRunAfter ${runAfter}\n"
                     }
-                    logger.info "...modding $task mustRunAfter ${runAfter} due to ${context}"
+                    logger.info('...modding {} mustRunAfter {} due to {}', task, runAfter, context)
                     task.mustRunAfter(runAfter)
                 }
             }

@@ -90,7 +90,9 @@ class OracleExportTask extends ConventionTask {
 
         logger.lifecycle('Calling expdp with user ' + getUsername() + ', tns ' + getTns());
 
-        logger.info 'Executing command: \n' + command.join(' ').replace(getPassword(), getPassword().replaceAll(/./, "*"))
+        if (logger.isInfoEnabled()) {
+            logger.info 'Executing command: \n' + command.join(' ').replace(getPassword(), getPassword().replaceAll(/./, "*"))
+        }
 
         def running = true
         def bufferPrinter = {buffer ->

@@ -56,7 +56,7 @@ class WeblogicBasePluginTest {
      * Illustrerer integrasjon med JavaPlugin.
      *
      * Illustrert er at weblogic-configurasjonen arver ifra (java) compile konfigurasjonen.
-     * Dependenices som legges til 'compile' skal da komme med i 'weblogic'
+     * Dependencies som legges til 'compile' skal da komme med i 'weblogic'
      */
     @Test
     void demoConfigurationHierarchy() {

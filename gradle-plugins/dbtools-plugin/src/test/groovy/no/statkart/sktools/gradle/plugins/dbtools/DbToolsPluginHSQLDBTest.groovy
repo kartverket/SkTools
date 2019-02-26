@@ -106,7 +106,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
         try {
             def row = sql.firstRow('select * from TEST_TABLE')
             Assert.assertNull row, 'Forventer ingen rader'
-        } catch (SQLSyntaxErrorException sqlsee) {
+        } catch (SQLSyntaxErrorException ignored) {
             Assert.fail 'Forventer at tabell finnes'
         }
 
@@ -224,7 +224,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
         try {
             def row = getSql(user1).firstRow('select * from TEST_TABLE')
             Assert.assertNull row, 'Forventer ingen rader'
-        } catch (SQLSyntaxErrorException sqlsee) {
+        } catch (SQLSyntaxErrorException ignored) {
             Assert.fail 'Forventer at tabell finnes'
         }
 
@@ -236,7 +236,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
         try {
             def row = getSql(user2).firstRow('select * from TEST_TABLE2')
             Assert.assertNull row, 'Forventer ingen rader'
-        } catch (SQLSyntaxErrorException sqlsee) {
+        } catch (SQLSyntaxErrorException ignored) {
             Assert.fail 'Forventer at tabell finnes'
         }
 

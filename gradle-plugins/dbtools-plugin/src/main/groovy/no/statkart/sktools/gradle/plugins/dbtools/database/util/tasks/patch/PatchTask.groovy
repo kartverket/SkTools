@@ -51,7 +51,10 @@ class PatchTask extends DatabasePatchTask {
 
             spec.systemProperties.put('singlestep', getSinglestep())
 
-            logger.debug("Executing databasepatcher with command: " + (spec.getArgs() + spec.getAllJvmArgs()).join('\n\t'))
+            if (logger.isDebugEnabled()) {
+                logger.debug('Executing databasepatcher with command: ' + (spec.getArgs() + spec.getAllJvmArgs()).join('\n\t'))
+            }
+
         }
     }
 

@@ -115,7 +115,7 @@ configureDatabasePlugin {
         String name = params.get('name')
         String prefix = params.get('prefix', name)
 
-        project.logger.info("Adding ${type} toolset with name '${name}' (prefix=${prefix})...")
+        project.logger.info('Adding {} toolset with name \'{}\' (prefix={})...', type, name, prefix)
 
         def toolset;
         if ('oracle'.equalsIgnoreCase(type)) {
@@ -146,7 +146,7 @@ configureDatabasePlugin {
         OracleTasksConvention convention = dbToolSets.get(name)
 
         if (convention == null) {
-            project.logger.info("Applying Oracle convention with name ${name} ...")
+            project.logger.info('Applying Oracle convention with name \'{}\' ...', name)
             convention = new OracleTasksConvention(this, prefix, name)
             dbToolSets.put(name, convention)
 
@@ -161,7 +161,7 @@ configureDatabasePlugin {
         HsqldbTasksConvention convention = dbToolSets.get(prefix)
 
         if (convention == null) {
-            project.logger.info("Applying HSQLDB convention with name ${name} ...")
+            project.logger.info('Applying HSQLDB convention with name \'{}\' ...', name)
             convention = new HsqldbTasksConvention(this, prefix, name)
             dbToolSets.put(name, convention)
 

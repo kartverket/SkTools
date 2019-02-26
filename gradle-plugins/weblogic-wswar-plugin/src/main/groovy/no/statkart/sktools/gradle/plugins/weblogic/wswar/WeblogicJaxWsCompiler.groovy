@@ -53,7 +53,7 @@ class WeblogicJaxWsCompiler implements no.statkart.sktools.gradle.plugins.weblog
         }
 
 
-        logger.info ('Calling jwsc with attributes = ' + attributes)
+        logger.info('Calling jwsc with attributes = {}', attributes)
 
         def antTask = ant.jwsc(attributes) {
 

@@ -78,8 +78,10 @@ public class WsDocCompileTask extends JavaCompile {
    @TaskAction
    @Override
    protected void compile() {
-      logger.info("args: " + getOptions().getCompilerArgs());
-      logger.debug("Classpath for generating WsDoc: {}", getClasspath().getFiles());
+      logger.info("args: {}", getOptions().getCompilerArgs());
+      if (logger.isDebugEnabled()) {
+         logger.debug("Classpath for generating WsDoc: {}", getClasspath().getFiles());
+      }
       super.compile();
    }
 

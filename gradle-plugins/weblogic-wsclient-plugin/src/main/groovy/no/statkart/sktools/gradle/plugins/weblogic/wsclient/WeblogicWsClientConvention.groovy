@@ -41,7 +41,7 @@ class WeblogicWsClientConvention {
      * Bestemmer katalog for genererte filer.
      * @since 1.1
      */
-    def WeblogicWsClientConvention genDir(Object path) {
+    WeblogicWsClientConvention genDir(Object path) {
         genDir = path
         this
     }

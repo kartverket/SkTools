@@ -117,7 +117,7 @@ abstract class HSQLDBTest {
                 [
                         "DROP SCHEMA \"${credentials.defaultSchema}\" CASCADE",
                 ].each { String sqlString ->
-                    logger.debug("SQL: ${sqlString}")
+                    logger.debug('SQL: {}', sqlString)
                     getSql(systemCredentials).execute(sqlString);
                 }
             }
@@ -147,7 +147,7 @@ abstract class HSQLDBTest {
                 "CREATE SCHEMA \"${credentials.defaultSchema}\" AUTHORIZATION \"${credentials.username}\"",
                 "ALTER USER \"${credentials.username}\" SET INITIAL SCHEMA \"${credentials.defaultSchema}\"",
         ].each { String sqlString ->
-            logger.debug("SQL: ${sqlString}")
+            logger.debug('SQL: {}', sqlString)
             getSql(systemCredentials).execute(sqlString);
         }
     }

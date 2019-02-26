@@ -12,6 +12,19 @@ import org.gradle.plugins.ide.idea.IdeaPlugin;
 
 import java.io.File;
 
+/**
+ * Konfigurasjon:
+ *
+ * <pre>
+ *   apply plugin: 'sktools-wsimport-plugin'
+ *
+ *   dependencies {
+ *      jaxws 'com.sun.xml.ws:wscompile:2.2.10'
+ *   }
+ * </pre>
+ *
+ * Skjema filer legges som standard i {@code sourceSets.main.resources.srcDir}
+ */
 public class WsImportPlugin implements Plugin<Project> {
     @Override
     public void apply(Project project) {

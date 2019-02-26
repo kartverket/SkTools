@@ -30,7 +30,14 @@ public class WsdlGenTask extends SourceTask {
             if (!details.directory) {
                 String path = details.relativePath
                 String classname = path.replace('/', '.').substring(0, path.length() - 6)
-                ant.wsgen(sei: classname, classpathref: this.getPath(), destdir: getTemporaryDir(), resourcedestdir: getDestinationDir(), genwsdl: 'true')
+                ant.wsgen(
+                        sei: classname,
+                        classpathref: this.getPath(),
+                        destdir: getTemporaryDir(),
+                        resourcedestdir: getDestinationDir(),
+                        genwsdl: 'true',
+                        keep: 'true',
+                )
             }
         }
     }

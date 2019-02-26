@@ -60,7 +60,7 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
         project.getDependencies().add(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME, WeblogicBasePlugin.toolsJar(project));
         project.getDependencies().add(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME, conventionalWeblogicDependencies(project));
 
-        createWeblogicConfiguration(project);
+        project.getConfigurations().maybeCreate(WEBLOGIC_CONFIGURATION_NAME);
         final SourceSet weblogicSourceSet = createSourceSet(project);
 
         configureConfigurations(project, weblogicSourceSet);
@@ -333,14 +333,5 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
         }
 
     }
-
-    private static Configuration createWeblogicConfiguration(Project project) {
-        Configuration weblogicConfiguration = project.getConfigurations().findByName(WEBLOGIC_CONFIGURATION_NAME);
-        if (weblogicConfiguration == null) {
-            weblogicConfiguration = project.getConfigurations().create(WEBLOGIC_CONFIGURATION_NAME);
-        }
-        return weblogicConfiguration;
-    }
-
 
 }

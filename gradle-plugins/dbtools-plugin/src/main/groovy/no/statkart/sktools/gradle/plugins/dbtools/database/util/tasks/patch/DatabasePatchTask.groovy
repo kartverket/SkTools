@@ -36,7 +36,15 @@ abstract class DatabasePatchTask extends AbstractSQLTask {
 
         spec.setClasspath(getClasspath())
 
-        spec.systemProperties.put('sql.file.encoding', getEncoding()); //PS: setter ikke file.encoding da dette forvrenger logging i gradle for forket prosess
+        spec.systemProperties.put('sql.file.encoding', getEncoding())
+        spec.setDefaultCharacterEncoding(System.getProperty('file.encoding')) //samme file.encoding unngår forvrengning av loggoutput til konsoll
+
+        //see documentation https://www.slf4j.org/api/org/slf4j/impl/SimpleLogger.html
+        spec.systemProperties.put('org.slf4j.simpleLogger.defaultLogLevel', getLogger().isDebugEnabled() ? 'trace' : logger.isInfoEnabled() ? 'debug' : 'info')
+        spec.systemProperties.put('org.slf4j.simpleLogger.showShortLogName', logger.isInfoEnabled())
+        spec.systemProperties.put('org.slf4j.simpleLogger.showLogName', false)
+        spec.systemProperties.put('org.slf4j.simpleLogger.showThreadName', false)
+        spec.systemProperties.put('org.slf4j.simpleLogger.showDateTime', false)
 
         spec.systemProperties.put('hibernate.connection.driver_class', getDriver())
         spec.systemProperties.put('hibernate.connection.url', getUrl())

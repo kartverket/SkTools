@@ -179,7 +179,7 @@ public class CustomWsdlTask extends DefaultTask {
         HashMap<String, Collection<File>> generatedSchemaFileMap = readGeneratedSchemas(documentBuilder, generatedSchemas);
 
         for (File wsdl : wsdls) {
-            getLogger().info("Processing " + wsdl);
+            getLogger().info("Processing {}", wsdl);
             processWsdl(documentBuilder, transformer, wsdl, namespaceSchemaFileMap, generatedSchemaFileMap, copySpec);
         }
 
@@ -210,16 +210,16 @@ public class CustomWsdlTask extends DefaultTask {
                 Element imp = (Element) imports.item(0);
                 String importNamespace = imp.getAttributeNS(null, "namespace");
                 if (importNamespace.equals(serviceNamespace)) {
-                    getLogger().info("Processing " + importNamespace + " as service namespace");
+                    getLogger().info("Processing {} as service namespace", importNamespace);
                     processServiceSchema(documentBuilder, transformer, namespaceSchemaFileMap, generatedSchemaFileMap.get(importNamespace));
                 } else if (shouldContainNamespace(importNamespace)) {
                     String schemaFile = namespaceSchemaFileMap.get(importNamespace);
                     if (schemaFile != null) {
-                        getLogger().info("Using original schema " + schemaFile + " for " + importNamespace);
+                        getLogger().info("Using original schema {} for {}", schemaFile, importNamespace);
                         imp.setAttributeNS(null, "schemaLocation", schemaFile);
                     } else {
                         Collection<File> file = generatedSchemaFileMap.get(importNamespace);
-                        getLogger().info("Using generated schema " + file + " for " + importNamespace);
+                        getLogger().info("Using generated schema {} for {}", file, importNamespace);
                         copySpec.from(file);
                     }
                 } else {
@@ -312,7 +312,7 @@ public class CustomWsdlTask extends DefaultTask {
         return namespaceSchemaFileMap;
     }
 
-    private HashMap<String, Collection<File>> readGeneratedSchemas(DocumentBuilder documentBuilder, Collection<File> schemaFiles) {
+    private static HashMap<String, Collection<File>> readGeneratedSchemas(DocumentBuilder documentBuilder, Collection<File> schemaFiles) {
         HashMap<String, Collection<File>> namespaceSchemaFileMap = new HashMap<>();
 
         XPathExpression xPathExpression;

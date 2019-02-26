@@ -3,9 +3,7 @@ package no.statkart.sktools.gradle.plugins.webstart
 import no.statkart.sktools.gradle.plugins.webstart.util.ArtifactMatcher
 import org.gradle.api.GradleException
 
-/**
- *
- */
+
 class JnlpSyntaxUtil {
 
     /**
@@ -13,9 +11,7 @@ class JnlpSyntaxUtil {
      * @param allJarFiles Dette er de jar-filene som skal brukes, både main og de andre
      * @return
      */
-    static def Node appendJarElementForAllDependencies(Node resourcesNode, Set<File> mainJarFiles, Set<File> allJarFiles, String libPath, String digest) {
-        final Set<File> nonMainJarFiles // Dette er alle jar-filer som ikke skal merkes som main
-
+    static Node appendJarElementForAllDependencies(Node resourcesNode, Set<File> mainJarFiles, Set<File> allJarFiles, String libPath, String digest) {
         boolean mainJarFound = false
 
         allJarFiles.each { File file ->
@@ -42,7 +38,7 @@ class JnlpSyntaxUtil {
         return resourcesNode
     }
 
-    static def Node createResourcesElement(ResourcesConfiguration resources) {
+    static Node createResourcesElement(ResourcesConfiguration resources) {
         Node resourcesNode = new Node(null, 'resources')
 
         if (resources != null) {
@@ -58,7 +54,7 @@ class JnlpSyntaxUtil {
         return resourcesNode
     }
 
-    static def Node createRuntimeElement(RuntimeConfiguration runtimeConfiguration) {
+    static Node createRuntimeElement(RuntimeConfiguration runtimeConfiguration) {
         if (runtimeConfiguration instanceof JavaRuntimeConfiguration) {
             return createJavaRuntimeElement(runtimeConfiguration)
         } else if (runtimeConfiguration instanceof JavaFxRuntimeConfiguration) {
@@ -68,7 +64,7 @@ class JnlpSyntaxUtil {
         }
     }
 
-    static def Node createJavaFxRuntimeElement(JavaFxRuntimeConfiguration configuration) {
+    static Node createJavaFxRuntimeElement(JavaFxRuntimeConfiguration configuration) {
         Node javaNode = new Node(null, 'jfx:javafx-runtime', [version: configuration.version])
         if (configuration.href != null) {
             javaNode.attributes().put('href', configuration.href)
@@ -76,7 +72,7 @@ class JnlpSyntaxUtil {
         return javaNode
     }
 
-    static def Node createJavaRuntimeElement(JavaRuntimeConfiguration configuration) {
+    static Node createJavaRuntimeElement(JavaRuntimeConfiguration configuration) {
         Node javaNode = new Node(null, 'j2se', [version: configuration.version])
         if (configuration.href != null) {
             javaNode.attributes().put('href', configuration.href)

@@ -59,7 +59,7 @@ public class FilterResourcesPlugin implements Plugin<ProjectInternal> {
     /**
      * Setter default verdier etter at all annen konfigurasjon er gjort.
      */
-    private void setConventionalDefaults(FilterResourcesConvention filterPropertiesConvention) {
+    private static void setConventionalDefaults(FilterResourcesConvention filterPropertiesConvention) {
         Project project = filterPropertiesConvention.project;
 
         if (filterPropertiesConvention.properties == null) {
@@ -69,7 +69,7 @@ public class FilterResourcesPlugin implements Plugin<ProjectInternal> {
     }
 
 
-    private void configureSourceSetDefaults(final ProjectInternal project, final FilterResourcesConvention convention) {
+    private static void configureSourceSetDefaults(final ProjectInternal project, final FilterResourcesConvention convention) {
         //for hvert source sett som finnes/blir lagt til
         project.getConvention().getPlugin(JavaPluginConvention.class).getSourceSets().all(new Action<SourceSet>() {
             public void execute(final SourceSet sourceSet) {

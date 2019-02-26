@@ -1,11 +1,12 @@
 package no.statkart.sktools.testutils;
 
-import org.apache.log4j.Logger;
+import org.gradle.api.logging.Logger;
+import org.gradle.api.logging.Logging;
 
 import java.io.File;
 
 public class RootDirectoryLocator {
-    private static final Logger LOGGER = Logger.getLogger(RootDirectoryLocator.class);
+    private static final Logger LOGGER = Logging.getLogger(RootDirectoryLocator.class);
     private static final String SETTINGS_GRADLE = "settings.gradle";
 
     private static File projectDevRoot = null;
@@ -27,7 +28,7 @@ public class RootDirectoryLocator {
             return null;
         }
 
-        LOGGER.debug("Tester file: " + file.getAbsolutePath());
+        LOGGER.debug("Tester file: {}", file.getAbsolutePath());
         if (!file.isDirectory()) {
             return findRootDirectory(file.getAbsoluteFile().getParentFile());
         }
@@ -35,7 +36,7 @@ public class RootDirectoryLocator {
         if (settingsFile.exists()) {
             return file;
         } else {
-            LOGGER.debug("Ingen match i directory: " + file.getAbsolutePath());
+            LOGGER.debug("Ingen match i directory: {}", file.getAbsolutePath());
             suggestedRoot = findRootDirectory(file.getAbsoluteFile().getParentFile());
         }
 

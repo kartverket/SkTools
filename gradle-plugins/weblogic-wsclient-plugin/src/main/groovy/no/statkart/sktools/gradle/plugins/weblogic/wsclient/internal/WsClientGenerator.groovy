@@ -94,7 +94,7 @@ class WsClientGenerator {
                     attributes.wsdlLocation = 'META-INF/wsdls/' + webServiceConfig.apiPrefix + '/' + f.name
                 }
 
-                logger.info('Calling clientgen with attributes = ' + attributes)
+                logger.info('Calling clientgen with attributes = {}', attributes)
                 def result = ant.clientgen(attributes) {
                     //nested <fileset> fungerer ikke (testet for WLS 10.3.1), må angi en og en wsdl-fil
                 }
@@ -102,7 +102,7 @@ class WsClientGenerator {
         }
 
         if (webServiceConfig.getException() != null) {
-            logger.info("Reusing exceptions for module ${webServiceConfig}")
+            logger.info('Reusing exceptions for module {}', webServiceConfig)
             reuseExceptions(getDestinationDir(), webServiceConfig.getException())
         }
     }
@@ -158,7 +158,7 @@ class WsClientGenerator {
         //flytter alle exceptions til felles katalog
         javaFiles.matching(exceptionConfig.getExceptionFilePatternSet()).files.each { File file ->
             File relocatedFile = new File(exceptionPackageDir, file.getName())
-            logger.info("merging exception ${relocatedFile} <- ${file}")
+            logger.info('merging exception {} <- {}', relocatedFile, file)
 
             project.copy(new Action<CopySpec>() {
                 @Override
@@ -176,7 +176,7 @@ class WsClientGenerator {
 
         //legger til import statements for de andre java filene
         javaFiles.files.each { File file ->
-            logger.debug("adding exception import statement in ${file}")
+            logger.debug('adding exception import statement in {}', file)
             file.text = file.text.replaceFirst('import ', "import ${packageString}.*;\nimport ")
         }
 

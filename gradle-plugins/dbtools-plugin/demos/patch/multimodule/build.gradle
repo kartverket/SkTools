@@ -202,7 +202,7 @@ class Assert {
         try {
             sqlSA().eachRow("select count(*) from " + tablename) { }
             assert false //forventer at tabell ikke finnes
-        } catch (java.sql.SQLException e) {
+        } catch (java.sql.SQLException ignored) {
             assert true
         }
     }
@@ -231,7 +231,7 @@ class Assert {
         try {
             sqlSA().eachRow("select count(*) from PATCHINFO") { }
             assert false //forventer at tabell ikke finnes
-        } catch (java.sql.SQLException e) {
+        } catch (java.sql.SQLException ignored) {
             assert true
         }
     }
@@ -250,7 +250,7 @@ class Assert {
                 }
             }
 
-        } catch (java.sql.SQLException e) {
+        } catch (java.sql.SQLException ignored) {
             assert false
         }
     }
@@ -260,7 +260,7 @@ class Assert {
         toConsole "Tar ned database ${project.convention.plugins.db.dbToolSets['sa'].url}"
         try {
             sqlSA().execute('SHUTDOWN;')
-        } catch (java.sql.SQLException e) {
+        } catch (java.sql.SQLException ignored) {
             assert true //får noen ganger EOFException her..
         }
     }
