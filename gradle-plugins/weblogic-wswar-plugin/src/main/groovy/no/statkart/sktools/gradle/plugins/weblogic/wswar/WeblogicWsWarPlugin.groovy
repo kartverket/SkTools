@@ -110,9 +110,16 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
                 );
             }
 
+            if (wlsVersion.startsWith("12.2")) {
+                return project.files(
+                        "${WEBLOGIC_HOME}/wlserver/modules/databinding.override.jar",
+                        "${WEBLOGIC_HOME}/wlserver/server/lib/weblogic.jar",
+                );
+            }
+
             project.logger.warn("WARNING: no optimalization found for weblogic version " + wlsVersion);
             return project.fileTree(dir: WEBLOGIC_HOME, includes: [
-                    "wlserver/modules/databinding.override_*.jar",
+                    "wlserver/modules/databinding.override*.jar",
                     "wlserver/server/lib/weblogic.jar",
             ]);
         }
