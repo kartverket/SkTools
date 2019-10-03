@@ -46,15 +46,14 @@ public class WsdlCustomizerPlugin implements Plugin<Project> {
     }
 
     private static Zip configureZipTask(Project project, CustomWsdlTask customWsdlTask) {
-        Zip zipTask = project.getTasks().replace("zipCustomizedWsdls", Zip.class);
+        Zip zipTask = project.getTasks().create("zipCustomizedWsdls", Zip.class);
         zipTask.setClassifier("wsdls");
         zipTask.from(customWsdlTask);
         return zipTask;
     }
 
     private static Copy configureSchemaExtractionTask(final Project project, final Configuration originalSchemas) {
-        // Bruker replace() siden add() er depracated og create() ikke fantes før
-        Copy extractSchemas = project.getTasks().replace("extractSchemas", Copy.class);
+        Copy extractSchemas = project.getTasks().create("extractSchemas", Copy.class);
         extractSchemas.setDestinationDir(new File(project.getBuildDir(), extractSchemas.getName()));
         extractSchemas.dependsOn(originalSchemas);
         extractSchemas.from(new Callable<Collection<FileCollection>>() {
@@ -78,8 +77,7 @@ public class WsdlCustomizerPlugin implements Plugin<Project> {
         final PatternSet wsdlAndXsdPattern = new PatternSet();
         wsdlAndXsdPattern.include("**/*.wsdl", "**/*.xsd");
 
-        // Bruker replace() siden add() er depracated og create() ikke fantes før
-        Copy extractWsdls = project.getTasks().replace("extractWsdls", Copy.class);
+        Copy extractWsdls = project.getTasks().create("extractWsdls", Copy.class);
         extractWsdls.setDestinationDir(new File(project.getBuildDir(), extractWsdls.getName()));
         extractWsdls.dependsOn(generatedSchemas);
         extractWsdls.from(new Callable<Collection<FileCollection>>() {
@@ -100,7 +98,7 @@ public class WsdlCustomizerPlugin implements Plugin<Project> {
     }
 
     private static CustomWsdlTask configureWsdlCustomizerTask(Project project, Task schemaTask, Task wsdlTask) {
-        CustomWsdlTask customWsdlTask = project.getTasks().replace("customizeWsdls", CustomWsdlTask.class);
+        CustomWsdlTask customWsdlTask = project.getTasks().create("customizeWsdls", CustomWsdlTask.class);
         customWsdlTask.setDestinationDir(new File(project.getBuildDir(), customWsdlTask.getName()));
         customWsdlTask.originalSchemaFiles(schemaTask);
         customWsdlTask.generatedWsdlAndSchemaFiles(wsdlTask);

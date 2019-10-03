@@ -76,7 +76,7 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
 
         String taskName = "collect" + GUtil.toCamelCase(webService.name) + "Schema";
 
-        Sync task = project.tasks.replace(taskName, Sync);
+        Sync task = project.tasks.maybeCreate(taskName, Sync);
         task.setFileMode(0755);  //SKTOOLS-123 no read only generated files i linux
         task.setDirMode(0755); //SKTOOLS-123 no read only generated files i linux
 
