@@ -207,7 +207,6 @@ class WeblogicDeployConfiguration {
      */
     void setFile(Object deployable) {
         this.file = deployable
-//        dependsOn((deployable instanceof org.gradle.api.Buildable || deployable instanceof Task) ? deployable : project.files(deployable))
     }
 
     void setName(String deploymentName) {

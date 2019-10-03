@@ -6,6 +6,7 @@ import org.gradle.api.logging.Logging;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Objects;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.regex.Matcher;
@@ -38,7 +39,7 @@ public class ArtifactMatcher {
 
         try (JarFile jarFile = new JarFile(file)) {
             Object value = jarFile.getManifest().getMainAttributes().get(new Attributes.Name("Implementation-Version"));
-            return value != null ? value.toString() : null;
+            return Objects.toString(value, null);
         } catch (IOException e) {
             //dont care
         }

@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -137,7 +138,7 @@ public class DatabasePatcher {
       }
 
         public String toString() {
-         return (patchtype != null ? patchtype : "   ") + " DB.VERSION=\"" + dbVersion + "\" PATCH.NO=\"" + patchNo + "\"";
+         return Objects.toString(patchtype, "   ") + " DB.VERSION=\"" + dbVersion + "\" PATCH.NO=\"" + patchNo + "\"";
       }
    }
 
