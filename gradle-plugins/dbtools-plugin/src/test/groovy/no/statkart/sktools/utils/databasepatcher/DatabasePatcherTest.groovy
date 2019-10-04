@@ -8,9 +8,8 @@ import no.statkart.sktools.gradle.plugins.dbtools.HSQLDBTest
 import no.statkart.sktools.utils.parsers.sql.SQLStatementParser
 import no.statkart.sktools.utils.parsers.sql.model.Expression
 
-import static DbToolsTestContext.FILE_TYPE.SQL
+import static no.statkart.sktools.gradle.plugins.dbtools.testutils.DbToolsTestContext.FILE_TYPE.SQL
 import no.statkart.sktools.utils.parsers.sql.model.Statement
-import no.statkart.sktools.gradle.plugins.dbtools.testutils.DbToolsTestContext
 
 /**
  * Tester funksjonaliteten til {@link no.statkart.sktools.utils.databasepatcher.DatabasePatcher}
@@ -252,7 +251,7 @@ INSERT INTO B_TABLE (ID, NAVN) VALUES (2, 'valueB');
     public void testParsingOfAlwaysPatchBlocks() {
         final DatabasePatcherTestContext testContext = buildDatabasePatcherTestFixture()
 
-        File patchFile = testContext.createTempFile(DbToolsTestContext.FILE_TYPE.SQL, """
+        File patchFile = testContext.createTempFile(SQL, """
 -- PATCH DB.MIN.VERSION="1.0"
 
 -- PATCH ALWAYS DB.VERSION="0" PATCH.NO="-1" "Definerer skjema for påfølgende patcher"
