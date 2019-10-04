@@ -38,6 +38,9 @@ class DatabasePatcherTestContext<T extends DatabasePatcherTestContext> extends D
                 return connection;
             }
         })
+
+        databasePatcher.schema = schema;
+
         if (props.component != null) {
             databasePatcher.component = props.component
         }
