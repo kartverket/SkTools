@@ -97,9 +97,6 @@ class DatabasePatcherTest extends HSQLDBTest {
     @Test
     public void testNoPatchinfoTableSystemUser() {
 
-        def user1 = systemCredentials
-        def user2 = defaultCredentials
-
         final DatabasePatcherTestContext testContext = buildDatabasePatcherTestFixture(systemCredentials, defaultCredentials)
 
         File patchFile = testContext.createTempFile("");
