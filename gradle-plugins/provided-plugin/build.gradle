@@ -6,11 +6,10 @@ group = 'no.statkart.sktools.gradle'
 
 
 dependencies {
-    //gradle api til byggesystem blir benyttet som std
-    compile gradleApi()
+    compileOnly gradleApi()
 
-    //test
-    testCompile project(':build-utils:test-utils')
+    testImplementation gradleTestKit()
+    testImplementation project(':build-utils:test-utils')
 }
 
 task sourceJar(type: Jar) {

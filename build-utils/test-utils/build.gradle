@@ -16,11 +16,11 @@ def pluginProperties = [
 ] as Properties
 
 dependencies {
+    implementation libraries.guava
+    implementation libraries.testng
 
-    //gradle api til byggesystemm blir benyttet som std
-    compile gradleApi()
-    compile libraries.guava
-    compile libraries.testng
+    implementation gradleTestKit()
+    implementation localGroovy()
 }
 
 task createTestProperties() {

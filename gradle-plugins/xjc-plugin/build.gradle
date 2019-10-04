@@ -18,16 +18,14 @@ def pluginProperties = [
 ] as Properties
 
 dependencies {
-
-    //gradle api til byggesystemm blir benyttet som std
-    compile gradleApi()
+    compileOnly gradleApi()
 
     testRuntimeOnly libraries.jaxb_rt //workaround for testing via gradle
 
     testImplementation project(':build-utils:xjc-plugins') //trenger denn på classpath for å kjøre tester med xjc plugins aktivert
 
-    //test
-    testCompile project(':build-utils:test-utils')
+    testImplementation gradleTestKit()
+    testImplementation project(':build-utils:test-utils')
 }
 
 task createPluginProperties() {

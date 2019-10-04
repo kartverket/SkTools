@@ -1,10 +1,10 @@
 package no.statkart.sktools.gradle.plugins.dbtools
 
-import com.google.common.base.Preconditions
 import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsConvention
 import no.statkart.sktools.gradle.plugins.dbtools.testutils.DbToolsPluginPatchHelper
 import no.statkart.sktools.gradle.testutils.ProjectHelper
 import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
+import org.assertj.core.util.Preconditions
 import org.gradle.api.Task
 import org.gradle.api.tasks.TaskExecutionException
 import org.testng.Assert
@@ -40,7 +40,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
      */
     @Test
     void testDynamicCredentials() {
-        Preconditions.checkState(sql.connection.isValid(0))
+        Preconditions.checkState(sql.connection.isValid(0), "Invalid connection - see %s", 'getSql()')
 
         final ProjectHelper testCase = GradleProjectBuilder.builder().build {
             apply plugin: 'sktools-dbtools-plugin'
@@ -154,8 +154,8 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
         final def user1 = defaultCredentials
         final def user2 = defineDatabaseUser('USER2', '')
 
-        Preconditions.checkState(getSql(user1).connection.isValid(0))
-        Preconditions.checkState(getSql(user2).connection.isValid(0))
+        Preconditions.checkState(getSql(user1).connection.isValid(0), "Invalid connection - see %s", "getSql($user1)")
+        Preconditions.checkState(getSql(user2).connection.isValid(0), "Invalid connection - see %s", "getSql($user2)")
 
         final ProjectHelper testCase = GradleProjectBuilder.builder().build {
             apply plugin: 'sktools-dbtools-plugin'

@@ -4,8 +4,7 @@ apply plugin: 'maven-publish'
 group = 'no.statkart.sktools.gradle'
 
 dependencies {
-    //gradle api til byggesystemm blir benyttet som std
-    compile gradleApi()
+    compileOnly gradleApi()
 }
 
 
