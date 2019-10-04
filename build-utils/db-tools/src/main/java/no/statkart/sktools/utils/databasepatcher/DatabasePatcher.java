@@ -43,8 +43,21 @@ public class DatabasePatcher {
    static Pattern pParsePatchMinVersion = Pattern.compile("^--\\s*PATCH\\s+DB\\.MIN\\.VERSION\\s*=\\s*\"([<>\\w\\.-]+)\"");
    static Pattern pStartsWithPatch = Pattern.compile("^--\\s*PATCH[\\s\\n]");
 
-   //SKTOOLS-34: modulbasert patching
-   public String component = PatchInfo.DEFAULT_MODULE;
+    public interface ConnectionProvider {
+        ConnectionProvider DefaultConnection = new ConnectionProvider() {
+            @Override
+            public Connection get() throws SQLException {
+                return JDBCHelper.createConnection();
+            }
+        };
+
+        Connection get() throws SQLException;
+    }
+
+    private final ConnectionProvider connectionProvider;
+
+    //SKTOOLS-34: modulbasert patching
+    public String component = PatchInfo.DEFAULT_MODULE;
 
     boolean singleStepPatches = false;
 
@@ -56,14 +69,20 @@ public class DatabasePatcher {
     public String schema = JDBCHelper.getConnectionSchema();
 
 
+
+    public DatabasePatcher() {
+        connectionProvider = ConnectionProvider.DefaultConnection;
+    }
+
     /**
-     * Mulighet for programatisk konfigurering av properties.
-     *
-     * Dette kan feks gjøres ved å selv opprette en Connection instans, eller å sette {@code JDBCHelper.connectionProperties}
-     * @since 1.2
+     * Mulighet for programatisk konfigurering av connection.
      */
-    protected Connection createConnection() throws SQLException {
-        return JDBCHelper.createConnection();
+    public DatabasePatcher(ConnectionProvider connectionProvider) {
+        this.connectionProvider = connectionProvider;
+    }
+
+    final Connection createConnection() throws SQLException {
+        return connectionProvider.get();
     }
 
 
@@ -142,7 +161,6 @@ public class DatabasePatcher {
       }
    }
 
-   ;
 
    /**
     * Angir nåverende patchinfo i databasen
@@ -165,7 +183,6 @@ public class DatabasePatcher {
       }
    }
 
-   ;
 
     private static void printUsage() {
         System.err.println("Usage: DatabasePatcher getVersion [-component <component>]");
@@ -484,7 +501,7 @@ public class DatabasePatcher {
     *
     * @param scriptLines list of sql expressions
     */
-   static LinkedHashMap<PatchVersion, List<? extends Expression>> parsePatches(List<? extends Expression> scriptLines) {
+   private static LinkedHashMap<PatchVersion, List<? extends Expression>> parsePatches(List<? extends Expression> scriptLines) {
       LinkedHashMap<PatchVersion, List<? extends Expression>> result = new LinkedHashMap<>();
 
       PatchVersion minDBVersion = new PatchVersion("Unspecified min.version");

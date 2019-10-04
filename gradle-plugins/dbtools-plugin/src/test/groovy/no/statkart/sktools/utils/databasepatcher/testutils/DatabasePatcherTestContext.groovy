@@ -1,7 +1,11 @@
 package no.statkart.sktools.utils.databasepatcher.testutils
 
+import groovy.sql.Sql
 import no.statkart.sktools.gradle.plugins.dbtools.testutils.DbToolsTestContext
 import no.statkart.sktools.utils.databasepatcher.DatabasePatcher
+
+import java.sql.Connection
+import java.sql.SQLException
 
 /**
  * @since 1.3
@@ -25,13 +29,15 @@ class DatabasePatcherTestContext<T extends DatabasePatcherTestContext> extends D
 
     protected DatabasePatcher setUpDatabasePatcher(Map<String, String> props = [:]) {
 
-        System.setProperty("hibernate.connection.driver_class", jdbcDriverClassString)
-        System.setProperty("hibernate.connection.url", url)
-        System.setProperty("hibernate.connection.username", username)
-        System.setProperty("hibernate.connection.password", password)
-        System.setProperty("hibernate.connection.schema", schema)
-
-        DatabasePatcher databasePatcher = new DatabasePatcher()
+        DatabasePatcher databasePatcher = new DatabasePatcher(new DatabasePatcher.ConnectionProvider() {
+            @Override
+            Connection get() throws SQLException {
+                final Sql sql = Sql.newInstance(url, username, password, jdbcDriverClassString);
+                final Connection connection = sql.getConnection();
+                connection.setAutoCommit(false);
+                return connection;
+            }
+        })
         if (props.component != null) {
             databasePatcher.component = props.component
         }
