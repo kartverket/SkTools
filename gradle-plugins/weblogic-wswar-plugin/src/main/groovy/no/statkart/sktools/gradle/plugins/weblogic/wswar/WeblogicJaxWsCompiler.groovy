@@ -3,12 +3,12 @@ package no.statkart.sktools.gradle.plugins.weblogic.wswar
 import no.statkart.sktools.gradle.plugins.weblogic.compile.WeblogicCompileSpec
 import org.gradle.api.AntBuilder
 import org.gradle.api.file.FileTree
-import org.gradle.api.internal.file.FileResolver
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.WorkResult
 import org.gradle.api.tasks.util.PatternSet
-import org.gradle.api.tasks.util.PatternSet
+
+import java.nio.file.Path
 
 /**
  * Steg for kompilering av JAX-WS implementasjon for server.
@@ -23,7 +23,6 @@ class WeblogicJaxWsCompiler implements no.statkart.sktools.gradle.plugins.weblog
     File baseDir;
     AntBuilder ant;
     String warName;
-    FileResolver fileResolver;
 
 
     @Override
@@ -63,9 +62,9 @@ class WeblogicJaxWsCompiler implements no.statkart.sktools.gradle.plugins.weblog
 
                 //todo: bør kunne parameteriseres?
                 FileTree filteredSourceFiles = spec.source.asFileTree.matching(new PatternSet(includes:['**/*WSBean.java']))
-                FileResolver resolver = fileResolver.withBaseDir(baseDir)
-                filteredSourceFiles.each {
-                    String path = resolver.resolveAsRelativePath(it)
+                Path base = baseDir.toPath()
+                filteredSourceFiles.each { File file ->
+                    String path = base.relativize(file.toPath()).toString() //relative path from base
                     jws(file: path, generateWsdl: true, type: 'JAXWS') {
                         wlhttptransport()
                     }

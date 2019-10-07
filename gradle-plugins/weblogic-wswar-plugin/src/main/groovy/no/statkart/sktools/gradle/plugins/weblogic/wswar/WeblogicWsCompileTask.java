@@ -7,7 +7,6 @@ import org.codehaus.groovy.runtime.MethodClosure;
 import org.gradle.api.Project;
 import org.gradle.api.file.CopySpec;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.internal.project.ProjectInternal;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
@@ -56,7 +55,6 @@ public class WeblogicWsCompileTask extends AbstractCompile implements WeblogicTa
         compiler.setAnt(project.getAnt()); //ant have to be initialized - assigning it in task execution phase
         compiler.setBaseDir(project.file("src"));
         compiler.setWarName(project.getName() + ".war");
-        compiler.setFileResolver(((ProjectInternal) project).getFileResolver());
 
 
         spec.setWeblogicClasspath(getWeblogicClasspath().getFiles());
@@ -71,8 +69,8 @@ public class WeblogicWsCompileTask extends AbstractCompile implements WeblogicTa
 
         final String javaEndorsedDirs = System.getProperty("java.endorsed.dirs");
         try {
-            if (System.getProperty("java.endorsed.dirs").contains(" ")) {
-                logger.warn("WARNING: Invalid java.endorsed.dirs={}. No whitespace allowed. Discarding this property for jwsc!");
+            if (javaEndorsedDirs.contains(" ")) {
+                logger.warn("WARNING: Invalid java.endorsed.dirs=\"{}\". No whitespace allowed. Discarding this property for jwsc!", javaEndorsedDirs);
                 System.setProperty("java.endorsed.dirs", "");
             }
             WorkResult result = compiler.execute(spec);
