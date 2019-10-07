@@ -6,7 +6,6 @@ import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.api.Task
 import org.testng.Assert
 import org.gradle.api.ProjectState
-import org.gradle.api.internal.project.ProjectInternal
 import org.gradle.api.tasks.util.PatternSet
 import org.gradle.api.internal.artifacts.dependencies.DefaultSelfResolvingDependency
 import org.gradle.api.plugins.ExtraPropertiesExtension
@@ -92,7 +91,7 @@ class ProjectHelper {
         return this
     }
 
-    private void _initializeProject(ProjectInternal project, boolean initializeSubprojects) {
+    private void _initializeProject(Project project, boolean initializeSubprojects) {
         ProjectState state = project.getState()
         project.getProjectEvaluationBroadcaster().afterEvaluate(project, state)
         if (initializeSubprojects) {

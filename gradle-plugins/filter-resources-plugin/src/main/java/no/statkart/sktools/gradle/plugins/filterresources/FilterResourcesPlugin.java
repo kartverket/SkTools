@@ -5,7 +5,6 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileTreeElement;
 import org.gradle.api.internal.HasConvention;
-import org.gradle.api.internal.project.ProjectInternal;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.specs.Spec;
@@ -24,7 +23,7 @@ import static no.statkart.sktools.gradle.plugins.filterresources.FilterResources
  * @author Leif Lislegård
  * @since 1.3
  */
-public class FilterResourcesPlugin implements Plugin<ProjectInternal> {
+public class FilterResourcesPlugin implements Plugin<Project> {
 
     public final static String CONVENTION_NAME = "filterProperties";
 
@@ -40,7 +39,7 @@ public class FilterResourcesPlugin implements Plugin<ProjectInternal> {
 
 
     @Override
-    public void apply(ProjectInternal project) {
+    public void apply(Project project) {
         project.getPlugins().apply(JavaBasePlugin.class);
 
         final FilterResourcesConvention filterPropertiesConvention = new FilterResourcesConvention(project);
@@ -69,7 +68,7 @@ public class FilterResourcesPlugin implements Plugin<ProjectInternal> {
     }
 
 
-    private static void configureSourceSetDefaults(final ProjectInternal project, final FilterResourcesConvention convention) {
+    private static void configureSourceSetDefaults(final Project project, final FilterResourcesConvention convention) {
         //for hvert source sett som finnes/blir lagt til
         project.getConvention().getPlugin(JavaPluginConvention.class).getSourceSets().all(new Action<SourceSet>() {
             public void execute(final SourceSet sourceSet) {

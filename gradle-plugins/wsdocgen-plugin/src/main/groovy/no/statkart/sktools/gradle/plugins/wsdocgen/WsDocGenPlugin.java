@@ -13,7 +13,6 @@ import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.initialization.dsl.ScriptHandler;
 import org.gradle.api.internal.HasConvention;
 import org.gradle.api.internal.artifacts.publish.ArchivePublishArtifact;
-import org.gradle.api.internal.project.ProjectInternal;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.SourceSet;
@@ -34,14 +33,14 @@ import java.util.concurrent.Callable;
  * @author Leif Lislegård
  * @since 1.0
  */
-public class WsDocGenPlugin implements Plugin<ProjectInternal> {
+public class WsDocGenPlugin implements Plugin<Project> {
 
     public final static String CONVENTION_NAME = "wsdoc";
     public final static String GEN_TASK_NAME = "genWsdoc";
     public final static String ARCHIVE_TASK_NAME = "packWsdoc";
 
     @Override
-    public void apply(ProjectInternal project) {
+    public void apply(Project project) {
         project.getPlugins().apply(JavaBasePlugin.class);
 
         final WsDocGenConvention convention = new WsDocGenConvention();
@@ -56,7 +55,7 @@ public class WsDocGenPlugin implements Plugin<ProjectInternal> {
         configureDocgenDependencies(project);
     }
 
-    private static void configureSourceSetDefaults(final ProjectInternal project, final WsDocGenConvention convention) {
+    private static void configureSourceSetDefaults(final Project project, final WsDocGenConvention convention) {
         final AbstractArchiveTask archiveTask = (AbstractArchiveTask) project.getTasks().getByName(ARCHIVE_TASK_NAME);
 
         //for hvert source sett som finnes/blir lagt til
@@ -146,7 +145,7 @@ public class WsDocGenPlugin implements Plugin<ProjectInternal> {
     /**
      * Docgen processor as dependency (needed on runtime classpath)
      */
-    private static void configureDocgenDependencies(final ProjectInternal project) {
+    private static void configureDocgenDependencies(final Project project) {
         final ScriptHandler buildscript = project.getRootProject().getBuildscript(); //root projects repo configuration
         final Configuration wsDocGenConfiguration = buildscript.getConfigurations().detachedConfiguration(wsDocGenDependency(project));
 
@@ -163,7 +162,7 @@ public class WsDocGenPlugin implements Plugin<ProjectInternal> {
         });
     }
 
-    static Dependency wsDocGenDependency(ProjectInternal project) {
+    static Dependency wsDocGenDependency(Project project) {
         HashMap<String, String> props = new HashMap<>();
         props.put("group", "no.statkart.sktools");
         props.put("name", "wsdocgen");

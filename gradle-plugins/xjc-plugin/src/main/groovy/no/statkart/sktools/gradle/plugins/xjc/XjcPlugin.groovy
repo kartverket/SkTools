@@ -10,7 +10,6 @@ import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.DependencySet
 import org.gradle.api.artifacts.ModuleDependency
 import org.gradle.api.internal.HasConvention
-import org.gradle.api.internal.project.ProjectInternal
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSet
@@ -55,7 +54,7 @@ import java.util.concurrent.Callable
  * @author Leif Lislegård
  */
 @SuppressWarnings("UnnecessaryQualifiedReference")
-class XjcPlugin implements Plugin<ProjectInternal> {
+class XjcPlugin implements Plugin<Project> {
 
     final static String CONVENTION_NAME = 'xjc'
     final static String JAXB_CONFIGURATION_NAME = 'jaxb'
@@ -66,7 +65,7 @@ class XjcPlugin implements Plugin<ProjectInternal> {
     }
 
     @Override
-    void apply(ProjectInternal project) {
+    void apply(Project project) {
         project.apply plugin: JavaPlugin.class
 
         final Configuration configuration = createConfiguration(project);
@@ -78,7 +77,7 @@ class XjcPlugin implements Plugin<ProjectInternal> {
     /**
      * Utvider sourceSets med xjc tillegg
      */
-    private void configureSourceSets(final ProjectInternal project, final Configuration configuration) {
+    private void configureSourceSets(final Project project, final Configuration configuration) {
 
         //for hvert source sett som finnes/blir lagt til
         final JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class)

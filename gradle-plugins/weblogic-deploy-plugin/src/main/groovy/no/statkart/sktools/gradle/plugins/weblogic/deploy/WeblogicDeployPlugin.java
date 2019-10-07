@@ -1,7 +1,7 @@
 package no.statkart.sktools.gradle.plugins.weblogic.deploy;
 
 import org.gradle.api.Plugin;
-import org.gradle.api.internal.project.ProjectInternal;
+import org.gradle.api.Project;
 
 /**
  * Plugin for deployment-tasker til Weblogic Server.
@@ -10,11 +10,11 @@ import org.gradle.api.internal.project.ProjectInternal;
  * @author Leif Lislegård
  * @since 1.2
  */
-public class WeblogicDeployPlugin implements Plugin<ProjectInternal> {
+public class WeblogicDeployPlugin implements Plugin<Project> {
     public final static String WEBLOGIC_DEPLOY_CONVENTION_NAME = "weblogicDeployConvention";
 
     @Override
-    public void apply(ProjectInternal project) {
+    public void apply(Project project) {
 
         WeblogicDeployConvention convention = new WeblogicDeployConvention(project);
         project.getConvention().getPlugins().put(WEBLOGIC_DEPLOY_CONVENTION_NAME, convention);
