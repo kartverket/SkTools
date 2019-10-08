@@ -157,6 +157,11 @@ subprojects { Project project ->
 //            scopes.PROVIDED.plus += configurations.provided
         }
 
+        // Det kreves at denne er kjørt for at tester basert på TestKit fungerer i IntelliJ .
+        tasks.withType(PluginUnderTestMetadata) {
+            tasks.ideaModule.dependsOn it
+        }
+
 
         // Test resultater og rapporter havner i egne mapper for paralleliserbarhet i Jenkins.
         // - feks build/reports/tests/<task name>
