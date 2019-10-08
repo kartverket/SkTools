@@ -7,12 +7,12 @@ package no.statkart.sktools.gradle.plugins.ideaextensions
  */
 class InspectionProfileTestContext extends IdeaTestContext<InspectionProfileTestContext> {
 
-    static String INSPECTION_PROFILE_1_NAME = 'Test profile 1'
-    static String INSPECTION_PROFILE_1_LOCAL = 'false'
-    static String INSPECTION_PROFILE_1_XML = buildInspectionProfile(INSPECTION_PROFILE_1_NAME, INSPECTION_PROFILE_1_LOCAL)
-    static String INSPECTION_PROFILE_2_XML = buildInspectionProfile('Test profile 2', 'false')
+    final String INSPECTION_PROFILE_1_NAME = 'Test profile 1'
+    final String INSPECTION_PROFILE_1_LOCAL = 'false'
+    final String INSPECTION_PROFILE_1_XML = buildInspectionProfile(INSPECTION_PROFILE_1_NAME, INSPECTION_PROFILE_1_LOCAL)
+    final String INSPECTION_PROFILE_2_XML = buildInspectionProfile('Test profile 2', 'false')
 
-    static String IDEA_TEMPLATE_WITH_INSPECTIONS_XML = buildInspectionSettings(INSPECTION_PROFILE_1_XML)
+    final String IDEA_TEMPLATE_WITH_INSPECTIONS_XML = buildInspectionSettings(INSPECTION_PROFILE_1_XML)
 
 
     InspectionProfileTestContext addInspectionProfileFile(String xml) {

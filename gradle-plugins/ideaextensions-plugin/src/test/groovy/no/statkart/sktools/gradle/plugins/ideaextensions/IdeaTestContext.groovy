@@ -9,8 +9,8 @@ import org.gradle.testfixtures.ProjectBuilder
  */
 class IdeaTestContext<T extends IdeaTestContext> {
 
-    static final String IDEA_IPR_EMPTY_XML = buildIdeaIprTemplate()
-    static final String IDEA_IWS_EMPTY_XML = buildIdeaIwsTemplate()
+    final String IDEA_IPR_EMPTY_XML = buildIdeaIprTemplate()
+    final String IDEA_IWS_EMPTY_XML = buildIdeaIwsTemplate()
 
     final Project project
     final IdeaExtensionsPluginExtension extension
