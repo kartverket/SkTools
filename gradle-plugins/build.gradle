@@ -1,5 +1,7 @@
-apply plugin: 'java'
-apply plugin: 'maven-publish'
+plugins {
+    id 'java'
+    id 'maven-publish'
+}
 
 group = 'no.statkart.sktools.gradle'
 
@@ -36,6 +38,7 @@ task zipDemos(description: 'Pakker sammen alle demoer for releasetesting', type:
             into name, {
                 from demoDir
                 exclude '**/.gradle/**', '**/build/**', '**/gen/**'
+                includeEmptyDirs = false //tomme demo mapper skal ikke tas med
             }
         }
     }
