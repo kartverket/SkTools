@@ -1,3 +1,0 @@
-include ':build-user-demo'
-
-rootProject.name = 'properties-demos'

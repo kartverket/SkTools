@@ -18,6 +18,7 @@ def pluginProperties = [
 dependencies {
     implementation libraries.guava
     implementation libraries.testng
+    implementation libraries.assertj
 
     implementation gradleTestKit()
     implementation localGroovy()

@@ -1,5 +1,8 @@
-apply plugin: 'groovy'
-apply plugin: 'maven-publish'
+plugins {
+    id 'groovy'
+    id 'maven-publish'
+    id 'java-gradle-plugin'
+}
 
 group = 'no.statkart.sktools.gradle'
 
@@ -8,8 +11,18 @@ group = 'no.statkart.sktools.gradle'
 dependencies {
     compileOnly gradleApi()
 
-    testImplementation gradleTestKit()
     testImplementation project(':build-utils:test-utils')
+}
+
+
+
+gradlePlugin {
+    plugins {
+        propertiesPlugin {
+            id = 'sktools-properties-plugin'
+            implementationClass = 'no.statkart.sktools.gradle.plugins.properties.PropertiesPlugin'
+        }
+    }
 }
 
 

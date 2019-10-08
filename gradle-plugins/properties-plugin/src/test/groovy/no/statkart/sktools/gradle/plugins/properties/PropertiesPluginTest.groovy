@@ -1,31 +1,32 @@
 package no.statkart.sktools.gradle.plugins.properties
 
-import no.statkart.sktools.gradle.plugins.properties.extension.PropertyUtils
-import no.statkart.sktools.gradle.testutils.ProjectHelper
-import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
-import org.gradle.api.Project
-import org.gradle.testfixtures.ProjectBuilder
-import org.testng.Assert
+
+import no.statkart.sktools.gradle.testutils.TestKitBase
+import org.assertj.core.api.Assertions
+import org.gradle.testkit.runner.BuildResult
 import org.testng.annotations.Test
 
 /**
  * @see PropertiesPlugin
  */
-class PropertiesPluginTest {
+@Test
+class PropertiesPluginTest extends TestKitBase {
 
     /**
      * Tester registrering av plugin via navn
+     * og at extension er registrert.
      */
     @Test
-    void testAppplyPlugin() {
-        //forks a new project in a temp folder
-        Project project = ProjectBuilder.builder().build()
+    void testApplyPlugin() {
+        writeFile("build.gradle", '''
+            plugins {
+              id 'sktools-properties-plugin'
+            }
+            
+            assert propertyUtils instanceof no.statkart.sktools.gradle.plugins.properties.extension.PropertyUtils
+        ''')
 
-        project.apply plugin: 'sktools-properties-plugin'
-
-        assert project.extensions.propertyUtils != null
-        Assert.assertTrue(project.extensions.propertyUtils instanceof PropertyUtils)
-
+        assertNoFailures(testGradleBuild("tasks"))
     }
 
     /**
@@ -33,32 +34,31 @@ class PropertiesPluginTest {
      */
     @Test
     void testInteroperabilityWithMavenPublish() {
-        //forks a new project in a temp folder
-        Project project = ProjectBuilder.builder().build()
-
-
-        project.apply plugin: 'maven-publish'
-        project.apply plugin: 'sktools-properties-plugin'
-
-        assert project.extensions.propertyUtils != null
-
-        project.propertyUtils.expandProjectProperties()
-
-        //feilen kom her..
-        project.plugins.withType(org.gradle.api.publish.maven.plugins.MavenPublishPlugin.class) {
-            project.publishing {
-                repositories {
-                    maven {
-                        url 'http://no.domain'
-                        credentials {
-                            username = 'dummy'
-                            password = 'password'
+        writeFile("build.gradle", '''
+            plugins {
+              id 'maven-publish'
+              id 'sktools-properties-plugin'
+            }
+            
+            project.propertyUtils.expandProjectProperties()
+    
+            //feilen kom her..
+            project.plugins.withType(org.gradle.api.publish.maven.plugins.MavenPublishPlugin.class) {
+                project.publishing {
+                    repositories {
+                        maven {
+                            url 'http://no.domain'
+                            credentials {
+                                username = 'dummy'
+                                password = 'password'
+                            }
                         }
                     }
                 }
             }
-        }
+        ''')
 
+        assertNoFailures(testGradleBuild("tasks"))
     }
 
     /**
@@ -67,26 +67,33 @@ class PropertiesPluginTest {
      */
     @Test
     void testParentProjectProperties() {
-        ProjectHelper rootProjectHelper = GradleProjectBuilder.builder().build {
-            apply plugin: 'java'
-            apply plugin: 'sktools-properties-plugin'
-        }
+        writeFile("subproject/build.gradle", '''
+            plugins {
+              id 'sktools-properties-plugin'
+            }
 
-        ProjectHelper child1ProjectHelper = GradleProjectBuilder.builder().withParent(rootProjectHelper).build {
-            apply plugin: 'sktools-properties-plugin'
-        }
+            ext.filteredProperty = "filtered${testProperty}"
 
-        rootProjectHelper.setProjectProperties(testProperty: "TestValue");
-        Assert.assertEquals(child1ProjectHelper.project.property("testProperty"), "TestValue")
-
-        child1ProjectHelper.setProjectProperties(filteredProperty: "filtered\${testProperty}");
-        Assert.assertEquals(child1ProjectHelper.project.property("filteredProperty"), "filtered\${testProperty}")
-
-        //ekspanderer properties..
-        child1ProjectHelper.configureProject {
+            //expanding properties in build config..
             propertyUtils.expandProjectProperties()
-        }
+            
+            task echoProperty() {
+              doFirst {
+                 println "My filtered property is: " + filteredProperty 
+               } 
+            }
+        ''')
 
-        Assert.assertEquals(child1ProjectHelper.project.property("filteredProperty"), "filteredTestValue")
+        writeFile("build.gradle", '''
+            ext.testProperty = 'TestValue'
+        ''')
+
+        writeFile("settings.gradle", "include ':subproject'")
+
+
+        BuildResult result = testGradleBuild("echoProperty")
+        Assertions.assertThat(result.getOutput())
+                .contains('My filtered property is: filteredTestValue');
     }
+
 }
