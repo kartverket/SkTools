@@ -20,10 +20,8 @@ task sourceJar(type: Jar) {
 }
 
 publishing {
-    publications {
-        sources(MavenPublication) {
-            artifact sourceJar
-        }
+    publications.all {
+        artifact sourceJar
     }
 }
 
