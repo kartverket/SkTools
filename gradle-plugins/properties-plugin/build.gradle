@@ -21,8 +21,7 @@ task sourceJar(type: Jar) {
 
 publishing {
     publications {
-        mavenJava(MavenPublication) {
-            from components.java
+        sources(MavenPublication) {
             artifact sourceJar
         }
     }
