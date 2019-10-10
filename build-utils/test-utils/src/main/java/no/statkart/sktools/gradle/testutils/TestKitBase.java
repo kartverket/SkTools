@@ -40,10 +40,14 @@ public abstract class TestKitBase {
                 .withProjectDir(projectDir)
                 .withArguments(arguments)
                 .withPluginClasspath() //krever bruk av 'java-gradle-plugin'
+                .withDebug(true)
                 .build();
         return result;
     }
 
+    public File file(String relativePath) {
+        return projectPath.resolve(relativePath).toFile();
+    }
 
     @BeforeMethod
     protected void createTempDir() throws IOException {
