@@ -5,9 +5,11 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileTreeElement;
 import org.gradle.api.internal.HasConvention;
+import org.gradle.api.plugins.BasePlugin;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.specs.Spec;
+import org.gradle.api.tasks.Delete;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.plugins.ide.idea.IdeaPlugin;
 
@@ -103,8 +105,12 @@ public class FilterResourcesPlugin implements Plugin<Project> {
                 //hekter inn task for filtering
                 project.getTasks().getByName(sourceSet.getProcessResourcesTaskName()).dependsOn(sourceSetConvention.getFilterResourcesTaskName());
 
-                project.afterEvaluate(new Action<Object>() {
-                    public void execute(Object o) {
+                //clean
+                Delete cleanTask = (Delete) project.getTasks().getByName(BasePlugin.CLEAN_TASK_NAME);
+                cleanTask.delete(filterResourcesTask);
+
+                project.afterEvaluate(new Action<Project>() {
+                    public void execute(Project project) {
                         //default verdier for filterResoruces source set
                         if (sourceSetOutputConvention.getFilterResourcesOutputDir() == null) {
                             sourceSetOutputConvention.filterResourcesOutput(String.format("build/filteredResources/%s", sourceSet.getName()));
@@ -113,7 +119,7 @@ public class FilterResourcesPlugin implements Plugin<Project> {
                         //registrerer sourceDir
                         sourceSet.getResources().srcDir(filterResourcesTask.getDestinationDir());
 
-                        //registrerre properties til task
+                        //registrerer properties til task
                         Map<String, Object> filterProperties = convention.getProperties();
                         filterResourcesTask.getInputs().properties(filterProperties);
                         filterResourcesTask.filter(Collections.singletonMap("tokens", filterProperties), org.apache.tools.ant.filters.ReplaceTokens.class);

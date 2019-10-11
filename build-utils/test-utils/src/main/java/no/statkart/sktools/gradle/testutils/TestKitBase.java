@@ -49,6 +49,10 @@ public abstract class TestKitBase {
         return projectPath.resolve(relativePath).toFile();
     }
 
+    public String rootProjectName() {
+        return projectPath.getFileName().toString();
+    }
+
     @BeforeMethod
     protected void createTempDir() throws IOException {
         projectPath = Files.createTempDirectory("sktoolsTest");

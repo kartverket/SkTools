@@ -1,108 +1,67 @@
 package no.statkart.sktools.gradle.plugins.filterresources
 
-import no.statkart.sktools.gradle.testutils.ProjectHelper
-import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
-import no.statkart.sktools.gradle.testutils.filewriter.FilterPropertiesTestutilFilewriter
-import org.gradle.api.Project
-import org.gradle.api.plugins.BasePlugin
-import org.gradle.api.tasks.SourceSet
-import org.gradle.testfixtures.ProjectBuilder
-import org.testng.Assert
+import no.statkart.sktools.gradle.testutils.TestKitBase
+import org.gradle.testkit.runner.BuildResult
+import org.gradle.testkit.runner.TaskOutcome
 import org.testng.annotations.Test
 
-/**
- *
- */
-class FilterResourcesPluginTest {
+import static no.statkart.sktools.gradle.plugins.filterresources.FilterPropertiesTestutil.writeTwoSimpleResources
+import static org.assertj.core.api.Assertions.assertThat
+import static org.assertj.core.api.Assertions.linesOf
+
+class FilterResourcesPluginTest extends TestKitBase {
 
     /**
      * Tester registrering av plugin via navn
+     * og at extension er registrert.
      */
     @Test
     void testAppplyPlugin() {
-        //forks a new project in a temp folder
-        Project project = ProjectBuilder.builder().build()
+        writeFile("build.gradle", '''
+            plugins {
+              id 'sktools-filter-resources-plugin'
+            }
+            
+            assert filterResources{} instanceof no.statkart.sktools.gradle.plugins.filterresources.FilterResourcesConvention
+        ''')
 
-        project.apply plugin: 'sktools-filter-resources-plugin'
-
-        assert project.convention.plugins.filterProperties != null
-        Assert.assertTrue(project.convention.plugins.filterProperties instanceof FilterResourcesConvention)
-
+        assertNoFailures(testGradleBuild("tasks"))
     }
 
-    /**
-     * Tester og demonstrerer angivelse av konfigurasjon
-     */
-    @Test
-    void testConventionConfiguration() {
-        ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
-            apply plugin: 'java'
-            apply plugin: 'sktools-filter-resources-plugin'
-        }
-
-        FilterResourcesConvention convention = (FilterResourcesConvention) projectHelper.project.convention.plugins.get(FilterResourcesPlugin.CONVENTION_NAME)
-
-        projectHelper.initializeProject()
-
-        projectHelper.configureProject {
-            filterResources {
-                properties = [singleProperty: 'singleValue']
-            }
-        }
-
-        assert convention.properties == ['singleProperty': 'singleValue']
-
-        projectHelper.setProjectProperties(['projectProperty': 'projectValue'])
-
-
-        projectHelper.configureProject {
-            filterResources {
-                properties = projectHelper.project.ext.properties
-                properties 'singleProperty': 'singleValue'
-            }
-        }
-
-        assert convention.properties.containsKey('singleProperty')
-        assert convention.properties.containsKey('projectProperty')
-
-    }
 
     /**
      * Tester bruk med standard verdier.
      */
     @Test
     void testDefaultValues() {
-        ProjectHelper projectHelper = GradleProjectBuilder.builder("PropertiesFilterTest").build {
-            apply plugin: 'java'
-            apply plugin: 'sktools-filter-resources-plugin'
-        }
+        writeFile("build.gradle", '''
+            plugins {
+              id 'java'
+              id 'sktools-filter-resources-plugin'
+            }
+            
+            project.ext.myProperty2 = 'testValue'
+            project.ext.myEmail = 'unittest'
+            
+        ''')
 
-        use(FilterPropertiesTestutilFilewriter) {
-            projectHelper.writeTwoSimpleResources('src/main/filterResources')
-        }
+        writeFile("settings.gradle", '''
+            rootProject.name = 'PropertiesFilterTest'
+        ''')
 
-        projectHelper.setProjectProperties([myProperty2: 'testValue', myEmail: 'unittest'])
-        assert projectHelper.project.getName() == "PropertiesFilterTest"
+        writeTwoSimpleResources(projectPath, "src/main/filterResources");
 
-        projectHelper.initializeProject()
+        testGradleBuild("filterResources")
 
+        assertThat(linesOf(file("build/filteredResources/main/simpleResource1.txt")))
+                .contains("name=PropertiesFilterTest"
+                        , "version=unspecified"
+                        , "myProperty1=@myProperty1@")
 
-
-        projectHelper.executeTask(FilterResourcesPlugin.FILTER_MAIN_RESOURCES_TASK_NAME)
-        projectHelper.assertTaskExecutedNotSkipped(FilterResourcesPlugin.FILTER_MAIN_RESOURCES_TASK_NAME)
-
-        projectHelper.assertFileExists("build/filteredResources/main/simpleResource1.txt") { File file ->
-            assert file.text.contains("name=PropertiesFilterTest")
-            assert file.text.contains("version=unspecified")
-            assert file.text.contains("myProperty1=@myProperty1@")
-        }
-
-        projectHelper.assertFileExists("build/filteredResources/main/simpleResource2.txt") { File file ->
-            assert file.text.contains("myProperty1=@myProperty1@")
-            assert file.text.contains("myProperty2=testValue")
-            assert file.text.contains("myEmail=unittest@statkart.no")
-        }
-
+        assertThat(linesOf(file("build/filteredResources/main/simpleResource2.txt")))
+                .contains("myProperty1=@myProperty1@"
+                        , "myProperty2=testValue"
+                        , "myEmail=unittest@statkart.no")
     }
 
     /**
@@ -110,111 +69,71 @@ class FilterResourcesPluginTest {
      */
     @Test
     void testCustomProperties() {
-        ProjectHelper projectHelper = GradleProjectBuilder.builder("PropertiesFilterTest").build {
-            apply plugin: 'java'
-            apply plugin: 'sktools-filter-resources-plugin'
-        }
-
-        use(FilterPropertiesTestutilFilewriter) {
-            projectHelper.writeTwoSimpleResources('src/main/filterResources')
-        }
-
-        projectHelper.setProjectProperties([myProperty1: 'testValue'])
-
-        projectHelper.configureProject {
-            filterResources {
-                properties projectHelper.project.ext.properties
-                properties myProperty1: 'overidenValue',
-                        'name': 'overidenName'
-
+        writeFile("build.gradle", '''
+            plugins {
+              id 'java'
+              id 'sktools-filter-resources-plugin'
             }
-        }
+            
+            project.ext.myProperty1 = 'testValue'
 
-        projectHelper.initializeProject()
+            filterResources {
+                properties project.ext.properties
+                properties myProperty1: 'overriddenValue', 'name': 'overriddenName'
+                properties version: project.version
+            }
+            
+        ''')
 
+        writeTwoSimpleResources(projectPath, "src/main/filterResources");
 
+        testGradleBuild("filterResources")
 
-        projectHelper.executeTask(FilterResourcesPlugin.FILTER_MAIN_RESOURCES_TASK_NAME)
-        projectHelper.assertTaskExecutedNotSkipped(FilterResourcesPlugin.FILTER_MAIN_RESOURCES_TASK_NAME)
-
-        projectHelper.assertFileExists("build/filteredResources/main/simpleResource1.txt") { File file ->
-            assert file.text.contains("name=overidenName")
-            assert file.text.contains("myProperty1=overidenValue")
-        }
-
+        assertThat(linesOf(file("build/filteredResources/main/simpleResource1.txt")))
+                .contains("name=overriddenName"
+                        , "version=unspecified"
+                        , "myProperty1=overriddenValue")
     }
 
-    /**
-     * Tester 'processResources' task blir satt opp riktig.
-     */
-    @Test
-    void testResources() {
-        ProjectHelper projectHelper = GradleProjectBuilder.builder("PropertiesFilterTest").build {
-            apply plugin: 'java'
-            apply plugin: 'sktools-filter-resources-plugin'
-        }
-
-        use(FilterPropertiesTestutilFilewriter) {
-            projectHelper.writeTwoSimpleResources('src/main/filterResources')
-        }
-
-        projectHelper.setProjectProperties([myProperty1: 'testValue'])
-        projectHelper.initializeProject()
-
-        projectHelper.executeTask("processResources")
-//        projectHelper.assertTaskExecutedNotSkipped("processResources")
-        projectHelper.assertTaskExecutedNotSkipped(FilterResourcesPlugin.FILTER_MAIN_RESOURCES_TASK_NAME)
-
-        projectHelper.assertFileExists("build/filteredResources/main/simpleResource1.txt") { File file ->
-            assert file.text.contains("myProperty1=testValue")
-        }
-
-    }
 
     /**
-     * Tester at genererte filer blir cleanet ved {@code clean}
+     * Tester at genererte filer blir slettet ved {@code clean}
      */
     @Test
     void testClean() {
-        ProjectHelper projectHelper = GradleProjectBuilder.builder("PropertiesFilterTest").build {
-            apply plugin: 'java'
-            apply plugin: 'sktools-filter-resources-plugin'
-        }
+        writeFile("build.gradle", '''
+            plugins {
+              id 'java'
+              id 'sktools-filter-resources-plugin'
+            }
+            
+            sourceSets {
+              main {
+                output.filterResourcesOutput 'gen/filtered' //utenfor mappen "build" som alltid slettes
+              }
+            }
+        ''')
 
-        use(FilterPropertiesTestutilFilewriter) {
-            projectHelper.writeTwoSimpleResources('src/main/filterResources')
-        }
+        writeTwoSimpleResources(projectPath, "src/main/filterResources");
 
-        projectHelper.initializeProject()
+        testGradleBuild("filterResources")
+        assertThat(file("gen/filtered/simpleResource1.txt")).exists()
 
-        projectHelper.executeTask(FilterResourcesPlugin.FILTER_MAIN_RESOURCES_TASK_NAME)
-        projectHelper.assertTaskExecutedNotSkipped(FilterResourcesPlugin.FILTER_MAIN_RESOURCES_TASK_NAME)
-
-        projectHelper.assertFileExists("build/filteredResources/main")
-        projectHelper.assertFileExists("build/filteredResources/main/simpleResource1.txt")
-        projectHelper.assertFileExists("build/filteredResources/main/simpleResource2.txt")
-
-        projectHelper.executeTask(BasePlugin.CLEAN_TASK_NAME)
-
-        projectHelper.assertFileNotExists("build/filteredResources/main")
-
-
+        testGradleBuild("clean")
+        assertThat(file("gen/filtered/simpleResource1.txt")).doesNotExist()
     }
 
     /**
-     * SKIF-173
-     *
-     * Tester og demonstrerer angivelse av konfigurasjon
+     * Egen betemte filstier
      */
     @Test
     void testCustomPathsConfiguration() {
-        ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
-            apply plugin: 'java'
-            apply plugin: 'sktools-filter-resources-plugin'
-        }
-
-        //definerer to source set med filtrerte ressurser
-        projectHelper.configureProject {
+        writeFile("build.gradle", '''
+            plugins {
+              id 'java'
+              id 'sktools-filter-resources-plugin'
+            }
+            
             sourceSets {
                 main {
                     filterResources {
@@ -229,146 +148,101 @@ class FilterResourcesPluginTest {
                     output.filterResourcesOutput 'gen/special/test'
                 }
             }
-        }
+        ''')
 
         //skriver noen filer til disk
-        use(FilterPropertiesTestutilFilewriter) {
-            projectHelper.writeCustomFile('src/special/main/file1.txt') { "file1.version=@version@" }
-            projectHelper.writeCustomFile('src/special/test/file2.txt') { "file2.version=@version@" }
-        }
+        writeFile("src/special/main/file1.txt", "file1.version=@version@")
+        writeFile("src/special/test/file2.txt", "file2.version=@version@")
 
-        //eksekverer
-        projectHelper.initializeProject()
-        projectHelper.executeTask(FilterResourcesPlugin.FILTER_MAIN_RESOURCES_TASK_NAME)
-        projectHelper.executeTask(FilterResourcesPlugin.FILTER_TEST_RESOURCES_TASK_NAME)
-        projectHelper.assertTaskExecutedNotSkipped(FilterResourcesPlugin.FILTER_MAIN_RESOURCES_TASK_NAME)
-        projectHelper.assertTaskExecutedNotSkipped(FilterResourcesPlugin.FILTER_TEST_RESOURCES_TASK_NAME)
 
-        //tester resultat
-        projectHelper.assertFileExists("gen/special/main/file1.txt")
-        projectHelper.assertFileNotExists("gen/special/test/file1.txt")
+        BuildResult buildResult = testGradleBuild(FilterResourcesPlugin.FILTER_MAIN_RESOURCES_TASK_NAME, FilterResourcesPlugin.FILTER_TEST_RESOURCES_TASK_NAME)
+        assertThat(buildResult.tasks(TaskOutcome.SUCCESS)).hasSize(2);
+        assertThat(buildResult.tasks(TaskOutcome.SKIPPED)).hasSize(0);
 
-        projectHelper.assertFileExists("gen/special/test/file2.txt")
-        projectHelper.assertFileNotExists("gen/special/main/file2.txt")
+        assertThat(file("gen/special/main/file1.txt")).exists()
+        assertThat(file("gen/special/test/file2.txt")).exists()
 
+        assertThat(file("gen/special/main/file2.txt")).doesNotExist()
+        assertThat(file("gen/special/test/file1.txt")).doesNotExist()
     }
 
-    /**
-     * SKIF-173
-     *
-     * Tester at filtrerte filer ikke kommer med som {@code source} eller {@code resources}
-     */
-    @Test
-    void testSourceSetIkkeOverlapper() {
-        ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
-            apply plugin: 'java'
-            apply plugin: 'sktools-filter-resources-plugin'
-        }
-
-        //definerer to source set med filtrerte ressurser
-        projectHelper.configureProject {
-            sourceSets {
-                main {
-                    filterResources {
-                        srcDir 'src/main/java' //ressursfiler finnes sammed med kildekoden
-                    }
-                    output.filterResourcesOutput 'gen/main/resources'
-                }
-                test {
-                    filterResources {
-                        srcDir 'src/test/resources'
-                        include '*.txt' //kun et utvalg av test resources skal filtreres, resten skal resources håndtere
-                    }
-                    output.filterResourcesOutput 'gen/test/resources'
-                }
-            }
-        }
-
-        //skriver noen filer til disk
-        use(FilterPropertiesTestutilFilewriter) {
-            projectHelper.writeCustomFile('src/main/java/file1.txt') { "file1.txt" }
-            projectHelper.writeCustomFile('src/main/java/file1.java') { "interface file1 {}" }
-            projectHelper.writeCustomFile('src/test/resources/file2.txt') { "file2.txt" }
-            projectHelper.writeCustomFile('src/test/resources/file2.nofilter') { "file2.nofilter" }
-        }
-
-        //eksekverer
-        projectHelper.initializeProject()
-        projectHelper.executeTask("build")
-        projectHelper.assertTaskExecutedNotSkipped(FilterResourcesPlugin.FILTER_MAIN_RESOURCES_TASK_NAME)
-        projectHelper.assertTaskExecutedNotSkipped(FilterResourcesPlugin.FILTER_TEST_RESOURCES_TASK_NAME)
-
-        //tester resultat
-        projectHelper.assertFileExists("gen/main/resources/file1.txt")
-        projectHelper.assertFileExists("gen/test/resources/file2.txt")
-        projectHelper.assertFileExists("${projectHelper.project.sourceSets.main.output.classesDir}/file1.class")
-        projectHelper.assertFileExists("build/classes/java/main/file1.class")
-        projectHelper.assertFileExists("build/resources/test/file2.nofilter")
-
-        //tester tilsvarende på SourceSet
-        Project project = projectHelper.project
-        assert !project.sourceSets.main.allJava.contains(projectHelper.assertFileExists("src/main/java/file1.txt"))
-        assert !project.sourceSets.test.resources.contains(projectHelper.assertFileExists("src/test/resources/file2.txt"))
-    }
 
     /**
-     * SKIF-173
-     *
+     * Classpath får filtrerte filer
      */
     @Test
     void testClasspathForSourceSet() {
-        ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
-            apply plugin: 'java'
-            apply plugin: 'sktools-filter-resources-plugin'
-        }
-
-
-        projectHelper.configureProject {
+        writeFile("build.gradle", '''
+            plugins {
+              id 'java'
+              id 'sktools-filter-resources-plugin'
+            }
+            
             sourceSets {
                 coolCode {
                     filterResources.srcDirs = ['src/code/unfiltered', 'src/easter/eggs']
                     output.filterResourcesOutput 'build/gen/so/cool'
                 }
             }
-        }
+            
+            task printRuntimeClasspath() {
+              doLast {
+                sourceSets.main.runtimeClasspath.each { println it }
+              }
+            }
+            
+            task printCoolCodeRuntimeClasspath() {
+              doLast {
+                sourceSets.coolCode.runtimeClasspath.each { println it }
+              }
+            }
+            
+        ''')
 
-        projectHelper.project.file('src/easter/eggs').mkdirs()
-        projectHelper.project.file('src/easter/eggs/resource1.txt').createNewFile()
-
-        projectHelper.project.file('src/code/unfiltered').mkdirs()
-        projectHelper.project.file('src/code/unfiltered/resource2.txt').createNewFile()
-
-        //eksekverer
-        projectHelper.initializeProject()
-
-        Project project = projectHelper.project
-
-        //tester main sourceset
-        ((SourceSet) project.sourceSets.main).with {
-            assert resources.srcDirs.contains(output.filterResourcesOutputDir)
-
-            assert output.contains(output.classesDir)
-            assert output.contains(output.resourcesDir)
-
-            assert runtimeClasspath.contains(output.classesDir)
-            assert runtimeClasspath.contains(output.resourcesDir)
-        }
-
-        //tester coolCode sourceset
-        ((SourceSet) project.sourceSets.coolCode).with {
-            assert resources.srcDirs.contains(output.filterResourcesOutputDir)
-
-            assert output.contains(output.classesDir)
-            assert output.contains(output.resourcesDir)
-
-            assert runtimeClasspath.contains(output.classesDir)
-            assert runtimeClasspath.contains(output.resourcesDir)
-        }
+        writeFile("src/easter/eggs/resource1.txt", "text1")
+        writeFile("src/code/unfiltered/resource2.txt", "text2")
 
 
-        projectHelper.executeTask(projectHelper.project.sourceSets.coolCode.filterResourcesTaskName)
+        def runtimeClasspath = testGradleBuild("printRuntimeClasspath").getOutput()
+        assertThat(runtimeClasspath)
+                .contains("> Task :printRuntimeClasspath")
+                .contains(file("build/classes/java/main").toString())
+                .contains(file("build/resources/main").toString());
 
-        projectHelper.assertFileExists('build/gen/so/cool/resource1.txt', 'Forventer at ressursfil er generert')
-        projectHelper.assertFileExists('build/gen/so/cool/resource2.txt', 'Forventer at ressursfil er generert')
+        def coolCodeRuntimeClasspath = testGradleBuild("printCoolCodeRuntimeClasspath").getOutput()
+        assertThat(coolCodeRuntimeClasspath)
+                .contains("> Task :printCoolCodeRuntimeClasspath")
+                .contains(file("build/classes/java/coolCode").toString())
+                .contains(file("build/resources/coolCode").toString());
+
+        testGradleBuild("processCoolCodeResources")
+        assertThat(file("build/resources/coolCode/resource1.txt")).exists()
+        assertThat(file("build/resources/coolCode/resource2.txt")).exists()
     }
+
+
+    /**
+     * Integrasjon med IntelliJ
+     */
+    @Test
+    void testIdeaIntegration() {
+        writeFile("build.gradle", '''
+            plugins {
+              id 'java'
+              id 'sktools-filter-resources-plugin'
+              id 'idea'
+            }
+            
+            sourceSets {
+                main {
+                    output.filterResourcesOutput 'build/gen/so/cool' //custom placement
+                }
+            }
+        ''')
+
+        testGradleBuild("ideaModule")
+        assertThat(linesOf(file(rootProjectName() + ".iml")))
+                .contains('$MODULE_DIR$/build/filteredResources/main')
+    }
+
 }

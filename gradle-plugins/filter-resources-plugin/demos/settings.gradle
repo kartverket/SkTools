@@ -1,8 +1,0 @@
-include ':simple-demo'
-include ':custom-properties'
-include ':build-user-demo'
-include ':idea-integration'
-
-rootProject.name = 'filter-resources-demos'
-
-
