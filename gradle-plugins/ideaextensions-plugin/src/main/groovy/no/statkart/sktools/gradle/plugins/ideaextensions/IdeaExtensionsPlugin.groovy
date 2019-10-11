@@ -52,7 +52,14 @@ class IdeaExtensionsPlugin implements Plugin<Project> {
         } else { //ikke root
             project.tasks.ideaModule.doFirst {
                 if (extension.createAllSourceDirs) {
+                    //SKIF-178: oppretter kataloger for alle sourceSet
                     it.project.getConvention().getPlugin(JavaPluginConvention.class).sourceSets.each {
+                        it.getAllSource().srcDirs.each {
+                            if (!it.exists()) {
+                                project.logger.quiet("..creating folder {}", project.relativePath(it))
+                                project.mkdir(it)
+                            }
+                        }
                         //oppretter også mapper for generert kode (introdusert i SKIF-173)
                         it.getOutput().getDirs().each {
                             if (!it.exists()) {
