@@ -205,13 +205,13 @@ class FilterResourcesPluginTest extends TestKitBase {
 
         def runtimeClasspath = testGradleBuild("printRuntimeClasspath").getOutput()
         assertThat(runtimeClasspath)
-                .contains("> Task :printRuntimeClasspath")
+                .contains(":printRuntimeClasspath")
                 .contains(file("build/classes/java/main").toString())
                 .contains(file("build/resources/main").toString());
 
         def coolCodeRuntimeClasspath = testGradleBuild("printCoolCodeRuntimeClasspath").getOutput()
         assertThat(coolCodeRuntimeClasspath)
-                .contains("> Task :printCoolCodeRuntimeClasspath")
+                .contains(":printCoolCodeRuntimeClasspath")
                 .contains(file("build/classes/java/coolCode").toString())
                 .contains(file("build/resources/coolCode").toString());
 
