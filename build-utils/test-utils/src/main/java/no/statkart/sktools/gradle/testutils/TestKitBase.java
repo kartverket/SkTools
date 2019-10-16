@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions;
 import org.gradle.testkit.runner.BuildResult;
 import org.gradle.testkit.runner.GradleRunner;
 import org.gradle.testkit.runner.TaskOutcome;
+import org.testng.ITestResult;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
@@ -13,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -56,13 +58,28 @@ public abstract class TestKitBase {
     @BeforeMethod
     protected void createTempDir() throws IOException {
         projectPath = Files.createTempDirectory("sktoolsTest");
+        projectPath = jenkinsWorkaroundForTempSetting(projectPath);
         projectDir = projectPath.toFile();
     }
 
+    /**
+     * Ved kjøring på jenkins 2.172.2 på Windows_Server_2008_R2 ble stasjonsnavnet i lowercase for temp-mappe.
+     * Dette skaper problemer ved tekstlig sammenligning av gradle output som inneholder filstier.
+     */
+    private Path jenkinsWorkaroundForTempSetting(Path projectPath) {
+        String path = projectPath.toString();
+        path = Character.toUpperCase(path.charAt(0)) + path.substring(1).replaceAll("\\\\", "\\\\\\\\");
+        return Paths.get(path);
+    }
+
     @AfterMethod
-    protected void deleteTempDir() throws IOException {
+    protected void deleteTempDir(ITestResult testResult) throws IOException {
         if (projectPath != null) {
-            deleteRecursively(projectPath);
+            if (testResult.isSuccess()) {
+                deleteRecursively(projectPath);
+            } else {
+                System.err.println("Test failed! Leaving generated files in directory " + file(""));
+            }
         }
     }
 
