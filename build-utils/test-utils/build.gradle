@@ -1,7 +1,5 @@
 apply plugin: 'groovy'
 
-//blir ikke eskponert
-//all testkode skal ligge i src/main sourceSet
 description = "Intern modul for felles test-logikk."
 
 def testPropertiesDir = "$buildDir/test-properties"
@@ -39,8 +37,3 @@ task createTestProperties() {
 }
 tasks.processResources.dependsOn createTestProperties
 
-// Testfunksjonalitet som avgjør om en kjører tester ifra IntelliJ eller ikke.
-// NB: Denne kildekoden skal IKKE med i gradle bygget!!
-idea.module {
-    testSourceDirs += file('src/idea/test-source')
-}
