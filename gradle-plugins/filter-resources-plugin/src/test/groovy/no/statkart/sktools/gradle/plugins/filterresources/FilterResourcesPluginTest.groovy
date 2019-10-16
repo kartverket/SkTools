@@ -8,6 +8,7 @@ import org.testng.annotations.Test
 import static no.statkart.sktools.gradle.plugins.filterresources.FilterPropertiesTestutil.writeTwoSimpleResources
 import static org.assertj.core.api.Assertions.assertThat
 import static org.assertj.core.api.Assertions.linesOf
+import static org.assertj.core.api.Assertions.contentOf
 
 class FilterResourcesPluginTest extends TestKitBase {
 
@@ -241,8 +242,9 @@ class FilterResourcesPluginTest extends TestKitBase {
         ''')
 
         testGradleBuild("ideaModule")
-        assertThat(linesOf(file(rootProjectName() + ".iml")))
-                .contains('$MODULE_DIR$/build/filteredResources/main')
+        assertThat(contentOf(file(rootProjectName() + ".iml")))
+                .contains('"file://$MODULE_DIR$/build/gen/so/cool"') //customized placement
+                .contains('"file://$MODULE_DIR$/build/filteredResources/test"') //conventional placement
     }
 
 }

@@ -111,7 +111,7 @@ public class FilterResourcesPlugin implements Plugin<Project> {
 
                 project.afterEvaluate(new Action<Project>() {
                     public void execute(Project project) {
-                        //default verdier for filterResoruces source set
+                        //default verdier for filterResources source set
                         if (sourceSetOutputConvention.getFilterResourcesOutputDir() == null) {
                             sourceSetOutputConvention.filterResourcesOutput(String.format("build/filteredResources/%s", sourceSet.getName()));
                         }
@@ -124,10 +124,11 @@ public class FilterResourcesPlugin implements Plugin<Project> {
                         filterResourcesTask.getInputs().properties(filterProperties);
                         filterResourcesTask.filter(Collections.singletonMap("tokens", filterProperties), org.apache.tools.ant.filters.ReplaceTokens.class);
 
-                        // Fortell IntelliJ at filene er
+                        // Fortell IntelliJ at filene er genererte
                         project.getPlugins().withType(IdeaPlugin.class, new Action<IdeaPlugin>() {
                             @Override
                             public void execute(IdeaPlugin ideaPlugin) {
+                                filterResourcesTask.getDestinationDir().mkdirs();
                                 ideaPlugin.getModel().getModule().getGeneratedSourceDirs().add(filterResourcesTask.getDestinationDir());
                             }
                         });
