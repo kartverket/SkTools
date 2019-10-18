@@ -2,8 +2,6 @@ import org.gradle.util.GradleVersion
 assert GradleVersion.current() >= GradleVersion.version('4.2') //lowest gradle version supported
 
 allprojects {
-    apply plugin: 'idea'
-
     defaultTasks 'build'
     group = 'no.statkart.sktools'
 
@@ -141,25 +139,7 @@ subprojects { Project project ->
                 project.sourceSets."$scope".resources.srcDir filteredResourcesDir
                 project.processResources.dependsOn filterTask
 
-                project.tasks.ideaModule.dependsOn filterTask
-                project.tasks.ideaModule.doFirst {
-                    println "...mkdir ${project.relativePath(filteredResourcesDir)}"
-                    project.mkdir(filteredResourcesDir)
-                }
             }
-        }
-
-
-
-        // Får Idea til å legge build katalog for alle moduler i en egen felles topp katalog (out/production, out/test)
-        project.idea.module {
-            inheritOutputDirs = true
-//            scopes.PROVIDED.plus += configurations.provided
-        }
-
-        // Det kreves at denne er kjørt for at tester basert på TestKit fungerer i IntelliJ .
-        tasks.withType(PluginUnderTestMetadata) {
-            tasks.ideaModule.dependsOn it
         }
 
 
@@ -240,144 +220,5 @@ allprojects {
             }
         }
     }
-}
-
-afterEvaluate {
-
-    idea.project {
-        jdkName = '1.7'
-        languageLevel = '1.7'
-
-        ipr {
-            //Perforce as default vcs by tinkering with the output *.ipr file before it's written out
-            withXml {
-                def component = it.asNode().appendNode('component', ['name': 'VcsDirectoryMappings'])
-                component.appendNode('mapping', ['directory': '', 'vcs': 'Perforce'])
-            }
-
-            //file encodings for project
-            withXml {
-                def encoding = it.asNode().component.find { it.@name == 'Encoding' }
-                if (encoding) {
-                    encoding.@useUTFGuessing = false
-                    encoding.@native2AsciiForPropertiesFiles = true
-                    encoding.@defaultCharsetForPropertiesFiles = 'ISO-8859-1'
-                    if (!encoding.file) {
-                        encoding.appendNode('file')
-                    }
-                    encoding.file.@url = 'PROJECT'
-                    encoding.file.@charset = 'utf-8'
-                } else {
-                    logger.warn('Not able to configure file encodings for IntelliJ')
-                }
-            }
-
-            //java code style
-            withXml {
-                def rootNode = it.asNode()
-                def projectCodeStyleSettingsManager = rootNode.component.find { it.@name == 'ProjectCodeStyleSettingsManager'}
-                if (projectCodeStyleSettingsManager == null) {
-                    projectCodeStyleSettingsManager = new XmlParser().parseText('''\
-                          <component name="ProjectCodeStyleSettingsManager">
-                            <option name="PER_PROJECT_SETTINGS">
-                              <value>
-                                <option name="CLASS_COUNT_TO_USE_IMPORT_ON_DEMAND" value="999" />
-                                <option name="NAMES_COUNT_TO_USE_IMPORT_ON_DEMAND" value="999" />
-                              </value>
-                            </option>
-                            <option name="USE_PER_PROJECT_SETTINGS" value="true" />
-                          </component>
-                            ''')
-                    rootNode.append(projectCodeStyleSettingsManager)
-                }
-            }
-
-        }
-    }
-
-    // branch spesifike navn for prosjekt og workspace fil.
-    ideaWorkspace {
-        outputFile = file("${project.name}-${project.version.toString().replace('-SNAPSHOT', '')}-gradle${gradle.gradleVersion}.iws")
-    }
-    idea.project {
-        outputFile = file("${project.name}-${project.version.toString().replace('-SNAPSHOT', '')}-gradle${gradle.gradleVersion}.ipr")
-    }
-
-    // gradle spesifik iml fil da gradle dependencies ligger på hver modul
-    allprojects {
-        idea.module {
-            outputFile = file("${project.name}-gradle${gradle.gradleVersion}.iml")
-        }
-    }
-
-}
-
-//defaults for IntelliJ Workspace iws file
-rootProject.idea.workspace.iws.withXml { provider ->
-    def rootNode = provider.asNode()
-    final def weblogicHome = WEBLOGIC_HOME
-
-    /**
-     * Eksempler og dokumentasjon på hvordan man kan benytte groovy xml og Node funksjonalitet
-     * <br> http://groovy.codehaus.org/Reading+XML+using+Groovy%27s+XmlSlurper
-     * <br> http://groovy.codehaus.org/Updating+XML+with+XmlSlurper
-     */
-    def runManagerNode = rootNode.component.find { it.@name == 'RunManager'}.with { runManager ->
-
-        //default settings for TestNG
-        runManager.configuration.find { it.@type == 'TestNG' && it.'@default' == 'true' }.with {
-            if( it.is(null) ) {
-                it = new XmlParser().parseText('''\
-          <configuration default="true" type="TestNG" factoryName="TestNG">
-            <extension name="coverage" enabled="false" merge="false" runner="emma" />
-            <module name="" />
-            <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
-            <option name="ALTERNATIVE_JRE_PATH" />
-            <option name="SUITE_NAME" />
-            <option name="PACKAGE_NAME" />
-            <option name="MAIN_CLASS_NAME" />
-            <option name="METHOD_NAME" />
-            <option name="GROUP_NAME" />
-            <option name="TEST_OBJECT" value="CLASS" />
-            <option name="VM_PARAMETERS" value="" />
-            <option name="PARAMETERS" />
-            <option name="WORKING_DIRECTORY" />
-            <option name="OUTPUT_DIRECTORY" />
-            <option name="ANNOTATION_TYPE" />
-            <option name="ENV_VARIABLES" />
-            <option name="PASS_PARENT_ENVS" value="true" />
-            <option name="TEST_SEARCH_SCOPE">
-              <value defaultName="moduleWithDependencies" />
-            </option>
-            <option name="USE_DEFAULT_REPORTERS" value="false" />
-            <option name="PROPERTIES_FILE" />
-            <envs />
-            <properties />
-            <listeners />
-            <method />
-          </configuration>
-        ''')
-                runManager.append(it)
-            }
-            it.option.find { it.@name == 'TEST_OBJECT' }.@value = 'PACKAGE' //ved høyreklikk i struktur velges kun tester innen samme pakke. Denne sees i sammenheng med  TEST_SEARCH_SCOPE=singleModule
-            it.option.find { it.@name == 'TEST_SEARCH_SCOPE' }.value.@defaultName = 'singleModule' //kjører kun tester innen samme modul - ikke på tvers av moduler
-
-        }
-
-
-
-        runManager.configuration.findAll { ['TestNG', 'Application', 'Remote', 'JUnit', 'WebApp'].contains(it.@type)}.each {
-            //default path variables
-            it.envs.each {
-                it.findAll {"${it.@name}".startsWith('WEBLOGIC_HOME')}.each {it.replaceNode{}} //tar vekk evt gammel
-                it.appendNode('env', [name: 'WEBLOGIC_HOME', value: weblogicHome]) //legger til weblogic for testing av gradle-plugins som trenger dette
-
-                it.findAll {"${it.@name}".startsWith('WEBLOGIC_VERSION')}.each {it.replaceNode{}} //tar vekk evt gammel
-                it.appendNode('env', [name: 'WEBLOGIC_VERSION', value: weblogicVersion])
-            }
-
-        }
-    }
-
 }
 

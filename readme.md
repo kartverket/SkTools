@@ -18,7 +18,9 @@ UTF-8 for all kildekode
 
 JDK 7 - 1.7.0_0_171 (latest)
 
-IntelliJ - kjør gradlew og importer versjonert ipr fil
+IntelliJ 
+ 1. Importer som gradle prosjekt.
+ 2. Gradle versjon velges fra spesifisert sted på disk (ikke gradle wrapper)
 
 
 
@@ -27,6 +29,9 @@ Opprett gradle.properties med innhold, feks:
 ```
 WEBLOGIC_HOME=C:/bea1213
 WEBLOGIC_VERSION=12.1.3
+
+!unikt prosjektnavn for vindu i IntelliJ
+project_name=sktools-1.5
 ```
 
 ## Releasetesting 
