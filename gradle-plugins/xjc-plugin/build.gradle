@@ -26,7 +26,7 @@ dependencies {
     testImplementation project(':build-utils:test-utils')
 }
 
-pluginUnderTestMetadata.pluginClasspath.from project(':build-utils:xjc-plugins').sourceSets.main.output
+project(':build-utils:xjc-plugins').afterEvaluate {  pluginUnderTestMetadata.pluginClasspath += it.sourceSets.main.output }
 
 task createPluginProperties() {
     outputs.dir pluginPropertiesDir
