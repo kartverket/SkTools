@@ -1,3 +1,5 @@
+import org.gradle.util.GradleVersion
+
 plugins {
     id 'groovy'
     id 'maven-publish'
@@ -26,7 +28,13 @@ dependencies {
     testImplementation project(':build-utils:test-utils')
 }
 
-project(':build-utils:xjc-plugins').afterEvaluate {  pluginUnderTestMetadata.pluginClasspath += it.sourceSets.main.output }
+pluginUnderTestMetadata.doFirst {
+    if (org.gradle.util.GradleVersion.current() >= org.gradle.util.GradleVersion.version('4.10')) {
+        pluginUnderTestMetadata.pluginClasspath.from project(':build-utils:xjc-plugins').sourceSets.main.output
+    } else {
+        pluginUnderTestMetadata.pluginClasspath += project(':build-utils:xjc-plugins').sourceSets.main.output
+    }
+}
 
 task createPluginProperties() {
     outputs.dir pluginPropertiesDir
