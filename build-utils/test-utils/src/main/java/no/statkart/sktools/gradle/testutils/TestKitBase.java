@@ -19,11 +19,13 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * Felles oppsett av Gradle Test Kit funksjonalitet.
  * Brukes for integrasjonstesting av plugin-logikk.
- *
  */
 public abstract class TestKitBase {
     public Path projectPath;
@@ -31,19 +33,18 @@ public abstract class TestKitBase {
 
     public static void assertNoFailures(BuildResult buildResult) {
         Assertions.assertThat(buildResult.getTasks())
-                .extractingResultOf("getOutcome")
-                .doesNotContain(TaskOutcome.FAILED);
-
+            .extractingResultOf("getOutcome")
+            .doesNotContain(TaskOutcome.FAILED);
     }
 
     public BuildResult testGradleBuild(String... arguments) {
         @SuppressWarnings("UnnecessaryLocalVariable")
         BuildResult result = GradleRunner.create()
-                .withProjectDir(projectDir)
-                .withArguments(arguments)
-                .withPluginClasspath() //krever bruk av 'java-gradle-plugin'
-                .withDebug(true)
-                .build();
+            .withProjectDir(projectDir)
+            .withArguments(arguments)
+            .withPluginClasspath() //krever bruk av 'java-gradle-plugin'
+            .withDebug(true) //debug av plugin-implementasjon
+            .build();
         return result;
     }
 
@@ -88,10 +89,11 @@ public abstract class TestKitBase {
         writeFile(path, lines);
 
     }
+
     protected void writeFile(Path destination, CharSequence... lines) throws IOException {
         Files.createDirectories(destination.getParent());
         Files.write(destination, Arrays.asList(lines), StandardCharsets.UTF_8,
-                StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+            StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
     }
 
 
@@ -106,11 +108,23 @@ public abstract class TestKitBase {
 
             @Override
             public FileVisitResult postVisitDirectory(Path dir, IOException exc)
-                    throws IOException {
+                throws IOException {
                 Files.delete(dir);
                 return FileVisitResult.CONTINUE;
             }
         });
     }
 
+    public static final Map testProperties;
+
+    static {
+        Properties properties = new Properties();
+        try {
+            properties.load(TestKitBase.class.getResourceAsStream("/no/statkart/sktools/test.properties"));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        testProperties = Collections.unmodifiableMap(properties);
+    }
 }

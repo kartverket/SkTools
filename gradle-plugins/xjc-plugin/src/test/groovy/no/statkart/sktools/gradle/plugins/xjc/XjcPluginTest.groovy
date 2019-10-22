@@ -1,32 +1,36 @@
 package no.statkart.sktools.gradle.plugins.xjc
 
 import no.statkart.sktools.gradle.testutils.ProjectHelper
+import no.statkart.sktools.gradle.testutils.TestKitBase
 import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
-import no.statkart.sktools.gradle.testutils.filewriter.XjcTestutilFilewriter
-import org.assertj.core.api.Assertions
-import org.gradle.api.Project
 import org.gradle.api.tasks.SourceSet
-import org.gradle.api.tasks.SourceSetContainer
-import org.gradle.testfixtures.ProjectBuilder
+import org.gradle.testkit.runner.BuildResult
+import org.gradle.testkit.runner.TaskOutcome
 import org.testng.annotations.Test
+
+import static no.statkart.sktools.gradle.testutils.filewriter.XjcTestutilFilewriter.writeSimpleSchema
+import static no.statkart.sktools.gradle.testutils.filewriter.XjcTestutilFilewriter.writeSimpleSchemaWithGdoc
+import static org.assertj.core.api.Assertions.*
 
 /**
  * Test av {@link XjcPlugin}
  *
  * @author Leif Lislegård
  */
-class XjcPluginTest {
+class XjcPluginTest extends TestKitBase {
 
     /**
      * Tester registrering av plugin via navn
      */
     @Test
     void testAppplyPlugin() {
-        //forks a new project in a temp folder
-        Project project = ProjectBuilder.builder().build()
+        writeFile("build.gradle", """
+            plugins {
+              id 'sktools-xjc-plugin'
+            }
+        """)
 
-        project.apply plugin: 'sktools-xjc-plugin'
-
+        assertNoFailures(testGradleBuild("classes"))
     }
 
     /**
@@ -35,19 +39,20 @@ class XjcPluginTest {
      * Merk at her er ingen artifakter deklarert. JavaPlugin er heller ikke aktivert.
      */
     @Test
-    void testDefaultSetting() {
-        //forks a new project in a temp folder
-        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
-            apply plugin: 'sktools-xjc-plugin'
-        }
-
+    void testDefaultConfig() {
         //generates a simple source file
-        use(XjcTestutilFilewriter) {
-            projectHelper.writeSimpleSchema("src/main/xsd/simple.xsd")
-        }
+        writeSimpleSchema(file("src/main/xsd/simple.xsd"))
 
         //config
-        projectHelper.configureProject {
+        writeFile("build.gradle", """
+            plugins {
+              id 'sktools-xjc-plugin'
+            }
+
+            repositories {
+                maven { url = '${testProperties.MAVEN_REPO}' }
+            }
+
             sourceSets {
                 main.xjc {
                     schema {
@@ -55,20 +60,16 @@ class XjcPluginTest {
                     }
                 }
             }
-        }
-
-
-        projectHelper.initializeProject()
+        """)
 
         //executes the gen task
-        projectHelper.executeTask('compileJava')
+        BuildResult buildResult = testGradleBuild("compileJava")
+        assertThat(buildResult.getTasks())
+                .extracting("path", "outcome")
+                .contains(tuple(":genMain0Schema", TaskOutcome.SUCCESS))
 
-        //asserts the results
-        projectHelper.project.sourceSets.main.xjc[0].with { def config ->
-            projectHelper.assertTaskExecutedNotSkipped(config.genTaskName)
-            projectHelper.assertFileExists("${config.genOutputPath}/no/statkart/sktools/test/SimpleType.java")
-        }
-
+        assertThat(file("build/xjc/main/main0Schema/no/statkart/sktools/test/SimpleType.java"))
+                .exists()
     }
 
     /**
@@ -76,18 +77,19 @@ class XjcPluginTest {
      */
     @Test
     void testGrunnbokDoc() {
-        //forks a new project in a temp folder
-        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
-            apply plugin: 'sktools-xjc-plugin'
-        }
-
         //generates a simple source file with gdoc annotations
-        use(XjcTestutilFilewriter) {
-            projectHelper.writeSimpleSchemaWithGdoc("src/main/xsd/simple.xsd")
-        }
+        writeSimpleSchemaWithGdoc(file("src/main/xsd/simple.xsd"))
 
         //config
-        projectHelper.configureProject {
+        writeFile("build.gradle", """
+            plugins {
+              id 'sktools-xjc-plugin'
+            }
+
+            repositories {
+                maven { url = '${testProperties.MAVEN_REPO}' }
+            }
+
             sourceSets {
                 main.xjc {
                     schema {
@@ -98,22 +100,12 @@ class XjcPluginTest {
                     }
                 }
             }
-        }
+        """)
 
+        testGradleBuild("genMain0Schema")
 
-        projectHelper.initializeProject()
-
-        projectHelper.project.sourceSets.main.xjc[0].with { def config ->
-            //executes the gen task
-            projectHelper.executeTask(config.genTaskName)
-
-            //asserts the results
-            projectHelper.assertTaskExecutedNotSkipped(config.genTaskName)
-            projectHelper.assertFileExists("${config.genOutputPath}/no/statkart/sktools/test/DocumentedSimpleType.java") { File file ->
-                assert file.text.contains("Ekstra dokumentasjon for typen.")
-            }
-        }
-
+        assertThat(contentOf(file("build/xjc/main/main0Schema/no/statkart/sktools/test/DocumentedSimpleType.java")))
+                .contains("Ekstra dokumentasjon for typen.")
     }
 
     /**
@@ -121,22 +113,22 @@ class XjcPluginTest {
      */
     @Test
     void testListAdapter() {
-        //forks a new project in a temp folder
-        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
-            apply plugin: 'sktools-xjc-plugin'
-        }
-
         //generates a simple source file
-        use(XjcTestutilFilewriter) {
-            projectHelper.writeSimpleSchema("src/main/xsd/simple.xsd")
+        writeSimpleSchema(file("src/main/xsd/simple.xsd"))
 
-            projectHelper.project.mkdir("src/adaper/java/some_adapter")
-            projectHelper.project.file("src/adaper/java/some_adapter/Fqn.java").createNewFile()
-            projectHelper.project.file("src/adaper/java/some_adapter/Fqn.java") << "package some_adapter;\n public class Fqn { }"
-        }
+        writeFile("src/adaper/java/some_adapter/Fqn.java",
+            "package some_adapter;\n public class Fqn { }")
 
-        //config
-        projectHelper.configureProject {
+
+        writeFile("build.gradle", """
+            plugins {
+              id 'sktools-xjc-plugin'
+            }
+
+            repositories {
+                maven { url = '${testProperties.MAVEN_REPO}' }
+            }
+
             sourceSets {
                 main.java.srcDir "src/adaper/java"
                 main.xjc {
@@ -148,106 +140,33 @@ class XjcPluginTest {
                     }
                 }
             }
-        }
+        """)
 
-
-        projectHelper.initializeProject()
 
         //executes builds the main source
-        projectHelper.executeTask('classes')
-
+        BuildResult buildResult = testGradleBuild("classes")
         //asserts the results
-        projectHelper.project.sourceSets.main.xjc[0].with { def config ->
-            projectHelper.assertTaskExecutedNotSkipped(config.genTaskName)
+        assertThat(buildResult.task(':genMain0Schema').getOutcome()).isEqualTo(TaskOutcome.SUCCESS)
 
-            projectHelper.assertFileExists(config.genOutputPath)
-            projectHelper.assertFileExists("${config.genOutputPath}/no/statkart/sktools/test/StringList.java") { File file ->
-                assert file.text.contains('import some_adapter.Fqn;')
-                assert file.text.contains('extends Fqn')
-
-            }
-        }
-
+        assertThat(contentOf(file("build/xjc/main/main0Schema/no/statkart/sktools/test/StringList.java")))
+        .contains(
+            'import some_adapter.Fqn;'
+            , 'extends Fqn'
+        )
     }
 
     /**
-     * Tester og demonstrer oppsett av konfigurasjon
-     */
-    @Test
-    void testConventionConfiguration2() {
-
-        //forks a new project in a temp folder
-        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
-            apply plugin: 'sktools-xjc-plugin'
-
-            sourceSets {
-                main {
-                    xjc {
-                        schema {
-                            srcDir 'src/main/xsd'
-                            withGrunnbokDoc
-                        }
-                        schema {
-                            srcDir 'src/main/xsd'
-                            withListAdapter
-                        }
-                    }
-                }
-
-                other.xjc {
-                    schema {
-                        srcDir 'src/main/xsd'
-                        config {
-                            withGrunnbokDoc
-                            withListAdapter 'someAdapter.fqn'
-                        }
-                    }
-                }
-            }
-
-        }
-
-        projectHelper.initializeProject()
-
-        Project project = projectHelper.project
-
-        SourceSetContainer sourceSets = (SourceSetContainer) project.getConvention().getPlugins().get('java').sourceSets;
-        assert sourceSets != null //foventer at javaBase plugin er aktivert
-
-        //tester at source set er utvidet med plugin konfigurasjon
-
-        assert sourceSets.main.xjc.schemas[0] //foventer schema konfigurasjon
-        assert sourceSets.main.xjc.schemas[1] //foventer schema konfigurasjon
-
-        //tester targetDir
-        sourceSets.main.xjc.each { config ->
-            def genTask = project.tasks[config.genTaskName]
-            assert sourceSets.main.java.srcDirs.contains(genTask.outputDirectory)
-        }
-
-        //tester schema.withGrunnbokDoc
-        assert sourceSets.main.xjc.schemas[0].xjcOptions.containsKey(XjcConfig.GRUNNBOK_DOC)
-        assert sourceSets.other.xjc.schemas[0].xjcOptions.containsKey(XjcConfig.LIST_ADAPTER)
-
-        //tester schema.withListAdapter
-        assert sourceSets.main.xjc.schemas[1].xjcOptions.containsKey(XjcConfig.LIST_ADAPTER)
-        assert sourceSets.other.xjc.schemas[0].xjcOptions[XjcConfig.LIST_ADAPTER] == [baseClass: 'someAdapter.fqn']
-
-
-    }
-
-    /**
-     * SKTOOLS-22
+     * Verifiserer at {@link org.gradle.api.file.SourceDirectorySet#srcDir srcDir} kan konfigureres.
      * Regresjonsstester feil funnet i MAT-9900 der ideaModule task feiler pga feil oppsett av {@link SourceSet}
      */
     @Test
     void ideaTasksCanHandleSourceSetConfiguration() {
-
-        //forks a new project in a temp folder
-        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
-            apply plugin: 'sktools-xjc-plugin'
-            apply plugin: 'idea'
-
+        writeFile("build.gradle", '''
+            plugins {
+              id 'sktools-xjc-plugin'
+              id 'idea'
+            }
+            
             sourceSets {
                 main {
                     xjc {
@@ -257,23 +176,21 @@ class XjcPluginTest {
                     }
                 }
             }
-        }
+        ''')
 
-        projectHelper.initializeProject()
-
-        final Project project = projectHelper.project
-        final SourceSet sourceSet = project.convention.plugins.java.sourceSets.main
-        assert project.idea.module.generatedSourceDirs.contains(project.file('build/xjc/main/main0Schema'))
+        testGradleBuild("ideaModule")
+        assertThat(contentOf(file(rootProjectName() + ".iml")))
+            .contains('"file://$MODULE_DIR$/build/xjc/main/main0Schema"')
     }
 
 
     @Test
     void canSpecifyTaskNameForGen() {
-
-        //forks a new project in a temp folder
-        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
-            apply plugin: 'sktools-xjc-plugin'
-
+        writeFile("build.gradle", '''
+            plugins {
+              id 'sktools-xjc-plugin'
+            }
+            
             sourceSets {
                 main.xjc {
                     schema {
@@ -281,67 +198,57 @@ class XjcPluginTest {
                     }
                 }
             }
-        }
+        ''')
 
-        projectHelper.initializeProject()
-
-        assert projectHelper.project.convention.plugins.java.sourceSets.main.xjc[0].genTaskName == 'genCustom'
-        assert projectHelper.project.tasks.findByPath('genCustom')
+        BuildResult result = testGradleBuild("genCustom")
+        assertThat(result.task(":genCustom"))
+            .isNotNull();
     }
 
 
     @Test
     void canSpecifyGenOutputPath() {
-
-        //forks a new project in a temp folder
-        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
-            apply plugin: 'sktools-xjc-plugin'
-        }
-
-        //config
-        projectHelper.configureProject {
+        writeFile("build.gradle", '''
+            plugins {
+              id 'sktools-xjc-plugin'
+              id 'idea'
+            }
+            
             sourceSets {
                 main.xjc {
                     schema {
-                        genTaskName = 'genCustom'
                         genOutputPath = 'generated/custom'
                     }
                 }
             }
-        }
+        ''')
 
-        projectHelper.initializeProject()
-
-        //preconditions
-        assert projectHelper.project.convention.plugins.java.sourceSets.main.xjc[0].genTaskName == 'genCustom'
-        assert projectHelper.project.tasks.findByPath('genCustom')
+        testGradleBuild("ideaModule")
 
         //tests
-        assert projectHelper.project.convention.plugins.java.sourceSets.main.xjc[0].genOutputPath == 'generated/custom'
-        assert projectHelper.project.tasks.findByPath('genCustom').outputDirectory == projectHelper.project.file('generated/custom')
+        assertThat(file('generated/custom')).exists().isDirectory()
 
+        assertThat(contentOf(file(rootProjectName() + ".iml")))
+            .contains('"file://$MODULE_DIR$/generated/custom"') //customized placement
     }
 
     /**
-     * Verifiserer at src dirs kan konfigureres
+     * Verifiserer at {@link org.gradle.api.file.SourceDirectorySet#srcDirs srcDirs} kan konfigureres.
+     * Denne er i tillegg til {@link org.gradle.api.file.SourceDirectorySet#srcDir srcDir}.
      */
     @Test
     void testSrcDirs() {
-        //forks a new project in a temp folder
-        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
-            apply plugin: 'sktools-xjc-plugin'
-        }
 
-        //generates a simple source file
-        use(XjcTestutilFilewriter) {
-            projectHelper.writeCustomFile("src/main/xsd/simple.xsd") {""}
-            projectHelper.writeCustomFile("src/main/xsd1/simple1.xsd") {""}
-            projectHelper.writeCustomFile("src/main/xsd2/simple2.xsd") {""}
-            projectHelper.writeCustomFile("src/main/xsd3/simple3.xsd") {""}
-        }
+        writeFile("src/main/xsd/simple.xsd", "")
+        writeFile("src/main/xsd1/simple1.xsd", "")
+        writeFile("src/main/xsd2/simple2.xsd", "")
+        writeFile("src/main/xsd3/simple3.xsd", "")
 
-        //config
-        projectHelper.configureProject {
+        writeFile("build.gradle", '''
+            plugins {
+              id 'sktools-xjc-plugin'
+            }
+            
             sourceSets {
                 main.xjc {
                     schema {
@@ -351,21 +258,26 @@ class XjcPluginTest {
                     }
                 }
             }
-        }
+            
+            task echoSourceFiles() {
+              doLast {
+                project.tasks[project.sourceSets.main.xjc[0].genTaskName].getSource().files.each {
+                  println it.name
+                }
+              }
+            }
+            
+        ''')
 
-        def assertFilesInFileTree = {
-            assert it.contains(projectHelper.project.file('src/main/xsd/simple.xsd'))
-            assert it.contains(projectHelper.project.file('src/main/xsd1/simple1.xsd'))
-            assert it.contains(projectHelper.project.file('src/main/xsd2/simple2.xsd'))
-            assert it.contains(projectHelper.project.file('src/main/xsd3/simple3.xsd'))
-        }
-
+        BuildResult buildResult = testGradleBuild("echoSourceFiles")
         //asserts the results
-        projectHelper.project.sourceSets.main.xjc[0].with { def config ->
-            assertFilesInFileTree projectHelper.project.tasks[config.genTaskName].getSource();
-            assertFilesInFileTree config.source.asFileTree;
-        }
-
+        assertThat(buildResult.getOutput()).
+            contains(
+                "simple.xsd"
+                , "simple1.xsd"
+                , "simple2.xsd"
+                , "simple3.xsd"
+            )
     }
 
 
@@ -380,7 +292,7 @@ class XjcPluginTest {
             apply plugin: 'sktools-xjc-plugin'
         }
 
-        Assertions.assertThat(projectHelper.project.configurations.jaxb.resolvedConfiguration.getResolvedArtifacts()).
+        assertThat(projectHelper.project.configurations.jaxb.resolvedConfiguration.getResolvedArtifacts()).
                 extracting("artifact.name").
                 contains("jaxb-xjc").doesNotContain("ant")
     }

@@ -9,10 +9,12 @@ import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.DependencySet
 import org.gradle.api.artifacts.ModuleDependency
+import org.gradle.api.file.FileCollection
 import org.gradle.api.internal.HasConvention
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSet
+import org.gradle.plugin.devel.tasks.PluginUnderTestMetadata
 
 import java.util.concurrent.Callable
 
@@ -103,6 +105,9 @@ class XjcPlugin implements Plugin<Project> {
 
                         project.plugins.withId('idea') {
                             project.idea.module.generatedSourceDirs += genOutputDir
+                            project.tasks.getByName('ideaModule').doFirst {
+                                genOutputDir.mkdirs()
+                            }
                         }
                     }
 
@@ -165,8 +170,7 @@ class XjcPlugin implements Plugin<Project> {
      * xjc-plugin and jaxb configuration
      */
     private static def configureJaxbXjcDependencies(final Project project, final Configuration jaxbConfiguration) {
-        final def buildscript = project.getRootProject().getBuildscript(); //root projects repo configuration
-        final Configuration processorConfiguration = buildscript.getConfigurations().detachedConfiguration(xjcExtentionDependency(project));
+        final FileCollection processorConfiguration = processorClasspathForXjcExtension(project);
 
         project.getTasks().withType(XjcTask.class, new Action<XjcTask>() {
             @Override
@@ -176,24 +180,34 @@ class XjcPlugin implements Plugin<Project> {
         })
     }
 
-    private static Dependency[] xjcExtentionDependency(Project project) {
-        ArrayList<Dependency> dependencies = new ArrayList<Dependency>(1);
-        dependencies.add(wsDocGenDependency(project));
-        return dependencies.toArray(new Dependency[dependencies.size()]);
+    public static FileCollection processorClasspathForXjcExtension(Project project) {
+        InputStream testKitMetadataStream = testEnvironmentClasspath()
+        if (testKitMetadataStream != null) {
+            Properties properties = new Properties()
+            properties.load(testKitMetadataStream)
+            testKitMetadataStream.close()
+            def classpath = properties.getProperty(PluginUnderTestMetadata.IMPLEMENTATION_CLASSPATH_PROP_KEY)
+            // En trenger classpath til egen-utvidelser av xjc (xjc plugins)
+            // disse ligger i prosjektet no.statkart.sktools:xjc-plugins
+            // avhengighet til jaxb og jaxb-xjc legges på fra annen konfigurasjon
+            return project.files(classpath.split(";")) //NB: for GradleRunner i debug mode
+        }
+        final def buildscript = project.getRootProject().getBuildscript(); //root projects repo configuration
+        return buildscript.getConfigurations().detachedConfiguration(wsDocGenDependency(project))
     }
 
+
     private static Dependency wsDocGenDependency(Project project) {
-        if (runningInIDEATestEnvironment()) {
-            Class clazz = Class.forName("com.sun.tools.xjc.addon.statkart.ListGenPlugin")
-            return project.getDependencies().create(project.files(clazz.getProtectionDomain().getCodeSource().getLocation()))
-        }
-        ModuleDependency moduleDependency = project.getDependencies().create(pluginProperties.getProperty("sktools_xjc_extensions"))
+        ModuleDependency moduleDependency = (ModuleDependency) project.getDependencies().create(pluginProperties.getProperty("sktools_xjc_extensions"))
         moduleDependency.setTransitive(false) //ikke transitiv da en ønsker at configuration JAXB_CONFIGURATION_NAME skal diktere xjb/jaxb versjon
         return moduleDependency;
     }
 
-    static boolean runningInIDEATestEnvironment() {
-        return !XjcPlugin.class.getProtectionDomain().getCodeSource().getLocation().getPath().endsWith(".jar");
+    /**
+     * Classpath satt opp for Gradle TestKit
+     */
+    static InputStream testEnvironmentClasspath() {
+        return getClass().getResourceAsStream("/" + PluginUnderTestMetadata.METADATA_FILE_NAME) //dersom denne finnes på classpath kjører man tester
     }
 
 }
