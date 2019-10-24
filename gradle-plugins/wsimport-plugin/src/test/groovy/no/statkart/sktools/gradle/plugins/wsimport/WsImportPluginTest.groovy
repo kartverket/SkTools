@@ -7,6 +7,7 @@ import org.testng.annotations.Test
 import java.nio.file.Files
 import java.util.jar.JarFile
 
+import static java.util.Collections.list
 import static org.assertj.core.api.Assertions.assertThat
 import static org.assertj.core.api.Assertions.contentOf
 
@@ -84,8 +85,8 @@ class WsImportPluginTest extends TestKitBase {
 
         JarFile jar = new JarFile(file)
         try {
-            assertThat(jar.entries()).as("Contents of jar file")
-            .extracting("name")
+            assertThat(list(jar.entries())).as("Contents of jar file")
+            .extractingResultOf("getName")
             .contains(
                 'META-INF/wsdls/TestServiceWS.wsdl',
                 'META-INF/wsdls/TestServiceWS_schema1.xsd',
