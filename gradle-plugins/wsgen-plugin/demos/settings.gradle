@@ -1,5 +1,0 @@
-include ':simple-demo'
-
-rootProject.name = 'wsgen-demos'
-
-
