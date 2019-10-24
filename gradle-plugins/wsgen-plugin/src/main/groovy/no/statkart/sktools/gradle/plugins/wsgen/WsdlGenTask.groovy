@@ -37,6 +37,7 @@ public class WsdlGenTask extends SourceTask {
                         resourcedestdir: getDestinationDir(),
                         genwsdl: 'true',
                         keep: 'true',
+                        fork: 'true',
                 )
             }
         }
