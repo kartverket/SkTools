@@ -1,14 +1,14 @@
-apply plugin: 'groovy'
-apply plugin: 'maven-publish'
+plugins {
+    id 'groovy'
+    id 'maven-publish'
+    id 'java-gradle-plugin'
+}
 
 group = 'no.statkart.sktools.gradle'
 
 
 
 dependencies {
-    compileOnly gradleApi()
-
-    testImplementation gradleTestKit()
     testImplementation project(':build-utils:test-utils')
 }
 
@@ -18,10 +18,7 @@ task sourceJar(type: Jar) {
 }
 
 publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-            artifact sourceJar
-        }
+    publications.all {
+        artifact sourceJar
     }
 }
