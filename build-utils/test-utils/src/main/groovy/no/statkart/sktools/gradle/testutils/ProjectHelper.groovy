@@ -2,6 +2,7 @@ package no.statkart.sktools.gradle.testutils
 
 import no.statkart.sktools.testutils.RootDirectoryLocator
 import org.gradle.api.Project
+import org.gradle.api.internal.project.ProjectInternal
 import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.api.Task
 import org.testng.Assert
@@ -93,7 +94,7 @@ class ProjectHelper {
 
     private void _initializeProject(Project project, boolean initializeSubprojects) {
         ProjectState state = project.getState()
-        project.getProjectEvaluationBroadcaster().afterEvaluate(project, state)
+        ((ProjectInternal) project).getProjectEvaluationBroadcaster().afterEvaluate(project, state)
         if (initializeSubprojects) {
             project.getSubprojects().each {
                 _initializeProject(it, initializeSubprojects)
@@ -181,14 +182,6 @@ class ProjectHelper {
      * Setter conventional {@code WEBLOGIC_HOME} og {@code WEBLOGIC_VERSION} property for prosjekt
      */
     public ProjectHelper withConventionalWEBLOGIC() {
-        //foretrekker satt verdi satt i setEnv_Personal
-        if (System.getenv('ORG_GRADLE_PROJECT_WEBLOGIC_HOME') != null) {
-            project.ext.set('WEBLOGIC_HOME', System.getenv('ORG_GRADLE_PROJECT_WEBLOGIC_HOME'))
-        }
-        if (System.getenv('ORG_GRADLE_PROJECT_WEBLOGIC_VERSION') != null) {
-            project.ext.set('WEBLOGIC_VERSION', System.getenv('ORG_GRADLE_PROJECT_WEBLOGIC_VERSION'))
-        }
-
         File gradlePropertiesFile = new File(RootDirectoryLocator.getRootDirectory(), "gradle.properties")
         def gradleProperties = new Properties()
         if (gradlePropertiesFile.exists()) {
@@ -237,20 +230,6 @@ class ProjectHelper {
         return file
     }
 
-    public File assertFileExistsInBuildDir(String path, Closure testClosure = null) {
-        return assertFileExistsInBuildDir(path, '', testClosure)
-    }
-    public File assertFileExistsInBuildDir(String path, String message, Closure testClosure = null) {
-        File file = project.file(project.relativePath(project.buildDir) + '/' + path)
-        if (!file.exists()) {
-            Assert.fail("Forventet at filen ${path} finnes. ${message}")
-        }
-        if (testClosure != null) {
-            testClosure.delegate = file
-            testClosure()
-        }
-        return file
-    }
 
     public Task assertTaskExecutedNotSkipped(String taskName, String message = '', Closure testClosure = null) {
         Task task = project.getTasks().getByName(taskName);
