@@ -1,7 +1,6 @@
 package no.statkart.sktools.gradle.plugins.wsdlcustomizer
 
 import groovy.util.slurpersupport.GPathResult
-import no.statkart.sktools.gradle.testutils.ProjectHelper
 import org.gradle.api.Project
 import org.gradle.api.file.FileTree
 import org.gradle.testfixtures.ProjectBuilder
@@ -20,7 +19,6 @@ class CustomWsdlTaskTest {
     @Test
     void testCustomWsdl() {
         Project project = ProjectBuilder.builder().build()
-        ProjectHelper projectHelper = new ProjectHelper(project)
 
         File destDir = project.file('result')
 
@@ -30,7 +28,7 @@ class CustomWsdlTaskTest {
         URL generatedUrl = getClass().getResource("/fakeGenerated")
         File generatedDir = new File(generatedUrl.toURI())
 
-        project.task('customWsdl', type: CustomWsdlTask) {
+        CustomWsdlTask customWsdl = project.task('customWsdl', type: CustomWsdlTask) {
             destinationDir = destDir
 
             originalSchemaFiles project.fileTree(handmadeDir)
@@ -39,10 +37,10 @@ class CustomWsdlTaskTest {
             excludeNamespaces 'http://statkart.no/sktools/wsapi/v1/domain/register/person'
         }
 
-        Assert.assertEquals(project.customWsdl.originalSchemaFiles.files.size(), 4, 'Antall skjemafiler')
-        Assert.assertEquals(project.customWsdl.generatedWsdlAndSchemaFiles.files.size(), 12, 'Antall genererte file')
+        Assert.assertEquals(customWsdl.originalSchemaFiles.files.size(), 4, 'Antall skjemafiler')
+        Assert.assertEquals(customWsdl.generatedWsdlAndSchemaFiles.files.size(), 12, 'Antall genererte file')
 
-        projectHelper.executeTask('customWsdl')
+        customWsdl.generate()
 
         FileTree result = project.fileTree(destDir)
 
