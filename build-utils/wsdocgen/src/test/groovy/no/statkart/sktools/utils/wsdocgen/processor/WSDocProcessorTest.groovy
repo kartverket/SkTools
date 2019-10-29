@@ -31,10 +31,8 @@ class WSDocProcessorTest {
         def xslt;
 
         //generer eksempel-kildekode
-        use(WsDocgenTestutilFilewriter) {
-            projectHelper.writeSimpleDemoServiceWSBean(sourcePath)
-            xslt = projectHelper.writeSimpleXSLT(resourcePath)
-        }
+        WsDocgenTestutilFilewriter.writeSimpleDemoServiceWSBean(projectHelper.project.file(sourcePath))
+        xslt = WsDocgenTestutilFilewriter.writeSimpleXSLT(projectHelper.project.file(resourcePath))
 
 
         //setter opp testprosjekt
