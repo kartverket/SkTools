@@ -19,7 +19,6 @@ class WeblogicBasePluginTest {
     void testConfiguration() {
         //forks a new rootProject in a temp folder
         ProjectHelper rootProjectHelper = GradleProjectBuilder.builder().build()
-        def rootDir = rootProjectHelper.toString()
 
         //defines dummy.jars
         File someJarFile = rootProjectHelper.project.file('some.jar')
@@ -44,12 +43,10 @@ class WeblogicBasePluginTest {
 
         //asserts
         assert rootProjectHelper.project.configurations.getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME).files.contains(someJarFile)
-        assert !rootProjectHelper.project.configurations.getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME).files.contains(otherJarFile)
-
-        assert !subProjectHelper.project.configurations.getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME).files.contains(someJarFile)
         assert subProjectHelper.project.configurations.getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME).files.contains(otherJarFile)
 
-
+        assert !subProjectHelper.project.configurations.getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME).files.contains(someJarFile)
+        assert !rootProjectHelper.project.configurations.getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME).files.contains(otherJarFile)
     }
 
     /**
@@ -76,7 +73,6 @@ class WeblogicBasePluginTest {
 
         //tenker oss at weblogic classpath configurasjon også skal inneholde alle compile time dependencies..
         projectHelper.project.configurations.getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME).extendsFrom(projectHelper.project.configurations.getByName(JavaPlugin.COMPILE_CONFIGURATION_NAME))
-
 
         assert projectHelper.project.configurations.getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME).contains(somJarFile)
     }
