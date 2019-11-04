@@ -9,47 +9,6 @@ import no.statkart.sktools.gradle.testutils.ProjectHelper
  */
 class WeblogicWsWarTestutilFilewriter extends AbstractTestutilFilewriter {
 
-    /**
-     * Skriver kildekode til fil for en simpel webservice implementasjon.
-     */
-    public static Collection<File> writeDemoServiceWSBean(ProjectHelper projectHelper, String targetPath) {
-        ArrayList<File> generatedFiles = new ArrayList<File>()
-
-        generatedFiles.add projectHelper.project.file("${targetPath}/test/DemoServiceWSBean.java").with { File file ->
-            file.parentFile.mkdirs()
-            file.withPrintWriter { writer ->
-                writer.print """
-                    package no.statkart.test.test1;
-
-                    /**
-                     * Bla bla bla beskrivelse av service.
-                     */
-                    @javax.jws.WebService(
-                        name = "TestService",
-                        serviceName = "TestServiceWS_v1",
-                        targetNamespace = "http://test.statkart.no/test1")
-                    public class DemoServiceWSBean {
-
-                        /** Returnerer ikke noe */
-                        @javax.jws.WebMethod
-                        public void noPing() {
-
-                        }
-
-                        /** Returnerer PONG **/
-                        @javax.jws.WebMethod
-                        public String ping() {
-                            return "PONG";
-                        }
-
-                    }
-                """
-            }
-            return file
-        }
-
-        return generatedFiles
-    }
 
     /**
      * Service <b>{http://test.statkart.no/service/pingtns}PingService</b> som skrives til <br />

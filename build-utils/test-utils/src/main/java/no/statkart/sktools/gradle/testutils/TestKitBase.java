@@ -1,6 +1,7 @@
 package no.statkart.sktools.gradle.testutils;
 
 import org.assertj.core.api.Assertions;
+import org.gradle.testfixtures.ProjectBuilder;
 import org.gradle.testkit.runner.BuildResult;
 import org.gradle.testkit.runner.GradleRunner;
 import org.gradle.testkit.runner.TaskOutcome;
@@ -9,6 +10,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
@@ -34,6 +36,7 @@ public abstract class TestKitBase {
     public static void assertNoFailures(BuildResult buildResult) {
         Assertions.assertThat(buildResult.getTasks())
             .extractingResultOf("getOutcome")
+            .describedAs("Unexpected build error: %s", buildResult.getOutput())
             .doesNotContain(TaskOutcome.FAILED);
     }
 
@@ -46,6 +49,13 @@ public abstract class TestKitBase {
             .withDebug(true) //debug av plugin-implementasjon
             .build();
         return result;
+    }
+
+    /**
+     * @return ProjectBuilder koblet til {@link #projectDir}
+     */
+    public ProjectBuilder projectBuilder() {
+        return ProjectBuilder.builder().withProjectDir(projectDir);
     }
 
     public File file(String relativePath) {
@@ -84,18 +94,27 @@ public abstract class TestKitBase {
         }
     }
 
-    protected void writeFile(String relativePath, CharSequence... lines) throws IOException {
+    protected File writeFile(String relativePath, CharSequence... lines) throws IOException {
         Path path = projectPath.resolve(relativePath.replaceAll("/", File.separator.replace("\\", "\\\\"))); //escape backslash on windows
-        writeFile(path, lines);
-
+        return writeFile(path, lines);
     }
 
-    protected void writeFile(Path destination, CharSequence... lines) throws IOException {
+    protected File writeFile(Path destination, CharSequence... lines) throws IOException {
         Files.createDirectories(destination.getParent());
         Files.write(destination, Arrays.asList(lines), StandardCharsets.UTF_8,
             StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+        return destination.toFile();
     }
 
+    protected void writeGradleProperties(Map<Object, Object> properties) throws IOException {
+        final File file = file("gradle.properties");
+        file.createNewFile();
+        try (final FileOutputStream os = new FileOutputStream(file)) {
+            final Properties p = new Properties();
+            p.putAll(properties);
+            p.store(os, "");
+        }
+    }
 
     //kan erstattes med guava MoreFiles.deleteRecursively
     private static void deleteRecursively(Path path) throws IOException {
@@ -115,8 +134,7 @@ public abstract class TestKitBase {
         });
     }
 
-    public static final Map testProperties;
-
+    public static final Map<Object, Object> testProperties;
     static {
         Properties properties = new Properties();
         try {

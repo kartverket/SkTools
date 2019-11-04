@@ -112,6 +112,7 @@ class GradleProjectBuilder<T extends GradleProjectBuilder<T>> {
         return this
     }
 
+    @Deprecated
     public T withConventionalWEBLOGIC() {
         closures.add {
             projectHelper.withConventionalWEBLOGIC()

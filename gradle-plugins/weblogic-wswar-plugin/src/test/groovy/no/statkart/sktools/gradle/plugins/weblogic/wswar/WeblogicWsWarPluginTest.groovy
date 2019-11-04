@@ -1,22 +1,28 @@
 package no.statkart.sktools.gradle.plugins.weblogic.wswar
 
-import no.statkart.sktools.gradle.testutils.ProjectHelper
-import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
-import no.statkart.sktools.gradle.testutils.filewriter.WeblogicWsWarTestutilFilewriter
+
+import no.statkart.sktools.gradle.testutils.TestKitBase
 import org.gradle.api.Project
-import org.gradle.api.Task
 import org.gradle.api.plugins.JavaPluginConvention
-import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.compile.AbstractCompile
-import org.gradle.testfixtures.ProjectBuilder
+import org.gradle.testkit.runner.BuildResult
+import org.gradle.testkit.runner.TaskOutcome
 import org.testng.annotations.Test
+
+import java.util.zip.ZipFile
+
+import static java.util.Collections.list
+import static no.statkart.sktools.gradle.plugins.weblogic.wswar.WeblogicTestUtil.writeDemoServiceWSBean
+import static no.statkart.sktools.gradle.plugins.weblogic.wswar.WeblogicTestUtil.writeExceptionService01
+import static no.statkart.sktools.gradle.plugins.weblogic.wswar.WeblogicTestUtil.writeExceptionService01Exceptions
+import static org.assertj.core.api.Assertions.assertThat
 
 /**
  * Test av {@link WeblogicWsWarPlugin}
  *
  * @author Leif Lislegård
  */
-class WeblogicWsWarPluginTest {
+class WeblogicWsWarPluginTest extends TestKitBase {
 
     /**
      * Tester registrering av plugin via navn
@@ -24,13 +30,9 @@ class WeblogicWsWarPluginTest {
     @Test
     void testAppplyPlugin() {
         //forks a new project in a temp folder
-        Project project = ProjectBuilder.builder().build()
-
-        //konfigurerer project
-        project.with {
+        Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-weblogic-wswar-plugin'
         }
-
 
         assert project.plugins.hasPlugin('sktools-weblogic-wswar-plugin')
     }
@@ -41,8 +43,8 @@ class WeblogicWsWarPluginTest {
      * Tester og demonstrerer angivelse av konfigurasjon
      */
     @Test
-    void projectHelper() {
-        ProjectHelper projectHelper = GradleProjectBuilder.builder().withConventionalWEBLOGIC().build {
+    void testWeblogicSourceSetConfiguration() {
+        Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-weblogic-wswar-plugin'
 
             sourceSets.weblogic {
@@ -51,13 +53,10 @@ class WeblogicWsWarPluginTest {
             }
         }
 
+        JavaPluginConvention javaConvention = project.getConvention().getPlugins().get("java");
 
-        JavaPluginConvention javaConvention = projectHelper.project.getConvention().getPlugins().get("java");
-
-
-        assert javaConvention.sourceSets['weblogic'].java.srcDirs.contains(projectHelper.project.file('scr/someJavaSourceDir'))
-        assert javaConvention.sourceSets['weblogic'].resources.srcDirs.contains(projectHelper.project.file('scr/someResourcesDir'))
-
+        assert javaConvention.sourceSets['weblogic'].java.srcDirs.contains(project.file("scr/someJavaSourceDir"))
+        assert javaConvention.sourceSets['weblogic'].resources.srcDirs.contains(project.file("scr/someResourcesDir"))
     }
 
 
@@ -66,17 +65,15 @@ class WeblogicWsWarPluginTest {
      */
     @Test
     void testCompileTaskClasspath() {
-        //forks a new project in a temp folder
-        ProjectHelper projectHelper = GradleProjectBuilder.builder().withConventionalWEBLOGIC().build {
+        Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-weblogic-wswar-plugin'
         }
-        Project project = projectHelper.project
 
         AbstractCompile genTask = project.tasks[WeblogicWsWarPlugin.WEBLOGIC_GEN_TASK_NAME]
-        SourceSet sourceSet = project.sourceSets[WeblogicWsWarPlugin.WEBLOGIC_SOURCE_SET_NAME]
 
-        assert genTask.classpath.contains(sourceSet.output.classesDir) // forventer kompilerte classfiler på classpath
-
+        for (def classesDir : project.sourceSets[WeblogicWsWarPlugin.WEBLOGIC_SOURCE_SET_NAME].output.classesDirs) {
+            assert genTask.classpath.contains(classesDir) // forventer kompilerte classfiler på classpath
+        }
     }
 
 
@@ -84,28 +81,24 @@ class WeblogicWsWarPluginTest {
      * Tester task med default verdier
      *
      * @see WeblogicWsWarPlugin#WEBLOGIC_GEN_TASK_NAME
-     * @see WeblogicWsWarPlugin#WEBLOGIC_WAR_TASK_NAME
      */
     @Test
     void testCompileTask() {
-        //forks a new project in a temp folder
-        ProjectHelper projectHelper = GradleProjectBuilder.builder().withConventionalWEBLOGIC().build {
-            apply plugin: 'sktools-weblogic-wswar-plugin'
-        }
+        writeFile("build.gradle", """
+            plugins {
+              id 'sktools-weblogic-wswar-plugin'
+            }
+        """)
+        writeGradleProperties(testProperties.findAll {
+            'WEBLOGIC_HOME'.equals(it.key) || 'WEBLOGIC_VERSION'.equals(it.key)
+        });
 
-        //genererer java kildekode for en testservice
-        use(WeblogicWsWarTestutilFilewriter) {
-            projectHelper.writeDemoServiceWSBean('src/weblogic/java')
-        }
+        // java kildekode for en testservice
+        writeDemoServiceWSBean(file("src/weblogic/java"))
 
-        projectHelper.executeTask(WeblogicWsWarPlugin.WEBLOGIC_GEN_TASK_NAME)
+        assertNoFailures(testGradleBuild(":genWeblogic"))
 
-        projectHelper.assertTaskExecutedNotSkipped(WeblogicWsWarPlugin.WEBLOGIC_GEN_TASK_NAME, '') { Task task ->
-            assert task.outputs.hasOutput //skal ha fått deklarert at denne tasken har outputs
-            assert !task.outputs.getFiles().isEmpty() //forventer genererte filer
-            assert 1 == task.outputs.getFiles().getAsFileTree().findAll {it.name.endsWith('.wsdl')}.size() //antall wsdl filer generert
-        }
-
+        assertThat(file("build/weblogic/webapp/WEB-INF/TestServiceWS_v1.wsdl")).exists()
     }
 
     /**
@@ -115,28 +108,27 @@ class WeblogicWsWarPluginTest {
      */
     @Test
     void testWarTask() {
-        //forks a new project in a temp folder
-        ProjectHelper projectHelper = GradleProjectBuilder.builder("projectName").withConventionalWEBLOGIC().build {
-            apply plugin: 'sktools-weblogic-wswar-plugin'
-        }
+        writeFile("build.gradle", """
+            plugins {
+              id 'sktools-weblogic-wswar-plugin'
+            }
+        """)
+        writeGradleProperties(testProperties.findAll {
+            'WEBLOGIC_HOME'.equals(it.key) || 'WEBLOGIC_VERSION'.equals(it.key)
+        });
 
-        //genererer java kildekode for en testservice
-        use(WeblogicWsWarTestutilFilewriter) {
-            projectHelper.writeDemoServiceWSBean('src/weblogic/java')
-        }
+        // java kildekode for en testservice
+        writeDemoServiceWSBean(file("src/weblogic/java"))
 
         //eksekverer task
-        Task warTask = projectHelper.executeTask(WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME)
+        BuildResult buildResult = testGradleBuild(":warWeblogic")
 
         //tester task
-        projectHelper.assertTaskExecutedNotSkipped(WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME)
-        projectHelper.assertTaskExecutedNotSkipped(WeblogicWsWarPlugin.WEBLOGIC_GEN_TASK_NAME)
-        projectHelper.assertTaskExecutedNotSkipped('compileWeblogicJava')
+        assertThat(buildResult.task(':warWeblogic').getOutcome()).isEqualTo(TaskOutcome.SUCCESS)
+        assertThat(buildResult.task(':genWeblogic').getOutcome()).isEqualTo(TaskOutcome.SUCCESS)
+        assertThat(buildResult.task(':compileWeblogicJava').getOutcome()).isEqualTo(TaskOutcome.SUCCESS)
 
-        File warFile = projectHelper.assertFileExists('build/libs/projectName-weblogic.war')
-
-        assert warTask.getOutputs().getFiles().getSingleFile() == warFile //forventer at output inneholder denne filen
-
+        assertThat(file("build/libs/${rootProjectName()}-weblogic.war")).exists()
     }
 
 
@@ -146,28 +138,15 @@ class WeblogicWsWarPluginTest {
     @Test
     void testSourceSetConfig() {
         //forks a new project in a temp folder
-        ProjectHelper projectHelper = GradleProjectBuilder.builder().withConventionalWEBLOGIC().build {
+        Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-weblogic-wswar-plugin'
         }
-        Project project = projectHelper.project
 
+        File weblogicSourceFile = writeFile("src/weblogic/java/SomeFile.java")
+        File mainSourceFile = writeFile("src/main/java/Main.java")
 
-        Collection<File> weblogicSourceFiles = null
-        Collection<File> mainSourceFiles = null
-
-        //generering av kildekode
-        use(WeblogicWsWarTestutilFilewriter) {
-            weblogicSourceFiles = projectHelper.writeDemoServiceWSBean('src/weblogic/java')
-            mainSourceFiles = projectHelper.writeDummyClass('src/main/java')
-        }
-
-        weblogicSourceFiles.each {
-            assert project.tasks['compileWeblogicJava'].source.contains(it)    //forventer tilgang til kildekode i weblogic source set
-        }
-        mainSourceFiles.each {
-            assert !project.tasks['compileWeblogicJava'].source.contains(it)   //forventer ingen tilgang til kildekode i main source set
-        }
-
+        assert project.tasks['compileWeblogicJava'].source.contains(weblogicSourceFile)    //forventer tilgang til kildekode i weblogic source set
+        assert !project.tasks['compileWeblogicJava'].source.contains(mainSourceFile)   //forventer ingen tilgang til kildekode i main source set
     }
 
     /**
@@ -176,90 +155,53 @@ class WeblogicWsWarPluginTest {
     @Test
     void testResourcesConfig() {
         //forks a new project in a temp folder
-        ProjectHelper projectHelper = GradleProjectBuilder.builder().withConventionalWEBLOGIC().build {
+        Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-weblogic-wswar-plugin'
         }
-        Project project = projectHelper.project
 
-        Collection<File> weblogicResourceFiles = null
-        Collection<File> mainResourceFiles = null
-        Collection<File> otherResourceFiles = null
+        //definerer noen filer
+        File weblogicResourceFile = writeFile("src/weblogic/resources/weblogic.txt")
+        File mainResourceFile = writeFile("src/main/resources/main.txt")
+        File otherResourceFile = writeFile("src/other/resources/other.txt")
 
-        //genererer noen filer
-        use(WeblogicWsWarTestutilFilewriter) {
-            weblogicResourceFiles = projectHelper.writeDemoServiceWSBean('src/weblogic/resources')
-            mainResourceFiles = projectHelper.writeDummyClass('src/main/resources')
-            otherResourceFiles = projectHelper.writeDummyClass('src/other/resources')
-        }
 
         //tester tilgang for en kjent task
-        weblogicResourceFiles.each {
-            assert project.tasks['processWeblogicResources'].source.contains(it)    //forventer tilgang til ressursfiler i src/weblogic
-        }
-        mainResourceFiles.each {
-            assert !project.tasks['processWeblogicResources'].source.contains(it)   //forventer INGEN tilgang til ressursfiler i src/main
-        }
-        otherResourceFiles.each {
-            assert !project.tasks['processWeblogicResources'].source.contains(it)   //forventer INGEN tilgang til ressursfiler i src/other
-        }
+        assert project.tasks['processWeblogicResources'].source.contains(weblogicResourceFile)    //forventer tilgang til ressursfiler i src/weblogic
+        assert !project.tasks['processWeblogicResources'].source.contains(mainResourceFile)   //forventer INGEN tilgang til ressursfiler i src/main
+        assert !project.tasks['processWeblogicResources'].source.contains(otherResourceFile)   //forventer INGEN tilgang til ressursfiler i src/other
 
         //legger til mappe
-        projectHelper.configureProject {
+        project.tap {
             sourceSets {
                 weblogic.resources.srcDir 'src/other/resources'
             }
         }
 
         //tester tilgang for en kjent task
-        weblogicResourceFiles.each {
-            assert project.tasks['processWeblogicResources'].source.contains(it)    //forventer tilgang til ressursfiler i src/weblogic
-        }
-        mainResourceFiles.each {
-            assert !project.tasks['processWeblogicResources'].source.contains(it)   //forventer FORTSATT INGEN tilgang til ressursfiler i src/main
-        }
-        otherResourceFiles.each {
-            assert project.tasks['processWeblogicResources'].source.contains(it)   //forventer NÅ TILGANG tilgang til ressursfiler i src/other
-        }
-
-
+        assert project.tasks['processWeblogicResources'].source.contains(weblogicResourceFile)    //forventer tilgang til ressursfiler i src/weblogic
+        assert !project.tasks['processWeblogicResources'].source.contains(mainResourceFile)   //forventer FORTSATT INGEN tilgang til ressursfiler i src/main
+        assert project.tasks['processWeblogicResources'].source.contains(otherResourceFile)   //forventer NÅ TILGANG tilgang til ressursfiler i src/other
     }
 
     /**
-     * Tester oppsett av {@code SourceSet} med annet sourceDir
+     * Tester oppsett av {@code SourceSet} med flere sourceDirs
      */
     @Test
     void testSourceConfig() {
         //forks a new project in a temp folder
-        ProjectHelper projectHelper = GradleProjectBuilder.builder().withConventionalWEBLOGIC().build {
+        Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-weblogic-wswar-plugin'
         }
-        Project project = projectHelper.project
 
-        Collection<File> weblogicSourceFiles = null
-        Collection<File> divSourceFiles = null
-        Collection<File> sourceDirViaSourceSetSourceFiles = null
+        // some java files...
+        File weblogicSourceFile = writeFile('src/weblogic/java/DummyWLS.java')
+        File divSourceFile = writeFile('src/div/java/Div.java')
 
-        //genererer java kildekode for en testservice
-        use(WeblogicWsWarTestutilFilewriter) {
-            weblogicSourceFiles = projectHelper.writeDemoServiceWSBean('src/weblogic/java')
-            divSourceFiles = projectHelper.writeDummyClass('src/div/java')
-            sourceDirViaSourceSetSourceFiles = projectHelper.writeDummyClass('src/weblogic/java2')
-        }
-
-
-
-        weblogicSourceFiles.each {
-            assert project.tasks['compileWeblogicJava'].source.contains(it)    //forventer tilgang til kildekode i weblogic source set
-        }
-        divSourceFiles.each {
-            assert !project.tasks['compileWeblogicJava'].source.contains(it)   //forventer INGEN tilgang til kildekode i div source set
-        }
-        sourceDirViaSourceSetSourceFiles.each {
-            assert !project.tasks['compileWeblogicJava'].source.contains(it)    //forventer INGEN tilgang til kildekode i weblogic source set
-        }
+        assert project.tasks['compileWeblogicJava'].source.contains(weblogicSourceFile)    //forventer tilgang til kildekode i weblogic source set
+        assert !project.tasks['compileWeblogicJava'].source.contains(divSourceFile)   //forventer INGEN tilgang til kildekode i div source set
 
         //konfigurerer project
-        projectHelper.configureProject {
+        project.tap {
             sourceSets {
                 weblogic.java.srcDir 'src/div/java'
                 weblogic.java.srcDir 'src/weblogic/java2'
@@ -267,16 +209,7 @@ class WeblogicWsWarPluginTest {
 
         }
 
-        weblogicSourceFiles.each {
-            assert project.tasks['compileWeblogicJava'].source.contains(it)    //forventer tilgang til kildekode i weblogic source set
-        }
-        divSourceFiles.each {
-            assert project.tasks['compileWeblogicJava'].source.contains(it)   //forventer NÅ TILGANG til kildekode i div source set
-        }
-        sourceDirViaSourceSetSourceFiles.each {
-            assert project.tasks['compileWeblogicJava'].source.contains(it)    //forventer NÅ TILGANG til kildekode i weblogic source set
-        }
-
+        assert project.tasks['compileWeblogicJava'].source.contains(divSourceFile)   //forventer NÅ TILGANG til kildekode i div source set
     }
 
     /**
@@ -288,38 +221,14 @@ class WeblogicWsWarPluginTest {
      *
      * Testen setter opp enn felles resource katalog.
      * Det blir også demonstrert deklarasjon av avhengighet til 'main'
-     *
-     *
      */
     @Test
     void testJavaPluginIntegration() {
         //forks a new rootProject in a temp folder
-        ProjectHelper projectHelper = GradleProjectBuilder.builder().withConventionalWEBLOGIC().withName('testproject').build {
+        Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-weblogic-wswar-plugin'
             apply plugin: 'java'
-        }
-        Project rootProject = projectHelper.project
 
-        Collection<File> weblogicSourceFiles = null
-        Collection<File> mainSourceFiles = null
-
-        Collection<File> weblogicResources = null
-        Collection<File> mainResources = null
-        Collection<File> commonResources = null
-
-        //genererer java kildekode for en testservice
-        use(WeblogicWsWarTestutilFilewriter) {
-            weblogicSourceFiles = projectHelper.writeDemoServiceWSBean('src/weblogic/java')
-            mainSourceFiles = projectHelper.writeDummyClass('src/main/java')
-
-            weblogicResources = projectHelper.writeDummyClass('src/weblogic/resources')
-            mainResources = projectHelper.writeDummyClass('src/main/resources')
-            commonResources = projectHelper.writeDummyClass('src/common/resources')
-        }
-
-
-        projectHelper.configureProject {
-            //alternativ konfigurasjon via JavaPluginConvention
             sourceSets {
                 weblogic.resources.srcDir 'src/common/resources'
                 main.resources.srcDir 'src/common/resources'
@@ -332,50 +241,95 @@ class WeblogicWsWarPluginTest {
                 //felles bibliotek
                 compile files('lib/common.jar')
             }
-
         }
 
-        weblogicSourceFiles.each {
-            assert rootProject.tasks['compileWeblogicJava'].source.contains(it)    //forventer tilgang til kildekode for  weblogicCompile configuration
-            assert !rootProject.tasks['compileJava'].source.contains(it)    //forventer INGEN tilgang til kildekode for javaCompile configuration
-        }
-        mainSourceFiles.each {
-            assert !rootProject.tasks['compileWeblogicJava'].source.contains(it)    //forventer INGEN tilgang til kildekode for weblogicCompile configuration
-            assert rootProject.tasks['compileJava'].source.contains(it)    //forventer tilgang til kildekode for javaCompile configuration
-        }
+        File weblogicSourceFile = writeFile("src/weblogic/java/WLS.java")
+        File mainSourceFile = writeFile("src/main/java/Main.java")
+
+        File weblogicResource = writeFile("src/weblogic/resources/wls.txt")
+        File mainResource = writeFile("src/main/resources/main.txt")
+        File commonResource = writeFile("src/common/resources/common.txt")
 
 
+        assert project.tasks['compileWeblogicJava'].source.contains(weblogicSourceFile)    //forventer tilgang til kildekode for  weblogicCompile configuration
+        assert !project.tasks['compileJava'].source.contains(weblogicSourceFile)    //forventer INGEN tilgang til kildekode for javaCompile configuration
 
-        weblogicResources.each {
-            assert rootProject.tasks['processWeblogicResources'].source.contains(it)    //forventer tilgang til ressurser for  processWeblogicResources
-            assert !rootProject.tasks['processResources'].source.contains(it)    //forventer INGEN tilgang til ressurser for processResources
-        }
-        mainResources.each {
-            assert !rootProject.tasks['processWeblogicResources'].source.contains(it)    //forventer INGEN tilgang til ressurser for processWeblogicResources
-            assert rootProject.tasks['processResources'].source.contains(it)    //forventer tilgang til ressurser for processResources
-        }
+        assert !project.tasks['compileWeblogicJava'].source.contains(mainSourceFile)    //forventer INGEN tilgang til kildekode for weblogicCompile configuration
+        assert project.tasks['compileJava'].source.contains(mainSourceFile)    //forventer tilgang til kildekode for javaCompile configuration
 
-        commonResources.each {
-            assert rootProject.tasks['processWeblogicResources'].source.contains(it)    //forventer tilgang til ressurser for processWeblogicResources
-            assert rootProject.tasks['processResources'].source.contains(it)    //forventer tilgang til ressurser for processResources
-        }
+
+        assert project.tasks['processWeblogicResources'].source.contains(weblogicResource)    //forventer tilgang til ressurser for  processWeblogicResources
+        assert !project.tasks['processResources'].source.contains(weblogicResource)    //forventer INGEN tilgang til ressurser for processResources
+
+        assert !project.tasks['processWeblogicResources'].source.contains(mainResource)    //forventer INGEN tilgang til ressurser for processWeblogicResources
+        assert project.tasks['processResources'].source.contains(mainResource)    //forventer tilgang til ressurser for processResources
+
+        assert project.tasks['processWeblogicResources'].source.contains(commonResource)    //forventer tilgang til ressurser for processWeblogicResources
+        assert project.tasks['processResources'].source.contains(commonResource)    //forventer tilgang til ressurser for processResources
 
         //henter ut filer for configurations
-        Iterable<File> weblogicArtifacts = rootProject.getConfigurations().getByName('weblogicRuntime').getFiles()
-        Iterable<File> mainArtifacts = rootProject.getConfigurations().getByName('runtime').getFiles()
+        Iterable<File> weblogicArtifacts = project.getConfigurations().getByName('weblogicRuntime').getFiles()
+        Iterable<File> mainArtifacts = project.getConfigurations().getByName('runtime').getFiles()
 
         //tester kjente artifakter
-        File mainJarFile = rootProject.file('lib/common.jar').with { File file ->
-            assert weblogicArtifacts.contains(file)
-            assert mainArtifacts.contains(file)
-            return file
-        }
-
+        File mainJarFile = file('lib/common.jar')
+        assert weblogicArtifacts.contains(mainJarFile)
+        assert mainArtifacts.contains(mainJarFile)
 
         //sjekker at artifakt ifra 'main' blir med på classpath
-        assert rootProject.tasks['compileWeblogicJava'].classpath.contains(mainJarFile)
-
+        assert project.tasks['compileWeblogicJava'].classpath.contains(mainJarFile)
     }
 
 
+
+
+    /**
+     * Demonstrerer oppsett med egne exception klasser (i main)
+     *
+     * @see WeblogicWsWarPlugin#WEBLOGIC_WAR_TASK_NAME
+     */
+    @Test
+    void testCustomExceptions() {
+        writeFile("build.gradle", """
+            plugins {
+              id 'java'
+              id 'sktools-weblogic-wswar-plugin'
+            }
+        """)
+        writeGradleProperties(testProperties.findAll {
+            'WEBLOGIC_HOME'.equals(it.key) || 'WEBLOGIC_VERSION'.equals(it.key)
+        });
+
+
+        // exception klasser
+        writeExceptionService01Exceptions(file("src/main/java"))
+
+        // java kildekode for en testservice
+        writeExceptionService01(file("src/weblogic/java"))
+
+        //eksekverer task
+        BuildResult buildResult = testGradleBuild(":warWeblogic")
+
+        //tester task
+        File file = file("build/libs/${rootProjectName()}-weblogic.war")
+        assertThat(file).exists()
+
+        ZipFile zip = new ZipFile(file)
+        try {
+            assertThat(list(zip.entries()))
+                .extractingResultOf("getName")
+                .as("Contents of jar file")
+                .contains(
+                    'WEB-INF/classes/WebConfig.class',
+                    'WEB-INF/classes/exceptiondemo01/ExceptionService1WSBean.class',
+                )
+            .doesNotContain(
+                'WEB-INF/web.xml', // legges inn eksplisitt når ønskeligt
+                'WEB-INF/classes/exceptiondemo01/exception/ServiceException.class', //ligger i jar fil (evt i internt domene)
+                'WEB-INF/classes/exceptiondemo01/exception/ServiceFaultInfo.class', //ligger i jar fil (evt i internt domene)
+            )
+        } finally {
+            zip.close()
+        }
+    }
 }

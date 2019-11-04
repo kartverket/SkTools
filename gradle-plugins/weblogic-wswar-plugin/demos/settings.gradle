@@ -1,4 +1,0 @@
-include ':simple-demo'
-
-rootProject.name = 'weblogic-wswar-demos'
-
