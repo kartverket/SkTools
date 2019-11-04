@@ -67,8 +67,11 @@ pipeline { //declarative pipeline syntax
             parallel {
                 stage('Test gradle baseline') {
                     steps {
-                        bat "gradle --version"
-                        bat "gradle testGradle4.2 -DignoreFailures=true ${gradleOptions(this)}"
+                        //tester med spesifiserte minstekrav
+                        withEnv(['WEBLOGIC_VERSION=10.3.5.0', "WEBLOGIC_HOME=${WEBLOGIC_HOME('10.3.5.0', env)}"]) {
+                            bat "gradle --version"
+                            bat "gradle testGradle4.2 -DignoreFailures=true ${gradleOptions(this)}"
+                        }
                     }
                     post {
                         always {
@@ -174,6 +177,8 @@ Build : $BUILD_URL <br>
 
     // The options directive is for configuration that applies to the whole job.
     options {
+
+        disableConcurrentBuilds()
 
         // Vi ønsker ikke å fylle opp jenkins master med logger og artefakter av gamle bygg
         buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '30', daysToKeepStr: '180', numToKeepStr: '90'))
