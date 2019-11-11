@@ -12,12 +12,14 @@ import org.testng.annotations.BeforeMethod;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Arrays;
@@ -95,8 +97,7 @@ public abstract class TestKitBase {
     }
 
     protected File writeFile(String relativePath, CharSequence... lines) throws IOException {
-        Path path = projectPath.resolve(relativePath.replaceAll("/", File.separator.replace("\\", "\\\\"))); //escape backslash on windows
-        return writeFile(path, lines);
+        return writeFile(toPath(relativePath), lines);
     }
 
     protected File writeFile(Path destination, CharSequence... lines) throws IOException {
@@ -106,6 +107,17 @@ public abstract class TestKitBase {
         return destination.toFile();
     }
 
+    protected File writeFile(String relativePath, InputStream is) throws IOException {
+        return writeFile(toPath(relativePath), is);
+    }
+
+    protected File writeFile(Path destination, InputStream is) throws IOException {
+        Files.createDirectories(destination.getParent());
+        Files.copy(is, destination, StandardCopyOption.REPLACE_EXISTING);
+        return destination.toFile();
+    }
+
+
     protected void writeGradleProperties(Map<Object, Object> properties) throws IOException {
         final File file = file("gradle.properties");
         file.createNewFile();
@@ -114,6 +126,11 @@ public abstract class TestKitBase {
             p.putAll(properties);
             p.store(os, "");
         }
+    }
+
+
+    private Path toPath(String relativePath) {
+        return projectPath.resolve(relativePath.replaceAll("/", File.separator.replace("\\", "\\\\")));  //escape backslash on windows
     }
 
     //kan erstattes med guava MoreFiles.deleteRecursively
