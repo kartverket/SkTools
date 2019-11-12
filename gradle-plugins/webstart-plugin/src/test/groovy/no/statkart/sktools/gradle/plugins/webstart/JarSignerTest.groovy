@@ -75,6 +75,10 @@ class JarSignerTest extends TestKitBase {
 
         Assert.assertEquals(jarSigner2.outputs.files.collect {it.name}, jarSigner1.outputs.files.collect {it.name}, 'forventet samme sett av filer')
         Assert.assertEquals(modified2, modified1, 'forventer at cached fil er urørt')
+
+        assertThat(jarSigner1.didSignJarFile).isTrue()
+        assertThat(jarSigner2.didSignJarFile)
+            .as("Jar signer eksekvert nr 2 skal kun ha brukt cache [SKTOOLS-184]").isFalse()
     }
 
 
