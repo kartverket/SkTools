@@ -151,6 +151,7 @@ class WebstartTask extends ConventionTask {
      * Writes xml to file, applying withXml transform if set
      */
     static protected void writeXml(File file, Node xml, Closure withXml) {
+        file.getParentFile().mkdirs()
         def writer = new OutputStreamWriter(new BufferedOutputStream(new FileOutputStream(file)), StandardCharsets.UTF_8)
         writeXml(writer, xml, withXml)
         writer.close()

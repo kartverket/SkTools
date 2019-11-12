@@ -1,12 +1,13 @@
 package no.statkart.sktools.gradle.plugins.webstart
 
-import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
+import no.statkart.sktools.gradle.testutils.TestKitBase
 import org.gradle.api.XmlProvider
-import org.gradle.testfixtures.ProjectBuilder
 import org.testng.Assert
 import org.testng.annotations.Test
-import no.statkart.sktools.gradle.testutils.ProjectHelper
 import org.gradle.api.Project
+
+import static org.assertj.core.api.Assertions.assertThat
+import static org.assertj.core.api.Assertions.contentOf
 
 /**
  * Test av {@link WebstartTask}
@@ -14,19 +15,19 @@ import org.gradle.api.Project
  * @author Leif Lislegård
  * @author Tor Egil R. Strand
  */
-class WebstartTaskTest {
+class WebstartTaskTest extends TestKitBase {
 
     /**
      * Tester og demonstrerer angivelse av konfigurasjon.
      */
     @Test
     void testConfigurationNoResources() {
-        ProjectHelper projectHelper = GradleProjectBuilder.builder('root').build {
+        Project project = projectBuilder().withName('root').build().tap {
             apply plugin: 'sktools-webstart-plugin'
-        }
-        projectHelper.setProjectProperties(version: 101, description: 'Project description')
 
-        projectHelper.configureProject {
+            version = 101
+            description = 'Project description'
+
             webstart {
                 client {
                     jnlp {
@@ -65,10 +66,7 @@ class WebstartTaskTest {
             }
         }
 
-        projectHelper.initializeProject()
 
-
-        final Project project = projectHelper.project
         final WebstartTask task = project.tasks.getByName('genClientJnlp') as WebstartTask
         final List<JnlpConfiguration> configurations = task.jnlpConfigurations;
 
@@ -117,199 +115,188 @@ class WebstartTaskTest {
 
 
     /**
-     * Builds a webstart project with extensive use of configuration(s).
+     * Builds a webstart task with extensive use of configuration(s).
      * <p>
      *     Webstart project; the {@code root} project; depends on submodules {@code main} and {@code dep}.
      * </p>
      *
      * @return a pre built jnlp file from webstart task.
      */
-    private static ProjectHelper jnlpFileFromFullConfiguration_instance;
-    public static ProjectHelper jnlpFileFromFullConfiguration() {
-        if (!jnlpFileFromFullConfiguration_instance) {
-            //forks a new project in a temp folder
-            ProjectHelper projectHelper = GradleProjectBuilder.builder('root').build {
-            }
-            projectHelper.setProjectProperties(version: 101)
+    private WebstartTask jnlpFullConfiguration() {
 
-            Project depProject = ProjectBuilder.builder().withName('dep').withParent(projectHelper.project).build()
-            depProject.apply(plugin: 'java')
-            depProject.jar.manifest.attributes 'Implementation-Version': '0.1'
+        final File depJarFile = writeJarFile("dep.jar", ['Implementation-Version': '0.1'])
+        final File mainJarFile = writeJarFile("main.jar", ['Implementation-Version': '0.1'])
 
-            Project mainProject = ProjectBuilder.builder().withName('main').withParent(projectHelper.project).build()
-            mainProject.apply(plugin: 'java')
-            mainProject.jar.manifest.attributes 'Implementation-Version': '0.1'
-
-            final Project webstartProject = projectHelper.project;
-
-            mainProject.jar.execute()
-            depProject.jar.execute()
-
-            webstartProject.task('webstart', type: WebstartTask) {
-                jarResources webstartProject.files(mainProject.jar, depProject.jar)
-                mainJar webstartProject.files(mainProject.jar)
-                jnlp {
-                    jnlpFilename = 'client1.jnlp'
-
-                    title('title1')
-                    vendor('testvendor')
-                    description('some description.')
-                    homepage('ftp://example.net')
-                    resources {
-                        javaRuntime {
-                            version('1.5.0')
-                            href('downloadLink')
-                            xms('1024m')
-                            xmx('2g')
-                            vmArgs('-kewlargs')
-                        }
-                        javaRuntime {
-                            version('1.6+')
-                        }
-                        systemProperties('jnlp.versionEnabled': false)
-                        systemProperties('jnlp.versionEnabled': true)   //overskriver forrige
-                        systemProperties('uhuh': 'whatagoodfeelin')
-                    }
-
-                    application {
-                        mainClass 'my.Launcher'
-                    }
-
-                    withXml { XmlProvider xmlProvider ->
-                        Node jnlp = xmlProvider.asNode()
-                        jnlp.resources[0].appendNode('property', [name: 'withXml', value: 'oh,yeah'])
-                    }
-                }
-
-                //dummy configuration for testing javaFx
-                jnlp {
-                    jnlpFilename 'client2FX.jnlp'
-                    resources {
-                        javaFxRuntime {
-                            version "1.1+"
-                            href 'href1'
-                        }
-                        javaFxRuntime version: "1.1+", href: 'href1'
-                        javaFxRuntime(version: "1.1+") {
-                            href 'href1'
-                        }
-                    }
-                }
-
-            }
-
-            webstartProject.tasks.webstart.execute()
-
-            jnlpFileFromFullConfiguration_instance = projectHelper
+        Project project = projectBuilder().build().tap {
+            apply plugin: 'sktools-webstart-plugin'
         }
 
-        return jnlpFileFromFullConfiguration_instance
+        return project.task('webstart', type: WebstartTask) {
+            jarResources project.files(mainJarFile, depJarFile)
+            mainJar project.files(mainJarFile)
+            jnlp {
+                jnlpFilename = 'client1.jnlp'
+
+                title('title1')
+                vendor('testvendor')
+                description('some description.')
+                homepage('ftp://example.net')
+                resources {
+                    javaRuntime {
+                        version('1.5.0')
+                        href('downloadLink')
+                        xms('1024m')
+                        xmx('2g')
+                        vmArgs('-kewlargs')
+                    }
+                    javaRuntime {
+                        version('1.6+')
+                    }
+                    systemProperties('jnlp.versionEnabled': false)
+                    systemProperties('jnlp.versionEnabled': true)   //overskriver forrige
+                    systemProperties('uhuh': 'whatagoodfeelin')
+                }
+
+                application {
+                    mainClass 'my.Launcher'
+                }
+
+                withXml { XmlProvider xmlProvider ->
+                    Node jnlp = xmlProvider.asNode()
+                    jnlp.resources[0].appendNode('property', [name: 'withXml', value: 'oh,yeah'])
+                }
+            }
+
+            //dummy configuration for testing javaFx
+            jnlp {
+                jnlpFilename 'client2FX.jnlp'
+                resources {
+                    javaFxRuntime {
+                        version "1.1+"
+                        href 'href1'
+                    }
+                    javaFxRuntime version: "1.1+", href: 'href1'
+                    javaFxRuntime(version: "1.1+") {
+                        href 'href1'
+                    }
+                }
+            }
+        }
     }
 
 
     @Test
     void jnlpHasSpecVersion() {
-        ProjectHelper projectHelper = jnlpFileFromFullConfiguration()
-        projectHelper.assertFileExists('build/webstart/client1.jnlp') {
-            def jnlp = new XmlSlurper().parseText(it.text)
+        WebstartTask webstartTask = jnlpFullConfiguration()
+        webstartTask.generate()
 
-            Assert.assertEquals(jnlp.@spec.text(), '1.6+')
-        }
+        assertThat(file('build/webstart/client1.jnlp')).exists()
+
+        def jnlp = new XmlSlurper().parseText(contentOf(file('build/webstart/client1.jnlp')))
+        Assert.assertEquals(jnlp.@spec.text(), '1.6+')
     }
 
     @Test
     void jnlpHasInformation() {
-        ProjectHelper projectHelper = jnlpFileFromFullConfiguration()
-        projectHelper.assertFileExists('build/webstart/client1.jnlp') {
-            def jnlp = new XmlSlurper().parseText(it.text)
+        WebstartTask webstartTask = jnlpFullConfiguration()
+        webstartTask.generate()
 
-            Assert.assertEquals(jnlp.information[0].title.text(), 'title1')
-            Assert.assertEquals(jnlp.information[0].vendor.text(), 'testvendor')
-            Assert.assertEquals(jnlp.information[0].description.text(), 'some description.')
-            Assert.assertEquals(jnlp.information[0].homepage.@href.text(), 'ftp://example.net')
-        }
+        assertThat(file('build/webstart/client1.jnlp')).exists()
+
+        def jnlp = new XmlSlurper().parseText(contentOf(file('build/webstart/client1.jnlp')))
+        Assert.assertEquals(jnlp.information[0].title.text(), 'title1')
+        Assert.assertEquals(jnlp.information[0].vendor.text(), 'testvendor')
+        Assert.assertEquals(jnlp.information[0].description.text(), 'some description.')
+        Assert.assertEquals(jnlp.information[0].homepage.@href.text(), 'ftp://example.net')
     }
 
     @Test
     void jnlpHasMainClass() {
-        ProjectHelper projectHelper = jnlpFileFromFullConfiguration()
-        projectHelper.assertFileExists('build/webstart/client1.jnlp') {
-            def jnlp = new XmlSlurper().parseText(it.text)
+        WebstartTask webstartTask = jnlpFullConfiguration()
+        webstartTask.generate()
 
-            Assert.assertEquals(jnlp.'application-desc'[0].@'main-class'.text(), 'my.Launcher')
-        }
+        assertThat(file('build/webstart/client1.jnlp')).exists()
+
+        def jnlp = new XmlSlurper().parseText(contentOf(file('build/webstart/client1.jnlp')))
+        Assert.assertEquals(jnlp.'application-desc'[0].@'main-class'.text(), 'my.Launcher')
     }
 
     @Test
     void jnlpHasRuntime() {
-        ProjectHelper projectHelper = jnlpFileFromFullConfiguration()
-        projectHelper.assertFileExists('build/webstart/client1.jnlp') {
-            def jnlp = new XmlSlurper().parseText(it.text)
+        WebstartTask webstartTask = jnlpFullConfiguration()
+        webstartTask.generate()
 
-            Assert.assertEquals(jnlp.resources[0].j2se[0].@version.text(), '1.5.0')
-            Assert.assertEquals(jnlp.resources[0].j2se[0].@href.text(), 'downloadLink')
-            Assert.assertEquals(jnlp.resources[0].j2se[0].@'initial-heap-size'.text(), '1024m')
-            Assert.assertEquals(jnlp.resources[0].j2se[0].@'max-heap-size'.text(), '2g')
-            Assert.assertEquals(jnlp.resources[0].j2se[0].@'java-vm-args'.text(), '-kewlargs')
-        }
+        assertThat(file('build/webstart/client1.jnlp')).exists()
+
+        def jnlp = new XmlSlurper().parseText(contentOf(file('build/webstart/client1.jnlp')))
+
+        Assert.assertEquals(jnlp.resources[0].j2se[0].@version.text(), '1.5.0')
+        Assert.assertEquals(jnlp.resources[0].j2se[0].@href.text(), 'downloadLink')
+        Assert.assertEquals(jnlp.resources[0].j2se[0].@'initial-heap-size'.text(), '1024m')
+        Assert.assertEquals(jnlp.resources[0].j2se[0].@'max-heap-size'.text(), '2g')
+        Assert.assertEquals(jnlp.resources[0].j2se[0].@'java-vm-args'.text(), '-kewlargs')
     }
 
     @Test
     void jnlpCanHaveMultipleRuntimes() {
-        ProjectHelper projectHelper = jnlpFileFromFullConfiguration()
-        projectHelper.assertFileExists('build/webstart/client1.jnlp') {
-            def jnlp = new XmlSlurper().parseText(it.text)
+        WebstartTask webstartTask = jnlpFullConfiguration()
+        webstartTask.generate()
 
-            Assert.assertTrue(jnlp.resources[0].j2se.size() >= 2)
-            Assert.assertEquals(jnlp.resources[0].j2se[0].@version.text(), '1.5.0')
-            Assert.assertEquals(jnlp.resources[0].j2se[1].@version.text(), '1.6+')
-        }
+        assertThat(file('build/webstart/client1.jnlp')).exists()
+
+        def jnlp = new XmlSlurper().parseText(contentOf(file('build/webstart/client1.jnlp')))
+        Assert.assertTrue(jnlp.resources[0].j2se.size() >= 2)
+        Assert.assertEquals(jnlp.resources[0].j2se[0].@version.text(), '1.5.0')
+        Assert.assertEquals(jnlp.resources[0].j2se[1].@version.text(), '1.6+')
     }
 
 
     @Test
     void jnlpCanHaveProperties() {
-        ProjectHelper projectHelper = jnlpFileFromFullConfiguration()
-        projectHelper.assertFileExists('build/webstart/client1.jnlp') {
-            def jnlp = new XmlSlurper().parseText(it.text)
+        WebstartTask webstartTask = jnlpFullConfiguration()
+        webstartTask.generate()
 
-            Assert.assertEquals(jnlp.resources[0].property[0].@name.text(), 'jnlp.versionEnabled')
-            Assert.assertEquals(jnlp.resources[0].property[0].@value.text(), 'true')
-            Assert.assertEquals(jnlp.resources[0].property[1].@name.text(), 'uhuh')
-            Assert.assertEquals(jnlp.resources[0].property[1].@value.text(), 'whatagoodfeelin')
-            Assert.assertEquals(jnlp.resources[0].property[2].@name.text(), 'withXml')
-            Assert.assertEquals(jnlp.resources[0].property[2].@value.text(), 'oh,yeah')
-        }
+        assertThat(file('build/webstart/client1.jnlp')).exists()
+
+        def jnlp = new XmlSlurper().parseText(contentOf(file('build/webstart/client1.jnlp')))
+        Assert.assertEquals(jnlp.resources[0].property[0].@name.text(), 'jnlp.versionEnabled')
+        Assert.assertEquals(jnlp.resources[0].property[0].@value.text(), 'true')
+        Assert.assertEquals(jnlp.resources[0].property[1].@name.text(), 'uhuh')
+        Assert.assertEquals(jnlp.resources[0].property[1].@value.text(), 'whatagoodfeelin')
+        Assert.assertEquals(jnlp.resources[0].property[2].@name.text(), 'withXml')
+        Assert.assertEquals(jnlp.resources[0].property[2].@value.text(), 'oh,yeah')
     }
 
     @Test
     void jnlpCanHaveResources() {
-        ProjectHelper projectHelper = jnlpFileFromFullConfiguration()
-        projectHelper.assertFileExists('build/webstart/client1.jnlp') {
-            def jnlp = new XmlSlurper().parseText(it.text)
+        WebstartTask webstartTask = jnlpFullConfiguration()
+        webstartTask.generate()
 
-            Assert.assertEquals(jnlp.resources[0].jar[0].@href.text(), 'lib/main.jar')
-            Assert.assertEquals(jnlp.resources[0].jar[0].@size.text(), '280')
-            Assert.assertEquals(jnlp.resources[0].jar[0].@version.text(), '0.1')
+        assertThat(file('build/webstart/client1.jnlp')).exists()
 
-            Assert.assertEquals(jnlp.resources[0].jar[1].@href.text(), 'lib/dep.jar')
-            Assert.assertEquals(jnlp.resources[0].jar[1].@size.text(), '280')
-            Assert.assertEquals(jnlp.resources[0].jar[1].@version.text(), '0.1')
-        }
+        def jnlp = new XmlSlurper().parseText(contentOf(file('build/webstart/client1.jnlp')))
+        assertThat(jnlp.resources[0].jar[0].@href.text() as String).isEqualTo('lib/main.jar')
+        assertThat(jnlp.resources[0].jar[0].@size.text() as long).isGreaterThan(1L)
+        assertThat(jnlp.resources[0].jar[0].@version.text() as String).isEqualTo('0.1')
+
+        assertThat(jnlp.resources[0].jar[1].@href.text() as String).isEqualTo('lib/dep.jar')
+        assertThat(jnlp.resources[0].jar[1].@size.text() as long).isGreaterThan(1L)
+        assertThat(jnlp.resources[0].jar[1].@version.text() as String).isEqualTo('0.1')
     }
 
     @Test
     void jnlpHasTaggedMainJar() {
-        ProjectHelper projectHelper = jnlpFileFromFullConfiguration()
-        projectHelper.assertFileExists('build/webstart/client1.jnlp') {
-            def jnlp = new XmlSlurper().parseText(it.text)
+        WebstartTask webstartTask = jnlpFullConfiguration()
+        webstartTask.generate()
 
-            Assert.assertEquals(jnlp.resources[0].jar[0].@href.text(), 'lib/main.jar')
-            Assert.assertEquals(jnlp.resources[0].jar[0].@main.text(), 'true')
+        assertThat(file('build/webstart/client1.jnlp')).exists()
 
-            Assert.assertEquals(jnlp.resources[0].jar[1].@href.text(), 'lib/dep.jar')
-            Assert.assertEquals(jnlp.resources[0].jar[1].@main.text(), '')
-        }
+        def jnlp = new XmlSlurper().parseText(contentOf(file('build/webstart/client1.jnlp')))
+        Assert.assertEquals(jnlp.resources[0].jar[0].@href.text(), 'lib/main.jar')
+        Assert.assertEquals(jnlp.resources[0].jar[0].@main.text(), 'true')
+
+        Assert.assertEquals(jnlp.resources[0].jar[1].@href.text(), 'lib/dep.jar')
+        Assert.assertEquals(jnlp.resources[0].jar[1].@main.text(), '')
     }
 
     /**
@@ -317,15 +304,15 @@ class WebstartTaskTest {
      */
     @Test
     void jnlpCanHaveMultipleResourceLists() {
-        ProjectHelper projectHelper = jnlpFileFromFullConfiguration()
-        projectHelper.assertFileExists('build/webstart/client1.jnlp') {
-            def jnlp = new XmlSlurper().parseText(it.text)
+        WebstartTask webstartTask = jnlpFullConfiguration()
+        webstartTask.generate()
 
-            Assert.assertTrue(jnlp.resources[0].children().size() > 0)
-            Assert.assertTrue(jnlp.resources[1].children().size() == 0) //tom resources
-        }
+        assertThat(file('build/webstart/client1.jnlp')).exists()
+
+        def jnlp = new XmlSlurper().parseText(contentOf(file('build/webstart/client1.jnlp')))
+        Assert.assertTrue(jnlp.resources[0].children().size() > 0)
+        Assert.assertTrue(jnlp.resources[1].children().size() == 0) //tom resources
     }
-
 
 
     /**
@@ -333,15 +320,15 @@ class WebstartTaskTest {
      */
     @Test
     void javaFX() {
-        ProjectHelper projectHelper = jnlpFileFromFullConfiguration()
-        projectHelper.assertFileExists('build/webstart/client2FX.jnlp') {
-            def jnlp = new XmlSlurper().parseText(it.text)
+        WebstartTask webstartTask = jnlpFullConfiguration()
+        webstartTask.generate()
 
+        assertThat(file('build/webstart/client1.jnlp')).exists()
 
-            jnlp.resources.'javafx-runtime'.each {
-                Assert.assertEquals(it.@version.text(), '1.1+', 'Java FX version')
-                Assert.assertEquals(it.@href.text(), 'href1', 'Java FX href download url')
-            }
+        def jnlp = new XmlSlurper().parseText(contentOf(file('build/webstart/client1.jnlp')))
+        jnlp.resources.'javafx-runtime'.each {
+            Assert.assertEquals(it.@version.text(), '1.1+', 'Java FX version')
+            Assert.assertEquals(it.@href.text(), 'href1', 'Java FX href download url')
         }
     }
 
@@ -350,13 +337,14 @@ class WebstartTaskTest {
      */
     @Test
     void jnlpHasAllPermissions() {
-        ProjectHelper projectHelper = jnlpFileFromFullConfiguration()
-        projectHelper.assertFileExists('build/webstart/client1.jnlp') {
-            def jnlp = new XmlSlurper().parseText(it.text)
+        WebstartTask webstartTask = jnlpFullConfiguration()
+        webstartTask.generate()
 
-            Assert.assertTrue(jnlp.security[0].childNodes().size() > 0)
-            Assert.assertTrue(jnlp.security[0].childNodes()[0].name == 'all-permissions')
-        }
+        assertThat(file('build/webstart/client1.jnlp')).exists()
+
+        def jnlp = new XmlSlurper().parseText(contentOf(file('build/webstart/client1.jnlp')))
+        Assert.assertTrue(jnlp.security[0].childNodes().size() > 0)
+        Assert.assertTrue(jnlp.security[0].childNodes()[0].name == 'all-permissions')
     }
 
 

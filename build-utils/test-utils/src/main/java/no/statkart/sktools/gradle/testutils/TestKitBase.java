@@ -26,6 +26,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
+import java.util.jar.Attributes;
+import java.util.jar.JarOutputStream;
+import java.util.jar.Manifest;
 
 /**
  * Felles oppsett av Gradle Test Kit funksjonalitet.
@@ -128,6 +131,21 @@ public abstract class TestKitBase {
         }
     }
 
+    protected File writeJarFile(String relativePath, Map<String, String> manifestAttributes) throws IOException {
+        Manifest manifest = new Manifest();
+        Attributes attrs = manifest.getMainAttributes();
+        attrs.put(java.util.jar.Attributes.Name.MANIFEST_VERSION,"1.2");
+
+        for (Map.Entry<String, String> entry: manifestAttributes.entrySet() ) {
+            attrs.putValue(entry.getKey(), entry.getValue());
+        }
+
+         File destinationFile = file(relativePath);
+        try (JarOutputStream os = new JarOutputStream(new FileOutputStream(destinationFile), manifest)) {
+            os.flush();
+        }
+        return destinationFile;
+    }
 
     private Path toPath(String relativePath) {
         return projectPath.resolve(relativePath.replaceAll("/", File.separator.replace("\\", "\\\\")));  //escape backslash on windows
