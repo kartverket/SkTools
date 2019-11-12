@@ -7,6 +7,7 @@ sourceSets {
     main {
         output.dir(testPropertiesDir, builtBy: 'createTestProperties')
     }
+    sample // ressurser for sample.jar til bruk i tester
 }
 
 def pluginProperties = [
@@ -39,3 +40,21 @@ task createTestProperties() {
 }
 tasks.processResources.dependsOn createTestProperties
 
+
+task createSampleJar(type: Jar) {
+    archiveName = 'sample.jar.bin'
+    from(project.sourceSets.sample.output)
+    manifest.attributes([
+        'Specification-Title': "Sample 1",
+    ])
+}
+sourceSets.main.output.dir(createSampleJar, builtBy: createSampleJar)
+
+task createSample2Jar(type: Jar) {
+    archiveName = 'sample2.jar.bin'
+    from(project.sourceSets.sample.output)
+    manifest.attributes([
+        'Specification-Title': "Sample 2",
+    ])
+}
+sourceSets.main.output.dir(createSample2Jar, builtBy: createSample2Jar)
