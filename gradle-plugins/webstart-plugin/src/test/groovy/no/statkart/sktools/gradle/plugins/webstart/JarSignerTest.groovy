@@ -13,6 +13,8 @@ import org.testng.annotations.Test
 import java.nio.file.Files
 import java.util.jar.JarFile
 
+import static no.statkart.sktools.gradle.testutils.KeystoreTestutil.KeystoreType.JKS
+import static no.statkart.sktools.gradle.testutils.KeystoreTestutil.KeystoreType.P12
 import static org.assertj.core.api.Assertions.assertThat
 import static org.assertj.core.util.Preconditions.checkState
 
@@ -29,7 +31,7 @@ class JarSignerTest extends TestKitBase {
     @Test
     void testSignJarsCache() {
         File certificateFile = file('kodesignering.jks')
-        KeystoreTestutil.writeKodesigneringssertifikat(certificateFile)
+        KeystoreTestutil.writeKodesigneringssertifikat(JKS, certificateFile)
         File sampleJarFile = SampleJarTestutil.writeSampleJar(file('lib/sample.jar'))
 
         //forks a new project in a temp folder
@@ -88,7 +90,40 @@ class JarSignerTest extends TestKitBase {
     @Test
     void testSignJars() {
         File certificateFile = file('kodesignering.jks')
-        KeystoreTestutil.writeKodesigneringssertifikat(certificateFile)
+        KeystoreTestutil.writeKodesigneringssertifikat(JKS, certificateFile)
+        File sampleJarFile = SampleJarTestutil.writeSampleJar(file('lib/sample.jar'))
+
+        //forks a new project in a temp folder
+        Project root = projectBuilder().withName('root').build()
+
+        JarSigner jarSigner = root.task('jarSigner1', type: JarSigner)
+        jarSigner.setCertificateFile(certificateFile)
+        jarSigner.setPassword(KeystoreTestutil.KeystorePassword)
+        jarSigner.setAlias(KeystoreTestutil.KeystoreAlias)
+        jarSigner.manifestAttribute('Permissions', 'sandbox')
+        jarSigner.setJarFilesToSign(sampleJarFile)
+
+
+        //testing signed file
+        jarSigner.signJars()
+
+        jarSigner.outputs.files.singleFile.with { File signedFile ->
+
+            assertThat(signedFile).hasName("sample.jar")
+            assertSignedJar(signedFile)
+
+            String md5 = new File(getCertificateCacheDir(jarSigner), signedFile.name+'.md5').text
+            assertMd5(sampleJarFile, md5)
+        }
+    }
+
+    /**
+     * Tester signering med P12 sertifikat
+     */
+    @Test
+    void testSigningWithP12() {
+        File certificateFile = file('kodesignering.p12')
+        KeystoreTestutil.writeKodesigneringssertifikat(P12, certificateFile)
         File sampleJarFile = SampleJarTestutil.writeSampleJar(file('lib/sample.jar'))
 
         //forks a new project in a temp folder
@@ -121,7 +156,7 @@ class JarSignerTest extends TestKitBase {
     @Test
     void testSignJar() {
         File certificateFile = file('kodesignering.jks')
-        KeystoreTestutil.writeKodesigneringssertifikat(certificateFile)
+        KeystoreTestutil.writeKodesigneringssertifikat(JKS, certificateFile)
 
         Project root = projectBuilder().withName('root').build()
 
