@@ -7,7 +7,9 @@ import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.Defi
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.PatchTask
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.SyncPatchTask
 import no.statkart.sktools.gradle.testutils.ProjectHelper
+import no.statkart.sktools.gradle.testutils.TestKitBase
 import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
+import org.gradle.api.Project
 import org.gradle.api.Task
 import org.testng.Assert
 import org.testng.annotations.Test
@@ -19,18 +21,18 @@ import static org.assertj.core.api.Assertions.assertThat
  *
  * For funksjonell testing av eksekvering av sql script, se {@link DbToolsPluginHSQLDBTest}
  */
-class DbToolsPluginTest {
+class DbToolsPluginTest extends TestKitBase {
 
     /**
      * Tester registrering av plugin via navn
      */
     @Test
     void testAppplyPlugin() {
-        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+        final Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-dbtools-plugin'
         };
 
-        Assert.assertTrue(testCase.project.convention.plugins.db instanceof DbtoolsConvention)
+        Assert.assertTrue(project.convention.plugins.db instanceof DbtoolsConvention)
     }
 
     /**
@@ -41,13 +43,13 @@ class DbToolsPluginTest {
      */
     @Test
     void testApplyCredentials() {
-        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+        final Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-dbtools-plugin'
         };
 
-        testCase.createNewFileWithDirsRelativeToProject('src/hsql/PleaseAuthenticateMe.sql')
+        writeFile('src/hsql/PleaseAuthenticateMe.sql')
 
-        testCase.configureProject {
+        project.tap {
             configureDatabasePlugin {
                 toolset(name: 'coolDb', type: 'hsqldb', prefix: 'coolDb') {
                     url = "jdbc:hsqldb:mem:${this.class.simpleName}TestApplyCredentials"
@@ -62,8 +64,8 @@ class DbToolsPluginTest {
             }
         }
 
-        Assert.assertNotNull(testCase.project.tasks.findByName('coolDbPleaseAuthenticateMe'), "Forventet at task er lagt til")
-        final DbtoolsConvention convention = testCase.project.convention.plugins.db
+        Assert.assertNotNull(project.tasks.findByName('coolDbPleaseAuthenticateMe'), "Forventet at task er lagt til")
+        final DbtoolsConvention convention = project.convention.plugins.db
 
         //tester defaults - username og password blir lest ifra prosjekt properties
         Assert.assertEquals(convention.dbToolSets.coolDb.credentials.username, 'brukernavn')
@@ -72,7 +74,7 @@ class DbToolsPluginTest {
         Assert.assertEquals(convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].password, 'passord')
 
         //setter credentials på toolsetet
-        testCase.configureProject {
+        project.tap {
             configureDatabasePlugin {
                 toolset(type: 'hsqldb', name: 'coolDb') {
                     credentials.username = 'brukernavn2'
@@ -89,9 +91,9 @@ class DbToolsPluginTest {
         Assert.assertEquals(convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].password, 'passord2')
 
         //setter passord på task
-        testCase.project.tasks.'coolDbPleaseAuthenticateMe'.password = 'passord3'
+        project.tasks.'coolDbPleaseAuthenticateMe'.password = 'passord3'
         //setter default brukernavn via project properties
-        testCase.project.ext.setProperty 'username', 'projectUser'
+        project.ext.setProperty 'username', 'projectUser'
 
 
         Assert.assertEquals(convention.dbToolSets.coolDb.credentials.username, 'brukernavn2', "Forventet samme brukernavn")
@@ -101,7 +103,7 @@ class DbToolsPluginTest {
         Assert.assertEquals(convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].password, 'passord3')
 
         //clearer credentials på task
-        testCase.project.tasks.'coolDbPleaseAuthenticateMe'.credentials.clear()
+        project.tasks.'coolDbPleaseAuthenticateMe'.credentials.clear()
 
         Assert.assertEquals(convention.dbToolSets.coolDb.credentials.username, 'brukernavn2', "Forventet samme brukernavn")
         Assert.assertEquals(convention.dbToolSets.coolDb.credentials.password, 'passord2', "Forventet samme passord")
@@ -110,8 +112,8 @@ class DbToolsPluginTest {
         Assert.assertEquals(convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].password, 'passord2', "Forventet conventional verdi")
 
         //setter credentials  på task
-        testCase.project.tasks.'coolDbPleaseAuthenticateMe'.username = 'brukernavn4'
-        testCase.project.tasks.'coolDbPleaseAuthenticateMe'.password = 'passord4'
+        project.tasks.'coolDbPleaseAuthenticateMe'.username = 'brukernavn4'
+        project.tasks.'coolDbPleaseAuthenticateMe'.password = 'passord4'
 
         Assert.assertEquals(convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].credentials.username, 'brukernavn4', "Forventet oppdatert brukernavn")
         Assert.assertEquals(convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].credentials.password, 'passord4', "Forventet  oppdatert passord")
@@ -125,18 +127,18 @@ class DbToolsPluginTest {
      */
     @Test
     void configurationInUnresolvedState() {
-        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+        final Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-dbtools-plugin'
         };
 
-        testCase.createNewFileWithDirsRelativeToProject('src/hsql/PleaseAuthenticateMe.sql')
-        testCase.createNewFileWithDirsRelativeToProject('lib/testfile-2.3.3.jar')
+        writeFile('src/hsql/PleaseAuthenticateMe.sql')
+        writeFile('lib/testfile-2.3.3.jar')
 
-        Assert.assertEquals(testCase.project.configurations.dbTools.state.toString(), "UNRESOLVED")
+        Assert.assertEquals(project.configurations.dbTools.state.toString(), "UNRESOLVED")
 
-        testCase.configureProject {
+        project.tap {
             repositories {
-                flatDir dirs: "${testCase.project.rootProject.projectDir}/lib"
+                flatDir dirs: "${project.rootProject.projectDir}/lib"
             }
             configureDatabasePlugin {
                 useDrivers 'test:testfile:2.3.3@jar'
@@ -148,8 +150,8 @@ class DbToolsPluginTest {
             }
         }
 
-        Assert.assertEquals(testCase.project.configurations.dbTools.state.toString(), "UNRESOLVED")
-        Assert.assertTrue(testCase.project.configurations.dbTools.files.contains(testCase.project.file('lib/testfile-2.3.3.jar')))
+        Assert.assertEquals(project.configurations.dbTools.state.toString(), "UNRESOLVED")
+        Assert.assertTrue(project.configurations.dbTools.files.contains(project.file('lib/testfile-2.3.3.jar')))
     }
 
     /**
@@ -158,7 +160,7 @@ class DbToolsPluginTest {
      */
     @Test
     void testOracleImportTask() {
-        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+        final Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-dbtools-plugin'
 
             configureDatabasePlugin {
@@ -180,9 +182,9 @@ class DbToolsPluginTest {
 
         1..2.each {
             def taskName = "db${it}Import"
-            Assert.assertNotNull(testCase.project.tasks.findByName(taskName), "Forventet at task er lagt til")
-            Assert.assertTrue(testCase.project.tasks[taskName] instanceof OracleImportTask)
-            testCase.project.tasks[taskName].with { OracleImportTask task ->
+            Assert.assertNotNull(project.tasks.findByName(taskName), "Forventet at task er lagt til")
+            Assert.assertTrue(project.tasks[taskName] instanceof OracleImportTask)
+            project.tasks[taskName].with { OracleImportTask task ->
                 Assert.assertEquals(task.username, 'brukernavn', "Forventet brukernavn")
                 Assert.assertEquals(task.password, 'passord', "Forventet passord")
                 Assert.assertEquals(task.transform, 'SEGMENT_ATTRIBUTES:n,OID:n:TYPE', "Forventet transform")
@@ -196,7 +198,7 @@ class DbToolsPluginTest {
      */
     @Test
     void testOracleExportTask() {
-        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+        final Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-dbtools-plugin'
 
             configureDatabasePlugin {
@@ -218,9 +220,9 @@ class DbToolsPluginTest {
 
         1..2.each {
             def taskName = "db${it}Export"
-            Assert.assertNotNull(testCase.project.tasks.findByName(taskName), "Forventet at task er lagt til")
-            Assert.assertTrue(testCase.project.tasks[taskName] instanceof OracleExportTask)
-            testCase.project.tasks[taskName].with { OracleExportTask task ->
+            Assert.assertNotNull(project.tasks.findByName(taskName), "Forventet at task er lagt til")
+            Assert.assertTrue(project.tasks[taskName] instanceof OracleExportTask)
+            project.tasks[taskName].with { OracleExportTask task ->
                 Assert.assertEquals(task.username, 'brukernavn', "Forventet brukernavn")
                 Assert.assertEquals(task.password, 'passord', "Forventet passord")
             }
@@ -233,7 +235,7 @@ class DbToolsPluginTest {
      */
     @Test
     void testPatchTask() {
-        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+        final Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-dbtools-plugin'
 
             configureDatabasePlugin {
@@ -250,13 +252,13 @@ class DbToolsPluginTest {
             }
         }
 
-        final DbtoolsConvention convention = testCase.project.convention.plugins.db
+        final DbtoolsConvention convention = project.convention.plugins.db
         Assert.assertNotNull(convention.dbToolSets.db1, "Forventet toolset objekt")
         Assert.assertNotNull(convention.dbToolSets.db1.patch['null'], "Forventet patch objekt")
         Assert.assertNotNull(convention.dbToolSets.db1.patch['null'].tasks['TestSchema'], "Forventet patch task")
 
         convention.dbToolSets.db1.patch['null'].tasks['TestSchema'].with { PatchTask task ->
-            Assert.assertEquals(task.sqlFile, testCase.project.file("foo.sql"), "Fil for patch task")
+            Assert.assertEquals(task.sqlFile, project.file("foo.sql"), "Fil for patch task")
             Assert.assertEquals(task.component, 'null', "component for patch task")
             Assert.assertEquals(task.failOnError, true, "FailOnError for patch task")
             Assert.assertEquals(task.failOnWarning, true, "FailOnWarning for patch task")
@@ -265,13 +267,13 @@ class DbToolsPluginTest {
             Assert.assertNull(task.schema, "schema for patch task")
         }
 
-        final Task independentTask = testCase.project.task('IndependentTask', type: PatchTask.class) {
+        final Task independentTask = project.task('IndependentTask', type: PatchTask.class) {
             description = "Task som ikke legges til via convention/configuration, men konfigureres manuelt"
             sqlFile = project.file("patchFoo.sql")
             singlestep = true
         }
         independentTask.with { PatchTask task ->
-            Assert.assertEquals(task.sqlFile, testCase.project.file("patchFoo.sql"), "Fil for patch task")
+            Assert.assertEquals(task.sqlFile, project.file("patchFoo.sql"), "Fil for patch task")
             Assert.assertEquals(task.component, 'null', "component for patch task")
             Assert.assertEquals(task.failOnError, true, "FailOnError for patch task")
             Assert.assertEquals(task.failOnWarning, true, "FailOnWarning for patch task")
@@ -288,7 +290,7 @@ class DbToolsPluginTest {
      */
     @Test
     void testPatchTaskSchema() {
-        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+        final Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-dbtools-plugin'
 
             configureDatabasePlugin {
@@ -306,7 +308,7 @@ class DbToolsPluginTest {
             }
         }
 
-        final DbtoolsConvention convention = testCase.project.convention.plugins.db
+        final DbtoolsConvention convention = project.convention.plugins.db
         Assert.assertNotNull(convention.dbToolSets.db1, "Forventet toolset objekt")
         Assert.assertNotNull(convention.dbToolSets.db1.patch['null'], "Forventet patch objekt")
         Assert.assertNotNull(convention.dbToolSets.db1.patch['null'].tasks['TestSchema'], "Forventet patch task")
@@ -316,7 +318,7 @@ class DbToolsPluginTest {
             Assert.assertEquals(task.schema, 'schema2', "schema for patch task")
         }
 
-        final Task independentTask = testCase.project.task('IndependentTask', type: PatchTask.class) {
+        final Task independentTask = project.task('IndependentTask', type: PatchTask.class) {
             description = "Task som ikke legges til via convention/configuration, men konfigureres manuelt"
             sqlFile = project.file("patchFoo.sql")
             singlestep = true
@@ -335,7 +337,7 @@ class DbToolsPluginTest {
      */
     @Test
     void testSyncPatchTask() {
-        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+        final Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-dbtools-plugin'
 
             configureDatabasePlugin {
@@ -355,13 +357,13 @@ class DbToolsPluginTest {
             }
         }
 
-        final DbtoolsConvention convention = testCase.project.convention.plugins.db
+        final DbtoolsConvention convention = project.convention.plugins.db
         Assert.assertNotNull(convention.dbToolSets.db1, "Forventet toolset objekt")
         Assert.assertNotNull(convention.dbToolSets.db1.patch['null'], "Forventet patch objekt")
         Assert.assertNotNull(convention.dbToolSets.db1.patch['null'].tasks['TestSchema'], "Forventet patch task")
 
         convention.dbToolSets.db1.patch['null'].tasks['TestSchema'].with { SyncPatchTask task ->
-            Assert.assertEquals(task.sqlFile, testCase.project.file("foo.sql"), "Fil for patch task")
+            Assert.assertEquals(task.sqlFile, project.file("foo.sql"), "Fil for patch task")
             Assert.assertEquals(task.component, 'null', "component for patch task")
             Assert.assertEquals(task.failOnError, false, "FailOnError for patch task")
             Assert.assertEquals(task.failOnWarning, false, "FailOnWarning for patch task")
@@ -370,13 +372,13 @@ class DbToolsPluginTest {
             Assert.assertEquals(task.singlestep, false, "singlestep for patch task")
         }
 
-        final Task independentTask = testCase.project.task('IndependentTask', type: SyncPatchTask.class) {
+        final Task independentTask = project.task('IndependentTask', type: SyncPatchTask.class) {
             description = "Task som ikke legges til via convention/configuration, men konfigureres manuelt"
             sqlFile = project.file("patchFoo.sql")
             singlestep = true
         }
         independentTask.with { SyncPatchTask task ->
-            Assert.assertEquals(task.sqlFile, testCase.project.file("patchFoo.sql"), "Fil for patch task")
+            Assert.assertEquals(task.sqlFile, project.file("patchFoo.sql"), "Fil for patch task")
             Assert.assertEquals(task.component, 'null', "component for patch task")
             Assert.assertEquals(task.failOnError, true, "FailOnError for patch task")
             Assert.assertEquals(task.failOnWarning, false, "FailOnWarning for patch task")
@@ -393,7 +395,7 @@ class DbToolsPluginTest {
      */
     @Test
     void testDefineLatestPatchVersionTask() {
-        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+        final Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-dbtools-plugin'
 
             configureDatabasePlugin {
@@ -405,45 +407,45 @@ class DbToolsPluginTest {
             }
         }
 
-        final DbtoolsConvention convention = testCase.project.convention.plugins.db
+        final DbtoolsConvention convention = project.convention.plugins.db
         Assert.assertNotNull(convention.dbToolSets.db1, "Forventet toolset objekt")
         Assert.assertNotNull(convention.dbToolSets.db1.patch['null'], "Forventet patch objekt")
         Assert.assertNotNull(convention.dbToolSets.db1.patch['null'].tasks['AssignLatestPatchlevel'], "Forventet patch task")
         Assert.assertTrue(convention.dbToolSets.db1.patch['null'].tasks['AssignLatestPatchlevel'] instanceof DefineLatestPatchVersionTask, "Forventet type")
 
         convention.dbToolSets.db1.patch['null'].tasks['AssignLatestPatchlevel'].with { DefineLatestPatchVersionTask task ->
-            Assert.assertEquals(task.sqlFile, testCase.project.file("foo.sql"), "Fil for patch task")
+            Assert.assertEquals(task.sqlFile, project.file("foo.sql"), "Fil for patch task")
             Assert.assertEquals(task.component, 'null', "component for patch task")
         }
 
-        final Task independentTask = testCase.project.task('IndependentTask', type: DefineLatestPatchVersionTask.class) {
+        final Task independentTask = project.task('IndependentTask', type: DefineLatestPatchVersionTask.class) {
             description = "Task som ikke legges til via convention/configuration, men konfigureres manuelt"
             sqlFile = project.file("patchFoo.sql")
         }
         independentTask.with { DefineLatestPatchVersionTask task ->
-            Assert.assertEquals(task.sqlFile, testCase.project.file("patchFoo.sql"), "Fil for patch task")
+            Assert.assertEquals(task.sqlFile, project.file("patchFoo.sql"), "Fil for patch task")
             Assert.assertEquals(task.component, 'null', "component for patch task")
         }
 
     }
 
     /**
-     * @since 1.3 - SKTOOLS-88
+     * @since 1.3 - felles info task for toolsets
      */
     @Test
     void testInfoTask() {
-        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+        final Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-dbtools-plugin'
 
             configureDatabasePlugin {
                 toolset(name: 'coolDb', type: 'hsqldb', prefix: 'coolDb') {
-                    url = "jdbc:hsqldb:mem:${this.class.simpleName}TestApplyCredentials"
+                    url = "some url"
                     driver = 'org.hsqldb.jdbcDriver'
                 }
             }
         }
 
-        final Task info = testCase.project.tasks.findByName('info')
+        final Task info = project.tasks.findByName('info')
         Assert.assertNotNull(info, "Forventet at task er lagt til")
 
         info.execute()
@@ -456,7 +458,7 @@ class DbToolsPluginTest {
      */
     @Test
     void taskSequenceIsExtendedToProject() {
-        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+        final Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-dbtools-plugin'
 
             taskSequence('nestedTask') {
@@ -465,11 +467,11 @@ class DbToolsPluginTest {
             }
         }
 
-        assertThat(testCase.project.tasks.findByName('nestedTask')).describedAs("Forventet task").isNotNull()
-        assertThat(testCase.project.tasks.findByName('task1')).describedAs("Forventet task").isNotNull()
-        assertThat(testCase.project.tasks.findByName('task2')).describedAs("Forventet task").isNotNull()
+        assertThat(project.tasks.findByName('nestedTask')).describedAs("Forventet task").isNotNull()
+        assertThat(project.tasks.findByName('task1')).describedAs("Forventet task").isNotNull()
+        assertThat(project.tasks.findByName('task2')).describedAs("Forventet task").isNotNull()
 
-        assertThat(testCase.project.tasks.findByName('nestedTask').dependsOn).describedAs("dependencies")
-                .contains(testCase.project.tasks.'task1', testCase.project.tasks.'task2')
+        assertThat(project.tasks.findByName('nestedTask').dependsOn).describedAs("dependencies")
+                .contains(project.tasks.'task1', project.tasks.'task2')
     }
 }

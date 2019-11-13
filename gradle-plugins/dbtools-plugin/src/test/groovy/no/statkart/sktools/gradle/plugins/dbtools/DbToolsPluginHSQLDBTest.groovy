@@ -1,16 +1,18 @@
 package no.statkart.sktools.gradle.plugins.dbtools
 
 import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsConvention
-import no.statkart.sktools.gradle.plugins.dbtools.testutils.DbToolsPluginPatchHelper
-import no.statkart.sktools.gradle.testutils.ProjectHelper
-import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
+import no.statkart.sktools.gradle.plugins.dbtools.database.util.SQLTask
+import org.assertj.core.api.Assertions
+import org.assertj.core.api.ThrowableAssert
 import org.assertj.core.util.Preconditions
+import org.gradle.api.Project
 import org.gradle.api.Task
-import org.gradle.api.tasks.TaskExecutionException
 import org.testng.Assert
 import org.testng.annotations.Test
 
 import java.sql.SQLSyntaxErrorException
+
+import static no.statkart.sktools.gradle.plugins.dbtools.testutils.PatchTestutil.createSimplePatchFile
 
 /**
  * Tester funksjonell plugin funjsonalitet via HSQLDB - en in memory database
@@ -42,13 +44,9 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
     void testDynamicCredentials() {
         Preconditions.checkState(sql.connection.isValid(0), "Invalid connection - see %s", 'getSql()')
 
-        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
-            apply plugin: 'sktools-dbtools-plugin'
-        };
-
         // STEG 1 - oppretter sql-filer relativt til prosjekt
 
-        final File createShemaFile = testCase.createNewFileWithDirsRelativeToProject('src/hsql/CreateSchema.sql', """\
+        final File createShemaFile = writeFile('src/hsql/CreateSchema.sql', """\
             CREATE TABLE TEST_TABLE (
                ID INTEGER NOT NULL,
                NAVN VARCHAR(32) NOT NULL,
@@ -57,7 +55,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
             """
         )
 
-        final File createShema2File = testCase.createNewFileWithDirsRelativeToProject('src/hsql/CreateSchema2.sql', """
+        final File createShema2File = writeFile('src/hsql/CreateSchema2.sql', """
                 CREATE TABLE TEST_TABLE2 (
                    ID INTEGER NOT NULL,
                    NAVN VARCHAR(32) NOT NULL,
@@ -67,11 +65,16 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
         )
 
 
-        testCase.configureProject {
-            configureDatabasePlugin {
+        final Project project = projectBuilder().build().tap {
+            apply plugin: 'sktools-dbtools-plugin'
+
+             configureDatabasePlugin {
                 toolset( type:'hsqldb', prefix:'Prefix_', name:'hsql' ) {
                     sqlTask('CreateSchema', sqlFile: createShemaFile)
-                    sqlTask('CreateSchema2', sqlFile: createShema2File)
+                    sqlTask('CreateSchema2', sqlFile: createShema2File) {
+                        username = 'foo'
+                        password = 'bar'
+                    }
 
                     url = sql.connection.properties.URL
                     driver = jdbcDriverClassString
@@ -84,24 +87,23 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
         }
 
 
-        final DbtoolsConvention convention = testCase.project.convention.plugins.db
+        final DbtoolsConvention convention = project.convention.plugins.db
 
         // STEG 3 - credentials ihht konfig
-        def credentials = convention.dbToolSets['hsql'].credentials
-        Assert.assertEquals credentials.username, defaultCredentials.username
-        Assert.assertEquals credentials.password, defaultCredentials.password
+        Assert.assertEquals convention.dbToolSets['hsql'].credentials.username, defaultCredentials.username
+        Assert.assertEquals convention.dbToolSets['hsql'].credentials.password, defaultCredentials.password
 
-        Task createSchemaTask = testCase.project.tasks.getByName('prefix_CreateSchema')
+        SQLTask createSchemaTask = project.tasks.getByName('prefix_CreateSchema') as SQLTask
         Assert.assertNotNull createSchemaTask, "Forventet task for ${createShemaFile.name}"
 
-        Task createSchema2Task = testCase.project.tasks.getByName('prefix_CreateSchema2')
+        SQLTask createSchema2Task = project.tasks.getByName('prefix_CreateSchema2') as SQLTask
         Assert.assertNotNull createSchema2Task, "Forventet task for ${createShema2File.name}"
 
 
 
         // STEG 4 - kjøring av tasks for bruker 1
 
-        createSchemaTask.execute()
+        createSchemaTask.exec()
 
         try {
             def row = sql.firstRow('select * from TEST_TABLE')
@@ -112,19 +114,12 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
 
         // STEG 5 - kjøring av tasks for bruker 2
 
-        credentials.username = 'sa2'
-        credentials.username = ''
-
-        try {
-            createSchema2Task.execute()
-            Assert.fail 'forventer exception'
-        } catch (TaskExecutionException tee) {
-            def cause = tee.cause
-            Assert.assertTrue cause.message.contains('authorization')
-            Assert.assertTrue cause instanceof java.sql.SQLInvalidAuthorizationSpecException ||
-                    cause.cause instanceof java.sql.SQLInvalidAuthorizationSpecException
-        }
-
+        Assertions.assertThatThrownBy(new ThrowableAssert.ThrowingCallable() {
+            @Override
+            void call() throws Throwable {
+                createSchema2Task.exec()
+            }
+        }).hasMessage("invalid authorization specification - not found: foo");
     }
 
 
@@ -157,14 +152,9 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
         Preconditions.checkState(getSql(user1).connection.isValid(0), "Invalid connection - see %s", "getSql($user1)")
         Preconditions.checkState(getSql(user2).connection.isValid(0), "Invalid connection - see %s", "getSql($user2)")
 
-        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
-            apply plugin: 'sktools-dbtools-plugin'
-        };
-
 
         // STEG 1 - oppretter sql-filer relativt til prosjekt
-
-        File createShemaFile = testCase.createNewFileWithDirsRelativeToProject('src/hsql/CreateSchema.sql', """\
+        File createShemaFile = writeFile('src/hsql/CreateSchema.sql', """\
             CREATE TABLE TEST_TABLE (
                ID INTEGER NOT NULL,
                NAVN VARCHAR(32) NOT NULL,
@@ -172,7 +162,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
             );
             """
         )
-        File createShema2File = testCase.createNewFileWithDirsRelativeToProject('src/hsql2/CreateSchema2.sql', """\
+        File createShema2File = writeFile('src/hsql2/CreateSchema2.sql', """\
             CREATE TABLE TEST_TABLE2 (
                ID INTEGER NOT NULL,
                NAVN VARCHAR(32) NOT NULL,
@@ -184,7 +174,9 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
 
 
         // STEG 2 - konfigurering av plugin
-        testCase.configureProject {
+        final Project project = projectBuilder().build().tap {
+            apply plugin: 'sktools-dbtools-plugin'
+
             configureDatabasePlugin {
                 toolset( type:'hsqldb', prefix:'DB1', name:'hsql' ) {
                     sqlTask('CreateSchema', sqlFile: createShemaFile)
@@ -209,17 +201,17 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
 
 
         // STEG 3 - credentials ihht konfig
-        Task createSchemaTask = testCase.project.tasks.getByName('dB1CreateSchema')
+        SQLTask createSchemaTask = project.tasks.getByName('dB1CreateSchema') as SQLTask
         Assert.assertNotNull createSchemaTask, "Forventet task for ${createShemaFile.name}"
 
-        Task createSchema2Task = testCase.project.tasks.getByName('dB2CreateSchema2')
+        SQLTask createSchema2Task = project.tasks.getByName('dB2CreateSchema2') as SQLTask
         Assert.assertNotNull createSchema2Task, "Forventet task for ${createShema2File.name}"
 
 
 
         // STEG 4 - kjøring av tasks for DB1
 
-        createSchemaTask.execute()
+        createSchemaTask.exec()
 
         try {
             def row = getSql(user1).firstRow('select * from TEST_TABLE')
@@ -231,7 +223,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
 
         // STEG 5 - kjøring av tasks for DB2
 
-        createSchema2Task.execute()
+        createSchema2Task.exec()
 
         try {
             def row = getSql(user2).firstRow('select * from TEST_TABLE2')
@@ -248,11 +240,9 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
      */
     @Test
     void testPatchStandardTaskPrintPatchVersion() {
-        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+        final Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-dbtools-plugin'
-        };
 
-        testCase.configureProject {
             configureDatabasePlugin {
                 toolset(name: 'Prefix', type: 'hsqldb', prefix: 'Prefix') {
 
@@ -270,7 +260,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
         }
 
         // STEG 3 - tester
-        Task printPatchVersionTask = testCase.project.tasks.getByName('prefixPrintPatchVersion')
+        Task printPatchVersionTask = project.tasks.getByName('prefixPrintPatchVersion')
         Assert.assertNotNull(printPatchVersionTask, "Forventet task for 'prefixPrintPatchVersion")
     }
 
@@ -279,11 +269,9 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
      */
     @Test
     void testPatchStandardTaskSetIndexInSyncWithPatch() {
-        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+        final Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-dbtools-plugin'
-        };
 
-        testCase.configureProject {
             configureDatabasePlugin {
                 toolset(name: 'Prefix', type: 'hsqldb', prefix: 'Prefix') {
 
@@ -301,7 +289,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
         }
 
         // STEG 3 - tester
-        Task setIndexInSyncWithPatchTask = testCase.project.tasks.getByName('prefixSetIndexInSyncWithPatch')
+        Task setIndexInSyncWithPatchTask = project.tasks.getByName('prefixSetIndexInSyncWithPatch')
         Assert.assertNotNull(setIndexInSyncWithPatchTask, "Forventet task for 'prefixSetIndexInSyncWithPatch")
     }
 
@@ -310,11 +298,9 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
      */
     @Test
     void testPatchStandardTaskUnSetIndexInSyncWithPatch() {
-        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+        final Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-dbtools-plugin'
-        };
 
-        testCase.configureProject {
             configureDatabasePlugin {
                 toolset(name: 'Prefix', type: 'hsqldb', prefix: 'Prefix') {
 
@@ -332,7 +318,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
         }
 
         // STEG 3 - tester
-        Task unsetIndexInSyncWithPatchTask = testCase.project.tasks.getByName('prefixUnSetIndexInSyncWithPatch')
+        Task unsetIndexInSyncWithPatchTask = project.tasks.getByName('prefixUnSetIndexInSyncWithPatch')
         Assert.assertNotNull(unsetIndexInSyncWithPatchTask, "Forventet task for 'prefixUnSetIndexInSyncWithPatch")
     }
 
@@ -341,53 +327,49 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
      */
     @Test
     void testPatchDatabase() {
-        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
-            apply plugin: 'sktools-dbtools-plugin'
-        };
-
         // STEG 1 - setter opp testmaterie
-        File patchFile = DbToolsPluginPatchHelper.createSimplePatchFile()
+        createSimplePatchFile(file('patch.sql'))
 
         // STEG 2 - konfigurering av plugin
-        testCase.configureProject {
+        writeFile("build.gradle", """
+            plugins {
+              id 'sktools-dbtools-plugin'
+            }
+
+            repositories {
+                maven { url = '${testProperties.MAVEN_REPO}' }
+            }
+
             configureDatabasePlugin {
+                useDrivers "${testProperties.libraries_hsqldb}" 
+
                 toolset(name: 'Prefix', type: 'hsqldb', prefix: 'Prefix') {
 
-                    credentials.username = defaultCredentials.username
-                    credentials.password = defaultCredentials.password
+                    credentials.username = "${defaultCredentials.username}"
+                    credentials.password = "${defaultCredentials.password}"
 
-                    url = sql.connection.properties.URL
-                    driver = jdbcDriverClassString
+                    url = "${sql.connection.properties.URL}"
+                    driver = "${jdbcDriverClassString}"
 
                     patch {
-                        patchTask('TestSchema', sqlFile:patchFile)
+                        patchTask('TestSchema', sqlFile: 'patch.sql')
                     }
 
                 }
             }
-        }
+        """)
 
         // STEG 3 - tester
-        Task printPatchVersionTask = testCase.project.tasks.getByName('prefixPatchTestSchema')
-
-//
-//        if (IntelliJTestUtil.isIntelliJTestRuntime) {
-//            printPatchVersionTask.classpath = project.files(this.class.classLoader.properties['URLs'])
-//        }
-
-        printPatchVersionTask.execute()
-
+        assertNoFailures(testGradleBuild(":prefixPatchTestSchema"))
     }
 
 
 
     @Test
     void tasknameForPatch() {
-        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+        final Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-dbtools-plugin'
-        };
 
-        testCase.configureProject {
             configureDatabasePlugin {
                 toolset(name: 'Prefix', type: 'hsqldb', prefix: 'Prefix') {
 
@@ -403,22 +385,20 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
                 }
             }
         }
-        Assert.assertNotNull(testCase.project.tasks.findByName("prefixPatchTestSchema"), "Forventer task med navn")
+        Assert.assertNotNull(project.tasks.findByName("prefixPatchTestSchema"), "Forventer task med navn")
     }
 
     @Test
     void tasknameForNull() {
-        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+        final Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-dbtools-plugin'
-        };
 
-        testCase.configureProject {
             configureDatabasePlugin {
                 toolset(name: 'main', type: 'hsqldb', prefix: '') {
 
                     credentials.username = defaultCredentials.username
                     credentials.password = defaultCredentials.password
-
+1
                     url = sql.connection.properties.URL
                     driver = jdbcDriverClassString
 
@@ -426,7 +406,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
                 }
             }
         }
-        Assert.assertNotNull(testCase.project.tasks.findByName("testSchema"), "Forventer task med navn")
+        Assert.assertNotNull(project.tasks.findByName("testSchema"), "Forventer task med navn")
     }
 
 }
