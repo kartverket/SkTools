@@ -8,6 +8,8 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
 public class SampleJarTestutil {
+    public final static String VERSION_simple_jar = "0.1";
+
     private final static String PATH_SampleJar = "/sample.jar.bin";
     private final static String PATH_Sample2Jar = "/sample2.jar.bin";
 

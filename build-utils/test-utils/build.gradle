@@ -47,6 +47,7 @@ task createSampleJar(type: Jar) {
     from(project.sourceSets.sample.output)
     manifest.attributes([
         'Specification-Title': "Sample 1",
+        'Implementation-Version': "0.1",
     ])
 }
 sourceSets.main.output.dir(createSampleJar, builtBy: createSampleJar)
