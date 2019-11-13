@@ -1,18 +1,19 @@
 package com.sun.tools.xjc.addon.statkart
 
+
+import no.statkart.sktools.gradle.testutils.TestKitBase
 import org.testng.annotations.Test
 
-import org.gradle.api.logging.LogLevel
-import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
-import no.statkart.sktools.gradle.testutils.ProjectHelper
-import no.statkart.sktools.gradle.testutils.filewriter.XjcTestutilFilewriter
+import static no.statkart.sktools.gradle.testutils.filewriter.XjcTestutilFilewriter.writeSimpleSchemaWithGdoc
+import static org.assertj.core.api.Assertions.assertThat
+import static org.assertj.core.api.Assertions.contentOf
 
 /**
  * Test av {@link GrunnbokDocPlugin}
  *
  * @author Leif Lislegård
  */
-class GrunnbokDocPluginTest {
+class GrunnbokDocPluginTest extends TestKitBase {
 
 
     /**
@@ -22,60 +23,31 @@ class GrunnbokDocPluginTest {
      */
     @Test
     void testGrunnbokDocPlugin() {
-        ProjectHelper projectHelper = GradleProjectBuilder.builder('ListgenTest').build()
-        def outputPath = 'build/gen/java'
-        def sourcePath = 'src/main/schema'
+        File schemaFile = file("schema/base.xsd")
+        File destDir = file('gen')
 
+        //eksempel-kildekode
+        writeSimpleSchemaWithGdoc(schemaFile)
 
-        //generer eksempel-kildekode
-        use(XjcTestutilFilewriter) {
-            projectHelper.writeSimpleSchemaWithGdoc(sourcePath + "/base.xsd")
-        }
+        def xjc = new com.sun.tools.xjc.XJC2Task()
+        xjc.setDestdir(destDir)
+        xjc.setExtension(true)
+        xjc.setSchema(schemaFile.toURI().toString())
+        xjc.createArg().setLine("-grunnbokDoc no.statkart.sktools.test no.statkart.sktools.annen.pakke")
 
-
-        //setter opp test-prosjekt
-        projectHelper.configureProject {
-
-                ant.taskdef(name: 'xjc', classname: 'com.sun.tools.xjc.XJCTask') //classpath: runs in classpath of this test fixture. no need to spesify it here.
-
-                //oppretter gradle task
-                task('testGrunnbokDocPlugin') {
-                    logging.captureStandardOutput LogLevel.ERROR
-                    logging.captureStandardError LogLevel.ERROR
-
-                    doLast {
-                        //oppretter mapper for gen kode + ant defgen
-                        ant.mkdir(dir: outputPath)
-
-                        //xjc ant task
-                        ant.xjc(destDir: outputPath, extension: true) {
-                            schema(dir: sourcePath, includes: '**/*.xsd')
-                            arg(line: "-grunnbokDoc no.statkart.sktools.test no.statkart.sktools.annen.pakke")
-                        }
-                    }
-                }
-
-            } //end configure
-
+        destDir.mkdirs()
 
         //utfører xjc task ihht til konfigurasjon
-        projectHelper.executeTask('testGrunnbokDocPlugin')
+        xjc.execute()
 
 
+        //PS: (?ms) matches regex over multiple lines.
         //tester
-        projectHelper.assertFileExists(outputPath + '/no/statkart/sktools/test/SimpleType.java') { File file ->
+        assertThat(contentOf(file('gen/no/statkart/sktools/test/SimpleType.java')))
+            .matches(/(?ms).*@see no\.statkart\.sktools\.annen\.pakke\.SimpleType.*/)
 
-            //sjekker at @see tag er blitt med
-            assert file.text ==~ /(?ms).*@see no\.statkart\.sktools\.annen\.pakke\.SimpleType.*/ //(?ms) matches regex over multiple lines.
-        }
-
-
-        projectHelper.assertFileExists(outputPath + '/no/statkart/sktools/test/DocumentedSimpleType.java') { File file ->
-
-            //sjekker at dokumentasjon av klasse er blitt med
-            assert file.text ==~ /(?ms).*Ekstra dokumentasjon for typen\.([\n\s\*]+)Merk at denne er multiline.*/  //(?ms) matches regex over multiple lines.
-        }
-
+        assertThat(contentOf(file('gen/no/statkart/sktools/test/DocumentedSimpleType.java')))
+            .matches(/(?ms).*Ekstra dokumentasjon for typen\.([\n\s\*]+)Merk at denne er multiline.*/)
     }
 
 

@@ -1,19 +1,11 @@
 package no.statkart.sktools.gradle.testutils.filewriter
 
-import no.statkart.sktools.gradle.testutils.ProjectHelper
-
 /**
  * Statiske understøttende hjelpemetoder for generering av kildekode for bruk i testing.
  *
  * @author Leif Lislegård
  */
 class XjcTestutilFilewriter extends AbstractTestutilFilewriter {
-
-    @Deprecated
-    public static void writeSimpleSchema(ProjectHelper projectHelper, String targetFilePath) {
-        def toFile = projectHelper.project.file(targetFilePath)
-        writeSimpleSchemaImpl(toFile, [])
-    }
 
     /**
      * Skriver enkelt schema til fil.
@@ -23,12 +15,6 @@ class XjcTestutilFilewriter extends AbstractTestutilFilewriter {
         writeSimpleSchemaImpl(targetFilePath, [])
     }
 
-    @Deprecated
-    public static void writeSimpleSchemaWithGdoc(ProjectHelper projectHelper, String targetFilePath) {
-        def toFile = projectHelper.project.file(targetFilePath)
-        writeSimpleSchemaWithGdoc(toFile)
-    }
-
     /**
      * Skriver enkelt schema til fil der gdoc prefikset er koblet inn slik at gdoc dokumentasjon er aktivert.
      * targetNamespace="http://sktools.statkart.no/test"
@@ -36,40 +22,6 @@ class XjcTestutilFilewriter extends AbstractTestutilFilewriter {
     public static void writeSimpleSchemaWithGdoc(File targetFilePath) {
         writeSimpleSchemaImpl(targetFilePath, [gdoc: true])
     }
-
-    /**
-     * Genererer kildekode for ListTestIterable.java
-     */
-    public static Collection<File> writeListTestIterableJava(ProjectHelper projectHelper, String targetPath) {
-        ArrayList<File> generatedFiles = new ArrayList<File>()
-
-        generatedFiles.add projectHelper.project.file(targetPath+'/ListTestIterable.java').with { File file ->
-            file.parentFile.mkdirs()
-            file.withPrintWriter('UTF-8') { writer ->
-                writer.print """
-                    import java.util.Iterator;
-                    import javax.xml.bind.annotation.XmlTransient;
-
-
-                    @XmlTransient
-                    public abstract class ListTestIterable  implements Iterable  {
-
-                        abstract public java.util.List  _getList();
-
-
-                        public Iterator  iterator() {
-                            return _getList().iterator();
-                        }
-
-                    }
-                """
-            }
-            return file
-        }
-
-        return generatedFiles
-    }
-
 
 
     private static void writeSimpleSchemaImpl(File file, def args) {

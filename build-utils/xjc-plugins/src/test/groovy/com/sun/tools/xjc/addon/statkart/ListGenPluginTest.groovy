@@ -1,17 +1,18 @@
 package com.sun.tools.xjc.addon.statkart
 
+import no.statkart.sktools.gradle.testutils.TestKitBase
 import org.testng.annotations.Test
-import org.gradle.api.logging.LogLevel
-import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
-import no.statkart.sktools.gradle.testutils.ProjectHelper
-import no.statkart.sktools.gradle.testutils.filewriter.XjcTestutilFilewriter
+
+import static no.statkart.sktools.gradle.testutils.filewriter.XjcTestutilFilewriter.writeSimpleSchema
+import static org.assertj.core.api.Assertions.assertThat
+import static org.assertj.core.api.Assertions.contentOf
 
 /**
  * Test av {@link ListGenPlugin}
  *
  * @author Leif Lislegård
  */
-class ListGenPluginTest {
+class ListGenPluginTest extends TestKitBase {
 
 
     /**
@@ -21,54 +22,33 @@ class ListGenPluginTest {
      */
     @Test
     void testListgenPlugin() {
-        ProjectHelper projectHelper = GradleProjectBuilder.builder('ListgenTest').build()
-        def sourcePath = 'src/main/schema'
-        def outputPath = 'build/gen/java'
+        File schemaFile = file("schema/base.xsd")
+        File destDir = file('gen')
 
+        //eksempel-kildekode
+        writeSimpleSchema(schemaFile)
 
-        //generer eksempel-kildekode
-        use(XjcTestutilFilewriter) {
-            projectHelper.writeSimpleSchema(sourcePath + "/base.xsd")
-        }
+        def xjc = new com.sun.tools.xjc.XJC2Task()
+        xjc.setDestdir(destDir)
+        xjc.setExtension(true)
+        xjc.setSchema(schemaFile.toURI().toString())
+        xjc.createArg().setLine("-listgen")
 
-        //setter opp test-prosjekt
-        projectHelper.configureProject {
-            ant.taskdef(name: 'xjc', classname: 'com.sun.tools.xjc.XJCTask') //classpath: runs in classpath of this test fixure. no need to spesify it here.
-
-                task('testListgenPlugin') {
-                    logging.captureStandardError LogLevel.ERROR
-
-                    doLast {
-                        //oppretter mapper for gen kode + ant defgen
-                        ant.mkdir(dir: outputPath)
-
-                        //kjører xjc task
-                        ant.xjc(destDir: outputPath, extension: true) {
-                            schema(dir: sourcePath, includes: '**/*.xsd')
-                            arg(line: '-listgen')
-                        }
-                    }
-                }
-            }
+        destDir.mkdirs()
 
         //eksekverer task
-        projectHelper.executeTask('testListgenPlugin')
+        xjc.execute()
 
 
+        //PS: (?ms) matches regex over multiple lines.
         //tester
-        projectHelper.assertFileExists(outputPath + '/no/statkart/sktools/test/StringList.java') { File file ->
-
-            //sjekker at import statement er blitt med
-            assert file.text ==~ /(?ms).*import\s+no\.statkart\.grunnbok\.skif\.util\.ListIterable;.*/ //(?ms) matches regex over multiple lines.
-
-            //sjekker at klassen extender ListItarable
-            assert file.text ==~ /(?ms).*StringList[\s\n]+ extends ListIterable.*/ //(?ms) matches regex over multiple lines.
-
-            //sjekker at interface metoder er lagt til
-            assert file.text ==~ /(?ms).*public\s+java\.util\.List<String>\s+_getList\(\)\s+\{.*/ //(?ms) matches regex over multiple lines.
-
-        }
-
+        assertThat(contentOf(file('gen//no/statkart/sktools/test/StringList.java')))
+            .as("import statement er blitt med")
+            .matches(/(?ms).*import\s+no\.statkart\.grunnbok\.skif\.util\.ListIterable;.*/)
+            .as("extender ListItarable")
+            .matches(/(?ms).*StringList[\s\n]+ extends ListIterable.*/)
+            .as("interface metoder er lagt til")
+            .matches(/(?ms).*public\s+java\.util\.List<String>\s+_getList\(\)\s+\{.*/)
     }
 
 
@@ -80,54 +60,33 @@ class ListGenPluginTest {
      */
     @Test
     void testListgenPluginWithBaseClass() {
-        ProjectHelper projectHelper = GradleProjectBuilder.builder('ListgenTest').build()
-        def outputPath = 'build/gen/java'
-        def sourcePath = 'src/main/schema'
+        File schemaFile = file("schema/base.xsd")
+        File destDir = file('gen')
 
-        //generer eksempel-kildekode
-        use(XjcTestutilFilewriter) {
-            projectHelper.writeSimpleSchema(sourcePath + "/base.xsd")
-        }
+        //eksempel-kildekode
+        writeSimpleSchema(schemaFile)
 
-        //setter opp test-prosjekt
-        projectHelper.configureProject {
-                ant.taskdef(name: 'xjc', classname: 'com.sun.tools.xjc.XJCTask') //classpath: runs in classpath of this test fixure. no need to spesify it here.
+        def xjc = new com.sun.tools.xjc.XJC2Task()
+        xjc.setDestdir(destDir)
+        xjc.setExtension(true)
+        xjc.setSchema(schemaFile.toURI().toString())
+        xjc.createArg().setLine("-listgen baseClass=some.implementation.ListTestIterable")
 
-                task('testListgenPluginWithBaseClass') {
-                    logging.captureStandardError LogLevel.ERROR
-
-                    doLast {
-                        //oppretter mapper for gen kode + ant defgen
-                        ant.mkdir(dir: outputPath)
-
-                        //kjører xjc task
-                        ant.xjc(destDir: outputPath, extension: true) {
-                            schema(dir: sourcePath, includes: '**/*.xsd')
-                            arg(line: '-listgen baseClass=some.implementation.ListTestIterable')
-                        }
-                    }
-                }
-
-        }
-
+        destDir.mkdirs()
 
         //eksekverer task
-        projectHelper.executeTask('testListgenPluginWithBaseClass')
+        xjc.execute()
 
 
+        //PS: (?ms) matches regex over multiple lines.
         //tester
-        projectHelper.assertFileExists(outputPath + '/no/statkart/sktools/test/StringList.java') { File file ->
-
-            //sjekker at import statement er blitt med
-            assert file.text ==~ /(?ms).*import\s+some\.implementation\.ListTestIterable;.*/ //(?ms) matches regex over multiple lines.
-
-            //sjekker at klassen extender ListTestIterable
-            assert file.text ==~ /(?ms).*StringList[\s\n]+ extends ListTestIterable.*/ //(?ms) matches regex over multiple lines.
-
-            //sjekker at interface metoder er lagt til
-            assert file.text ==~ /(?ms).*public\s+java\.util\.List<String>\s+_getList\(\)\s+\{.*/ //(?ms) matches regex over multiple lines.
-        }
-
+        assertThat(contentOf(file('gen//no/statkart/sktools/test/StringList.java')))
+            .as("import statement er blitt med")
+            .matches(/(?ms).*import\s+some\.implementation\.ListTestIterable;.*/)
+            .as("extender ListTestIterable")
+            .matches(/(?ms).*StringList[\s\n]+ extends ListTestIterable.*/)
+            .as("interface metoder er lagt til")
+            .matches(/(?ms).*public\s+java\.util\.List<String>\s+_getList\(\)\s+\{.*/)
     }
 
 
