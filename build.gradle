@@ -42,7 +42,7 @@ project.ext.libraries = [
         // Testing
         assertj: 'org.assertj:assertj-core:2.9.1', /* AssertJ 2.x for Java 7, 3.x for Java8 */
         testng: 'org.testng:testng:6.14.3',
-        hsqldb: 'org.hsqldb:hsqldb:2.5.0',
+        hsqldb: 'org.hsqldb:hsqldb:2.3.3', //2.4.x krever Java8
 ]
 
 
