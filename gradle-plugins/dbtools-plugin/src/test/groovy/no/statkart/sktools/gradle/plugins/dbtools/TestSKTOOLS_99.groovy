@@ -4,9 +4,7 @@ import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsConvention
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractDatabaseConvention
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.PatchConfiguration
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.SequenceTask
-import no.statkart.sktools.gradle.testutils.ProjectHelper
 import no.statkart.sktools.gradle.testutils.TestKitBase
-import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
 import org.gradle.api.Project
 import org.testng.annotations.Test
 

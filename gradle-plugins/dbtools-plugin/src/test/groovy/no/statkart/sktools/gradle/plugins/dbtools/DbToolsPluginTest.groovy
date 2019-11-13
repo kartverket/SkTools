@@ -6,9 +6,7 @@ import no.statkart.sktools.gradle.plugins.dbtools.database.oracle.OracleImportTa
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.DefineLatestPatchVersionTask
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.PatchTask
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.SyncPatchTask
-import no.statkart.sktools.gradle.testutils.ProjectHelper
 import no.statkart.sktools.gradle.testutils.TestKitBase
-import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.testng.Assert

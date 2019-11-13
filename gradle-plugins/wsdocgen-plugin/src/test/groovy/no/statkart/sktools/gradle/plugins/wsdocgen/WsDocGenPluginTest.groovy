@@ -1,8 +1,7 @@
 package no.statkart.sktools.gradle.plugins.wsdocgen
 
-import no.statkart.sktools.gradle.testutils.ProjectHelper
+
 import no.statkart.sktools.gradle.testutils.TestKitBase
-import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
 import org.gradle.api.Project
 import org.testng.annotations.Test
 
@@ -64,8 +63,7 @@ class WsDocGenPluginTest extends TestKitBase {
 
     @Test
     void tasksForVanillaConfiguration() {
-        //forks a new java project in a temp folder
-        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+        final Project project = projectBuilder().build().tap {
             apply plugin: 'java'
             apply plugin: 'sktools-wsdocgen-plugin'
 
@@ -73,8 +71,6 @@ class WsDocGenPluginTest extends TestKitBase {
                 main.wsdoc.group { }
             }
         }
-
-        final Project project = projectHelper.project
 
         assertNotNull project.tasks.findByName('genWsdoc'), "gen task"
         assertNotNull project.tasks.findByName('genMainWsdoc'), "gen task for source set"
@@ -89,8 +85,7 @@ class WsDocGenPluginTest extends TestKitBase {
      */
     @Test
     void noTasksForNoneAnnotatedSourceSets() {
-        //forks a new java project in a temp folder
-        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+        final Project project = projectBuilder().build().tap {
             apply plugin: 'java'
             apply plugin: 'sktools-wsdocgen-plugin'
 
@@ -99,8 +94,6 @@ class WsDocGenPluginTest extends TestKitBase {
                 other.wsdoc.group { }
             }
         }
-
-        final Project project = projectHelper.project
 
         assertNotNull project.tasks.findByName('genWsdoc'), "gen task"
 
@@ -115,8 +108,7 @@ class WsDocGenPluginTest extends TestKitBase {
 
     @Test
     void sourceSetForVanillaConfiguration() {
-        //forks a new java project in a temp folder
-        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+        final Project project = projectBuilder().build().tap {
             apply plugin: 'java'
             apply plugin: 'sktools-wsdocgen-plugin'
 
@@ -126,7 +118,6 @@ class WsDocGenPluginTest extends TestKitBase {
             }
         }
 
-        final Project project = projectHelper.project
         assertNotNull project.sourceSets.main.wsdoc
         assertNotNull project.sourceSets.other.wsdoc
 
@@ -140,8 +131,7 @@ class WsDocGenPluginTest extends TestKitBase {
 
     @Test
     void canCustomizeOutputLocation() {
-        //forks a new java project in a temp folder
-        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+        final Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-wsdocgen-plugin'
 
             sourceSets {
@@ -156,7 +146,6 @@ class WsDocGenPluginTest extends TestKitBase {
             }
         }
 
-        final Project project = projectHelper.project
 
         //tests vanilla configuration
         assertEquals project.sourceSets.main.wsdoc[0].targetPath, 'build/main/wsdoc/Group1'
@@ -177,8 +166,7 @@ class WsDocGenPluginTest extends TestKitBase {
 
     @Test
     void canCustomizeInclude() {
-        //forks a new java project in a temp folder
-        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+        final Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-wsdocgen-plugin'
 
             sourceSets {
@@ -186,7 +174,6 @@ class WsDocGenPluginTest extends TestKitBase {
             }
         }
 
-        final Project project = projectHelper.project
         assertEquals project.sourceSets.main.wsdoc[0].includes, ['**/TestServiceWSBean.java']
         assertEquals project.tasks.genMainWsdocGroup1.includes.size(), 1
         assertTrue project.tasks.genMainWsdocGroup1.includes.contains('**/TestServiceWSBean.java')

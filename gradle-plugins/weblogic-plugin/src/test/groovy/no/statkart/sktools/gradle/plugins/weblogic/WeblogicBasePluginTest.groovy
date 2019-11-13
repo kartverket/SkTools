@@ -1,7 +1,7 @@
 package no.statkart.sktools.gradle.plugins.weblogic
 
-import no.statkart.sktools.gradle.testutils.ProjectHelper
-import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
+import no.statkart.sktools.gradle.testutils.TestKitBase
+import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
 import org.testng.annotations.Test
 
@@ -10,43 +10,38 @@ import org.testng.annotations.Test
  *
  * @author Leif Lislegård
  */
-class WeblogicBasePluginTest {
+class WeblogicBasePluginTest extends TestKitBase {
 
     /**
      * Tester at konfigurasjon er tilgjengelig for prosjekt.
      */
     @Test
     void testConfiguration() {
-        //forks a new rootProject in a temp folder
-        ProjectHelper rootProjectHelper = GradleProjectBuilder.builder().build()
 
         //defines dummy.jars
-        File someJarFile = rootProjectHelper.project.file('some.jar')
-        File otherJarFile = rootProjectHelper.project.file('other.jar')
-
-        //creates a subproject
-        ProjectHelper subProjectHelper = GradleProjectBuilder.builder().withName('subproject').withParent(rootProjectHelper).build()
+        File someJarFile = file('some.jar')
+        File otherJarFile = file('subproject/other.jar')
 
         //configures rootproject
-        rootProjectHelper.configureProject {
+        final Project rootProject = projectBuilder().withName("root").build().tap {
             apply plugin: WeblogicBasePlugin
 
             dependencies.weblogicProvided files('some.jar')
         }
 
         //configures subproject
-        subProjectHelper.configureProject {
+        final Project subProject = projectBuilder().withName("subproject").withProjectDir(file("subproject")).build().tap {
             apply plugin: WeblogicBasePlugin
 
-            dependencies.weblogicProvided files('../other.jar')
+            dependencies.weblogicProvided files('other.jar')
         }
 
         //asserts
-        assert rootProjectHelper.project.configurations.getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME).files.contains(someJarFile)
-        assert subProjectHelper.project.configurations.getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME).files.contains(otherJarFile)
+        assert rootProject.configurations.getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME).files.contains(someJarFile)
+        assert subProject.configurations.getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME).files.contains(otherJarFile)
 
-        assert !subProjectHelper.project.configurations.getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME).files.contains(someJarFile)
-        assert !rootProjectHelper.project.configurations.getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME).files.contains(otherJarFile)
+        assert !subProject.configurations.getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME).files.contains(someJarFile)
+        assert !rootProject.configurations.getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME).files.contains(otherJarFile)
     }
 
     /**
@@ -57,24 +52,26 @@ class WeblogicBasePluginTest {
      */
     @Test
     void demoConfigurationHierarchy() {
-        //forks a new rootProject in a temp folder
-        ProjectHelper projectHelper = GradleProjectBuilder.builder().build()
 
         //defines a dummy.jar
-        File somJarFile = projectHelper.project.file('some.jar')
+        File somJarFile = file('some.jar')
 
-        projectHelper.configureProject {
+        final Project project = projectBuilder().build().tap {
             apply plugin: WeblogicBasePlugin
             apply plugin: JavaPlugin
+
+            configurations {
+                //tenker oss at weblogic classpath configurasjon også skal inneholde alle compile time dependencies..
+                weblogicProvided.extendsFrom compile
+            }
+
             dependencies {
                 compile files('some.jar')
             }
+
         }
 
-        //tenker oss at weblogic classpath configurasjon også skal inneholde alle compile time dependencies..
-        projectHelper.project.configurations.getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME).extendsFrom(projectHelper.project.configurations.getByName(JavaPlugin.COMPILE_CONFIGURATION_NAME))
-
-        assert projectHelper.project.configurations.getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME).contains(somJarFile)
+        assert project.configurations.getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME).contains(somJarFile)
     }
 
 
