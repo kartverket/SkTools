@@ -42,7 +42,7 @@ project.ext.libraries = [
         // Testing
         assertj: 'org.assertj:assertj-core:2.9.1', /* AssertJ 2.x for Java 7, 3.x for Java8 */
         testng: 'org.testng:testng:6.14.3',
-        hsqldb: 'org.hsqldb:hsqldb:2.2.8',
+        hsqldb: 'org.hsqldb:hsqldb:2.5.0',
 ]
 
 
@@ -195,29 +195,22 @@ subprojects { Project project ->
         groovyOptions.encoding = 'UTF-8' //SKTOOLS-163: groovy source files in UTF-8 encoding (default is UTF-8)
     }
 
-}
+    tasks.withType(Jar) {
+        it.manifest.attributes([
+            'Specification-Title'   : project.name,
+            'Specification-Vendor'  : 'Statens kartverk',
+            'Specification-Version' : (gradle.startParameter.projectProperties.get('sktools_versjon') ?: sktools_versjon).replace('-SNAPSHOT', ''),
 
-allprojects {
-    afterEvaluate {
-        tasks.withType(Jar) {
-            it.manifest {
-                attributes([
-                        'Specification-Title': project.name,
-                        'Specification-Vendor': 'Statens kartverk',
-                        'Specification-Version': (gradle.startParameter.projectProperties.get('sktools_versjon') ?: sktools_versjon).replace('-SNAPSHOT', ''),
+            //misc build info
+            'Build-By'              : System.getProperty('user.name'),
+            'Build-Machine'         : java.net.InetAddress.localHost.hostName,
+            'Build-Repo'            : MAVEN_REPO,
+            'Build-Gradle'          : gradle.gradleVersion,
 
-                        //misc build info
-                        'Build-By'     : System.getProperty('user.name'),
-                        'Build-Machine': java.net.InetAddress.localHost.hostName,
-                        'Build-Repo': MAVEN_REPO,
-                        'Build-Gradle': gradle.gradleVersion,
-
-                        'Implementation-Title': "${project.name} bygget for ${(version == null || version.contains('-SNAPSHOT')) ? 'TEST' : 'Produksjon'}",
-                        'Implementation-Vendor': 'Statens kartverk',
-                        'Implementation-Version': project.version,
-                ])
-            }
-        }
+            'Implementation-Title'  : "${project.name} bygget for ${(version == null || version.contains('-SNAPSHOT')) ? 'TEST' : 'Produksjon'}",
+            'Implementation-Vendor' : 'Statens kartverk',
+            'Implementation-Version': project.version,
+        ])
     }
 }
 
