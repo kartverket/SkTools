@@ -22,7 +22,7 @@ class WsDocgenTestutilFilewriter extends AbstractTestutilFilewriter {
      * <p><b>
      * PS: Merk at service navn og klassenavn divergerer!
      */
-    public static void writeSimpleDemoServiceWSBean(File targetPath) {
+    public static File writeSimpleDemoServiceWSBean(File targetPath) {
         File file = new File(targetPath, '/no/statkart/sktools/test/SimpleDemoServiceWSBean.java')
         file.parentFile.mkdirs()
         Files.write(file.toPath(), ["""
@@ -64,6 +64,8 @@ class WsDocgenTestutilFilewriter extends AbstractTestutilFilewriter {
                      }
                 """], StandardCharsets.UTF_8,
             StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.APPEND)
+
+        return file;
     }
 
     /**

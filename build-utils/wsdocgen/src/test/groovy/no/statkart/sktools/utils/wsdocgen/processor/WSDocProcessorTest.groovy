@@ -1,13 +1,17 @@
 package no.statkart.sktools.utils.wsdocgen.processor
 
 import groovy.util.slurpersupport.GPathResult
-import no.statkart.sktools.gradle.testutils.ProjectHelper
-import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
+import no.statkart.sktools.gradle.testutils.TestKitBase
 import no.statkart.sktools.gradle.testutils.filewriter.WsDocgenTestutilFilewriter
 import no.statkart.sktools.gradle.testutils.xml.XmlTestUtils
-import org.gradle.api.tasks.compile.JavaCompile
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.testng.Assert
 import org.testng.annotations.Test
+
+import static org.assertj.core.api.Assertions.assertThat
+import static org.assertj.core.api.Assertions.contentOf
+import static org.testng.Assert.fail
 
 /**
  * Tester {@link WSDocProcessor}
@@ -15,90 +19,81 @@ import org.testng.annotations.Test
  * @since 1.3 - ny grunnbok sprint 30
  * @author Leif Lislegård
  */
-class WSDocProcessorTest {
+class WSDocProcessorTest extends TestKitBase {
+    static final Logger log = LoggerFactory.getLogger(WSDocProcessorTest)
 
+    static final String processorPath = WSDocProcessorTest.getClass().getResource("/processor-classpath.txt").text
+
+    void test(String... command) {
+        Process javac = Runtime.getRuntime().exec(command)
+        javac.consumeProcessErrorStream(System.err)
+        javac.consumeProcessOutputStream(System.out)
+        javac.waitFor()
+
+        if (javac.exitValue() == 0) {
+            return;
+        }
+
+        fail("Error executing command: " + command.join(" "))
+    }
 
     /**
      * Tester eksekvering med default parametere
      */
     @Test
     void testDefaultConfiguration() {
-        ProjectHelper projectHelper = GradleProjectBuilder.builder('WsDocgenTest').build()
-        def outputPath = 'build/gen/wsdoc'
-        def sourcePath = 'src/main/java'
-        def resourcePath = 'src/main/resources'
+        File outputPath = file('gen/source')
+        File resourcePath = file('src/main/resources')
 
-        def xslt;
+        //eksempel-kildekode
+        File javaFile = WsDocgenTestutilFilewriter.writeSimpleDemoServiceWSBean(file('src/main/java'))
+        File xslt = WsDocgenTestutilFilewriter.writeSimpleXSLT(resourcePath)
 
-        //generer eksempel-kildekode
-        WsDocgenTestutilFilewriter.writeSimpleDemoServiceWSBean(projectHelper.project.file(sourcePath))
-        xslt = WsDocgenTestutilFilewriter.writeSimpleXSLT(projectHelper.project.file(resourcePath))
+        //utfører annotasjonsprosessering
+        outputPath.mkdirs()
+        test(
+            "javac",
+            "-proc:only",
+            "-processor", WSDocProcessor.class.getName(),
+            "-processorpath", processorPath,
+            "-sourcepath", resourcePath.toString(),
+            "-d", outputPath.toString(), //d = generated class files
 
-
-        //setter opp testprosjekt
-        projectHelper.configureProject {
-            apply plugin:'java'
-
-            task('testWSDocProcessor', type:JavaCompile.class) {
-
-                options.compilerArgs = [
-                        "-proc:only",
-                        "-processor", WSDocProcessor.class.getName(),
-
-                        "-Axslt=${xslt}", //xslt file
-
-                ]
-
-                // specify output of generated code
-                destinationDir = file(outputPath)
-
-                // specify source files
-                source = sourceSets.main.java
-                include('**/*WSBean.java')
-
-                classpath = configurations.compile
-                options.annotationProcessorPath = files(((URLClassLoader)WSDocProcessor.class.getClassLoader()).getURLs()) //hacker dette til for test
-            }
-        } //end configure
-
-        //utfører task
-        projectHelper.executeTask('testWSDocProcessor')
+            "-Axslt=${xslt}", //xslt file
+            javaFile.toString()
+        )
 
 
         //tester resultat
-        projectHelper.assertFileExists(outputPath + '/TestService.html') { File file ->
+        File file = new File(outputPath, 'TestService.html')
+        log.debug("Generert html: \n{}", contentOf(file))
+
+        //leser inn html dokumentasjon som xml - dette steget validerer derfor html-koden
+        GPathResult html = parseXML(file)
+
+        //sjekker innhold
+        assertStringContains(html.head.title.text(), 'TestService', "service name")
+        assertStringContains(html.body.span[0].text(), 'TestService', "service name")
+        assertStringContains(html.body.span[1].text(), 'beskrivelse av service', "service description")
+        Assert.assertEquals(html.body.span[2].text(), 'http://test.statkart.no/test1', "service namespace")
+
+        //sjekker dokumenterte metoder
+        Assert.assertEquals html.body.div[0].ul.li.size(), 3, "forventet antall metoder"
+        Assert.assertEquals html.body.div[0].ul.li[0].a.text(), 'binary', "forventet metodenavn"
+        Assert.assertEquals html.body.div[0].ul.li[1].a.text(), 'noPing', "forventet metodenavn"
+        Assert.assertEquals html.body.div[0].ul.li[2].a.text(), 'ping', "forventet metodenavn"
 
 
-            println "Generert html: \n" + file.getText()
+        Assert.assertEquals html.body.div[1].div[0].p[0].text().trim(), 'Returnerer PONG', "forventet dokumentasjon"
+        Assert.assertEquals html.body.div[1].div[0].h4[0].text().trim(), 'ping', "forventet overskrift"
 
-            //leser inn html dokumentasjon som xml - dette steget validerer derfor html-koden
-            GPathResult html = parseXML(file)
+        Assert.assertEquals html.body.div[1].div[1].p[0].text().trim(), 'Returnerer ikke noe', "forventet dokumentasjon"
+        Assert.assertEquals html.body.div[1].div[1].h4[0].text().trim(), 'noPing', "forventet overskrift"
 
-            //sjekker innhold
-            assertStringContains(html.head.title.text(), 'TestService', "service name")
-            assertStringContains(html.body.span[0].text(), 'TestService', "service name")
-            assertStringContains(html.body.span[1].text(), 'beskrivelse av service', "service description")
-            Assert.assertEquals(html.body.span[2].text(), 'http://test.statkart.no/test1', "service namespace")
+        Assert.assertEquals html.body.div[1].div[2].p[0].text().trim(), 'Returnerer noen bytes', "forventet dokumentasjon"
+        Assert.assertEquals html.body.div[1].div[2].h4[0].text().trim(), 'binary', "forventet overskrift"
 
-            //sjekker dokumenterte metoder
-            Assert.assertEquals html.body.div[0].ul.li.size(), 3, "forventet antall metoder"
-            Assert.assertEquals html.body.div[0].ul.li[0].a.text(), 'binary', "forventet metodenavn"
-            Assert.assertEquals html.body.div[0].ul.li[1].a.text(), 'noPing', "forventet metodenavn"
-            Assert.assertEquals html.body.div[0].ul.li[2].a.text(), 'ping', "forventet metodenavn"
-
-
-            Assert.assertEquals html.body.div[1].div[0].p[0].text().trim(), 'Returnerer PONG', "forventet dokumentasjon"
-            Assert.assertEquals html.body.div[1].div[0].h4[0].text().trim(), 'ping', "forventet overskrift"
-
-            Assert.assertEquals html.body.div[1].div[1].p[0].text().trim(), 'Returnerer ikke noe', "forventet dokumentasjon"
-            Assert.assertEquals html.body.div[1].div[1].h4[0].text().trim(), 'noPing', "forventet overskrift"
-
-            Assert.assertEquals html.body.div[1].div[2].p[0].text().trim(), 'Returnerer noen bytes', "forventet dokumentasjon"
-            Assert.assertEquals html.body.div[1].div[2].h4[0].text().trim(), 'binary', "forventet overskrift"
-
-            Assert.assertEquals html.body.div[1].div.size(), 3, "forventet antall metoder for service"
-        }
-
+        Assert.assertEquals html.body.div[1].div.size(), 3, "forventet antall metoder for service"
     }
 
     /**
@@ -106,17 +101,12 @@ class WSDocProcessorTest {
      */
     @Test
     void testJavaDocLookupPath() {
-        ProjectHelper projectHelper = GradleProjectBuilder.builder('WsDocgenTest').build()
-        def outputPath = 'build/gen/wsdoc'
-        def sourcePath = 'src/main/java'
-        def resourcePath = 'src/main/resources'
+        File outputPath = file('gen/source')
+        File resourcePath = file('src/main/resources')
 
-        def xslt;
-
-        //generer eksempel-kildekode
-        use(WsDocgenTestutilFilewriter) {
-            projectHelper.writeCustomFile('src/main/java/TestWSBean.java') {
-                """
+        //eksempel-kildekode
+        File javaFile = writeFile('src/main/java/TestWSBean.java',
+            """
                  @javax.jws.WebService(
                      name = "TestService",
                      serviceName = "TestServiceWS",
@@ -129,11 +119,10 @@ class WSDocProcessorTest {
                          return "PONG";
                      }
                  }
-                """
-            }
+                """)
 
-            xslt = projectHelper.writeCustomFile('minimal.xsl') {
-                """
+        File xslt = writeFile('minimal.xsl',
+            """
                 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
                 <xsl:output method="text" version="1.0" media-type="text/plain" omit-xml-declaration="yes" />
@@ -145,56 +134,30 @@ class WSDocProcessorTest {
                 </xsl:template>
 
                 </xsl:stylesheet>
-                """
-            }
+                """)
 
-        }
+        //utfører annotasjonsprosessering
+        outputPath.mkdirs()
+        test(
+            "javac",
+            "-proc:only",
+            "-processor", WSDocProcessor.class.getName(),
+            "-processorpath", processorPath,
+            "-sourcepath", resourcePath.toString(),
+            "-d", outputPath.toString(), //d = generated class files
 
-        //setter opp testprosjekt
-        projectHelper.configureProject {
-            apply plugin:'java'
-
-            task('testWSDocProcessor', type:JavaCompile.class) {
-
-                options.compilerArgs = [
-                        "-proc:only",
-                        "-processor", WSDocProcessor.class.getName(),
-
-                        "-Axslt=${xslt}", //xslt file
-                        "-AjavaDocLookupPath=../uniktNavn/for/test/index.html", //lookup path
-                ]
-
-                // specify output of generated code
-                destinationDir = file(outputPath)
-
-                // specify source files
-                source = sourceSets.main.java
-                include('**/*WSBean.java')
-
-                classpath = configurations.compile
-                options.annotationProcessorPath = files(((URLClassLoader)WSDocProcessor.class.getClassLoader()).getURLs()) //hacker dette til for test
-
-            }
-        } //end configure
-
-        //utfører task
-        projectHelper.executeTask('testWSDocProcessor')
+            "-Axslt=${xslt}", //xslt file
+            "-AjavaDocLookupPath=../uniktNavn/for/test/index.html", //lookup path
+            javaFile.toString()
+        )
 
 
         //tester resultat
-        projectHelper.assertFileExists(outputPath + '/TestService.html') { File file ->
+        File file = new File(outputPath, 'TestService.html')
 
-
-            println "Generert html: \n" + file.getText()
-
-            //sjekker innhold
-            def lines = []
-            file.eachLine { lines += it}
-
-            assert lines.find { def line -> line.contains('../uniktNavn/for/test/index.html?')} //forventer å finne denne i output
-
-        }
-
+        //sjekker innhold
+        assertThat(contentOf(file))
+            .contains('../uniktNavn/for/test/index.html?') //forventer å finne denne i output
     }
 
     /**
@@ -202,16 +165,11 @@ class WSDocProcessorTest {
      */
     @Test
     void testPrimitives() {
-        ProjectHelper projectHelper = GradleProjectBuilder.builder('WsDocgenTest').build()
-        def outputPath = 'build/gen/wsdoc'
-        def sourcePath = 'src/main/java'
-        def resourcePath = 'src/main/resources'
+        File outputPath = file('gen/source')
+        File resourcePath = file('src/main/resources')
 
-        def xslt;
-
-        //generer eksempel-kildekode
-        use(WsDocgenTestutilFilewriter) {
-            projectHelper.writeCustomFile('src/main/java/TestWSBean.java') {
+        // eksempel-kildekode
+        File javaFile = writeFile('src/main/java/TestWSBean.java',
                 """
                  @javax.jws.WebService(
                      name = "TestService",
@@ -225,10 +183,9 @@ class WSDocProcessorTest {
                          return 0;
                      }
                  }
-                """
-            }
+                """)
 
-            xslt = projectHelper.writeCustomFile('minimal.xsl') {
+        File xslt = writeFile('minimal.xsl',
                 """
                 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
@@ -241,56 +198,28 @@ class WSDocProcessorTest {
                 </xsl:template>
 
                 </xsl:stylesheet>
-                """
-            }
+                """)
 
-        }
+        //utfører annotasjonsprosessering
+        outputPath.mkdirs()
+        test(
+            "javac",
+            "-proc:only",
+            "-processor", WSDocProcessor.class.getName(),
+            "-processorpath", processorPath,
+            "-sourcepath", resourcePath.toString(),
+            "-d", outputPath.toString(), //d = generated class files
 
-        //setter opp testprosjekt
-        projectHelper.configureProject {
-            apply plugin:'java'
-
-            task('testWSDocProcessor', type:JavaCompile.class) {
-
-                options.compilerArgs = [
-                        "-proc:only",
-                        "-processor", WSDocProcessor.class.getName(),
-
-                        "-Axslt=${xslt}", //xslt file
-                        "-AjavaDocLookupPath=../uniktNavn/for/test/index.html", //lookup path
-                ]
-
-                // specify output of generated code
-                destinationDir = file(outputPath)
-
-                // specify source files
-                source = sourceSets.main.java
-                include('**/*WSBean.java')
-
-                classpath = configurations.compile
-                options.annotationProcessorPath = files(((URLClassLoader)WSDocProcessor.class.getClassLoader()).getURLs()) //hacker dette til for test
-
-            }
-        } //end configure
-
-        //utfører task
-        projectHelper.executeTask('testWSDocProcessor')
-
+            "-Axslt=${xslt}", //xslt file
+            "-AjavaDocLookupPath=../uniktNavn/for/test/index.html", //lookup path
+            javaFile.toString()
+        )
 
         //tester resultat
-        projectHelper.assertFileExists(outputPath + '/TestService.html') { File file ->
+        File file = new File(outputPath, 'TestService.html')
 
-
-            println "Generert html: \n" + file.getText()
-
-            //sjekker innhold
-            def lines = []
-            file.eachLine { lines += it}
-
-            assert lines.find { def line -> line.contains('long')} //forventer å finne denne i output
-
-        }
-
+        assertThat(contentOf(file))
+            .contains('long') //forventer å finne denne i output
     }
 
     /**
@@ -298,16 +227,11 @@ class WSDocProcessorTest {
      */
     @Test
     void testReturnTaglets() {
-        ProjectHelper projectHelper = GradleProjectBuilder.builder('WsDocgenTest').build()
-        def outputPath = 'build/gen/wsdoc'
-        def sourcePath = 'src/main/java'
-        def resourcePath = 'src/main/resources'
+        File outputPath = file('gen/source')
+        File resourcePath = file('src/main/resources')
 
-        def xslt;
-
-        //generer eksempel-kildekode
-        use(WsDocgenTestutilFilewriter) {
-            projectHelper.writeCustomFile('src/main/java/TestWSBean.java') {
+        // eksempel-kildekode
+        File javaFile = writeFile('src/main/java/TestWSBean.java',
                 """
                 package test1;
 
@@ -335,10 +259,9 @@ class WSDocProcessorTest {
                          return 0;
                      }
                  }
-                """
-            }
+                """)
 
-            xslt = projectHelper.writeCustomFile('minimal.xsl') {
+        File xslt = writeFile('minimal.xsl',
                 """
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
@@ -379,61 +302,40 @@ class WSDocProcessorTest {
 </body></html>
 </xsl:template>
 </xsl:stylesheet>
-                """
-            }
+                """)
 
-        }
 
-        //setter opp testprosjekt
-        projectHelper.configureProject {
-            mkdir(outputPath)
+        //utfører annotasjonsprosessering
+        outputPath.mkdirs()
+        test(
+            "javac",
+            "-proc:only",
+            "-processor", WSDocProcessor.class.getName(),
+            "-processorpath", processorPath,
+            "-sourcepath", resourcePath.toString(),
+            "-encoding", 'UTF-8',
+            "-d", outputPath.toString(), //d = generated class files
 
-            apply plugin: 'java'
-
-            task('testWSDocProcessor', type: JavaCompile.class) {
-
-                options.compilerArgs = [
-                        "-proc:only",
-                        "-processor", WSDocProcessor.class.getName(),
-
-                        "-Axslt=${xslt}", //xslt file
-                ]
-
-                // specify output of generated code
-                destinationDir = file(outputPath)
-
-                // specify source files
-                source = sourceSets.main.java
-                include('**/*WSBean.java')
-
-                classpath = configurations.compile
-                options.annotationProcessorPath = files(((URLClassLoader)WSDocProcessor.class.getClassLoader()).getURLs()) //hacker dette til for test
-
-            }
-        } //end configure
-
-        //utfører task
-        projectHelper.executeTask('testWSDocProcessor')
+            "-Axslt=${xslt}", //xslt file
+            javaFile.toString()
+        )
 
 
         //tester resultat
-        projectHelper.assertFileExists(outputPath + '/TestService.html') { File file ->
+        File file = new File(outputPath, 'TestService.html')
+        log.debug("Generert html: \n{}", contentOf(file))
 
-            println "Generert html: \n" + file.getText()
+        //leser inn html dokumentasjon som xml - dette steget validerer derfor html-koden
+        GPathResult html = parseXML(file)
 
-            //leser inn html dokumentasjon som xml - dette steget validerer derfor html-koden
-            GPathResult html = parseXML(file)
+        //sjekker innhold
+        Assert.assertEquals html.body.span[0].text(), 'Service Æøå description.\nSecond sentence.', "service description"
 
-            //sjekker innhold
-            Assert.assertEquals html.body.span[0].text(), 'Service Æøå description.\nSecond sentence.', "service description"
+        //sjekker dokumenterte metoder
+        Assert.assertEquals html.body.div[0].div[0].h4[0].text().trim(), 'intToLong', "overskrift"
+        Assert.assertEquals html.body.div[0].div[0].ul[0].li[0].p[0].text().trim(), 'the converted value', "dokumentasjon av retur"
 
-            //sjekker dokumenterte metoder
-            Assert.assertEquals html.body.div[0].div[0].h4[0].text().trim(), 'intToLong', "overskrift"
-            Assert.assertEquals html.body.div[0].div[0].ul[0].li[0].p[0].text().trim(), 'the converted value', "dokumentasjon av retur"
-
-            Assert.assertEquals html.body.div[0].div.size(), 1, "forventet antall metoder for service"
-
-        }
+        Assert.assertEquals html.body.div[0].div.size(), 1, "forventet antall metoder for service"
     }
 
 
@@ -442,16 +344,11 @@ class WSDocProcessorTest {
      */
     @Test
     void testExceptionTaglets() {
-        ProjectHelper projectHelper = GradleProjectBuilder.builder('WsDocgenTest').build()
-        def outputPath = 'build/gen/wsdoc'
-        def sourcePath = 'src/main/java'
-        def resourcePath = 'src/main/resources'
+        File outputPath = file('gen/source')
+        File resourcePath = file('src/main/resources')
 
-        def xslt;
-
-        //generer eksempel-kildekode
-        use(WsDocgenTestutilFilewriter) {
-            projectHelper.writeCustomFile('src/main/java/TestWSBean.java') {
+        // eksempel-kildekode
+        File javaFile = writeFile('src/main/java/TestWSBean.java',
                 """
                 package test1;
 
@@ -489,10 +386,9 @@ class WSDocProcessorTest {
                          return 0;
                      }
                  }
-                """
-            }
+                """)
 
-            xslt = projectHelper.writeCustomFile('minimal.xsl') {
+        File xslt = writeFile('minimal.xsl',
                 """
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
@@ -543,70 +439,48 @@ class WSDocProcessorTest {
 </body></html>
 </xsl:template>
 </xsl:stylesheet>
-                """
-            }
+                """)
 
-        }
 
-        //setter opp testprosjekt
-        projectHelper.configureProject {
-            mkdir(outputPath)
+        //utfører annotasjonsprosessering
+        outputPath.mkdirs()
+        test(
+            "javac",
+            "-proc:only",
+            "-processor", WSDocProcessor.class.getName(),
+            "-processorpath", processorPath,
+            "-sourcepath", resourcePath.toString(),
+            "-d", outputPath.toString(), //d = generated class files
 
-            apply plugin: 'java'
-
-            task('testWSDocProcessor', type: JavaCompile.class) {
-
-                options.compilerArgs = [
-                        "-proc:only",
-                        "-processor", WSDocProcessor.class.getName(),
-
-                        "-Axslt=${xslt}", //xslt file
-                ]
-
-                // specify output of generated code
-                destinationDir = file(outputPath)
-
-                // specify source files
-                source = sourceSets.main.java
-                include('**/*WSBean.java')
-
-                classpath = configurations.compile
-                options.annotationProcessorPath = files(((URLClassLoader)WSDocProcessor.class.getClassLoader()).getURLs()) //hacker dette til for test
-
-            }
-        } //end configure
-
-        //utfører task
-        projectHelper.executeTask('testWSDocProcessor')
+            "-Axslt=${xslt}", //xslt file
+            javaFile.toString()
+        )
 
 
         //tester resultat
-        projectHelper.assertFileExists(outputPath + '/TestService.html') { File file ->
+        File file = new File(outputPath, 'TestService.html')
+        log.debug("Generert html: \n{}", contentOf(file))
 
-            println "Generert html: \n" + file.getText()
+        //leser inn html dokumentasjon som xml - dette steget validerer derfor html-koden
+        GPathResult html = parseXML(file)
 
-            //leser inn html dokumentasjon som xml - dette steget validerer derfor html-koden
-            GPathResult html = parseXML(file)
+        //sjekker innhold
+        Assert.assertEquals html.body.span[0].text(), 'Service description.\nSecond sentence.', "service description"
 
-            //sjekker innhold
-            Assert.assertEquals html.body.span[0].text(), 'Service description.\nSecond sentence.', "service description"
+        //sjekker dokumenterte metoder
+        Assert.assertEquals html.body.div[0].div[0].h4[0].text().trim(), 'intToLong', "overskrift"
+        Assert.assertEquals html.body.div[0].div[0].ul[0].li[0].p[0].text().trim(), 'the converted value', "dokumentasjon av retur"
+        Assert.assertEquals html.body.div[0].div[0].ul[0].li[1].span[0].text().trim(), 'Exception', "navn for exception"
+        Assert.assertEquals html.body.div[0].div[0].ul[0].li[1].p[0].text().trim(), 'ved feil i konvertering', "dokumentasjon for exception"
 
-            //sjekker dokumenterte metoder
-            Assert.assertEquals html.body.div[0].div[0].h4[0].text().trim(), 'intToLong', "overskrift"
-            Assert.assertEquals html.body.div[0].div[0].ul[0].li[0].p[0].text().trim(), 'the converted value', "dokumentasjon av retur"
-            Assert.assertEquals html.body.div[0].div[0].ul[0].li[1].span[0].text().trim(), 'Exception', "navn for exception"
-            Assert.assertEquals html.body.div[0].div[0].ul[0].li[1].p[0].text().trim(), 'ved feil i konvertering', "dokumentasjon for exception"
+        Assert.assertEquals html.body.div[0].div[1].h4[0].text().trim(), 'longToInt', "overskrift"
+        Assert.assertEquals html.body.div[0].div[1].ul[0].li[0].p[0].text().trim(), 'the converted value as int', "dokumentasjon av retur"
+        Assert.assertEquals html.body.div[0].div[1].ul[0].li[2].span[0].text().trim(), 'Exception', "navn for exception"
+        Assert.assertEquals html.body.div[0].div[1].ul[0].li[2].p[0].text().trim(), 'ved feil i konvertering', "dokumentasjon for exception"
+        Assert.assertEquals html.body.div[0].div[1].ul[0].li[1].span[0].text().trim(), 'RuntimeException', "navn for exception"
+        Assert.assertEquals html.body.div[0].div[1].ul[0].li[1].p[0].text().trim(), 'dersom base-verdi ikke validerer', "dokumentasjon for exception"
 
-            Assert.assertEquals html.body.div[0].div[1].h4[0].text().trim(), 'longToInt', "overskrift"
-            Assert.assertEquals html.body.div[0].div[1].ul[0].li[0].p[0].text().trim(), 'the converted value as int', "dokumentasjon av retur"
-            Assert.assertEquals html.body.div[0].div[1].ul[0].li[2].span[0].text().trim(), 'Exception', "navn for exception"
-            Assert.assertEquals html.body.div[0].div[1].ul[0].li[2].p[0].text().trim(), 'ved feil i konvertering', "dokumentasjon for exception"
-            Assert.assertEquals html.body.div[0].div[1].ul[0].li[1].span[0].text().trim(), 'RuntimeException', "navn for exception"
-            Assert.assertEquals html.body.div[0].div[1].ul[0].li[1].p[0].text().trim(), 'dersom base-verdi ikke validerer', "dokumentasjon for exception"
-
-            Assert.assertEquals html.body.div[0].div.size(), 2, "forventet antall metoder for service"
-
-        }
+        Assert.assertEquals html.body.div[0].div.size(), 2, "forventet antall metoder for service"
     }
 
     /**
@@ -614,16 +488,11 @@ class WSDocProcessorTest {
      */
     @Test
     void testParamTaglets() {
-        ProjectHelper projectHelper = GradleProjectBuilder.builder('WsDocgenTest').build()
-        def outputPath = 'build/gen/wsdoc'
-        def sourcePath = 'src/main/java'
-        def resourcePath = 'src/main/resources'
+        File outputPath = file('gen/source')
+        File resourcePath = file('src/main/resources')
 
-        def xslt;
-
-        //generer eksempel-kildekode
-        use(WsDocgenTestutilFilewriter) {
-            projectHelper.writeCustomFile('src/main/java/TestWSBean.java') {
+        // eksempel-kildekode
+        File javaFile = writeFile('src/main/java/TestWSBean.java',
                 """
                 package test1;
 
@@ -651,10 +520,9 @@ class WSDocProcessorTest {
                          return 0;
                      }
                  }
-                """
-            }
+                """)
 
-            xslt = projectHelper.writeCustomFile('minimal.xsl') {
+    File xslt = writeFile('minimal.xsl',
                 """
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
@@ -695,61 +563,39 @@ class WSDocProcessorTest {
 </body></html>
 </xsl:template>
 </xsl:stylesheet>
-                """
-            }
+                """)
 
-        }
 
-        //setter opp testprosjekt
-        projectHelper.configureProject {
-            mkdir(outputPath)
+        //utfører annotasjonsprosessering
+        outputPath.mkdirs()
+        test(
+            "javac",
+            "-proc:only",
+            "-processor", WSDocProcessor.class.getName(),
+            "-processorpath", processorPath,
+            "-sourcepath", resourcePath.toString(),
+            "-d", outputPath.toString(), //d = generated class files
 
-            apply plugin: 'java'
-
-            task('testWSDocProcessor', type: JavaCompile.class) {
-
-                options.compilerArgs = [
-                        "-proc:only",
-                        "-processor", WSDocProcessor.class.getName(),
-
-                        "-Axslt=${xslt}", //xslt file
-                ]
-
-                // specify output of generated code
-                destinationDir = file(outputPath)
-
-                // specify source files
-                source = sourceSets.main.java
-                include('**/*WSBean.java')
-
-                classpath = configurations.compile
-                options.annotationProcessorPath = files(((URLClassLoader)WSDocProcessor.class.getClassLoader()).getURLs()) //hacker dette til for test
-
-            }
-        } //end configure
-
-        //utfører task
-        projectHelper.executeTask('testWSDocProcessor')
+            "-Axslt=${xslt}", //xslt file
+            javaFile.toString()
+        )
 
 
         //tester resultat
-        projectHelper.assertFileExists(outputPath + '/TestService.html') { File file ->
+        File file = new File(outputPath, 'TestService.html')
+        log.debug("Generert html: \n{}", contentOf(file))
 
-            println "Generert html: \n" + file.getText()
+        //leser inn html dokumentasjon som xml - dette steget validerer derfor html-koden
+        GPathResult html = parseXML(file)
 
-            //leser inn html dokumentasjon som xml - dette steget validerer derfor html-koden
-            GPathResult html = parseXML(file)
+        //sjekker innhold
+        Assert.assertEquals html.body.span[0].text(), 'Service description.\nSecond sentence.', "service description"
 
-            //sjekker innhold
-            Assert.assertEquals html.body.span[0].text(), 'Service description.\nSecond sentence.', "service description"
+        //sjekker dokumenterte metoder
+        Assert.assertEquals html.body.div[0].div[0].p[0].text().trim(), 'Intended for asserting a conversion.', "forventet dokumentasjon"
+        Assert.assertEquals html.body.div[0].div[0].h4[0].text().trim(), 'intToLong', "forventet overskrift"
 
-            //sjekker dokumenterte metoder
-            Assert.assertEquals html.body.div[0].div[0].p[0].text().trim(), 'Intended for asserting a conversion.', "forventet dokumentasjon"
-            Assert.assertEquals html.body.div[0].div[0].h4[0].text().trim(), 'intToLong', "forventet overskrift"
-
-            Assert.assertEquals html.body.div[0].div.size(), 1, "forventet antall metoder for service"
-
-        }
+        Assert.assertEquals html.body.div[0].div.size(), 1, "forventet antall metoder for service"
     }
 
 
@@ -759,17 +605,11 @@ class WSDocProcessorTest {
      */
     @Test
     void testSimpleIndex() {
-        ProjectHelper projectHelper = GradleProjectBuilder.builder('WsDocgenTest').build()
-        def outputPath = 'build/gen/wsdoc'
-        def sourcePath = 'src/main/java'
-        def resourcePath = 'src/main/resources'
+        File outputPath = file('gen/source')
+        File resourcePath = file('src/main/resources')
 
-        def xslt;
-        def indexXslt;
-
-        //generer eksempel-kildekode
-        use(WsDocgenTestutilFilewriter) {
-            projectHelper.writeCustomFile('src/main/java/Service1WSBean.java') {
+        // eksempel-kildekode
+        File javaFile1 = writeFile('src/main/java/Service1WSBean.java',
                 """
                 package test1;
 
@@ -787,10 +627,9 @@ class WSDocProcessorTest {
                          return "PONG";
                      }
                  }
-                """
-            }
+                """)
 
-            projectHelper.writeCustomFile('src/main/java/Service2WSBean.java') {
+        File javaFile2 = writeFile('src/main/java/Service2WSBean.java',
                 """
                 package test2;
 
@@ -822,10 +661,9 @@ class WSDocProcessorTest {
                          return 0;
                      }
                  }
-                """
-            }
+                """)
 
-            xslt = projectHelper.writeCustomFile('minimal.xsl') {
+        File xslt = writeFile('minimal.xsl',
                 """
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
@@ -848,11 +686,10 @@ class WSDocProcessorTest {
 </xsl:template>
 
 </xsl:stylesheet>
-                """
-            }
+                """)
 
 
-            indexXslt = projectHelper.writeCustomFile('index.xsl') {
+        File indexXslt = writeFile('index.xsl',
                 """
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
@@ -878,49 +715,30 @@ class WSDocProcessorTest {
 </xsl:template>
 
 </xsl:stylesheet>
-                """
-            }
+                """)
 
-        }
 
-        //setter opp testprosjekt
-        projectHelper.configureProject {
-            mkdir(outputPath)
+        //utfører annotasjonsprosessering
+        outputPath.mkdirs()
+        test(
+            "javac",
+            "-proc:only",
+            "-processor", WSDocProcessor.class.getName(),
+            "-processorpath", processorPath,
+            "-sourcepath", resourcePath.toString(),
+            "-d", outputPath.toString(), //d = generated class files
 
-            apply plugin: 'java'
-
-            task('testWSDocProcessor', type: JavaCompile.class) {
-
-                options.compilerArgs = [
-                        "-proc:only",
-                        "-processor", WSDocProcessor.class.getName(),
-
-                        "-Axslt=${xslt}", //xslt file
-                        "-AindexXslt=${indexXslt}", //xslt file for generating index
-
-                ]
-
-                // specify output of generated code
-                destinationDir = file(outputPath)
-
-                // specify source files
-                source = sourceSets.main.java
-                include('**/*WSBean.java')
-
-                classpath = configurations.compile
-                options.annotationProcessorPath = files(((URLClassLoader)WSDocProcessor.class.getClassLoader()).getURLs()) //hacker dette til for test
-
-            }
-        } //end configure
-
-        //utfører task
-        projectHelper.executeTask('testWSDocProcessor')
+            "-Axslt=${xslt}", //xslt file
+            "-AindexXslt=${indexXslt}", //xslt file for generating index
+            javaFile1.toString(),
+            javaFile2.toString()
+        )
 
 
         //tester resultat
-        projectHelper.assertFileExists(outputPath + "/index.html") { File file ->
+        file("$outputPath/index.html").with { File file ->
 
-            println "Generert html: \n" + file.getText()
+            log.debug("Generert html: \n{}", contentOf(file))
 
             //leser inn html dokumentasjon som xml - dette steget validerer derfor html-koden
             GPathResult html = parseXML(file)
@@ -940,9 +758,9 @@ class WSDocProcessorTest {
 
 
         (1..2).each { int idx ->
-            projectHelper.assertFileExists(outputPath + "/TestService${idx}.html") { File file ->
+            file("$outputPath/TestService${idx}.html").with { File file ->
 
-                println "Generert html: \n" + file.getText()
+                log.debug("Generert html: \n{}", contentOf(file))
 
                 //leser inn html dokumentasjon som xml - dette steget validerer derfor html-koden
                 GPathResult html = parseXML(file)
@@ -961,16 +779,11 @@ class WSDocProcessorTest {
      */
     @Test
     void testCodeTaglets() {
-        ProjectHelper projectHelper = GradleProjectBuilder.builder('WsDocgenTest').build()
-        def outputPath = 'build/gen/wsdoc'
-        def sourcePath = 'src/main/java'
-        def resourcePath = 'src/main/resources'
+        File outputPath = file('gen/source')
+        File resourcePath = file('src/main/resources')
 
-        def xslt;
-
-        //generer eksempel-kildekode
-        use(WsDocgenTestutilFilewriter) {
-            projectHelper.writeCustomFile('src/main/java/TestWSBean.java') {
+        // eksempel-kildekode
+        File javaFile = writeFile('src/main/java/TestWSBean.java',
                 """
                 package test1;
 
@@ -987,10 +800,9 @@ class WSDocProcessorTest {
                  public class TestWSBean {
 
                  }
-                """
-            }
+                """)
 
-            xslt = projectHelper.writeCustomFile('minimal.xsl') {
+        File xslt = writeFile('minimal.xsl',
                 """
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
@@ -1050,55 +862,34 @@ class WSDocProcessorTest {
 
 
 </xsl:stylesheet>
-                """
-            }
+                """)
 
-        }
 
-        //setter opp testprosjekt
-        projectHelper.configureProject {
-            mkdir(outputPath)
+        //utfører annotasjonsprosessering
+        outputPath.mkdirs()
+        test(
+            "javac",
+            "-proc:only",
+            "-processor", WSDocProcessor.class.getName(),
+            "-processorpath", processorPath,
+            "-sourcepath", resourcePath.toString(),
+            "-d", outputPath.toString(), //d = generated class files
 
-            apply plugin: 'java'
-
-            task('testWSDocProcessor', type: JavaCompile.class) {
-
-                options.compilerArgs = [
-                        "-proc:only",
-                        "-processor", WSDocProcessor.class.getName(),
-
-                        "-Axslt=${xslt}", //xslt file
-                ]
-
-                // specify output of generated code
-                destinationDir = file(outputPath)
-
-                // specify source files
-                source = sourceSets.main.java
-                include('**/*WSBean.java')
-
-                classpath = configurations.compile
-                options.annotationProcessorPath = files(((URLClassLoader)WSDocProcessor.class.getClassLoader()).getURLs()) //hacker dette til for test
-
-            }
-        } //end configure
-
-        //utfører task
-        projectHelper.executeTask('testWSDocProcessor')
+            "-Axslt=${xslt}", //xslt file
+            javaFile.toString()
+        )
 
 
         //tester resultat
-        projectHelper.assertFileExists(outputPath + '/TestService.html') { File file ->
+        File file = new File(outputPath, 'TestService.html')
+        log.debug("Generert html: \n{}", contentOf(file))
 
-            println "Generert html: \n" + file.getText()
+        //leser inn html dokumentasjon som xml - dette steget validerer derfor html-koden
+        GPathResult html = parseXML(file)
 
-            //leser inn html dokumentasjon som xml - dette steget validerer derfor html-koden
-            GPathResult html = parseXML(file)
-
-            //sjekker innhold
-            Assert.assertEquals html.body.p[0].text().trim(), 'Service taglet description.', "service description"
-            Assert.assertEquals html.body.p[1].span[0].text().trim(), 'taglet', "code enclosed taglet"
-        }
+        //sjekker innhold
+        Assert.assertEquals html.body.p[0].text().trim(), 'Service taglet description.', "service description"
+        Assert.assertEquals html.body.p[1].span[0].text().trim(), 'taglet', "code enclosed taglet"
     }
 
 
@@ -1109,16 +900,11 @@ class WSDocProcessorTest {
      */
     @Test
     void testReturnName() {
-        ProjectHelper projectHelper = GradleProjectBuilder.builder('WsDocgenTest').build()
-        def outputPath = 'build/gen/wsdoc'
-        def sourcePath = 'src/main/java'
-        def resourcePath = 'src/main/resources'
+        File outputPath = file('gen/source')
+        File resourcePath = file('src/main/resources')
 
-        def xslt;
-
-        //generer eksempel-kildekode
-        use(WsDocgenTestutilFilewriter) {
-            projectHelper.writeCustomFile('src/main/java/TestWSBean.java') {
+        // eksempel-kildekode
+        File javaFile = writeFile('src/main/java/TestWSBean.java',
                 """
                 package test1;
 
@@ -1153,10 +939,9 @@ class WSDocProcessorTest {
                     }
 
                  }
-                """
-            }
+                """)
 
-            xslt = projectHelper.writeCustomFile('minimal.xsl') {
+        File xslt = writeFile('minimal.xsl',
                 """
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
@@ -1197,70 +982,48 @@ class WSDocProcessorTest {
 </body></html>
 </xsl:template>
 </xsl:stylesheet>
-                """
-            }
+                """)
 
-        }
 
-        //setter opp testprosjekt
-        projectHelper.configureProject {
-            mkdir(outputPath)
+        //utfører annotasjonsprosessering
+        outputPath.mkdirs()
+        test(
+            "javac",
+            "-proc:only",
+            "-processor", WSDocProcessor.class.getName(),
+            "-processorpath", processorPath,
+            "-sourcepath", resourcePath.toString(),
+            "-d", outputPath.toString(), //d = generated class files
 
-            apply plugin: 'java'
+            "-Axslt=${xslt}", //xslt file
+            javaFile.toString()
+        )
 
-            task('testWSDocProcessor', type: JavaCompile.class) {
-
-                options.compilerArgs = [
-                        "-proc:only",
-                        "-processor", WSDocProcessor.class.getName(),
-
-                        "-Axslt=${xslt}", //xslt file
-                ]
-
-                // specify output of generated code
-                destinationDir = file(outputPath)
-
-                // specify source files
-                source = sourceSets.main.java
-                include('**/*WSBean.java')
-
-                classpath = configurations.compile
-                options.annotationProcessorPath = files(((URLClassLoader)WSDocProcessor.class.getClassLoader()).getURLs()) //hacker dette til for test
-
-            }
-        } //end configure
-
-        //utfører task
-        projectHelper.executeTask('testWSDocProcessor')
 
 
         //tester resultat
-        projectHelper.assertFileExists(outputPath + '/TestService.html') { File file ->
+        File file = new File(outputPath, 'TestService.html')
+        log.debug("Generert html: \n{}", contentOf(file))
 
-            println "Generert html: \n" + file.getText()
+        //leser inn html dokumentasjon som xml - dette steget validerer derfor html-koden
+        GPathResult html = parseXML(file)
 
-            //leser inn html dokumentasjon som xml - dette steget validerer derfor html-koden
-            GPathResult html = parseXML(file)
+        //sjekker innhold
+        Assert.assertEquals html.body.div[0].div[0].h4[0].text(), 'noReturn', "method name"
+        Assert.assertEquals html.body.div[0].div[0].ul[0].li[0].span[0].text(), '', "return tag element"
+        Assert.assertEquals html.body.div[0].div[0].ul[0].li[0].p[0].text(), '', "return description"
 
-            //sjekker innhold
-            Assert.assertEquals html.body.div[0].div[0].h4[0].text(), 'noReturn', "method name"
-            Assert.assertEquals html.body.div[0].div[0].ul[0].li[0].span[0].text(), '', "return tag element"
-            Assert.assertEquals html.body.div[0].div[0].ul[0].li[0].p[0].text(), '', "return description"
+        Assert.assertEquals html.body.div[0].div[1].h4[0].text(), 'ping1', "method name"
+        Assert.assertEquals html.body.div[0].div[1].ul[0].li[0].span[0].text(), 'return', "return tag element"
+        Assert.assertEquals html.body.div[0].div[1].ul[0].li[0].p[0].text(), 'withouth annotation', "return description"
 
-            Assert.assertEquals html.body.div[0].div[1].h4[0].text(), 'ping1', "method name"
-            Assert.assertEquals html.body.div[0].div[1].ul[0].li[0].span[0].text(), 'return', "return tag element"
-            Assert.assertEquals html.body.div[0].div[1].ul[0].li[0].p[0].text(), 'withouth annotation', "return description"
+        Assert.assertEquals html.body.div[0].div[2].h4[0].text(), 'ping2', "method name"
+        Assert.assertEquals html.body.div[0].div[2].ul[0].li[0].span[0].text(), 'return', "return tag element"
+        Assert.assertEquals html.body.div[0].div[2].ul[0].li[0].p[0].text(), 'with empty annotation', "return description"
 
-            Assert.assertEquals html.body.div[0].div[2].h4[0].text(), 'ping2', "method name"
-            Assert.assertEquals html.body.div[0].div[2].ul[0].li[0].span[0].text(), 'return', "return tag element"
-            Assert.assertEquals html.body.div[0].div[2].ul[0].li[0].p[0].text(), 'with empty annotation', "return description"
-
-            Assert.assertEquals html.body.div[0].div[3].h4[0].text(), 'ping3', "method name"
-            Assert.assertEquals html.body.div[0].div[3].ul[0].li[0].span[0].text(), 'youPingResult', "return tag element"
-            Assert.assertEquals html.body.div[0].div[3].ul[0].li[0].p[0].text(), 'with annotation', "return description"
-
-
-        }
+        Assert.assertEquals html.body.div[0].div[3].h4[0].text(), 'ping3', "method name"
+        Assert.assertEquals html.body.div[0].div[3].ul[0].li[0].span[0].text(), 'youPingResult', "return tag element"
+        Assert.assertEquals html.body.div[0].div[3].ul[0].li[0].p[0].text(), 'with annotation', "return description"
     }
 
 
@@ -1270,16 +1033,11 @@ class WSDocProcessorTest {
      */
     @Test
     void testInlineTaglets() {
-        ProjectHelper projectHelper = GradleProjectBuilder.builder('WsDocgenTest').build()
-        def outputPath = 'build/gen/wsdoc'
-        def sourcePath = 'src/main/java'
-        def resourcePath = 'src/main/resources'
+        File outputPath = file('gen/source')
+        File resourcePath = file('src/main/resources')
 
-        def xslt;
-
-        //generer eksempel-kildekode
-        use(WsDocgenTestutilFilewriter) {
-            projectHelper.writeCustomFile('src/main/java/TestWSBean.java') {
+        // eksempel-kildekode
+        File javaFile = writeFile('src/main/java/TestWSBean.java',
                 """
                 package test1;
 
@@ -1307,10 +1065,9 @@ class WSDocProcessorTest {
                          return 0;
                      }
                  }
-                """
-            }
+                """)
 
-            xslt = projectHelper.writeCustomFile('minimal.xsl') {
+        File xslt = writeFile('minimal.xsl',
                 """
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
@@ -1399,76 +1156,55 @@ class WSDocProcessorTest {
 </xsl:template>
 
 </xsl:stylesheet>
-                """
-            }
+                """)
 
-        }
 
-        //setter opp testprosjekt
-        projectHelper.configureProject {
-            mkdir(outputPath)
+        //utfører annotasjonsprosessering
+        outputPath.mkdirs()
+        test(
+            "javac",
+            "-proc:only",
+            "-processor", WSDocProcessor.class.getName(),
+            "-processorpath", processorPath,
+            "-sourcepath", resourcePath.toString(),
+            "-d", outputPath.toString(), //d = generated class files
 
-            apply plugin: 'java'
-
-            task('testWSDocProcessor', type: JavaCompile.class) {
-
-                options.compilerArgs = [
-                        "-proc:only",
-                        "-processor", WSDocProcessor.class.getName(),
-
-                        "-Axslt=${xslt}", //xslt file
-                ]
-
-                // specify output of generated code
-                destinationDir = file(outputPath)
-
-                // specify source files
-                source = sourceSets.main.java
-                include('**/*WSBean.java')
-
-                classpath = configurations.compile
-                options.annotationProcessorPath = files(((URLClassLoader)WSDocProcessor.class.getClassLoader()).getURLs()) //hacker dette til for test
-            }
-        } //end configure
-
-        //utfører task
-        projectHelper.executeTask('testWSDocProcessor')
+            "-Axslt=${xslt}", //xslt file
+            javaFile.toString()
+        )
 
 
         //tester resultat
-        projectHelper.assertFileExists(outputPath + '/TestService.html') { File file ->
+        File file = new File(outputPath, 'TestService.html')
+        log.debug("Generert html: \n{}", contentOf(file))
 
-            println "Generert html: \n" + file.getText()
+        //leser inn html dokumentasjon som xml - dette steget validerer derfor html-koden
+        GPathResult html = parseXML(file)
 
-            //leser inn html dokumentasjon som xml - dette steget validerer derfor html-koden
-            GPathResult html = parseXML(file)
+        //sjekker innhold - example with no escaped text
+        Assert.assertEquals html.body.div[0].text(), 'Service description. Bold sentence.wrapped text test of GBOK-4872', "plaintext service description"
+        Assert.assertEquals html.body.div[0].span[0].text(), 'Bold sentence.', "{@bold ...} turns into <div>"
+        Assert.assertEquals html.body.div[0].p.text(), 'wrapped text test of GBOK-4872', "nested <p>"
+        Assert.assertEquals html.body.div[0].p.span[0].text(), 'GBOK-4872', "{@code GBOK-4872} turns into <div>"
 
-            //sjekker innhold - example with no escaped text
-            Assert.assertEquals html.body.div[0].text(), 'Service description. Bold sentence.wrapped text test of GBOK-4872', "plaintext service description"
-            Assert.assertEquals html.body.div[0].span[0].text(), 'Bold sentence.', "{@bold ...} turns into <div>"
-            Assert.assertEquals html.body.div[0].p.text(), 'wrapped text test of GBOK-4872', "nested <p>"
-            Assert.assertEquals html.body.div[0].p.span[0].text(), 'GBOK-4872', "{@code GBOK-4872} turns into <div>"
+        //sjekker innhold - example of escaped text
+        Assert.assertEquals html.body.div[1].text().replaceAll('\n', ''), 'Service description. Bold sentence.<p>wrapped text test of GBOK-4872</p>', "escaped service description"
 
-            //sjekker innhold - example of escaped text
-            Assert.assertEquals html.body.div[1].text().replaceAll('\n', ''), 'Service description. Bold sentence.<p>wrapped text test of GBOK-4872</p>', "escaped service description"
+        //sjekker dokumenterte metoder
+        Assert.assertEquals html.body.div[2].div.size(), 1, "forventet antall metoder for service"
 
-            //sjekker dokumenterte metoder
-            Assert.assertEquals html.body.div[2].div.size(), 1, "forventet antall metoder for service"
+        Assert.assertEquals html.body.div[2].div[0].h4[0].text().trim(), 'intToLong', "forventet overskrift"
+        Assert.assertEquals html.body.div[2].div[0].p[0].text().trim().replaceAll("\\s+"," "), 'Bold sentence. Intended for asserting a conversion. testlist', "forventet dokumentasjon"
 
-            Assert.assertEquals html.body.div[2].div[0].h4[0].text().trim(), 'intToLong', "forventet overskrift"
-            Assert.assertEquals html.body.div[2].div[0].p[0].text().trim().replaceAll("\\s+"," "), 'Bold sentence. Intended for asserting a conversion. testlist', "forventet dokumentasjon"
+        Assert.assertEquals html.body.div[2].div[0].p[0].span[0].@class.text(), 'javadoc_tag_bold', "forventet CSS.class"
+        Assert.assertEquals html.body.div[2].div[0].p[0].span[0].text().trim(), 'Bold sentence.', "forventet tekst for span"
 
-            Assert.assertEquals html.body.div[2].div[0].p[0].span[0].@class.text(), 'javadoc_tag_bold', "forventet CSS.class"
-            Assert.assertEquals html.body.div[2].div[0].p[0].span[0].text().trim(), 'Bold sentence.', "forventet tekst for span"
+        Assert.assertEquals html.body.div[2].div[0].p[0].ul[0].li[0].text().trim(), 'testlist', "forventet tekst for li"
 
-            Assert.assertEquals html.body.div[2].div[0].p[0].ul[0].li[0].text().trim(), 'testlist', "forventet tekst for li"
-
-            Assert.assertEquals html.body.div[2].div[0].ul[0].li[0].span[0].text(), 'return', "forventet tekst for retur"
-            Assert.assertEquals html.body.div[2].div[0].ul[0].li[0].p[0].text().trim().replaceAll("\\s+"," "), 'value typed as long<encoded>', "forventet dokumentasjon av retur" //groovy substituerer &gt; og andre entiteter...
-            Assert.assertEquals html.body.div[2].div[0].ul[0].li[0].p[0].span[0].text().trim(), 'long', "forventet formatert dokumentasjon av retur"
-            Assert.assertEquals html.body.div[2].div[0].ul[0].li[0].p[0].span[1].text().trim(), '<encoded>', "forventet formatert dokumentasjon av retur" //groovy substituerer &gt; og andre entiteter...
-
-        }
+        Assert.assertEquals html.body.div[2].div[0].ul[0].li[0].span[0].text(), 'return', "forventet tekst for retur"
+        Assert.assertEquals html.body.div[2].div[0].ul[0].li[0].p[0].text().trim().replaceAll("\\s+"," "), 'value typed as long<encoded>', "forventet dokumentasjon av retur" //groovy substituerer &gt; og andre entiteter...
+        Assert.assertEquals html.body.div[2].div[0].ul[0].li[0].p[0].span[0].text().trim(), 'long', "forventet formatert dokumentasjon av retur"
+        Assert.assertEquals html.body.div[2].div[0].ul[0].li[0].p[0].span[1].text().trim(), '<encoded>', "forventet formatert dokumentasjon av retur" //groovy substituerer &gt; og andre entiteter...
     }
 
     /**
@@ -1478,16 +1214,11 @@ class WSDocProcessorTest {
      */
     @Test
     void parameterCanHaveFormattedDescription() {
-        ProjectHelper projectHelper = GradleProjectBuilder.builder('WsDocgenTest').build()
-        def outputPath = 'build/gen/wsdoc'
-        def sourcePath = 'src/main/java'
-        def resourcePath = 'src/main/resources'
+        File outputPath = file('gen/source')
+        File resourcePath = file('src/main/resources')
 
-        def xslt;
-
-        //generer eksempel-kildekode
-        use(WsDocgenTestutilFilewriter) {
-            projectHelper.writeCustomFile('src/main/java/TestWSBean.java') {
+        // eksempel-kildekode
+        File javaFile = writeFile('src/main/java/TestWSBean.java',
                 """
                 package test1;
 
@@ -1505,10 +1236,9 @@ class WSDocProcessorTest {
                          return 0;
                      }
                  }
-                """
-            }
+                """)
 
-            xslt = projectHelper.writeCustomFile('minimal.xsl') {
+        File xslt = writeFile('minimal.xsl',
                 """
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
@@ -1583,58 +1313,36 @@ class WSDocProcessorTest {
 </xsl:template>
 
 </xsl:stylesheet>
-                """
-            }
-
-        }
-
-        //setter opp testprosjekt
-        projectHelper.configureProject {
-            mkdir(outputPath)
-
-            apply plugin: 'java'
-
-            task('testWSDocProcessor', type: JavaCompile.class) {
-
-                options.compilerArgs = [
-                        "-proc:only",
-                        "-processor", WSDocProcessor.class.getName(),
-
-                        "-Axslt=${xslt}", //xslt file
-                ]
-
-                // specify output of generated code
-                destinationDir = file(outputPath)
-
-                // specify source files
-                source = sourceSets.main.java
-                include('**/*WSBean.java')
-
-                classpath = configurations.compile
-                options.annotationProcessorPath = files(((URLClassLoader)WSDocProcessor.class.getClassLoader()).getURLs()) //hacker dette til for test
-            }
-        } //end configure
-
-        //utfører task
-        projectHelper.executeTask('testWSDocProcessor')
+                """)
 
 
-        //tester resultat
-        projectHelper.assertFileExists(outputPath + '/TestService.html') { File file ->
+        //utfører annotasjonsprosessering
+        outputPath.mkdirs()
+        test(
+            "javac",
+            "-proc:only",
+            "-processor", WSDocProcessor.class.getName(),
+            "-processorpath", processorPath,
+            "-sourcepath", resourcePath.toString(),
+            "-d", outputPath.toString(), //d = generated class files
 
-            println "Generert html: \n" + file.getText()
+            "-Axslt=${xslt}", //xslt file
+            javaFile.toString()
+        )
 
-            //leser inn html dokumentasjon som xml - dette steget validerer derfor html-koden
-            GPathResult html = parseXML(file)
 
-            Assert.assertEquals html.body.div[0].div[0].h4[0].text().trim(), 'intToLong', "forventet overskrift"
-            Assert.assertEquals html.body.div[0].div[0].h5[0].text().trim(), 'Input', "forventet overskrift"
+        File file = new File(outputPath, 'TestService.html')
+        log.debug("Generert html: \n{}", contentOf(file))
 
-            Assert.assertEquals html.body.div[0].div[0].ul[0].li[0].span[0].text(), 'value', "forventet parameternavn"
-            Assert.assertEquals html.body.div[0].div[0].ul[0].li[0].p[0].text().trim(), 'value in base system', "forventet tekstlig dokumentasjon"
-            Assert.assertEquals html.body.div[0].div[0].ul[0].li[0].p[0].span[0].text().trim(), 'base', "{@code base} wraps to <span>"
+        //leser inn html dokumentasjon som xml - dette steget validerer derfor html-koden
+        GPathResult html = parseXML(file)
 
-        }
+        Assert.assertEquals html.body.div[0].div[0].h4[0].text().trim(), 'intToLong', "forventet overskrift"
+        Assert.assertEquals html.body.div[0].div[0].h5[0].text().trim(), 'Input', "forventet overskrift"
+
+        Assert.assertEquals html.body.div[0].div[0].ul[0].li[0].span[0].text(), 'value', "forventet parameternavn"
+        Assert.assertEquals html.body.div[0].div[0].ul[0].li[0].p[0].text().trim(), 'value in base system', "forventet tekstlig dokumentasjon"
+        Assert.assertEquals html.body.div[0].div[0].ul[0].li[0].p[0].span[0].text().trim(), 'base', "{@code base} wraps to <span>"
     }
 
     public static GPathResult parseXML(File file) {

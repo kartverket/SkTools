@@ -17,6 +17,28 @@ dependencies {
 
 }
 
+
+// Write the plugin's classpath to a file to share with the tests
+task processorClasspathManifest {
+    def outputDir = file("$buildDir/$name")
+
+    inputs.files(sourceSets.main.runtimeClasspath)
+        .withPropertyName("runtimeClasspath")
+    outputs.dir(outputDir)
+        .withPropertyName("outputDir")
+
+    doLast {
+        outputDir.mkdirs()
+        file("$outputDir/processor-classpath.txt").text = sourceSets.main.runtimeClasspath.join(";")
+    }
+}
+
+// Add the classpath file to the test runtime classpath
+dependencies {
+    testRuntimeOnly files(processorClasspathManifest)
+}
+
+
 task sourceJar(type: Jar) {
     from sourceSets.main.allJava
     classifier "sources"
