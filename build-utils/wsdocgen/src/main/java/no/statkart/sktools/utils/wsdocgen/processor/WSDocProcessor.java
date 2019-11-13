@@ -30,7 +30,7 @@ import java.util.Set;
 
 
 /**
- * Processor implemented in {@code Pluggabable Annotation Processing API} (JSR 269)
+ * Processor implemented in {@code Pluggable Annotation Processing API} (JSR 269)
  *
  * <br/>
  * <b>XML-structure for XSLT processing built by {@link XMLBuilderFactory}: <b/><pre> {@code
