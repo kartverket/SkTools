@@ -81,12 +81,10 @@ public class SQLStatementParser {
                 newExpression = new DefaultStatement();
             }
 
-            if (newExpression != null) {
-                Object o = newExpression.execute(visitor, null);
+            Object o = newExpression.execute(visitor, null);
 
-                if (!(o instanceof InlineComment)) {
-                    expressions.add((Expression) o);
-                }
+            if (!(o instanceof InlineComment)) {
+                expressions.add((Expression) o);
             }
 
             { //end of file??
@@ -96,6 +94,8 @@ public class SQLStatementParser {
             }
 
         }
+
+        reader.close(); // release file handles...
 
         return expressions;
     }
