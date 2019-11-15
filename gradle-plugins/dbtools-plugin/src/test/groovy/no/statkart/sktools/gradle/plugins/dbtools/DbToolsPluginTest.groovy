@@ -25,7 +25,7 @@ class DbToolsPluginTest extends TestKitBase {
      * Tester registrering av plugin via navn
      */
     @Test
-    void testAppplyPlugin() {
+    void testApplyPlugin() {
         final Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-dbtools-plugin'
         };

@@ -20,7 +20,7 @@ public class ProvidedPluginTest {
      * Tester registrering av plugin via navn.
      */
     @Test
-    public void testAppplyPlugin() {
+    public void testApplyPlugin() {
         //forks a new project in a temp folder
         Project project = ProjectBuilder.builder().build();
 

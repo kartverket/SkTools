@@ -1,8 +1,10 @@
 package no.statkart.sktools.gradle.plugins.filterresources
 
 import no.statkart.sktools.gradle.testutils.TestKitBase
+import org.gradle.api.Project
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
+import org.testng.Assert
 import org.testng.annotations.Test
 
 import static no.statkart.sktools.gradle.plugins.filterresources.FilterPropertiesTestutil.writeTwoSimpleResources
@@ -17,16 +19,12 @@ class FilterResourcesPluginTest extends TestKitBase {
      * og at extension er registrert.
      */
     @Test
-    void testAppplyPlugin() {
-        writeFile("build.gradle", '''
-            plugins {
-              id 'sktools-filter-resources-plugin'
-            }
-            
-            assert filterResources{} instanceof no.statkart.sktools.gradle.plugins.filterresources.FilterResourcesConvention
-        ''')
+    void testApplyPlugin() {
+        final Project project = projectBuilder().build().tap {
+            apply plugin: 'sktools-filter-resources-plugin'
+        }
 
-        assertNoFailures(testGradleBuild("tasks"))
+        Assert.assertTrue(project.convention.plugins.filterProperties instanceof FilterResourcesConvention)
     }
 
 

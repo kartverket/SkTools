@@ -18,9 +18,9 @@ class IdeaTestContext<T extends IdeaTestContext> {
 
 
     IdeaTestContext() {
-        project = ProjectBuilder.builder().build()
-
-        project.apply plugin: 'sktools-ideaextensions-plugin'
+        project = ProjectBuilder.builder().build().tap {
+            apply plugin: 'sktools-ideaextensions-plugin'
+        }
 
         extension = project.extensions.getByName(IdeaExtensionsPlugin.EXTENSION_NAME)
     }

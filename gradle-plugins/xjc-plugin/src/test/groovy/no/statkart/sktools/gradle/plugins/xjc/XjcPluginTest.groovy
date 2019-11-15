@@ -23,14 +23,12 @@ class XjcPluginTest extends TestKitBase {
      * Tester registrering av plugin via navn
      */
     @Test
-    void testAppplyPlugin() {
-        writeFile("build.gradle", """
-            plugins {
-              id 'sktools-xjc-plugin'
-            }
-        """)
+    void testApplyPlugin() {
+        Project project = projectBuilder().build().tap {
+            apply plugin: 'sktools-xjc-plugin'
+        }
 
-        assertNoFailures(testGradleBuild("classes"))
+        assertThat(project.getPlugins().getPlugin(XjcPlugin.class)).isNotNull()
     }
 
     /**

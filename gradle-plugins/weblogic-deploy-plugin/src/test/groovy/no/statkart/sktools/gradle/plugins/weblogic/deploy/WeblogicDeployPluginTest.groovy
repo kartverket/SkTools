@@ -18,13 +18,11 @@ class WeblogicDeployPluginTest extends TestKitBase {
      * Tester registrering av plugin via navn
      */
     @Test
-    void testAppplyPlugin() {
-        //forks a new project in a temp folder
-        Project project = ProjectBuilder.builder().build()
+    void testApplyPlugin() {
+        final Project project = projectBuilder().build().tap {
+            apply plugin: 'sktools-weblogic-deploy-plugin'
+        }
 
-        project.apply plugin: 'sktools-weblogic-deploy-plugin'
-
-        assert project.convention.plugins.weblogicDeployConvention != null
         Assert.assertTrue(project.convention.plugins.weblogicDeployConvention instanceof WeblogicDeployConvention)
     }
 

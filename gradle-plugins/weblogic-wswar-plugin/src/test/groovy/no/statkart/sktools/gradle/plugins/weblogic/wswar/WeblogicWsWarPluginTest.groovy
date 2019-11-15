@@ -28,8 +28,7 @@ class WeblogicWsWarPluginTest extends TestKitBase {
      * Tester registrering av plugin via navn
      */
     @Test
-    void testAppplyPlugin() {
-        //forks a new project in a temp folder
+    void testApplyPlugin() {
         Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-weblogic-wswar-plugin'
         }
