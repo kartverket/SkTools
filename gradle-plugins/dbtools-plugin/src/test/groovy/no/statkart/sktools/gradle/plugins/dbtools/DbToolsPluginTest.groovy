@@ -445,8 +445,6 @@ class DbToolsPluginTest extends TestKitBase {
 
         final Task info = project.tasks.findByName('info')
         Assert.assertNotNull(info, "Forventet at task er lagt til")
-
-        info.execute()
     }
 
 
