@@ -13,42 +13,10 @@ dependencies {
 }
 
 
-task demoConfig() {
-    File propertyFile = file("${buildDir}/demo/gradle.properties")
-    //registerer output-filer for denne tasken
-    outputs.files propertyFile
-    doFirst {
-        logger.info "writing to $propertyFile"
-        propertyFile.parentFile.mkdirs()
-        def props = ['version': version /* bestemmer sktools versjon for demo context */] as Properties
-        props.store(new PrintWriter(propertyFile, "UTF-8"), "generated ${new Date()}")
-    }
-    inputs.property 'version', version
-}
-
-task zipDemos(description: 'Pakker sammen alle demoer for releasetesting', type: Zip) {
-    classifier = 'demos'
-
-    from 'src/demos'
-    from tasks.demoConfig
-
-    project.childProjects.each { name, p ->
-        def demoDir = p.file('demos')
-        if (demoDir) {
-            into name, {
-                from demoDir
-                exclude '**/.gradle/**', '**/build/**', '**/gen/**'
-                includeEmptyDirs = false //tomme demo mapper skal ikke tas med
-            }
-        }
-    }
-}
-
 publishing {
     publications {
         mavenJava(MavenPublication) {
             from components.java
-            artifact zipDemos
         }
     }
 }

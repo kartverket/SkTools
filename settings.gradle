@@ -6,7 +6,6 @@ include ':build-utils:db-tools'
 include ':build-utils:wsdocgen'
 include ':build-utils:xjc-plugins'
 
-include ':gradle-demos'
 include ':gradle-plugins'
 include ':gradle-plugins:dbtools-plugin'
 include ':gradle-plugins:ideaextensions-plugin'

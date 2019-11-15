@@ -16,7 +16,7 @@ import org.gradle.api.tasks.TaskAction
 public class SQLTask extends AbstractSQLTask {
     protected static final Logger logger = Logging.getLogger(SQLTask.class);
 
-    private final SQLExecutor executor = new SQLExecutor()
+    protected final SQLExecutor executor = new SQLExecutor()
 
     @Optional
     @Input
@@ -31,12 +31,7 @@ public class SQLTask extends AbstractSQLTask {
     def exec() {
         validate()
 
-        if (getSqlFile()) {
-            logger.info('parsing statements from file: {}', getSqlFile());
-            executor.statements = SQLStatementParser.parseStatements(getSqlFile(), getEncoding());
-        } else {
-            executor.statements = SQLStatementParser.parseStatements(getSqlString());
-        }
+        parseStatements()
 
         ExecSpecs specs = new ExecSpecs();
         specs.username = getUsername();
@@ -46,6 +41,15 @@ public class SQLTask extends AbstractSQLTask {
         specs.failOnError = getFailOnError()
 
         executor.executeStatements(specs)
+    }
+
+    protected void parseStatements() {
+        if (getSqlFile()) {
+            logger.info('parsing statements from file: {}', getSqlFile());
+            executor.statements = SQLStatementParser.parseStatements(getSqlFile(), getEncoding());
+        } else {
+            executor.statements = SQLStatementParser.parseStatements(getSqlString());
+        }
     }
 
 
