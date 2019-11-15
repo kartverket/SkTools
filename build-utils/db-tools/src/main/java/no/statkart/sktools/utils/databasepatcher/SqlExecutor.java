@@ -85,7 +85,7 @@ public class SqlExecutor {
 
                 line = br.readLine();
                 while (line != null) {
-                    tmpScript.append(line).append("\n");
+                    tmpScript.append(line).append('\n');
                     line = br.readLine();
                 }
             }
@@ -112,7 +112,7 @@ public class SqlExecutor {
                     try {
                         line = br.readLine();
                         while (line != null) {
-                            tmpScript.append(line).append("\n");
+                            tmpScript.append(line).append('\n');
                             line = br.readLine();
                         }
                     } catch (IOException ioe) {

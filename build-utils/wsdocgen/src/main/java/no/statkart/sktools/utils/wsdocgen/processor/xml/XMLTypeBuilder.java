@@ -120,7 +120,7 @@ class XMLTypeBuilder {
         String remainingUrlPath = buildJavadocPath(ns, clazz);
         final StringBuilder buffer = new StringBuilder(javadocPath);
         if (remainingUrlPath != null && remainingUrlPath.trim().length() > 0)
-            buffer.append("?").append(remainingUrlPath);
+            buffer.append('?').append(remainingUrlPath);
         return buffer.toString();
     }
 
@@ -138,10 +138,10 @@ class XMLTypeBuilder {
 
                 StringBuilder builder = new StringBuilder();
                 for (String str : host.split("\\.")) {
-                    builder.insert(0, str + "/");
+                    builder.insert(0, str + '/');
                 }
                 builder.append(path);
-                builder.append("/");
+                builder.append('/');
                 builder.append(clazz);
                 builder.append(".html");
 
