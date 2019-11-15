@@ -1,5 +1,6 @@
 package no.statkart.sktools.gradle.plugins.weblogic
 
+import no.statkart.sktools.gradle.testutils.TestKitBase
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.testfixtures.ProjectBuilder
@@ -11,45 +12,37 @@ import no.statkart.sktools.gradle.plugins.weblogic.testtasks.TestClasspathForWeb
  *
  * @author Leif Lislegård
  */
-class WeblogicTaskTest {
+class WeblogicTaskTest extends TestKitBase {
 
     /**
      * Tester at weblogicClasspath blir satt
      */
     @Test
     void testWeblogicClasspath() {
-        //forks a new rootProject in a temp folder
-        Project project = ProjectBuilder.builder().build()
-        def rootDir = project.rootDir
-
         //creates a dummy.jar
-        project.file('some.jar').createNewFile()
+        writeFile('some.jar')
 
 
-        project.apply plugin: WeblogicBasePlugin
-        project.apply plugin: JavaPlugin
+        Project project = ProjectBuilder.builder().build().tap {
+            apply plugin: WeblogicBasePlugin
+            apply plugin: JavaPlugin
+
+
+            dependencies {
+                compile files('some.jar')
+            }
+        }
 
         //tenker oss at weblogic classpath configurasjon også skal inneholde alle compile time dependencies..
         project.configurations.getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME).extendsFrom(project.configurations.getByName(JavaPlugin.COMPILE_CONFIGURATION_NAME))
 
-        //configure project
-        project.with {
-            dependencies.compile files('some.jar')
-        }
 
-        project.task('someWeblogicTask', type: TestClasspathForWeblogicTask)
-
-
-        project.someWeblogicTask.execute()
+        TestClasspathForWeblogicTask task = project.task('someWeblogicTask', type: TestClasspathForWeblogicTask)
+        task.compile()
 
         //sjekker task objektet
-        project.someWeblogicTask.with {
-            assert state.skipped == false
-            assert state.executed == true
-
-            assert getWeblogicClasspath().files == testResult  //forventer at weblogicClasspath er satt og er lik med expected
-            assert testResult == project.files('some.jar').files
-        }
+        task.getWeblogicClasspath().files == task.testResult  //forventer at weblogicClasspath er satt og er lik med expected
+        project.files(task.testResult) == project.files('some.jar')
     }
 
 
