@@ -10,7 +10,7 @@ import java.util.Stack;
 public class ProjectTestutil {
 
     /**
-     * Finner samtlige tasker som angitt task er avgengige av i task-grafen.
+     * Finner samtlige tasker som angitt task er avhengige av i task-grafen.
      */
     public static List<Task> extractDependsOn(Task aTask) {
         List<Task> dependsOnTaskNames = new ArrayList<>();
