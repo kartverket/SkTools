@@ -107,13 +107,13 @@ pipeline { //declarative pipeline syntax
         always {
             //for mulig substituert innhold se https://github.com/jenkinsci/email-ext-plugin/tree/master/src/main/java/hudson/plugins/emailext/plugins/content
             emailext to: 'lislei@kartverket.no',
-                    subject: '$PROJECT_NAME / $JOB_NAME - build# $BUILD_NUMBER - $BUILD_STATUS\'',
+                    subject: '$JOB_NAME - build# $BUILD_NUMBER - $BUILD_STATUS\'',
                     replyTo: 'noreply@kartverket.no',
                     mimeType: 'text/html',
                     body: '''
 <html>
 <body>
-You are receiving this email because <a href="$BUILD_URL">Build $JOB_NAME #BUILD_NUMBER $BUILD_CAUSE has been set to: $BUILD_STATUS</a>
+You are receiving this email because $PROJECT_NAME build <a href="$BUILD_URL">$JOB_NAME #$BUILD_NUMBER</a> has been set to: $BUILD_STATUS
 
 <br>
 <br>
