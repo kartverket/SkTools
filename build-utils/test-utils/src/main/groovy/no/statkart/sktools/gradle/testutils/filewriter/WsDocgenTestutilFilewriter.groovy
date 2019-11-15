@@ -9,7 +9,7 @@ import java.nio.file.StandardOpenOption
  *
  * @author Leif Lislegård
  */
-class WsDocgenTestutilFilewriter extends AbstractTestutilFilewriter {
+class WsDocgenTestutilFilewriter {
 
     /**
      * Skriver kildekode for en simpel testservice implementasjon (WebService) til fil.

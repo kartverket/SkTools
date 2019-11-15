@@ -1,15 +1,12 @@
 package no.statkart.sktools.gradle.testutils
 
-import no.statkart.sktools.testutils.RootDirectoryLocator
 import org.gradle.api.Project
-import org.gradle.api.internal.project.ProjectInternal
-import org.gradle.testfixtures.ProjectBuilder
-import org.gradle.api.Task
-import org.testng.Assert
 import org.gradle.api.ProjectState
-import org.gradle.api.tasks.util.PatternSet
-import org.gradle.api.internal.artifacts.dependencies.DefaultSelfResolvingDependency
+import org.gradle.api.Task
+import org.gradle.api.internal.project.ProjectInternal
 import org.gradle.api.plugins.ExtraPropertiesExtension
+import org.gradle.testfixtures.ProjectBuilder
+import org.testng.Assert
 
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
@@ -102,29 +99,7 @@ class ProjectHelper {
         }
     }
 
-    File createNewFileWithDirsRelativeToProject(String path, String... texts) {
-        File file = project.file(path)
-        createFile(file, texts)
-    }
 
-    static File createTempFile(String filetype = '.txt', File dir = null, String... texts) {
-        File file = File.createTempFile('test', filetype, dir)
-        file.deleteOnExit()
-        createFile(file, texts)
-    }
-
-    static File createFile(File file, String... texts) {
-        file.parentFile.mkdirs()
-        file.createNewFile()
-        file.withPrintWriter { def writer ->
-            for (String text : texts) {
-                writer.println text
-            }
-            writer.flush()
-            return null
-        }
-        return file
-    }
 
     /**
      * Setter properties på prosjektet.
@@ -165,40 +140,11 @@ class ProjectHelper {
     }
 
     /**
-     * @return sortert liste av gradle jars
-     */
-    public synchronized List<File> getGradleJars() {
-        if (gradleJars == null) {
-            DefaultSelfResolvingDependency dependency = (DefaultSelfResolvingDependency) project.getDependencies().gradleApi()
-            Collection<File> files = dependency.getFiles().getAsFileTree().matching(new PatternSet(includes: ['**/*gradle-*.jar'])).getFiles()
-            gradleJars = new ArrayList<File>(files)
-            Collections.sort(gradleJars)
-        }
-        return gradleJars
-    }
-    private static List<File> gradleJars = null;
-
-    /**
      * Setter conventional {@code WEBLOGIC_HOME} og {@code WEBLOGIC_VERSION} property for prosjekt
      */
     public ProjectHelper withConventionalWEBLOGIC() {
-        File gradlePropertiesFile = new File(RootDirectoryLocator.getRootDirectory(), "gradle.properties")
-        def gradleProperties = new Properties()
-        if (gradlePropertiesFile.exists()) {
-            gradleProperties.load(gradlePropertiesFile.newInputStream())
-        }
-
-        ['WEBLOGIC_HOME', 'WEBLOGIC_VERSION'].each { key ->
-            if (!project.ext.has(key)) {
-                if (gradleProperties.containsKey(key)) {
-                    project.ext.set(key, gradleProperties.get(key))
-                } else if (System.getenv(key) != null) {
-                    project.ext.set(key, System.getenv(key))
-                } else {
-                    throw new Error("Env variabel for ${key} ikke satt!")
-                }
-            }
-        }
+        project.ext.set('WEBLOGIC_HOME', TestKitBase.testProperties.get('WEBLOGIC_HOME'))
+        project.ext.set('WEBLOGIC_VERSION', TestKitBase.testProperties.get('WEBLOGIC_VERSION'))
 
         return this
     }
