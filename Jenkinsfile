@@ -107,7 +107,7 @@ pipeline { //declarative pipeline syntax
         always {
             //for mulig substituert innhold se https://github.com/jenkinsci/email-ext-plugin/tree/master/src/main/java/hudson/plugins/emailext/plugins/content
             emailext to: 'lislei@kartverket.no',
-                    subject: '$JOB_NAME - build# $BUILD_NUMBER - $BUILD_STATUS\'',
+                    subject: '$JOB_NAME - build# $BUILD_NUMBER - $BUILD_STATUS',
                     replyTo: 'noreply@kartverket.no',
                     mimeType: 'text/html',
                     body: '''
