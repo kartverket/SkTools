@@ -27,7 +27,7 @@ class ProjectHelper {
     /**
      * Emulerer eksekvering av task med dependencies.
      *
-     * Dependencies blir ikke eksekvert i noen bestemt rekkefølge. Rekkefølgenn kan derav divergere ifra gradles egen evaluering.
+     * Dependencies blir ikke eksekvert i noen bestemt rekkefølge. Rekkefølge kan derav divergere ifra gradles egen evaluering.
      */
     Task executeTask(String taskName) {
         return execute(project.tasks[taskName])
@@ -120,7 +120,7 @@ class ProjectHelper {
     }
 
     /**
-     * Finner samtlige tasker som angitt task er avgengige av i task-grafen.
+     * Finner samtlige tasker som angitt task er avhengige av i task-grafen.
      */
     List<String> findDependsOnTaskNames(String taskName) {
         List<String> dependsOnTaskNames = []
