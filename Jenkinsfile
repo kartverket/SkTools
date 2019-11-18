@@ -47,7 +47,7 @@ pipeline { //declarative pipeline syntax
         GRADLE_OPTS = "-XX:MaxPermSize=512m" //java 7 trenger litt mere permGen space
         BRANCH_NAME = "${params.BRANCH_NAME}"
 
-        //for publisering til sentralt maven repo bines opp via jenkins credential (secret text)
+        //for publisering til sentralt maven repo bindes opp via jenkins credential (secret text)
         MAVEN_PUBLISH = credentials('MAVEN_DEPLOY_RELEASES')
     }
 
@@ -59,7 +59,7 @@ pipeline { //declarative pipeline syntax
         }
         stage('Build') {
             steps {
-                bat "gradle assemble publishToMavenLocal ${gradleOptions(this)}"
+                bat "gradle assemble ${gradleOptions(this)}"
             }
         }
 
@@ -98,7 +98,7 @@ pipeline { //declarative pipeline syntax
 
         stage('Publish') {
             steps {
-                bat "gradle publish ${gradleOptions(this)} --init-script config/gradle/scripts/mavenPublish.gradle"
+                bat "gradle publish ${gradleOptions(this)} g"
             }
         }
     }

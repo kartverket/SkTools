@@ -65,7 +65,10 @@ task sourceJar(type: Jar) {
 }
 
 publishing {
-    publications.matching { it.name == 'pluginMaven' }.each {
-        artifact sourceJar
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            artifact sourceJar
+        }
     }
 }
