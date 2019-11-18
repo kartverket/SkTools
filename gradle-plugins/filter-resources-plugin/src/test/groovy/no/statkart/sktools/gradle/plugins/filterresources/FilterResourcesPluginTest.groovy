@@ -36,7 +36,7 @@ class FilterResourcesPluginTest extends TestKitBase {
         writeFile("build.gradle", '''
             plugins {
               id 'java'
-              id 'sktools-filter-resources-plugin'
+              id 'sktools.filter-resources'
             }
             
             project.ext.myProperty2 = 'testValue'
@@ -71,7 +71,7 @@ class FilterResourcesPluginTest extends TestKitBase {
         writeFile("build.gradle", '''
             plugins {
               id 'java'
-              id 'sktools-filter-resources-plugin'
+              id 'sktools.filter-resources'
             }
             
             project.ext.myProperty1 = 'testValue'
@@ -103,7 +103,7 @@ class FilterResourcesPluginTest extends TestKitBase {
         writeFile("build.gradle", '''
             plugins {
               id 'java'
-              id 'sktools-filter-resources-plugin'
+              id 'sktools.filter-resources'
             }
             
             sourceSets {
@@ -130,7 +130,7 @@ class FilterResourcesPluginTest extends TestKitBase {
         writeFile("build.gradle", '''
             plugins {
               id 'java'
-              id 'sktools-filter-resources-plugin'
+              id 'sktools.filter-resources'
             }
             
             sourceSets {
@@ -174,7 +174,7 @@ class FilterResourcesPluginTest extends TestKitBase {
         writeFile("build.gradle", '''
             plugins {
               id 'java'
-              id 'sktools-filter-resources-plugin'
+              id 'sktools.filter-resources'
             }
             
             sourceSets {
@@ -228,7 +228,7 @@ class FilterResourcesPluginTest extends TestKitBase {
         writeFile("build.gradle", '''
             plugins {
               id 'java'
-              id 'sktools-filter-resources-plugin'
+              id 'sktools.filter-resources'
               id 'idea'
             }
             

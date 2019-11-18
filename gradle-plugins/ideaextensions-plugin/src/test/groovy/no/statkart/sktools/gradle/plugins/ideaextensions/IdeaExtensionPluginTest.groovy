@@ -1,6 +1,9 @@
 package no.statkart.sktools.gradle.plugins.ideaextensions
 
 import no.statkart.sktools.gradle.testutils.TestKitBase
+import org.gradle.api.Project
+import org.gradle.testfixtures.ProjectBuilder
+import org.testng.Assert
 import org.testng.annotations.Test
 
 import static org.assertj.core.api.Assertions.assertThat
@@ -17,15 +20,11 @@ class IdeaExtensionPluginTest extends TestKitBase {
      */
     @Test
     void testApplyPlugin() {
-        writeFile("build.gradle", '''
-            plugins {
-              id 'sktools-ideaextensions-plugin'
-            }
-            
-            assert ideaExtensions instanceof no.statkart.sktools.gradle.plugins.ideaextensions.IdeaExtensionsPluginExtension
-        ''')
+        Project project = projectBuilder().build().tap {
+            apply plugin: 'sktools-ideaextensions-plugin'
+        }
 
-        assertNoFailures(testGradleBuild("tasks"))
+        Assert.assertTrue(project.ideaExtensions instanceof IdeaExtensionsPluginExtension)
     }
 
 
@@ -37,7 +36,7 @@ class IdeaExtensionPluginTest extends TestKitBase {
     void testMasksAndPaths() {
         writeFile("build.gradle", '''
             plugins {
-              id 'sktools-ideaextensions-plugin'
+              id 'sktools.ideaextensions'
             }
             
             ideaExtensions {
@@ -61,7 +60,7 @@ class IdeaExtensionPluginTest extends TestKitBase {
     void testVCS() {
         writeFile("build.gradle", '''
             plugins {
-              id 'sktools-ideaextensions-plugin'
+              id 'sktools.ideaextensions'
             }
             
             ideaExtensions {
@@ -82,7 +81,7 @@ class IdeaExtensionPluginTest extends TestKitBase {
     void testInspections() {
         writeFile("build.gradle", '''
             plugins {
-              id 'sktools-ideaextensions-plugin'
+              id 'sktools.ideaextensions'
             }
             
             ideaExtensions {
@@ -113,7 +112,7 @@ class IdeaExtensionPluginTest extends TestKitBase {
     void testCodeStyle() {
         writeFile("build.gradle", '''
             plugins {
-              id 'sktools-ideaextensions-plugin'
+              id 'sktools.ideaextensions'
             }
             
             ideaExtensions {
@@ -150,7 +149,7 @@ class IdeaExtensionPluginTest extends TestKitBase {
     void testFoldergeneration() {
         writeFile("subproject/build.gradle", '''
             plugins {
-              id 'sktools-ideaextensions-plugin'
+              id 'sktools.ideaextensions'
               id 'groovy'
             }
             

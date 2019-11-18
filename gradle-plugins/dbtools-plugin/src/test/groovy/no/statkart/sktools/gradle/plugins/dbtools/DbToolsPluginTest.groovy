@@ -34,6 +34,20 @@ class DbToolsPluginTest extends TestKitBase {
     }
 
     /**
+     * Tester registrering av plugin via navn
+     */
+    @Test
+    void testApplyPlugin2() {
+        writeFile("build.gradle", '''
+            plugins {
+              id 'sktools.dbtools'
+            }
+            ''')
+
+        assertNoFailures(testGradleBuild(":info"))
+    }
+
+    /**
      * Tester og demonstrerer angivelse av credentials.
      *
      * Testen illustrerer at credentials på toolset og tasker kan bli satt runtime.

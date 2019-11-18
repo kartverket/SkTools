@@ -44,7 +44,7 @@ class XjcPluginTest extends TestKitBase {
         //config
         writeFile("build.gradle", """
             plugins {
-              id 'sktools-xjc-plugin'
+                id 'sktools.xjc'
             }
 
             repositories {
@@ -63,11 +63,11 @@ class XjcPluginTest extends TestKitBase {
         //executes the gen task
         BuildResult buildResult = testGradleBuild("compileJava")
         assertThat(buildResult.getTasks())
-                .extracting("path", "outcome")
-                .contains(tuple(":genMain0Schema", TaskOutcome.SUCCESS))
+            .extracting("path", "outcome")
+            .contains(tuple(":genMain0Schema", TaskOutcome.SUCCESS))
 
         assertThat(file("build/xjc/main/main0Schema/no/statkart/sktools/test/SimpleType.java"))
-                .exists()
+            .exists()
     }
 
     /**
@@ -81,7 +81,7 @@ class XjcPluginTest extends TestKitBase {
         //config
         writeFile("build.gradle", """
             plugins {
-              id 'sktools-xjc-plugin'
+              id 'sktools.xjc'
             }
 
             repositories {
@@ -103,7 +103,7 @@ class XjcPluginTest extends TestKitBase {
         testGradleBuild("genMain0Schema")
 
         assertThat(contentOf(file("build/xjc/main/main0Schema/no/statkart/sktools/test/DocumentedSimpleType.java")))
-                .contains("Ekstra dokumentasjon for typen.")
+            .contains("Ekstra dokumentasjon for typen.")
     }
 
     /**
@@ -120,7 +120,7 @@ class XjcPluginTest extends TestKitBase {
 
         writeFile("build.gradle", """
             plugins {
-              id 'sktools-xjc-plugin'
+              id 'sktools.xjc'
             }
 
             repositories {
@@ -147,10 +147,10 @@ class XjcPluginTest extends TestKitBase {
         assertThat(buildResult.task(':genMain0Schema').getOutcome()).isEqualTo(TaskOutcome.SUCCESS)
 
         assertThat(contentOf(file("build/xjc/main/main0Schema/no/statkart/sktools/test/StringList.java")))
-        .contains(
-            'import some_adapter.Fqn;'
-            , 'extends Fqn'
-        )
+            .contains(
+                'import some_adapter.Fqn;'
+                , 'extends Fqn'
+            )
     }
 
     /**
@@ -161,7 +161,7 @@ class XjcPluginTest extends TestKitBase {
     void ideaTasksCanHandleSourceSetConfiguration() {
         writeFile("build.gradle", '''
             plugins {
-              id 'sktools-xjc-plugin'
+              id 'sktools.xjc'
               id 'idea'
             }
             
@@ -186,7 +186,7 @@ class XjcPluginTest extends TestKitBase {
     void canSpecifyTaskNameForGen() {
         writeFile("build.gradle", '''
             plugins {
-              id 'sktools-xjc-plugin'
+              id 'sktools.xjc'
             }
             
             sourceSets {
@@ -208,7 +208,7 @@ class XjcPluginTest extends TestKitBase {
     void canSpecifyGenOutputPath() {
         writeFile("build.gradle", '''
             plugins {
-              id 'sktools-xjc-plugin'
+              id 'sktools.xjc'
               id 'idea'
             }
             
@@ -244,7 +244,7 @@ class XjcPluginTest extends TestKitBase {
 
         writeFile("build.gradle", '''
             plugins {
-              id 'sktools-xjc-plugin'
+              id 'sktools.xjc'
             }
             
             sourceSets {
@@ -295,8 +295,8 @@ class XjcPluginTest extends TestKitBase {
         }
 
         assertThat(project.configurations.jaxb.resolvedConfiguration.getResolvedArtifacts()).
-                extracting("artifact.name").
-                contains("jaxb-xjc").doesNotContain("ant")
+            extracting("artifact.name").
+            contains("jaxb-xjc").doesNotContain("ant")
     }
 
 }

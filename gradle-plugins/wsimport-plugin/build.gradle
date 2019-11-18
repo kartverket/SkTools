@@ -6,6 +6,14 @@ plugins {
 
 group = 'no.statkart.sktools.gradle'
 
+gradlePlugin {
+    plugins {
+        wsimport {
+            id = 'sktools.wsimport'
+            implementationClass = 'no.statkart.sktools.gradle.plugins.wsimport.WsImportPlugin'
+        }
+    }
+}
 
 
 dependencies {
@@ -18,7 +26,7 @@ task sourceJar(type: Jar) {
 }
 
 publishing {
-    publications.all {
+    publications.matching { it.name == 'pluginMaven' }.each {
         artifact sourceJar
     }
 }

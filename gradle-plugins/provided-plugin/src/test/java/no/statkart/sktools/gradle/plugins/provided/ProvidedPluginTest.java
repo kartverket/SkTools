@@ -1,12 +1,16 @@
 package no.statkart.sktools.gradle.plugins.provided;
 
+import no.statkart.sktools.gradle.testutils.TestKitBase;
 import org.assertj.core.api.Assertions;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.testfixtures.ProjectBuilder;
+import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import java.io.IOException;
 
 
 /**
@@ -15,7 +19,8 @@ import org.testng.annotations.Test;
  * @author Tor Egil R. Strand
  * @since 1.2
  */
-public class ProvidedPluginTest {
+public class ProvidedPluginTest extends TestKitBase {
+
     /**
      * Tester registrering av plugin via navn.
      */
@@ -33,6 +38,21 @@ public class ProvidedPluginTest {
         Assertions.assertThat(project.getConfigurations().findByName(ProvidedPlugin.PROVIDED_CONFIGURATION_NAME))
                 .as("Configuration er registrert").isNotNull();
     }
+
+    /**
+     * Tester plugin via alternativt navn
+     */
+    @Test
+    void testApplyPlugin2() throws Exception {
+        writeFile("build.gradle",  "" +
+            "plugins {                                  " +
+            "       id 'sktools.provided'        " +
+            "}                                          "
+        );
+
+        assertNoFailures(testGradleBuild("tasks"));
+    }
+
 
     @Test
     public void testProvidedConfiguration() {

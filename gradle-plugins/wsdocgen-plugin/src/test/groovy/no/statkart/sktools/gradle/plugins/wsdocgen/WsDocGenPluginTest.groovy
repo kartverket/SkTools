@@ -26,14 +26,13 @@ class WsDocGenPluginTest extends TestKitBase {
      * Tester registrering av plugin via navn
      */
     @Test
-    void appplyPlugin() {
-        writeFile("build.gradle", """
-            plugins {
-              id 'sktools-wsdocgen-plugin'
-            }
-        """)
+    void applyPlugin() {
+        Project project = projectBuilder().build().tap {
+            apply plugin: 'sktools-wsdocgen-plugin'
+        }
 
-        assertNoFailures(testGradleBuild("assemble"))
+        assertThat(project.getPlugins().getPlugin(WsDocGenPlugin.class)).isNotNull()
+        assertThat(project.convention.plugins.wsdoc).isInstanceOf(WsDocGenConvention.class)
     }
 
 
@@ -42,7 +41,7 @@ class WsDocGenPluginTest extends TestKitBase {
         writeFile("build.gradle", """
             plugins {
               id 'java'
-              id 'sktools-wsdocgen-plugin'
+              id 'sktools.wsdoc'
             }
 
             sourceSets {
@@ -185,7 +184,7 @@ class WsDocGenPluginTest extends TestKitBase {
 
         writeFile("build.gradle", """
             plugins {
-              id 'sktools-wsdocgen-plugin'
+              id 'sktools.wsdoc'
             }
 
             sourceSets {
@@ -218,7 +217,7 @@ class WsDocGenPluginTest extends TestKitBase {
         //ps: notice that the java plugin is applied after the plugin, at a  later stage.
         writeFile("build.gradle", """
             plugins {
-              id 'sktools-wsdocgen-plugin'
+              id 'sktools.wsdoc'
               id 'java' //after
             }
 

@@ -2,6 +2,7 @@ package no.statkart.sktools.gradle.plugins.wsimport
 
 
 import no.statkart.sktools.gradle.testutils.TestKitBase
+import org.gradle.api.Project
 import org.testng.annotations.Test
 
 import java.nio.file.Files
@@ -18,14 +19,12 @@ class WsImportPluginTest extends TestKitBase {
      */
     @Test
     void applyPlugin() {
+        Project project = projectBuilder().build().tap {
+            apply plugin: 'sktools-wsimport-plugin'
+        }
 
-        writeFile("build.gradle", """
-            plugins {
-              id 'sktools-wsimport-plugin'
-            }
-        """)
-
-        assertNoFailures(testGradleBuild("classes"))
+        assertThat(project.getPlugins().getPlugin(WsImportPlugin.class)).isNotNull()
+        assertThat(project.plugins.hasPlugin('sktools-wsimport-plugin')).isTrue()
     }
 
     @Test
@@ -33,7 +32,7 @@ class WsImportPluginTest extends TestKitBase {
 
         writeFile("build.gradle", """
             plugins {
-              id 'sktools-wsimport-plugin'
+              id 'sktools.wsimport'
               id 'idea'
             }
         """)
@@ -48,7 +47,7 @@ class WsImportPluginTest extends TestKitBase {
     void wsimport_generates_sources() {
         writeFile("build.gradle", """
             plugins {
-              id 'sktools-wsimport-plugin'
+              id 'sktools.wsimport'
             }
             
             repositories {
@@ -68,7 +67,7 @@ class WsImportPluginTest extends TestKitBase {
     void jarFileIncludesResources() {
         writeFile("build.gradle", """
             plugins {
-              id 'sktools-wsimport-plugin'
+              id 'sktools.wsimport'
             }
             
             repositories {

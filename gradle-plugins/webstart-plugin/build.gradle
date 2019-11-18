@@ -6,6 +6,14 @@ plugins {
 
 group = 'no.statkart.sktools.gradle'
 
+gradlePlugin {
+    plugins {
+        webstart {
+            id = 'sktools.webstart'
+            implementationClass = 'no.statkart.sktools.gradle.plugins.webstart.WebstartPlugin'
+        }
+    }
+}
 
 
 dependencies {
@@ -19,7 +27,7 @@ task sourceJar(type: Jar) {
 }
 
 publishing {
-    publications.all {
+    publications.matching { it.name == 'pluginMaven' }.each {
         artifact sourceJar
     }
 }

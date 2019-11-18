@@ -2,6 +2,7 @@ package no.statkart.sktools.gradle.plugins.wsgen
 
 import no.statkart.sktools.gradle.testutils.TestKitBase
 import org.assertj.core.api.Condition
+import org.gradle.api.Project
 import org.gradle.testkit.runner.BuildResult
 import org.testng.annotations.Test
 
@@ -18,14 +19,11 @@ class WsdlGenPluginTest extends TestKitBase {
      */
     @Test
     void applyPlugin() {
+        Project project = projectBuilder().build().tap {
+            apply plugin: 'sktools-wsgen-plugin'
+        }
 
-        writeFile("build.gradle", """
-            plugins {
-              id 'sktools-wsgen-plugin'
-            }
-        """)
-
-        assertNoFailures(testGradleBuild("classes"))
+        assertThat(project.getPlugins().getPlugin(WsdlGenPlugin.class)).isNotNull()
     }
 
 
@@ -33,7 +31,7 @@ class WsdlGenPluginTest extends TestKitBase {
     void genWsdl_generates_sources() {
         writeFile("build.gradle", """
             plugins {
-              id 'sktools-wsgen-plugin'
+              id 'sktools.wsgen'
             }
             
             repositories {
@@ -55,7 +53,7 @@ class WsdlGenPluginTest extends TestKitBase {
     void warFileIncludesResources() {
         writeFile("build.gradle", """
             plugins {
-              id 'sktools-wsgen-plugin'
+              id 'sktools.wsgen'
             }
             
             repositories {

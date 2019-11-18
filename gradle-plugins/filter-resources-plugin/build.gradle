@@ -6,7 +6,14 @@ plugins {
 
 group = 'no.statkart.sktools.gradle'
 
-
+gradlePlugin {
+    plugins {
+        filterResources {
+            id = 'sktools.filter-resources'
+            implementationClass = 'no.statkart.sktools.gradle.plugins.filterresources.FilterResourcesPlugin'
+        }
+    }
+}
 
 dependencies {
     testImplementation project(':build-utils:test-utils')
@@ -18,8 +25,7 @@ task sourceJar(type: Jar) {
 }
 
 publishing {
-    publications.all {
+    publications.matching { it.name == 'pluginMaven' }.each {
         artifact sourceJar
     }
 }
-

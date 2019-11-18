@@ -1,9 +1,12 @@
 package no.statkart.sktools.gradle.plugins.properties
 
-
+import no.statkart.sktools.gradle.plugins.properties.extension.PropertyUtils
 import no.statkart.sktools.gradle.testutils.TestKitBase
 import org.assertj.core.api.Assertions
+import org.gradle.api.Project
+import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.testkit.runner.BuildResult
+import org.testng.Assert
 import org.testng.annotations.Test
 
 /**
@@ -18,15 +21,12 @@ class PropertiesPluginTest extends TestKitBase {
      */
     @Test
     void testApplyPlugin() {
-        writeFile("build.gradle", '''
-            plugins {
-              id 'sktools-properties-plugin'
-            }
-            
-            assert propertyUtils instanceof no.statkart.sktools.gradle.plugins.properties.extension.PropertyUtils
-        ''')
+        //forks a new project in a temp folder
+        Project project = ProjectBuilder.builder().build().tap {
+            apply plugin: 'sktools-properties-plugin'
+        }
 
-        assertNoFailures(testGradleBuild("tasks"))
+        Assert.assertTrue(project.extensions.propertyUtils instanceof PropertyUtils)
     }
 
     /**
@@ -37,7 +37,7 @@ class PropertiesPluginTest extends TestKitBase {
         writeFile("build.gradle", '''
             plugins {
               id 'maven-publish'
-              id 'sktools-properties-plugin'
+              id 'sktools.properties'
             }
             
             project.propertyUtils.expandProjectProperties()
@@ -69,7 +69,7 @@ class PropertiesPluginTest extends TestKitBase {
     void testParentProjectProperties() {
         writeFile("subproject/build.gradle", '''
             plugins {
-              id 'sktools-properties-plugin'
+              id 'sktools.properties'
             }
 
             ext.filteredProperty = "filtered${testProperty}"

@@ -6,7 +6,14 @@ plugins {
 
 group = 'no.statkart.sktools.gradle'
 
-
+gradlePlugin {
+    plugins {
+        ideaextensions {
+            id = 'sktools.ideaextensions'
+            implementationClass = 'no.statkart.sktools.gradle.plugins.ideaextensions.IdeaExtensionsPlugin'
+        }
+    }
+}
 
 dependencies {
     testImplementation project(':build-utils:test-utils')
@@ -18,8 +25,7 @@ task sourceJar(type: Jar) {
 }
 
 publishing {
-    publications.all {
+    publications.matching { it.name == 'pluginMaven' }.each {
         artifact sourceJar
     }
 }
-

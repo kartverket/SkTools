@@ -6,6 +6,14 @@ plugins {
 
 group = 'no.statkart.sktools.gradle'
 
+gradlePlugin {
+    plugins {
+        weblogicWswar {
+            id = 'sktools.weblogic-wswar'
+            implementationClass = 'no.statkart.sktools.gradle.plugins.weblogic.wswar.WeblogicWsWarPlugin'
+        }
+    }
+}
 
 
 dependencies {
@@ -20,7 +28,7 @@ task sourceJar(type: Jar) {
 }
 
 publishing {
-    publications.all {
+    publications.matching { it.name == 'pluginMaven' }.each {
         artifact sourceJar
     }
 }

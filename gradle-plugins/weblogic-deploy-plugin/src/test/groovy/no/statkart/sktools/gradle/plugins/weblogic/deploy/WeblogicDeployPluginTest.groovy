@@ -27,6 +27,20 @@ class WeblogicDeployPluginTest extends TestKitBase {
     }
 
     /**
+     * Tester plugin via alternativt navn
+     */
+    @Test
+    void testApplyPlugin2() {
+        writeFile("build.gradle", '''
+            plugins {
+                id 'sktools.weblogic-deploy'
+            }
+''')
+
+        assertNoFailures(testGradleBuild("tasks"))
+    }
+
+    /**
      * Tester og demonstrerer angivelse av konfigurasjon
      */
     @Test

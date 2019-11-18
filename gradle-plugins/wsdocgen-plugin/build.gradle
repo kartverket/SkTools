@@ -6,7 +6,14 @@ plugins {
 
 group = 'no.statkart.sktools.gradle'
 
-
+gradlePlugin {
+    plugins {
+        wsdoc {
+            id = 'sktools.wsdoc'
+            implementationClass = 'no.statkart.sktools.gradle.plugins.wsdocgen.WsDocGenPlugin'
+        }
+    }
+}
 
 dependencies {
     implementation project(':build-utils:wsdocgen')
@@ -20,7 +27,7 @@ task sourceJar(type: Jar) {
 }
 
 publishing {
-    publications.all {
+    publications.matching { it.name == 'pluginMaven' }.each {
         artifact sourceJar
     }
 }

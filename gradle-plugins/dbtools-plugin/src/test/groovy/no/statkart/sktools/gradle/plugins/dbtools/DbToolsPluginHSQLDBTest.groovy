@@ -333,7 +333,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
         // STEG 2 - konfigurering av plugin
         writeFile("build.gradle", """
             plugins {
-              id 'sktools-dbtools-plugin'
+              id 'sktools.dbtools'
             }
 
             repositories {

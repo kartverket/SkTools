@@ -46,7 +46,7 @@ class WebstartPluginTest extends TestKitBase {
 
         writeFile("build.gradle", """
             plugins {
-              id 'sktools-webstart-plugin'
+              id 'sktools.webstart'
             }
             version = 101
 
@@ -109,7 +109,7 @@ class WebstartPluginTest extends TestKitBase {
 
         writeFile("build.gradle", """
             plugins {
-              id 'sktools-webstart-plugin'
+              id 'sktools.webstart'
             }
             version = '2.0'
             
@@ -316,7 +316,7 @@ class WebstartPluginTest extends TestKitBase {
 
         writeFile("build.gradle", """
             plugins {
-              id 'sktools-webstart-plugin'
+              id 'sktools.webstart'
             }
             
             webstart {

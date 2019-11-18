@@ -6,6 +6,14 @@ plugins {
 
 group = 'no.statkart.sktools.gradle'
 
+gradlePlugin {
+    plugins {
+        weblogicDeploy {
+            id = 'sktools.weblogic-deploy'
+            implementationClass = 'no.statkart.sktools.gradle.plugins.weblogic.deploy.WeblogicDeployPlugin'
+        }
+    }
+}
 
 dependencies {
     testImplementation project(':build-utils:test-utils')
@@ -17,7 +25,7 @@ task sourceJar(type: Jar) {
 }
 
 publishing {
-    publications.all {
+    publications.matching { it.name == 'pluginMaven' }.each {
         artifact sourceJar
     }
 }

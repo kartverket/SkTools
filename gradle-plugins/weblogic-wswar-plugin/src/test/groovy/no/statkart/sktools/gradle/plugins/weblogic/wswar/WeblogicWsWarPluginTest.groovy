@@ -85,7 +85,7 @@ class WeblogicWsWarPluginTest extends TestKitBase {
     void testCompileTask() {
         writeFile("build.gradle", """
             plugins {
-              id 'sktools-weblogic-wswar-plugin'
+              id 'sktools.weblogic-wswar'
             }
         """)
         writeGradleProperties(testProperties.findAll {
@@ -109,7 +109,7 @@ class WeblogicWsWarPluginTest extends TestKitBase {
     void testWarTask() {
         writeFile("build.gradle", """
             plugins {
-              id 'sktools-weblogic-wswar-plugin'
+              id 'sktools.weblogic-wswar'
             }
         """)
         writeGradleProperties(testProperties.findAll {
@@ -292,7 +292,7 @@ class WeblogicWsWarPluginTest extends TestKitBase {
         writeFile("build.gradle", """
             plugins {
               id 'java'
-              id 'sktools-weblogic-wswar-plugin'
+              id 'sktools.weblogic-wswar'
             }
         """)
         writeGradleProperties(testProperties.findAll {

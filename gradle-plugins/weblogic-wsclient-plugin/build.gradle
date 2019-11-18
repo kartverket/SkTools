@@ -1,8 +1,20 @@
-apply plugin: 'groovy'
-apply plugin: 'maven-publish'
+plugins {
+    id 'groovy'
+    id 'maven-publish'
+    id 'java-gradle-plugin'
+}
 
 //deprecated - fjernes i 1.6
 group = 'no.statkart.sktools.gradle'
+
+gradlePlugin {
+    plugins {
+        weblogicWsclient {
+            id = 'sktools.weblogic-wsclient'
+            implementationClass = 'no.statkart.sktools.gradle.plugins.weblogic.wsclient.WeblogicWsClientPlugin'
+        }
+    }
+}
 
 dependencies {
     compileOnly gradleApi()
@@ -20,10 +32,7 @@ task sourceJar(type: Jar) {
 }
 
 publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-            artifact sourceJar
-        }
+    publications.matching { it.name == 'pluginMaven' }.each {
+        artifact sourceJar
     }
 }
