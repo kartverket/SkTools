@@ -98,7 +98,7 @@ pipeline { //declarative pipeline syntax
 
         stage('Publish') {
             steps {
-                bat "gradle publish ${gradleOptions(this)} g"
+                bat "gradle publish ${gradleOptions(this)} --init-script config/gradle/scripts/mavenPublish.gradle"
             }
         }
     }
