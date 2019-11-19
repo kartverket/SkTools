@@ -1,4 +1,4 @@
-#!groovy
+﻿#!groovy
 
 /*
  Multibranch Pipeline for Continuous integration (CI) prosess i Jenkins.
@@ -46,7 +46,7 @@ pipeline { //declarative pipeline syntax
         ORG_GRADLE_PROJECT_sktools_versjon = "${params.sktools_versjon}"
         BRANCH_NAME = "${params.BRANCH_NAME}"
 
-        //for publisering til sentralt maven repo bines opp via jenkins credential (secret text)
+        //for publisering til sentralt maven repo bindes opp via jenkins credential (secret text)
         MAVEN_PUBLISH = credentials('MAVEN_DEPLOY_RELEASES')
     }
 
@@ -58,7 +58,7 @@ pipeline { //declarative pipeline syntax
         }
         stage('Build') {
             steps {
-                bat "gradle assemble publishToMavenLocal ${gradleOptions(this)}"
+                bat "gradle assemble ${gradleOptions(this)}"
             }
         }
 
@@ -66,8 +66,11 @@ pipeline { //declarative pipeline syntax
             parallel {
                 stage('Test gradle baseline') {
                     steps {
-                        bat "gradle --version"
-                        bat "gradle testGradle4.10.2 -DignoreFailures=true ${gradleOptions(this)}"
+                        //tester med spesifiserte minstekrav
+                        withEnv(['WEBLOGIC_VERSION=12.1.3.0', "WEBLOGIC_HOME=${WEBLOGIC_HOME('12.1.3.0', env)}"]) {
+                            bat "gradle --version"
+                            bat "gradle testGradle4.10.2 -DignoreFailures=true ${gradleOptions(this)}"
+                        }
                     }
                     post {
                         always {
@@ -92,35 +95,6 @@ pipeline { //declarative pipeline syntax
             }
         }
 
-        stage('Integration tests') {
-            parallel {
-                stage('Integration Test Baseline') {
-                    tools {
-                        gradle 'Gradle 4.10.2' //spesifisert minstekrav
-                    }
-                    steps {
-                        withEnv(['EXECUTOR_NUMBER=1', 'WEBLOGIC_VERSION=12.1.3.0', "WEBLOGIC_HOME=${WEBLOGIC_HOME('12.1.3.0', env)}"]) {
-                            bat "gradle --version"
-                            bat "gradle runDemos ${gradleOptions(this)}"
-                        }
-                    }
-                }
-                stage('Integration Test Latest') {
-                    tools {
-                        gradle 'Gradle 4.10.2' //latest og greatest (kan også være neste major versjon)
-                        jdk 'Java 8 Latest' //weblogic krever denne major versjonen av java
-                    }
-                    steps {
-                        //setting unique value for EXECUTOR_NUMBER - helps seed randomness in choosing port# in database demos
-                        withEnv(['EXECUTOR_NUMBER=2', 'WEBLOGIC_VERSION=12.1.3.0', "WEBLOGIC_HOME=${WEBLOGIC_HOME('12.1.3.0', env)}"]) {
-                            bat "gradle --version"
-                            bat "gradle runDemos ${gradleOptions(this)} -DbuildDirName=gradle4.10.2"
-                        }
-                    }
-                }
-            }
-        }
-
         stage('Publish') {
             steps {
                 bat "gradle publish ${gradleOptions(this)} --init-script config/gradle/scripts/mavenPublish.gradle"
@@ -132,13 +106,13 @@ pipeline { //declarative pipeline syntax
         always {
             //for mulig substituert innhold se https://github.com/jenkinsci/email-ext-plugin/tree/master/src/main/java/hudson/plugins/emailext/plugins/content
             emailext to: 'lislei@kartverket.no',
-                    subject: '$PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS!',
+                    subject: '$JOB_NAME - build# $BUILD_NUMBER - $BUILD_STATUS',
                     replyTo: 'noreply@kartverket.no',
                     mimeType: 'text/html',
                     body: '''
 <html>
 <body>
-You are receiving this email because <a href="$BUILD_URL">Build $BUILD_NUMBER $BUILD_CAUSE has been set to: $BUILD_STATUS</a>
+You are receiving this email because $PROJECT_NAME build <a href="$BUILD_URL">$JOB_NAME #$BUILD_NUMBER</a> has been set to: $BUILD_STATUS
 
 <br>
 <br>
@@ -174,6 +148,8 @@ Build : $BUILD_URL <br>
     // The options directive is for configuration that applies to the whole job.
     options {
 
+        disableConcurrentBuilds()
+
         // Vi ønsker ikke å fylle opp jenkins master med logger og artefakter av gamle bygg
         buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '30', daysToKeepStr: '180', numToKeepStr: '90'))
 
@@ -195,7 +171,6 @@ static def gradleOptions(script) {
     return [
             "-PWEBLOGIC_VERSION=${script.env.WEBLOGIC_VERSION}",
             "-PWEBLOGIC_HOME=${WEBLOGIC_HOME(script.env.WEBLOGIC_VERSION, script.env)}",
-            "-Dmaven.repo.local=${script.env.BASE}/.m2", //publiserer midlertidigt artefakt til mavenLocal for kjøring av releasetester
             '-Dorg.gradle.daemon=false',
             "-Djava.io.tmpdir=${script.pwd(tmp: true)}", //temp dir settes til samme mappe som jenkins (<workspace name>@tmp)
             '--stacktrace'

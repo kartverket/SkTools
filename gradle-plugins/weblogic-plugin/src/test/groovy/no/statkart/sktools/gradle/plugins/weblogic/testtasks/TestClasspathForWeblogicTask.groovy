@@ -6,9 +6,7 @@ import org.gradle.api.internal.ConventionTask
 import org.gradle.api.tasks.TaskAction
 
 /**
- * Tester at weblogicClasspath blir satt på Task. Se testng test metode.
- *
- * @author Leif Lislegård
+ * Tester at weblogicClasspath blir satt på Task.
  */
 class TestClasspathForWeblogicTask extends ConventionTask implements WeblogicTaskInterface {
 
@@ -29,12 +27,9 @@ class TestClasspathForWeblogicTask extends ConventionTask implements WeblogicTas
     }
 
 
-    //test spesifik
-
     @TaskAction
-    protected void compile() {
+    public void compile() {
         testResult = getWeblogicClasspath().files
-//        setDidWork(true)
     }
 
 

@@ -1,3 +1,0 @@
--- file contents encoded in IBM 865 encoding
-insert into TABLE1(ID, TEXT) VALUES (1, '’‘›†');
-insert into TABLE1(ID, TEXT) VALUES (2, '@CUSTOM@');

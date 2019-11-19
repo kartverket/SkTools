@@ -6,7 +6,6 @@ include ':build-utils:db-tools'
 include ':build-utils:wsdocgen'
 include ':build-utils:xjc-plugins'
 
-include ':gradle-demos'
 include ':gradle-plugins'
 include ':gradle-plugins:dbtools-plugin'
 include ':gradle-plugins:ideaextensions-plugin'
@@ -27,8 +26,9 @@ include ':gradle-plugins:filter-resources-plugin'
 
 
 
+rootProject.name = properties.get('project_name', 'sktools') //unikt navn kan angis i gradle.properties
+rootProject.name += '-gradle-' + org.gradle.util.GradleVersion.current().getVersion()
 
-rootProject.name = 'sktools'
 
 gradle.rootProject { project -> //nested projects fallback to properties of root project
     [

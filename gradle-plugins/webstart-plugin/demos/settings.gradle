@@ -1,6 +1,0 @@
-include ':echo-client'
-include ':simple-webstart-app'
-include ':SKIF-209_uptodate'
-
-rootProject.name = 'webstart-demos'
-

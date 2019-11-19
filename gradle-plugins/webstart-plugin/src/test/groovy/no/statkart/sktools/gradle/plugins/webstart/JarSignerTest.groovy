@@ -1,17 +1,21 @@
 package no.statkart.sktools.gradle.plugins.webstart
 
 import no.statkart.sktools.gradle.plugins.webstart.util.FileHashIdent
+import no.statkart.sktools.gradle.testutils.KeystoreTestutil
+import no.statkart.sktools.gradle.testutils.SampleJarTestutil
+import no.statkart.sktools.gradle.testutils.TestKitBase
 import org.apache.commons.codec.binary.Hex
 import org.assertj.core.api.Assertions
-
-import java.util.jar.JarFile
-import no.statkart.sktools.gradle.testutils.ProjectHelper
-import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
-import no.statkart.sktools.gradle.testutils.filewriter.WebstartTestutilFilewriter
+import org.gradle.api.Project
 import org.testng.Assert
 import org.testng.annotations.Test
-import org.gradle.api.Project
 
+import java.nio.file.Files
+import java.util.jar.JarFile
+
+import static no.statkart.sktools.gradle.testutils.KeystoreTestutil.KeystoreType.JKS
+import static no.statkart.sktools.gradle.testutils.KeystoreTestutil.KeystoreType.P12
+import static org.assertj.core.api.Assertions.assertThat
 import static org.assertj.core.util.Preconditions.checkState
 
 /**
@@ -19,77 +23,64 @@ import static org.assertj.core.util.Preconditions.checkState
  *
  * @author Leif Lislegård
  */
-class JarSignerTest {
-
-    /**
-     * Instansierer opp en standard JarSigner med sertifikatfil, passord og alias.
-     */
-    private JarSigner buildDefaultJarSigner(ProjectHelper projectHelper, String name) {
-
-        //jks certificate
-        use(WebstartTestutilFilewriter) {
-            projectHelper.writeKodesignerinSertifikat('.')
-        }
-        File certificateFile = projectHelper.project.file('kodesignering.jks')
-        checkState(certificateFile.exists(), "kodesignering.jks available as test resources");
-
-        //configures the jar signer
-        return projectHelper.project.task(name, type: JarSigner) { JarSigner task ->
-            task.setCertificateFile(certificateFile)
-            task.setPassword(WebstartTestutilFilewriter.KeystorePassword)
-            task.setAlias(WebstartTestutilFilewriter.KeystoreAlias)
-            task.manifestAttribute('Permissions', 'sandbox')
-        } as JarSigner
-    }
+class JarSignerTest extends TestKitBase {
 
     /**
      * Tester caching av signerte jar filer
      */
     @Test
     void testSignJarsCache() {
+        File certificateFile = file('kodesignering.jks')
+        KeystoreTestutil.writeKodesigneringssertifikat(JKS, certificateFile)
+        File sampleJarFile = SampleJarTestutil.writeSampleJar(file('lib/sample.jar'))
+
         //forks a new project in a temp folder
-        ProjectHelper projectHelper = GradleProjectBuilder.builder().withName('root').build()
-        Project project = projectHelper.project
+        Project root = projectBuilder().withName('root').build()
 
-        Set<File> jarFilesToSign = [
-                projectHelper.gradleJars[0],
-        ]
+        JarSigner jarSigner1 = root.task('jarSigner1', type: JarSigner)
+        jarSigner1.setCertificateFile(certificateFile)
+        jarSigner1.setPassword(KeystoreTestutil.KeystorePassword)
+        jarSigner1.setAlias(KeystoreTestutil.KeystoreAlias)
+        jarSigner1.setJarFilesToSign(sampleJarFile)
 
-        JarSigner jarSigner1 = buildDefaultJarSigner(projectHelper, 'sign1')
-        jarSigner1.setJarFilesToSign(jarFilesToSign)
-
-        Assert.assertEquals(jarSigner1.signedArtifactsForCertificates.size(), 0, 'forventet tomt cache')
+        assertThat(jarSigner1.getSignedArtifactsForCertificates()).as("cache of signed files").isEmpty()
 
         //testing signed file
         jarSigner1.signJars()
-        long modified1 = jarSigner1.outputs.files.singleFile.lastModified()
-        jarSigner1.with { JarSigner jarSigner ->
-            Assert.assertEquals(jarSigner.signedArtifactsForCertificates.size(), 1)
-            Assert.assertEquals(jarSigner.signedArtifactsForCertificates.values().asList()[0].size(), 1)
-            Assert.assertEquals(jarSigner.signedArtifactsForCertificates.values().asList()[0].values().collect {it.file}.size(), 1)
-            Assertions.assertThat(jarSigner.signedArtifactsForCertificates.values().asList()[0].values().collect {it.file.name}).
-                    containsAll(jarSigner.outputs.files.collect {it.name})
-        }
 
-        JarSigner jarSigner2 = buildDefaultJarSigner(projectHelper, 'sign2')
-        //forventer at ny instans konstruerer samme cache..
-        jarSigner2.with { JarSigner jarSigner ->
-            Assert.assertEquals(jarSigner.signedArtifactsForCertificates.size(), 1)
-            Assert.assertEquals(jarSigner.signedArtifactsForCertificates.values().asList()[0].size(), 1)
-            Assert.assertEquals(jarSigner.signedArtifactsForCertificates.values().asList()[0].values().collect {it.file}.size(), 1)
-            Assertions.assertThat(jarSigner.signedArtifactsForCertificates.values().asList()[0].values().collect {it.file.name}).
-                    containsAll(jarSigner.outputs.files.collect {it.name})
-        }
+        assertThat(jarSigner1.getSignedArtifactsForCertificates()).as("cache of signed files").hasSize(1)
+        assertThat(jarSigner1.getSignedArtifactsForCertificates().values()).as("cache of signed files").hasSize(1)
+        assertThat(jarSigner1.getSignedArtifactsForCertificates().values().iterator().next() as Map).containsOnlyKeys("sample.jar")
+
+        assertThat(jarSigner1.outputs.files.getSingleFile()).hasName("sample.jar")
+            .hasBinaryContent(Files.readAllBytes(jarSigner1.getSignedArtifactsForCertificates().values().asList()[0].get("sample.jar").file.toPath()))
+
+
+        final long modified1 = jarSigner1.outputs.files.singleFile.lastModified()
+
+        Project subProject = projectBuilder().withParent(root).build()
+        JarSigner jarSigner2 = subProject.task('jarSigner2', type: JarSigner)
+        jarSigner2.setCertificateFile(certificateFile)
+        jarSigner2.setPassword(KeystoreTestutil.KeystorePassword)
+        jarSigner2.setAlias(KeystoreTestutil.KeystoreAlias)
+
+        //forventer at ny instans konstruerer cache som inneholder forrige signering..
+        assertThat(jarSigner2.getSignedArtifactsForCertificates())
+            .hasSize(1).isEqualTo(jarSigner1.getSignedArtifactsForCertificates());
 
         Thread.sleep(1000) //venter ett sekund for evt ulik timestamp
 
-        jarSigner2.setJarFilesToSign(jarFilesToSign)
+        jarSigner2.setJarFilesToSign(sampleJarFile)
         jarSigner2.signJars();
         long modified2 = jarSigner2.outputs.files.singleFile.lastModified()
 
 
         Assert.assertEquals(jarSigner2.outputs.files.collect {it.name}, jarSigner1.outputs.files.collect {it.name}, 'forventet samme sett av filer')
         Assert.assertEquals(modified2, modified1, 'forventer at cached fil er urørt')
+
+        assertThat(jarSigner1.didSignJarFile).isTrue()
+        assertThat(jarSigner2.didSignJarFile)
+            .as("Jar signer eksekvert nr 2 skal kun ha brukt cache [SKTOOLS-184]").isFalse()
     }
 
 
@@ -98,30 +89,64 @@ class JarSignerTest {
      */
     @Test
     void testSignJars() {
+        File certificateFile = file('kodesignering.jks')
+        KeystoreTestutil.writeKodesigneringssertifikat(JKS, certificateFile)
+        File sampleJarFile = SampleJarTestutil.writeSampleJar(file('lib/sample.jar'))
+
         //forks a new project in a temp folder
-        ProjectHelper projectHelper = GradleProjectBuilder.builder().withName('root').build()
-        Project project = projectHelper.project
+        Project root = projectBuilder().withName('root').build()
 
-        Set<File> jarFilesToSign = [
-                projectHelper.gradleJars[0],
-        ]
+        JarSigner jarSigner = root.task('jarSigner1', type: JarSigner)
+        jarSigner.setCertificateFile(certificateFile)
+        jarSigner.setPassword(KeystoreTestutil.KeystorePassword)
+        jarSigner.setAlias(KeystoreTestutil.KeystoreAlias)
+        jarSigner.manifestAttribute('Permissions', 'sandbox')
+        jarSigner.setJarFilesToSign(sampleJarFile)
 
-        JarSigner jarSigner = buildDefaultJarSigner(projectHelper, 'sign')
-        jarSigner.setJarFilesToSign(jarFilesToSign)
 
         //testing signed file
         jarSigner.signJars()
 
-        def jarNames = jarFilesToSign.collect {it.name}
+        jarSigner.outputs.files.singleFile.with { File signedFile ->
 
-        jarSigner.outputs.files.each { File signedFile ->
-
-            Assert.assertTrue(jarNames.contains(signedFile.name))
+            assertThat(signedFile).hasName("sample.jar")
             assertSignedJar(signedFile)
 
             String md5 = new File(getCertificateCacheDir(jarSigner), signedFile.name+'.md5').text
-            File unsignedFile = jarFilesToSign.find {it.name == signedFile.name}
-            assertMd5(unsignedFile, md5)
+            assertMd5(sampleJarFile, md5)
+        }
+    }
+
+    /**
+     * Tester signering med P12 sertifikat
+     */
+    @Test
+    void testSigningWithP12() {
+        File certificateFile = file('kodesignering.p12')
+        KeystoreTestutil.writeKodesigneringssertifikat(P12, certificateFile)
+        File sampleJarFile = SampleJarTestutil.writeSampleJar(file('lib/sample.jar'))
+
+        //forks a new project in a temp folder
+        Project root = projectBuilder().withName('root').build()
+
+        JarSigner jarSigner = root.task('jarSigner1', type: JarSigner)
+        jarSigner.setCertificateFile(certificateFile)
+        jarSigner.setPassword(KeystoreTestutil.KeystorePassword)
+        jarSigner.setAlias(KeystoreTestutil.KeystoreAlias)
+        jarSigner.manifestAttribute('Permissions', 'sandbox')
+        jarSigner.setJarFilesToSign(sampleJarFile)
+
+
+        //testing signed file
+        jarSigner.signJars()
+
+        jarSigner.outputs.files.singleFile.with { File signedFile ->
+
+            assertThat(signedFile).hasName("sample.jar")
+            assertSignedJar(signedFile)
+
+            String md5 = new File(getCertificateCacheDir(jarSigner), signedFile.name+'.md5').text
+            assertMd5(sampleJarFile, md5)
         }
     }
 
@@ -130,33 +155,20 @@ class JarSignerTest {
      */
     @Test
     void testSignJar() {
+        File certificateFile = file('kodesignering.jks')
+        KeystoreTestutil.writeKodesigneringssertifikat(JKS, certificateFile)
 
-        ProjectHelper rootProjectHelper = GradleProjectBuilder.builder("rootProject").build()
+        Project root = projectBuilder().withName('root').build()
 
-        //forks a new project in a temp folder
-        ProjectHelper java1ProjectHelper = GradleProjectBuilder.builder().withName("java1").applyJavaPlugin().withParent(rootProjectHelper).build()
-        ProjectHelper java2ProjectHelper = GradleProjectBuilder.builder().withName("java2").applyJavaPlugin().withParent(rootProjectHelper).build()
+        File java1JarFile = SampleJarTestutil.writeSampleJar(file('unsigned/sample.jar'))
 
-        //some dummy code making up two jars
-        use(WebstartTestutilFilewriter) {
-            java1ProjectHelper.writeDynamicMethodsClassWithNMethods('src/main/java', 1, 1)
-            java2ProjectHelper.writeDynamicMethodsClassWithNMethods('src/main/java', 1, 2)
-        }
+        JarSigner jarSigner = root.task('jarSigner1', type: JarSigner)
+        jarSigner.setCertificateFile(certificateFile)
+        jarSigner.setPassword(KeystoreTestutil.KeystorePassword)
+        jarSigner.setAlias(KeystoreTestutil.KeystoreAlias)
+        jarSigner.manifestAttribute('Permissions', 'sandbox')
+        jarSigner.setJarFilesToSign(java1JarFile)
 
-        java1ProjectHelper.executeTask('build')
-        java2ProjectHelper.executeTask('build')
-
-        File java1JarFile = java1ProjectHelper.project.file('build/libs/java1.jar')
-        File java2JarFile = java2ProjectHelper.project.file('build/libs/java2.jar')
-
-        File destinationDir = rootProjectHelper.project.file('gen/signed')
-        Collection<File> jarFilesToSign = Collections.singleton(java1JarFile)
-
-
-
-
-        JarSigner jarSigner = buildDefaultJarSigner(rootProjectHelper, 'sign')
-        jarSigner.setJarFilesToSign(jarFilesToSign)
 
         //testing signed file
         jarSigner.signJars()
@@ -164,7 +176,6 @@ class JarSignerTest {
         File unsignedFile1 = java1JarFile
         File signedFile1 = jarSigner.outputs.files.singleFile
 
-        checkState(jarFilesToSign.contains(unsignedFile1), "jarFilesToSign contains unsigned file");
         assertSignedJar(signedFile1)
         assertJarFileContainsAllEntries(signedFile1, unsignedFile1)
 
@@ -172,10 +183,7 @@ class JarSignerTest {
         assertMd5(unsignedFile1, md51)
 
         //updating 'java1' project jar by swapping it with jar produced by 'java2'
-        File oldFile = new File(java1JarFile.parentFile, java1JarFile.getName() + ".old")
-        ProjectHelper.copyFile(java1JarFile, oldFile)
-        ProjectHelper.copyFile(java2JarFile, java1JarFile)
-        checkState(java1JarFile.exists(), "java1JarFile should be have been copied and exist")
+        SampleJarTestutil.writeSample2Jar(unsignedFile1)
 
         //testing signed file - java1 should now ble updated
         jarSigner.signJars()
@@ -183,13 +191,12 @@ class JarSignerTest {
         File unsignedFile2 = java1JarFile
         File signedFile2 = jarSigner.outputs.files.singleFile
 
-        checkState(jarFilesToSign.contains(unsignedFile2), "jarFilesToSign contains unsigned file");
+        checkState(jarSigner.getJarFilesToSign().contains(unsignedFile2), "jarFilesToSign contains unsigned file");
         assertSignedJar(signedFile2)
         assertJarFileContainsAllEntries(signedFile2, unsignedFile2)
 
         String md52 = new File(getCertificateCacheDir(jarSigner), signedFile2.getName()+'.md5').text
         assertMd5(unsignedFile2, md52)
-
     }
 
     /**

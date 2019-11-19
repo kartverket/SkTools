@@ -5,10 +5,11 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileTreeElement;
 import org.gradle.api.internal.HasConvention;
-import org.gradle.api.internal.project.ProjectInternal;
+import org.gradle.api.plugins.BasePlugin;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.specs.Spec;
+import org.gradle.api.tasks.Delete;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.plugins.ide.idea.IdeaPlugin;
 
@@ -24,7 +25,7 @@ import static no.statkart.sktools.gradle.plugins.filterresources.FilterResources
  * @author Leif Lislegård
  * @since 1.3
  */
-public class FilterResourcesPlugin implements Plugin<ProjectInternal> {
+public class FilterResourcesPlugin implements Plugin<Project> {
 
     public final static String CONVENTION_NAME = "filterProperties";
 
@@ -40,7 +41,7 @@ public class FilterResourcesPlugin implements Plugin<ProjectInternal> {
 
 
     @Override
-    public void apply(ProjectInternal project) {
+    public void apply(Project project) {
         project.getPlugins().apply(JavaBasePlugin.class);
 
         final FilterResourcesConvention filterPropertiesConvention = new FilterResourcesConvention(project);
@@ -69,7 +70,7 @@ public class FilterResourcesPlugin implements Plugin<ProjectInternal> {
     }
 
 
-    private static void configureSourceSetDefaults(final ProjectInternal project, final FilterResourcesConvention convention) {
+    private static void configureSourceSetDefaults(final Project project, final FilterResourcesConvention convention) {
         //for hvert source sett som finnes/blir lagt til
         project.getConvention().getPlugin(JavaPluginConvention.class).getSourceSets().all(new Action<SourceSet>() {
             public void execute(final SourceSet sourceSet) {
@@ -104,9 +105,13 @@ public class FilterResourcesPlugin implements Plugin<ProjectInternal> {
                 //hekter inn task for filtering
                 project.getTasks().getByName(sourceSet.getProcessResourcesTaskName()).dependsOn(sourceSetConvention.getFilterResourcesTaskName());
 
-                project.afterEvaluate(new Action<Object>() {
-                    public void execute(Object o) {
-                        //default verdier for filterResoruces source set
+                //clean
+                Delete cleanTask = (Delete) project.getTasks().getByName(BasePlugin.CLEAN_TASK_NAME);
+                cleanTask.delete(filterResourcesTask);
+
+                project.afterEvaluate(new Action<Project>() {
+                    public void execute(Project project) {
+                        //default verdier for filterResources source set
                         if (sourceSetOutputConvention.getFilterResourcesOutputDir() == null) {
                             sourceSetOutputConvention.filterResourcesOutput(String.format("build/filteredResources/%s", sourceSet.getName()));
                         }
@@ -114,15 +119,16 @@ public class FilterResourcesPlugin implements Plugin<ProjectInternal> {
                         //registrerer sourceDir
                         sourceSet.getResources().srcDir(filterResourcesTask.getDestinationDir());
 
-                        //registrerre properties til task
+                        //registrerer properties til task
                         Map<String, Object> filterProperties = convention.getProperties();
                         filterResourcesTask.getInputs().properties(filterProperties);
                         filterResourcesTask.filter(Collections.singletonMap("tokens", filterProperties), org.apache.tools.ant.filters.ReplaceTokens.class);
 
-                        // Fortell IntelliJ at filene er
+                        // Fortell IntelliJ at filene er genererte
                         project.getPlugins().withType(IdeaPlugin.class, new Action<IdeaPlugin>() {
                             @Override
                             public void execute(IdeaPlugin ideaPlugin) {
+                                filterResourcesTask.getDestinationDir().mkdirs();
                                 ideaPlugin.getModel().getModule().getGeneratedSourceDirs().add(filterResourcesTask.getDestinationDir());
                             }
                         });

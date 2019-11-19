@@ -1,16 +1,15 @@
 package no.statkart.sktools.gradle.plugins.wsdocgen
 
-import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
-import org.testng.annotations.Test
-import org.gradle.api.Project
-import org.gradle.testfixtures.ProjectBuilder
-import no.statkart.sktools.gradle.testutils.ProjectHelper
-import no.statkart.sktools.gradle.testutils.filewriter.WsDocgenTestutilFilewriter
 
-import static org.testng.Assert.assertEquals
-import static org.testng.Assert.assertNotNull
-import static org.testng.Assert.assertNull
-import static org.testng.Assert.assertTrue
+import no.statkart.sktools.gradle.testutils.TestKitBase
+import org.gradle.api.Project
+import org.testng.annotations.Test
+
+import static no.statkart.sktools.gradle.testutils.filewriter.WsDocgenTestutilFilewriter.writeInterfaceServiceWSBean
+import static no.statkart.sktools.gradle.testutils.filewriter.WsDocgenTestutilFilewriter.writeSimpleDemoServiceWSBean
+import static org.assertj.core.api.Assertions.assertThat
+import static org.assertj.core.api.Assertions.contentOf
+import static org.testng.Assert.*
 
 /**
  * Test av {@link WsDocGenPlugin}
@@ -21,56 +20,49 @@ import static org.testng.Assert.assertTrue
  *
  * @author Leif Lislegård
  */
-class WsDocGenPluginTest {
+class WsDocGenPluginTest extends TestKitBase {
 
     /**
      * Tester registrering av plugin via navn
      */
     @Test
-    void appplyPlugin() {
-        //forks a new project in a temp folder
-        Project project = ProjectBuilder.builder().build()
+    void applyPlugin() {
+        Project project = projectBuilder().build().tap {
+            apply plugin: 'sktools-wsdocgen-plugin'
+        }
 
-        project.apply plugin: 'sktools-wsdocgen-plugin'
-
-
-        assertNotNull project.convention.plugins.wsdoc
-        assertTrue project.convention.plugins.wsdoc instanceof WsDocGenConvention
+        assertThat(project.getPlugins().getPlugin(WsDocGenPlugin.class)).isNotNull()
+        assertThat(project.convention.plugins.wsdoc).isInstanceOf(WsDocGenConvention.class)
     }
 
 
     @Test
     void genWsDocGeneratesDocumentationForAllSourceSets() {
-        //forks a new java project in a temp folder
-        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
-            apply plugin: 'java'
-            apply plugin: 'sktools-wsdocgen-plugin'
-        }
+        writeFile("build.gradle", """
+            plugins {
+              id 'java'
+              id 'sktools.wsdoc'
+            }
 
-
-        use(WsDocgenTestutilFilewriter) {
-            projectHelper.writeSimpleDemoServiceWSBean("src/main/java") //generates simple source file
-            projectHelper.writeSimpleDemoServiceWSBean("src/other/java") //generates simple source file
-        }
-
-        projectHelper.configureProject {
             sourceSets {
                 main.wsdoc.group { }
                 other.wsdoc.group { }
             }
-        }
+        """)
 
-        projectHelper.executeTask(WsDocGenPlugin.GEN_TASK_NAME)
+        writeSimpleDemoServiceWSBean(file("src/main/java")) //generates simple source file
+        writeSimpleDemoServiceWSBean(file("src/other/java")) //generates simple source file
 
-        projectHelper.assertFileExistsInBuildDir('main/wsdoc/Group1/TestService.html')
-        projectHelper.assertFileExistsInBuildDir('other/wsdoc/Group1/TestService.html')
+        assertNoFailures(testGradleBuild(WsDocGenPlugin.GEN_TASK_NAME))
+
+        assertThat(file('build/main/wsdoc/Group1/TestService.html')).exists()
+        assertThat(file('build/other/wsdoc/Group1/TestService.html')).exists()
     }
 
 
     @Test
     void tasksForVanillaConfiguration() {
-        //forks a new java project in a temp folder
-        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+        final Project project = projectBuilder().build().tap {
             apply plugin: 'java'
             apply plugin: 'sktools-wsdocgen-plugin'
 
@@ -78,8 +70,6 @@ class WsDocGenPluginTest {
                 main.wsdoc.group { }
             }
         }
-
-        final Project project = projectHelper.project
 
         assertNotNull project.tasks.findByName('genWsdoc'), "gen task"
         assertNotNull project.tasks.findByName('genMainWsdoc'), "gen task for source set"
@@ -94,8 +84,7 @@ class WsDocGenPluginTest {
      */
     @Test
     void noTasksForNoneAnnotatedSourceSets() {
-        //forks a new java project in a temp folder
-        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+        final Project project = projectBuilder().build().tap {
             apply plugin: 'java'
             apply plugin: 'sktools-wsdocgen-plugin'
 
@@ -104,8 +93,6 @@ class WsDocGenPluginTest {
                 other.wsdoc.group { }
             }
         }
-
-        final Project project = projectHelper.project
 
         assertNotNull project.tasks.findByName('genWsdoc'), "gen task"
 
@@ -120,8 +107,7 @@ class WsDocGenPluginTest {
 
     @Test
     void sourceSetForVanillaConfiguration() {
-        //forks a new java project in a temp folder
-        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+        final Project project = projectBuilder().build().tap {
             apply plugin: 'java'
             apply plugin: 'sktools-wsdocgen-plugin'
 
@@ -131,7 +117,6 @@ class WsDocGenPluginTest {
             }
         }
 
-        final Project project = projectHelper.project
         assertNotNull project.sourceSets.main.wsdoc
         assertNotNull project.sourceSets.other.wsdoc
 
@@ -145,8 +130,7 @@ class WsDocGenPluginTest {
 
     @Test
     void canCustomizeOutputLocation() {
-        //forks a new java project in a temp folder
-        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+        final Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-wsdocgen-plugin'
 
             sourceSets {
@@ -161,7 +145,6 @@ class WsDocGenPluginTest {
             }
         }
 
-        final Project project = projectHelper.project
 
         //tests vanilla configuration
         assertEquals project.sourceSets.main.wsdoc[0].targetPath, 'build/main/wsdoc/Group1'
@@ -179,27 +162,10 @@ class WsDocGenPluginTest {
     }
 
 
-    @Test
-    void canCustomizeLookupPath() {
-        //forks a new java project in a temp folder
-        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
-            apply plugin: 'sktools-wsdocgen-plugin'
-
-            sourceSets {
-                main.wsdoc.group { lookupPath '../../some/wacky/path' }
-            }
-        }
-
-        final Project project = projectHelper.project
-        assertEquals project.sourceSets.main.wsdoc[0].lookupPath, '../../some/wacky/path'
-        assertEquals project.tasks.genMainWsdocGroup1.lookupPath, '../../some/wacky/path'
-    }
-
 
     @Test
     void canCustomizeInclude() {
-        //forks a new java project in a temp folder
-        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+        final Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-wsdocgen-plugin'
 
             sourceSets {
@@ -207,7 +173,6 @@ class WsDocGenPluginTest {
             }
         }
 
-        final Project project = projectHelper.project
         assertEquals project.sourceSets.main.wsdoc[0].includes, ['**/TestServiceWSBean.java']
         assertEquals project.tasks.genMainWsdocGroup1.includes.size(), 1
         assertTrue project.tasks.genMainWsdocGroup1.includes.contains('**/TestServiceWSBean.java')
@@ -215,9 +180,12 @@ class WsDocGenPluginTest {
 
 
     @Test
-    void generatedFilesHasLookupPath() {
-        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
-            apply plugin: 'sktools-wsdocgen-plugin'
+    void generatedFilesHasLookupPathWhenConfigured() {
+
+        writeFile("build.gradle", """
+            plugins {
+              id 'sktools.wsdoc'
+            }
 
             sourceSets {
                 main.wsdoc.group {
@@ -225,19 +193,17 @@ class WsDocGenPluginTest {
                     lookupPath '../wacky/path'
                 }
             }
-        }
+        """)
 
         //generer eksempel-kildekode som har domene-klasse definert
-        use(WsDocgenTestutilFilewriter) {
-            projectHelper.writeInterfaceServiceWSBean('src/main/java')
-        }
+        writeInterfaceServiceWSBean(file('src/main/java'))
 
+        assertNoFailures(testGradleBuild(WsDocGenPlugin.GEN_TASK_NAME))
 
-        projectHelper.executeTask(WsDocGenPlugin.GEN_TASK_NAME)
-
-        projectHelper.assertFileExists('build/mydocs/InterfaceService.html') { File file ->
-            assertTrue file.text.contains("../wacky/path") //skal ha link som peker til domeneklasse (javadoc)
-        }
+        assertThat(file('build/mydocs/InterfaceService.html')).exists()
+        assertThat(contentOf(file('build/mydocs/InterfaceService.html')))
+            .describedAs("skal ha link som peker til domeneklasse (javadoc)")
+            .contains("../wacky/path")
     }
 
 
@@ -245,39 +211,33 @@ class WsDocGenPluginTest {
      * Demonstrerer hvordan en kan spre kilekode over flere mapper
      */
     @Test
-    void multipleSourceFoldersForSourceSet() {
+    void multipleSourceFoldersForSingleSourceSet() {
 
         //forks a new java project in a temp folder
         //ps: notice that the java plugin is applied after the plugin, at a  later stage.
-        final ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
-            apply plugin: 'sktools-wsdocgen-plugin'
-            apply plugin: 'java' //after
-        }
+        writeFile("build.gradle", """
+            plugins {
+              id 'sktools.wsdoc'
+              id 'java' //after
+            }
 
-
-        //generer eksempel-kildekode som har domene-klasse definert
-        use(WsDocgenTestutilFilewriter) {
-            projectHelper.writeSimpleDemoServiceWSBean('src/main/java')
-            projectHelper.writeInterfaceServiceWSBean('src/main/morejava')
-        }
-
-
-        projectHelper.configureProject {
             sourceSets.main {
                 java.srcDir 'src/main/morejava'
                 wsdoc.group {
                     targetPath 'build'
                 }
             }
-        }
-        projectHelper.initializeProject()
+        """)
+
+        //generer eksempel-kildekode som har domene-klasse definert
+        writeSimpleDemoServiceWSBean(file("src/main/java"))
+        writeInterfaceServiceWSBean(file('src/main/morejava'))
 
 
-        projectHelper.executeTask(WsDocGenPlugin.GEN_TASK_NAME)
+        assertNoFailures(testGradleBuild(WsDocGenPlugin.GEN_TASK_NAME))
 
-        projectHelper.assertFileExists('build/InterfaceService.html')
-        projectHelper.assertFileExists('build/TestService.html')
-
+        assertThat(file('build/InterfaceService.html')).exists()
+        assertThat(file('build/TestService.html')).exists()
     }
 
 

@@ -1,21 +1,14 @@
 package no.statkart.sktools.gradle.plugins.dbtools.database.oracle
 
-import org.testng.Assert
 import org.testng.annotations.Test
+
+import static org.assertj.core.api.Assertions.assertThat
 
 /**
  * @see Util
  */
 class UtilTest {
 
-    static Closure assertFilterIncludeOrExcludeValue = { String value, String expectedValue, String message = null ->
-        def result = Util.filterIncludeOrExcludeValue(value)
-        if (message == null) {
-            Assert.assertEquals(result, expectedValue);
-        } else {
-            Assert.assertEquals(result, expectedValue, message);
-        }
-    };
 
     /**
      * Tester filtrering av verdier uten kolon
@@ -23,11 +16,11 @@ class UtilTest {
     @Test
     void testFilterIncludeOrExcludeValueNoColon() {
 
-        assertFilterIncludeOrExcludeValue('one two', 'one two', 'tekst uten kolon uten spesialtegn');
-        assertFilterIncludeOrExcludeValue('one 2', 'one 2', 'tekst uten kolon med tall');
-        assertFilterIncludeOrExcludeValue('one,2', 'one,2', 'tekst uten kolon med komma');
-        assertFilterIncludeOrExcludeValue('one,"2"', 'one,"2"', 'tekst uten kolon med spesialtegn');
-        assertFilterIncludeOrExcludeValue('one,()', 'one,()', 'tekst uten kolon med spesialtegn');
+        assertThat(Util.filterIncludeOrExcludeValue('one two')).isEqualTo('one two');
+        assertThat(Util.filterIncludeOrExcludeValue('one 2')).isEqualTo('one 2');
+        assertThat(Util.filterIncludeOrExcludeValue('one,2')).isEqualTo('one,2');
+        assertThat(Util.filterIncludeOrExcludeValue('one,"2"')).isEqualTo('one,"2"');
+        assertThat(Util.filterIncludeOrExcludeValue('one,()')).isEqualTo('one,()');
 
     }
 
@@ -38,12 +31,14 @@ class UtilTest {
     @Test
     void testFilterIncludeOrExcludeValueWithColon() {
 
-        assertFilterIncludeOrExcludeValue('one: two', 'one: two', 'tekst med kolon uten spesialtegn');
-        assertFilterIncludeOrExcludeValue('"one": "two"', '"one": \\"two\\"', 'tekst med kolon med spesialtegn');
-        assertFilterIncludeOrExcludeValue("'one': 'two'", "'one': \\'two\\'", 'tekst med kolon med spesialtegn');
+        assertThat(Util.filterIncludeOrExcludeValue('one: two')).isEqualTo('one: two');
+        assertThat(Util.filterIncludeOrExcludeValue('"one": "two"')).isEqualTo('"one": \\"two\\"');
+        assertThat(Util.filterIncludeOrExcludeValue("'one': 'two'")).isEqualTo("'one': \\'two\\'");
 
-        assertFilterIncludeOrExcludeValue(': (two)', ': \\(two\\)', 'tekst med kolon med spesialtegn');
+        assertThat(Util.filterIncludeOrExcludeValue(': (two)')).isEqualTo(': \\(two\\)');
 
-        assertFilterIncludeOrExcludeValue("TABLE:\"IN('REPCHECK', 'REPCHECK')\" ", "TABLE:\\\"IN\\(\\\'REPCHECK\\\', \\\'REPCHECK\\\'\\)\\\" ", 'case for SKTOOLS-113');
+        assertThat(Util.filterIncludeOrExcludeValue("TABLE:\"IN('REPCHECK', 'REPCHECK')\" "))
+            .describedAs("regression of SKTOOLS-113")
+            .isEqualTo("TABLE:\\\"IN\\(\\\'REPCHECK\\\', \\\'REPCHECK\\\'\\)\\\" ");
     }
 }

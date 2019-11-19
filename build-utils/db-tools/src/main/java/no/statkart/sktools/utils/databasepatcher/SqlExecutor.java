@@ -85,7 +85,7 @@ public class SqlExecutor {
 
                 line = br.readLine();
                 while (line != null) {
-                    tmpScript.append(line).append("\n");
+                    tmpScript.append(line).append('\n');
                     line = br.readLine();
                 }
             }
@@ -112,7 +112,7 @@ public class SqlExecutor {
                     try {
                         line = br.readLine();
                         while (line != null) {
-                            tmpScript.append(line).append("\n");
+                            tmpScript.append(line).append('\n');
                             line = br.readLine();
                         }
                     } catch (IOException ioe) {
@@ -145,7 +145,7 @@ public class SqlExecutor {
             throw new ConfigurationException("Kan ikke kjøre databasescript med connection = null");
         }
         if (sqlScript == null) {
-            throw new ConfigurationException("Det må angis ett sqlscript, sqlSript = null.");
+            throw new ConfigurationException("Det må angis ett script, sqlScript = null.");
         }
 
         List<? extends Expression> expressions = SQLStatementParser.parseExpressions(sqlScript);
@@ -210,7 +210,7 @@ public class SqlExecutor {
         } else {
             logger.info(String.format("Script completed. Statements: %d. Warnings: %d.", antallStatements, antallWarnings));
         }
-        return rsList.toArray(new java.sql.ResultSet[rsList.size()]);
+        return rsList.toArray(new java.sql.ResultSet[0]);
     }
 
     static boolean isWarning(SQLException e) {

@@ -1,20 +1,24 @@
-apply plugin: 'groovy'
-apply plugin: 'maven-publish'
+plugins {
+    id 'groovy'
+    id 'maven-publish'
+    id 'java-gradle-plugin'
+}
 
 group = 'no.statkart.sktools.gradle'
 
-
+gradlePlugin {
+    plugins {
+        wsdoc {
+            id = 'sktools.wsdoc'
+            implementationClass = 'no.statkart.sktools.gradle.plugins.wsdocgen.WsDocGenPlugin'
+        }
+    }
+}
 
 dependencies {
+    implementation project(':build-utils:wsdocgen')
 
-    //gradle api til byggesystemm blir benyttet som std
-    compile gradleApi()
-
-    compile project(':build-utils:wsdocgen')
-
-
-    //test
-    testCompile project(':build-utils:test-utils')
+    testImplementation project(':build-utils:test-utils')
 }
 
 task sourceJar(type: Jar) {

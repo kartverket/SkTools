@@ -1,7 +1,19 @@
-apply plugin: 'groovy'
-apply plugin: 'maven-publish'
+plugins {
+    id 'groovy'
+    id 'maven-publish'
+    id 'java-gradle-plugin'
+}
 
 group = 'no.statkart.sktools.gradle'
+
+gradlePlugin {
+    plugins {
+        xjc {
+            id = 'sktools.xjc'
+            implementationClass = 'no.statkart.sktools.gradle.plugins.xjc.XjcPlugin'
+        }
+    }
+}
 
 def pluginPropertiesDir = "$buildDir/plugin-properties"
 
@@ -18,16 +30,17 @@ def pluginProperties = [
 ] as Properties
 
 dependencies {
+    testRuntimeOnly project(':build-utils:xjc-plugins') //trenger denne på classpath for å kjøre tester med xjc plugins aktivert
 
-    //gradle api til byggesystemm blir benyttet som std
-    compile gradleApi()
+    testImplementation project(':build-utils:test-utils')
+}
 
-    testRuntimeOnly libraries.jaxb_rt //workaround for testing via gradle
-
-    testImplementation project(':build-utils:xjc-plugins') //trenger denn på classpath for å kjøre tester med xjc plugins aktivert
-
-    //test
-    testCompile project(':build-utils:test-utils')
+pluginUnderTestMetadata.doFirst {
+    if (org.gradle.util.GradleVersion.current() >= org.gradle.util.GradleVersion.version('4.10')) {
+        pluginUnderTestMetadata.pluginClasspath.from project(':build-utils:xjc-plugins').sourceSets.main.output
+    } else {
+        pluginUnderTestMetadata.pluginClasspath += project(':build-utils:xjc-plugins').sourceSets.main.output
+    }
 }
 
 task createPluginProperties() {

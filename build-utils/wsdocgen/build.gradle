@@ -9,13 +9,35 @@ dependencies {
 
     //Saxon for xslt 2.0
     //Saxon HE is the open source version
-    runtime libraries.saxon
+    runtimeOnly libraries.saxon
 
     //testing...
-    testCompile gradleApi()
-    testCompile project(':build-utils:test-utils')
+    testImplementation gradleTestKit()
+    testImplementation project(':build-utils:test-utils')
 
 }
+
+
+// Write the plugin's classpath to a file to share with the tests
+task processorClasspathManifest {
+    def outputDir = file("$buildDir/$name")
+
+    inputs.files(sourceSets.main.runtimeClasspath)
+        .withPropertyName("runtimeClasspath")
+    outputs.dir(outputDir)
+        .withPropertyName("outputDir")
+
+    doLast {
+        outputDir.mkdirs()
+        file("$outputDir/processor-classpath.txt").text = sourceSets.main.runtimeClasspath.join(";")
+    }
+}
+
+// Add the classpath file to the test runtime classpath
+dependencies {
+    testRuntimeOnly files(processorClasspathManifest)
+}
+
 
 task sourceJar(type: Jar) {
     from sourceSets.main.allJava

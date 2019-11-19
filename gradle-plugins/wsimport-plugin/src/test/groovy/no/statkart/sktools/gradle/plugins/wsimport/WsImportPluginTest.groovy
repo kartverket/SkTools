@@ -1,47 +1,106 @@
 package no.statkart.sktools.gradle.plugins.wsimport
 
-import no.statkart.sktools.gradle.testutils.ProjectHelper
+
+import no.statkart.sktools.gradle.testutils.TestKitBase
 import org.gradle.api.Project
-import org.gradle.testfixtures.ProjectBuilder
 import org.testng.annotations.Test
 
-import static org.testng.Assert.assertNotNull
-import static org.testng.Assert.assertTrue
+import java.nio.file.Files
+import java.util.jar.JarFile
 
-public class WsImportPluginTest {
+import static java.util.Collections.list
+import static org.assertj.core.api.Assertions.assertThat
+import static org.assertj.core.api.Assertions.contentOf
+
+class WsImportPluginTest extends TestKitBase {
+
     /**
      * Tester registrering av plugin via navn
      */
     @Test
     void applyPlugin() {
-        //forks a new project in a temp folder
-        Project project = ProjectBuilder.builder().build()
+        Project project = projectBuilder().build().tap {
+            apply plugin: 'sktools-wsimport-plugin'
+        }
 
-        project.apply plugin: 'sktools-wsimport-plugin'
-
-        assertTrue project.plugins.hasPlugin('java')
-        assertTrue project.plugins.hasPlugin('sktools-wsimport-plugin')
-        assertNotNull project.configurations.findByName('jaxws')
-        assertNotNull project.tasks.findByName('wsimport')
-
-        project.apply plugin: 'idea'
-
-        assertTrue project.idea.module.generatedSourceDirs.contains(new File(project.getBuildDir(), "wsimport"))
+        assertThat(project.getPlugins().getPlugin(WsImportPlugin.class)).isNotNull()
+        assertThat(project.plugins.hasPlugin('sktools-wsimport-plugin')).isTrue()
     }
 
     @Test
-    void runTask() {
-        //forks a new project in a temp folder
-        Project project = ProjectBuilder.builder().build()
-        project.apply plugin: 'sktools-wsimport-plugin'
+    void ideaIntegration() {
 
-        def wsdlDir = project.mkdir('src/main/resources/META-INF/wsdls')
+        writeFile("build.gradle", """
+            plugins {
+              id 'sktools.wsimport'
+              id 'idea'
+            }
+        """)
 
-        ProjectHelper.copyFile(getClass().getResourceAsStream('/TestServiceWS.wsdl'), new File(wsdlDir, 'TestServiceWS.wsdl'))
-        ProjectHelper.copyFile(getClass().getResourceAsStream('/TestServiceWS_schema1.xsd'), new File(wsdlDir, 'TestServiceWS_schema1.xsd'))
-        ProjectHelper.copyFile(getClass().getResourceAsStream('/TestServiceWS_schema2.xsd'), new File(wsdlDir, 'TestServiceWS_schema2.xsd'))
+        testGradleBuild("ideaModule")
 
-        ProjectHelper projectHelper = new ProjectHelper(project)
-        projectHelper.executeTask('wsimport')
+        assertThat(contentOf(file(rootProjectName() + ".iml")))
+            .contains('"file://$MODULE_DIR$/build/wsimport"') //generatedSourceDir
+    }
+
+    @Test
+    void wsimport_generates_sources() {
+        writeFile("build.gradle", """
+            plugins {
+              id 'sktools.wsimport'
+            }
+            
+            repositories {
+                maven { url = '${testProperties.MAVEN_REPO}' }
+            }
+        """)
+
+        writeTestSchemaTo('src/main/resources/META-INF/wsdls')
+
+        testGradleBuild("wsimport")
+
+        assertThat(file('build/wsimport/no/statkart/test/service/v1/TestServiceWS.java')).exists()
+    }
+
+
+    @Test
+    void jarFileIncludesResources() {
+        writeFile("build.gradle", """
+            plugins {
+              id 'sktools.wsimport'
+            }
+            
+            repositories {
+                maven { url = '${testProperties.MAVEN_REPO}' }
+            }
+        """)
+
+        writeTestSchemaTo('src/main/resources/META-INF/wsdls')
+
+        testGradleBuild("jar")
+
+        File file = file("build/libs/${rootProjectName()}.jar")
+        assertThat(file).exists()
+
+        JarFile jar = new JarFile(file)
+        try {
+            assertThat(list(jar.entries()))
+                .extractingResultOf("getName")
+                .as("Contents of jar file")
+                .contains(
+                    'META-INF/wsdls/TestServiceWS.wsdl',
+                    'META-INF/wsdls/TestServiceWS_schema1.xsd',
+                    'no/statkart/test/service/v1/TestServiceWS.class',
+                )
+        } finally {
+            jar.close()
+        }
+    }
+
+    private void writeTestSchemaTo(String path) {
+        file(path).mkdirs()
+        Files.copy(getClass().getResourceAsStream('/TestServiceWS.wsdl'), file("$path/TestServiceWS.wsdl").toPath())
+        Files.copy(getClass().getResourceAsStream('/TestServiceWS_schema1.xsd'), file("$path/TestServiceWS_schema1.xsd").toPath())
+        Files.copy(getClass().getResourceAsStream('/TestServiceWS_schema2.xsd'), file("$path/TestServiceWS_schema2.xsd").toPath())
     }
 }

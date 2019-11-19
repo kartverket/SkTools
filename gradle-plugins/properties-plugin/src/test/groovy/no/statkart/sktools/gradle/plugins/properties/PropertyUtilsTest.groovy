@@ -1,14 +1,14 @@
 package no.statkart.sktools.gradle.plugins.properties
 
-import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
-import org.testng.annotations.Test
-import no.statkart.sktools.gradle.testutils.ProjectHelper
 import no.statkart.sktools.gradle.plugins.properties.extension.PropertyUtils
-import org.testng.Assert
 import org.gradle.api.Project
+import org.gradle.testfixtures.ProjectBuilder
+import org.gradle.util.GFileUtils
+import org.testng.Assert
+import org.testng.annotations.Test
 
 /**
- * Test av {@link PropertyUtils}
+ * Unittest of {@link PropertyUtils}
  *
  * @author Leif Lislegård
  */
@@ -22,15 +22,10 @@ class PropertyUtilsTest {
     @Test
     void testLoadProperties() {
         //forks a new project in a temp folder
-        ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
-            apply plugin: 'sktools-properties-plugin'
-        }
-        projectHelper.project.file('custom.properties').withPrintWriter('UTF-8') {
-            it.println('hei=hopp')
-            it.println('hopp=hei')
-        }
+        Project project = ProjectBuilder.builder().build()
+        PropertyUtils propertyUtils = new PropertyUtils(project);
 
-        PropertyUtils propertyUtils = new PropertyUtils(projectHelper.project);
+        GFileUtils.writeFile("hei=hopp\nhopp=hei\n", project.file('custom.properties'));
 
         [['custom.properties'], ['custom.properties', 'noneExistant.properties']].each {
             Map<String, ?> properties = propertyUtils.fromFile(it as String[])
@@ -47,12 +42,9 @@ class PropertyUtilsTest {
     @Test
     void testLoadPropertiesNoneExistantResource() {
         //forks a new project in a temp folder
-        ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
-            apply plugin: 'sktools-properties-plugin'
-        }
+        Project project = ProjectBuilder.builder().build()
+        PropertyUtils propertyUtils = new PropertyUtils(project);
 
-
-        PropertyUtils propertyUtils = new PropertyUtils(projectHelper.project);
         Map<String, ?> properties = propertyUtils.fromFile('noneExistant.properties')
 
         Assert.assertNotNull(properties, 'properties')
@@ -67,7 +59,7 @@ class PropertyUtilsTest {
     @Test
     void testAssignPropertiesToProject() {
         //forks a new project in a temp folder
-        Project project = GradleProjectBuilder.builder().build().project;
+        Project project = ProjectBuilder.builder().build()
         PropertyUtils propertyUtils = new PropertyUtils(project);
 
         Map<String, String> myProperties = ['hei': 'hopp', 'hopp': 'hei']
@@ -85,7 +77,7 @@ class PropertyUtilsTest {
     @Test
     void testExpandProjectProperties() {
         //forks a new project in a temp folder
-        Project project = GradleProjectBuilder.builder().build().project;
+        Project project = ProjectBuilder.builder().build()
         PropertyUtils propertyUtils = new PropertyUtils(project);
 
         project.ext.hei = 'hei${hopp}!'
@@ -107,7 +99,7 @@ class PropertyUtilsTest {
     @Test
     void testExpandProperties() {
         //forks a new project in a temp folder
-        Project project = GradleProjectBuilder.builder().build().project;
+        Project project = ProjectBuilder.builder().build()
         project.ext.hei = 'heisann!'
         project.ext.hopp = 'sann'
 
@@ -139,21 +131,7 @@ class PropertyUtilsTest {
         Assert.assertEquals(myProps['hei'], 'heisann!', "Forventet value")
     }
 
-    /**
-     * Tester at extension fungerer
-     */
-    @Test
-    void testExtension() {
-        ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
-            apply plugin: 'sktools-properties-plugin'
-        }
-        Project project = projectHelper.project;
 
-        Object extensionObject = project.getExtensions().getByName('propertyUtils')
-        Assert.assertNotNull("Forventet instans")
-        Assert.assertTrue(extensionObject instanceof PropertyUtils, "Forventet PropertyUtils klasse")
-
-    }
 
 
 }

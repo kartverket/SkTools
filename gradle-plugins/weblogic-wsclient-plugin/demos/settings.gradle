@@ -1,9 +1,0 @@
-include ':war1'
-include ':war2'
-
-include ':simple-demo'
-include ':versioned-demo'
-
-rootProject.name = 'weblogic-wsclient-demos'
-
-

@@ -1,0 +1,59 @@
+Xjc Gradle Plugin
+------------------
+
+This plugin generates java model from .xsd schema files.
+
+Installation
+------------
+
+Build script snippet for new plugin DSL syntax:
+
+    plugins {
+        id 'sktools.xjc' version '1.5'
+    }
+
+Build script snippet for use in all versions:
+
+    buildscript {
+        repositories {
+            maven { url 'https://nexus.statkart.no/repository/public/' }
+        }
+        dependencies {
+            classpath 'no.statkart.sktools.gradle:xjc-plugin:1.5'
+            // or 
+            classpath 'no.statkart.sktools.gradle:gradle-plugins:1.5'
+        }
+    }
+    apply plugin: 'sktools-xjc-plugin'
+
+
+Configuration
+------------
+    sourceSets {
+        main.xjc {
+            schema {
+                srcDir 'src/main/xsd'
+            }
+        }
+    }
+    
+    dependencies {
+        jaxb 'org.glassfish.jaxb:jaxb-xjc:2.2.11', //default
+             'org.glassfish.jaxb:jaxb-runtime:2.2.11' //default
+             'com.sun.activation:javax.activation:1.2.0' //default
+    }
+
+### List adapter
+Schema can be augmented with list adapter of choice:
+
+        schema {
+            ...
+            withListAdapter 'custom.implemented.ListAdapter'
+        }
+        
+### Grunnbok Doc
+
+        schema {
+            ...
+            withGrunnbokDoc
+        }

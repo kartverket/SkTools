@@ -1,5 +1,6 @@
 package no.statkart.sktools.gradle.plugins.dbtools
 
+import no.statkart.sktools.gradle.testutils.TestKitBase
 import org.testng.annotations.BeforeTest
 import java.sql.Connection
 import java.sql.DriverManager
@@ -23,7 +24,7 @@ import org.slf4j.Logger
  * Ytterlige brukere defineres via {@link #defineDatabaseUser}
  *
  */
-abstract class HSQLDBTest {
+abstract class HSQLDBTest extends TestKitBase {
     final Logger logger = LoggerFactory.getLogger(this.class)
 
     private Connection connection

@@ -1,14 +1,18 @@
 package no.statkart.sktools.gradle.plugins.webstart
 
-import no.statkart.sktools.gradle.testutils.ProjectHelper
-import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
-import org.assertj.core.api.Assertions
+
+import no.statkart.sktools.gradle.testutils.TestKitBase
+import org.assertj.core.util.Preconditions
 import org.gradle.api.Project
-import org.gradle.testfixtures.ProjectBuilder
 import org.testng.Assert
 import org.testng.annotations.Test
 
 import java.util.zip.ZipFile
+
+import static no.statkart.sktools.gradle.testutils.ProjectTestutil.extractDependsOn
+import static no.statkart.sktools.gradle.testutils.SampleJarTestutil.writeSampleJar
+import static org.assertj.core.api.Assertions.assertThat
+import static org.assertj.core.api.Assertions.entry
 
 /**
  * Test av {@link WebstartPlugin}
@@ -16,7 +20,7 @@ import java.util.zip.ZipFile
  * @author Leif Lislegård
  * @author Tor Egil R. Strand
  */
-class WebstartPluginTest {
+class WebstartPluginTest extends TestKitBase {
 
     /**
      * Tester registrering av plugin via navn
@@ -24,9 +28,9 @@ class WebstartPluginTest {
     @Test
     void testApplyPlugin() {
         //forks a new project in a temp folder
-        Project project = ProjectBuilder.builder().build()
-
-        project.apply plugin: 'sktools-webstart-plugin'
+        Project project = projectBuilder().build().tap {
+            apply plugin: 'sktools-webstart-plugin'
+        }
 
         Assert.assertNotNull(project.convention.plugins.webstart)
     }
@@ -38,28 +42,27 @@ class WebstartPluginTest {
      */
     @Test
     void testDefaultWebstart() {
-        //forks a new project in a temp folder
-        ProjectHelper projectHelper = GradleProjectBuilder.builder('root').build {
-            apply plugin: 'sktools-webstart-plugin'
-            version = 101
-        }
+        writeSampleJar(file("lib/simple.jar"))
 
-        projectHelper.configureProject {
+        writeFile("build.gradle", """
+            plugins {
+              id 'sktools.webstart'
+            }
+            version = 101
+
             webstart {
                 client {
-                    jarDependencies files(projectHelper.gradleJars[1])
+                    jarDependencies files('lib/simple.jar')
                     jnlp {
                     }
                 }
             }
-        }
+        """)
 
-        projectHelper.initializeProject()
-
-        projectHelper.executeTask('genClientJnlp')
+        assertNoFailures(testGradleBuild(":genClientJnlp"))
 
         //sjekker at filer er blitt opprettet
-        projectHelper.assertFileExists("build/webstart/" + projectHelper.project.name + '.jnlp')
+        assertThat(file("build/webstart/" + rootProjectName() + '.jnlp')).exists()
     }
 
     /**
@@ -68,46 +71,54 @@ class WebstartPluginTest {
     @Test
     void testConventionConfigurationResources() {
 
+        writeFile("settings.gradle",
+            "rootProject.name = 'root'",
+            "include ':projectA'",
+            "include ':projectB'",
+        )
 
-        ProjectHelper projectHelper = GradleProjectBuilder.builder('root').build {
-            apply plugin: 'sktools-webstart-plugin'
-            version = '2.0'
-        }
-
-        ProjectHelper aProjectHelper = GradleProjectBuilder.builder('projectA').withParent(projectHelper).build {
-            apply plugin: 'java'
-            version = '1.0'
-        }
-
-        ProjectHelper bProjectHelper = GradleProjectBuilder.builder('projectB').withParent(projectHelper).build {
-            apply plugin: 'java'
-            version = '1.2'
-        }
-
-        File wsClientRuntimeJar = bProjectHelper.project.file('../wsClientRuntime-1.0.jar')
-        assert wsClientRuntimeJar.createNewFile()
-
-        bProjectHelper.configureProject {
-            dependencies {
-                runtime files('../wsClientRuntime-1.0.jar')
+        writeFile("projectA/build.gradle", """
+            plugins {
+              id 'java'
             }
-        }
-        aProjectHelper.configureProject {
+            version = '1.0'
+           
             dependencies {
                 runtime project(':projectB')    //dependency on projectB
             }
-        }
 
-        File webstartHelperJar = projectHelper.project.file('webstartHelper.jar')
+        """)
+
+        File wsClientRuntimeJar = file('wsClientRuntime-1.0.jar')
+        assert wsClientRuntimeJar.createNewFile()
+
+        writeFile("projectB/build.gradle", """
+            plugins {
+              id 'java'
+            }
+            version = '1.2'
+            
+            dependencies {
+                runtime files('../wsClientRuntime-1.0.jar')
+            }
+        """)
+
+
+        File webstartHelperJar = file('webstartHelper.jar')
         assert webstartHelperJar.createNewFile()
 
-        projectHelper.configureProject {
+        writeFile("build.gradle", """
+            plugins {
+              id 'sktools.webstart'
+            }
+            version = '2.0'
+            
             configurations {
                 webstartJars
             }
 
             dependencies {
-                webstartJars files(webstartHelperJar)
+                webstartJars files('webstartHelper.jar')
                 webstartJars project(path: ':projectA')
             }
 
@@ -123,110 +134,25 @@ class WebstartPluginTest {
                         }
                     }
                 }
-            }
-        }
+            }            
+        """)
 
-        projectHelper.initializeProject()
+        testGradleBuild(":assemble")
 
-        projectHelper.executeTask('assemble')
 
-        final Project project = projectHelper.project
-
-        File warPath = project.war.archivePath
+        File warPath = file("build/libs/root-2.0.war")
         Assert.assertTrue(warPath.exists())
 
         ZipFile warFile = new ZipFile(warPath)
-        List<String> entryNames = Collections.list(warFile.entries()).collect { it.name }
-        warFile.close()
-
-        Assert.assertTrue(entryNames.containsAll(['root.jnlp', 'lib/webstartHelper__Vunknown.jar', 'lib/wsClientRuntime__V1.0.jar', 'lib/projectA__V1.0.jar', 'lib/projectB__V1.2.jar']))
+        try {
+            assertThat(warFile.entries() as List)
+                .extractingResultOf("getName")
+                .contains('root.jnlp', 'lib/webstartHelper__Vunknown.jar', 'lib/wsClientRuntime__V1.0.jar', 'lib/projectA__V1.0.jar', 'lib/projectB__V1.2.jar')
+        } finally {
+            warFile.close()
+        }
     }
 
-    /**
-     * Tester problem med duplikate jar-filer dersom man har flere klienter.
-     */
-    @Test
-    void testDuplicates() {
-        ProjectHelper projectHelper = GradleProjectBuilder.builder('root').build {
-            apply plugin: 'sktools-webstart-plugin'
-            version = '2.0'
-        }
-
-        ProjectHelper aProjectHelper = GradleProjectBuilder.builder().withName('projectA').withParent(projectHelper).applyJavaPlugin().build {
-            version = '1.0'
-        }
-
-        ProjectHelper bProjectHelper = GradleProjectBuilder.builder().withName('projectB').withParent(projectHelper).applyJavaPlugin().build {
-            version = '1.2'
-        }
-
-        File wsClientRuntimeJar = bProjectHelper.project.file('../wsClientRuntime-1.0.jar')
-        assert wsClientRuntimeJar.createNewFile()
-
-        bProjectHelper.configureProject {
-            dependencies {
-                runtime files('../wsClientRuntime-1.0.jar')
-            }
-        }
-        aProjectHelper.configureProject {
-            dependencies {
-                runtime project(':projectB')    //dependency on projectB
-            }
-        }
-
-        File webstartHelperJar = projectHelper.project.file('webstartHelper.jar')
-        assert webstartHelperJar.createNewFile()
-        projectHelper.configureProject {
-            configurations {
-                webstartJars
-            }
-
-            dependencies {
-                webstartJars files(webstartHelperJar)
-                webstartJars project(path: ':projectA')
-            }
-
-            webstart {
-                client1 {
-                    mainJar 'wsClientRuntime'
-                    jarDependencies configurations.webstartJars
-                    jnlp {
-                        jnlpFilename 'client1.jnlp'
-                        description 'Client1 description'
-                        title 'Client1 title'
-                    }
-                }
-                client2 {
-                    mainJar 'wsClientRuntime'
-                    jarDependencies configurations.webstartJars
-                    jnlp {
-                        jnlpFilename 'client2.jnlp'
-                        description 'Client2 description'
-                        title 'Client2 title'
-                    }
-                }
-            }
-        }
-
-        projectHelper.initializeProject()
-
-        projectHelper.executeTask('assemble')
-
-        final Project project = projectHelper.project
-
-        File warPath = project.war.archivePath
-        Assert.assertTrue(warPath.exists())
-
-        ZipFile warFile = new ZipFile(warPath)
-        List<String> entryNames = Collections.list(warFile.entries()).collect { it.name }
-        warFile.close()
-
-        Set<String> entryNames2 = new HashSet<String>(entryNames)
-        Assert.assertEquals(entryNames2.size(), entryNames.size())
-
-        Assertions.assertThat(project.tasks.withType(JarSigner.class)).describedAs("Jar signer eksekvert nr 2 skal kun ha brukt cache [SKTOOLS-184]").isNotEmpty()
-                .extracting("didSignJarFile").contains(false);
-    }
 
 
     /**
@@ -234,25 +160,23 @@ class WebstartPluginTest {
      */
     @Test
     void jarFilesDefaultsAsMainJars() {
-        ProjectHelper projectHelper = GradleProjectBuilder.builder('root').build {
-            apply plugin: 'sktools-webstart-plugin'
-        }
-
-        final File wsClientRuntimeJar = projectHelper.project.file('../wsClientRuntime-1.0.jar')
+        final File wsClientRuntimeJar = file('wsClientRuntime-1.0.jar')
         wsClientRuntimeJar.createNewFile()
 
-        final File wsClientExtrasJar = projectHelper.project.file('../wsClientExtras-1.0.jar')
+        final File wsClientExtrasJar = file('wsClientExtras-1.0.jar')
         wsClientExtrasJar.createNewFile()
 
-        projectHelper.configureProject {
+        Project project = projectBuilder().build().tap {
+            apply plugin: 'sktools-webstart-plugin'
+
             configurations {
                 clientRuntime1
                 clientRuntime2
             }
 
             dependencies {
-                clientRuntime1 files('../wsClientRuntime-1.0.jar')
-                clientRuntime2 files('../wsClientRuntime-1.0.jar', '../wsClientExtras-1.0.jar')
+                clientRuntime1 files('wsClientRuntime-1.0.jar')
+                clientRuntime2 files('wsClientRuntime-1.0.jar', 'wsClientExtras-1.0.jar')
             }
 
             webstart {
@@ -273,24 +197,15 @@ class WebstartPluginTest {
                     }
                 }
             }
-
         }
-
-        projectHelper.initializeProject()
 
         //verifying client1 with single jar
-        projectHelper.project.with {
-            Assert.assertEquals(tasks['genClient1Jnlp'].mainJar.files.size(), 1, 'mainJar')
-            Assert.assertEquals(tasks['genClient1Jnlp'].mainJar.asPath, files(wsClientRuntimeJar).asPath, 'mainJar')
-            Assert.assertEquals(tasks['genClient1Jnlp'].jarResources.asPath, files(wsClientRuntimeJar).asPath, 'jarResources')
-        }
+        assertThat(project.tasks['genClient1Jnlp'].mainJar.files as Iterable).containsExactly(wsClientRuntimeJar)
+        assertThat(project.tasks['genClient1Jnlp'].jarResources.files as Iterable).containsExactly(wsClientRuntimeJar)
 
         //verifying client2 with multiple jars
-        projectHelper.project.with {
-            Assert.assertEquals(tasks['genClient2Jnlp'].mainJar.files.size(), 2, 'mainJar') //SKTOOLS-118: default behaviour to treat all as main jars (although this might lead to an exeption at runtime...)
-            Assert.assertEquals(tasks['genClient2Jnlp'].mainJar.asPath, files(wsClientRuntimeJar, wsClientExtrasJar).asPath, 'mainJar')
-            Assert.assertEquals(tasks['genClient2Jnlp'].jarResources.asPath, files(wsClientRuntimeJar, wsClientExtrasJar).asPath, 'jarResources')
-        }
+        assertThat(project.tasks['genClient2Jnlp'].mainJar.files as Iterable).containsExactlyInAnyOrder(wsClientRuntimeJar, wsClientExtrasJar)
+        assertThat(project.tasks['genClient2Jnlp'].jarResources.files as Iterable).containsExactlyInAnyOrder(wsClientRuntimeJar, wsClientExtrasJar)
     }
 
 
@@ -299,23 +214,21 @@ class WebstartPluginTest {
      */
     @Test
     void canSpecifyMainJar() {
-        ProjectHelper projectHelper = GradleProjectBuilder.builder('root').build {
-            apply plugin: 'sktools-webstart-plugin'
-        }
-
-        final File wsClientRuntimeJar = projectHelper.project.file('../wsClientRuntime-1.0.jar')
+        final File wsClientRuntimeJar = file('wsClientRuntime-1.0.jar')
         wsClientRuntimeJar.createNewFile()
 
-        final File wsClientExtrasJar = projectHelper.project.file('../wsClientExtras-1.0.jar')
+        final File wsClientExtrasJar = file('wsClientExtras-1.0.jar')
         wsClientExtrasJar.createNewFile()
 
-        projectHelper.configureProject {
+        Project project = projectBuilder().build().tap {
+            apply plugin: 'sktools-webstart-plugin'
+
             configurations {
                 clientRuntime
             }
 
             dependencies {
-                clientRuntime files('../wsClientRuntime-1.0.jar', '../wsClientExtras-1.0.jar')
+                clientRuntime files('wsClientRuntime-1.0.jar', 'wsClientExtras-1.0.jar')
             }
 
             webstart {
@@ -338,22 +251,13 @@ class WebstartPluginTest {
                     }
                 }
             }
-
         }
 
-        projectHelper.initializeProject()
-
-        ['genClient1Jnlp', 'genClient2Jnlp'].reverseEach { def genJnlpTaskName ->
-
-            //clients with multiple jars should have only one main jar specified
-            projectHelper.project.with {
-                Assert.assertEquals(tasks[genJnlpTaskName].mainJar.files.size(), 1, "${genJnlpTaskName}.mainJar")
-                Assert.assertEquals(tasks[genJnlpTaskName].mainJar.asPath, files(wsClientRuntimeJar).asPath, "${genJnlpTaskName}.mainJar")
-                Assert.assertEquals(tasks[genJnlpTaskName].jarResources.asPath, files(wsClientRuntimeJar, wsClientExtrasJar).asPath, "${genJnlpTaskName}.jarResources")
-            }
-
-        }
-
+        //clients with multiple jars should have only one main jar specified
+        assertThat(project.tasks['genClient1Jnlp'].mainJar.files as Iterable)
+            .containsExactly(wsClientRuntimeJar);
+        assertThat(project.tasks['genClient2Jnlp'].mainJar.files as Iterable)
+            .containsExactly(wsClientRuntimeJar);
     }
 
 
@@ -362,12 +266,9 @@ class WebstartPluginTest {
      */
     @Test
     void canSpecifyExtraManifestAttributes() {
-        ProjectHelper projectHelper = GradleProjectBuilder.builder('root').build {
+        Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-webstart-plugin'
-        }
-
-        projectHelper.configureProject {
-            apply: 'java'
+            apply plugin: 'java'
 
             webstart {
                 client1 {
@@ -378,48 +279,31 @@ class WebstartPluginTest {
                         title 'Client1 title'
                     }
                 }
-                client2 {
-                    jarDependencies configurations.runtime
-                    jnlp {
-                        description 'Client2 description'
-                        title 'Client2 title'
-                    }
-                }
             }
-
         }
 
-
-        projectHelper.initializeProject()
-
-        final JarSigner signTask = projectHelper.project.tasks['signClient1'] as JarSigner
-        Assert.assertNotNull(signTask.getManifestAttributes())
-        Assert.assertEquals(signTask.getManifestAttributes().size(), 2)
-        Assert.assertEquals(signTask.getManifestAttributes(), [codebase: 'https://*', dummy: 'testValue'])
-
+        final JarSigner signTask = project.tasks['signClient1'] as JarSigner
+        assertThat(signTask.getManifestAttributes())
+            .containsOnly(
+                entry('codebase', 'https://*'),
+                entry('dummy', 'testValue'))
     }
 
     @Test //regression
     void jnlpTaskDependsOnSignJars() {
-        //forks a new project in a temp folder
-        ProjectHelper projectHelper = GradleProjectBuilder.builder('root').build {
+        Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-webstart-plugin'
-            version = 101
-        }
 
-        projectHelper.configureProject {
             webstart {
                 client {
-                    jarDependencies files(projectHelper.gradleJars[1])
                     jnlp {
                     }
                 }
             }
         }
 
-        projectHelper.initializeProject()
-
-        Assertions.assertThat(projectHelper.findDependsOnTaskNames('genClientJnlp')).contains('signClient')
+        assertThat(extractDependsOn(project.tasks.genClientJnlp))
+            .contains(project.tasks.signClient)
     }
 
     /**
@@ -427,31 +311,25 @@ class WebstartPluginTest {
      */
     @Test
     void cleanJarSignerCacheDeletesCacheDir() {
+        File customCacheDir = file("customCacheDir")
+        writeFile("customCacheDir/willBeDeleted.txt")
 
-        //forks a new project in a temp folder
-        ProjectHelper projectHelper = GradleProjectBuilder.builder('root').build {
-            apply plugin: 'sktools-webstart-plugin'
-            version = 101
-        }
-
-        File customCacheDir = projectHelper.project.file("customCacheDir")
-        customCacheDir.mkdirs()
-        new File(customCacheDir, "willBeDeleted.txt").createNewFile()
-
-        projectHelper.configureProject {
+        writeFile("build.gradle", """
+            plugins {
+              id 'sktools.webstart'
+            }
+            
             webstart {
                 client {
-                    sign(cacheDir: customCacheDir)
+                    sign(cacheDir: file('customCacheDir'))
                 }
             }
-        }
+        """)
 
-        projectHelper.initializeProject()
+        Preconditions.checkArgument(customCacheDir.exists(), "Riktig testoppsett")
+        testGradleBuild(":cleanJarSignerCaches")
 
-        projectHelper.executeTask('cleanJarSignerCaches')
-
-        //sjekker at filer er blitt opprettet
-        projectHelper.assertFileNotExists(customCacheDir)
+        assertThat(customCacheDir).doesNotExist();
     }
 
 }

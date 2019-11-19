@@ -22,10 +22,8 @@ dependencies {
     //jaxb runtime
     testRuntimeOnly libraries.jaxb_rt
 
-    //testing...
-    testCompile project(':build-utils:test-utils')
-    testCompile gradleApi()
-
+    testImplementation gradleTestKit()
+    testImplementation project(':build-utils:test-utils')
 }
 
 

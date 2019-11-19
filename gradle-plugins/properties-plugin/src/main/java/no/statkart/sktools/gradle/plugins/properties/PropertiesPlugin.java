@@ -3,7 +3,6 @@ package no.statkart.sktools.gradle.plugins.properties;
 import no.statkart.sktools.gradle.plugins.properties.extension.PropertyUtils;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.internal.project.ProjectInternal;
 
 
 /**
@@ -12,12 +11,12 @@ import org.gradle.api.internal.project.ProjectInternal;
  * @since 1.3
  * @author Leif Lislegård
  */
-public class PropertiesPlugin implements Plugin<ProjectInternal> {
+public class PropertiesPlugin implements Plugin<Project> {
     public static final String PROPERTY_UTILS_EXTENSION_NAME = "propertyUtils";
 
 
     @Override
-    public void apply(ProjectInternal project) {
+    public void apply(Project project) {
         if (project == project.getRootProject()) { //extension to all projects if applied to root
             for (Project aProject : project.getAllprojects()) {
                 augmentProjectWithExtension(aProject);

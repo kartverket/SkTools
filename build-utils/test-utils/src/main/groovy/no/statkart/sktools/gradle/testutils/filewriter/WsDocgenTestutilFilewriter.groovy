@@ -1,13 +1,15 @@
 package no.statkart.sktools.gradle.testutils.filewriter
 
-import no.statkart.sktools.gradle.testutils.ProjectHelper
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+import java.nio.file.StandardOpenOption
 
 /**
  * Statiske understøttende hjelpemetoder for generering av kildekode for bruk i testing.
  *
  * @author Leif Lislegård
  */
-class WsDocgenTestutilFilewriter extends AbstractTestutilFilewriter {
+class WsDocgenTestutilFilewriter {
 
     /**
      * Skriver kildekode for en simpel testservice implementasjon (WebService) til fil.
@@ -20,13 +22,10 @@ class WsDocgenTestutilFilewriter extends AbstractTestutilFilewriter {
      * <p><b>
      * PS: Merk at service navn og klassenavn divergerer!
      */
-    public static Collection<File> writeSimpleDemoServiceWSBean(ProjectHelper projectHelper, String targetPath) {
-        ArrayList<File> generatedFiles = new ArrayList<File>()
-
-        generatedFiles.add projectHelper.project.file(targetPath + '/no/statkart/sktools/test/SimpleDemoServiceWSBean.java').with { File file ->
-            file.parentFile.mkdirs()
-            file.withPrintWriter { writer ->
-                writer.print """
+    public static File writeSimpleDemoServiceWSBean(File targetPath) {
+        File file = new File(targetPath, '/no/statkart/sktools/test/SimpleDemoServiceWSBean.java')
+        file.parentFile.mkdirs()
+        Files.write(file.toPath(), ["""
                      package no.statkart.sktools.test;
 
                      /**
@@ -63,12 +62,10 @@ class WsDocgenTestutilFilewriter extends AbstractTestutilFilewriter {
                          }
 
                      }
-                """
-            }
-            return file
-        }
+                """], StandardCharsets.UTF_8,
+            StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.APPEND)
 
-        return generatedFiles
+        return file;
     }
 
     /**
@@ -86,10 +83,9 @@ class WsDocgenTestutilFilewriter extends AbstractTestutilFilewriter {
      *
      * <p><b>
      */
-    public static Collection<File> writeInterfaceServiceWSBean(ProjectHelper projectHelper, String targetPath) {
-        ArrayList<File> generatedFiles = new ArrayList<File>()
+    public static void writeInterfaceServiceWSBean(File targetPath) {
 
-        generatedFiles.add projectHelper.project.file(targetPath + '/no/statkart/sktools/interfaceservice/domain/SimpleClass.java').with { File file ->
+        new File(targetPath, '/no/statkart/sktools/interfaceservice/domain/SimpleClass.java').with { File file ->
             file.parentFile.mkdirs()
             file.withPrintWriter { writer ->
                 writer.print """
@@ -126,7 +122,7 @@ class WsDocgenTestutilFilewriter extends AbstractTestutilFilewriter {
         }
 
 
-        generatedFiles.add projectHelper.project.file(targetPath + '/no/statkart/sktools/interfaceservice/InterfaceServiceInterface.java').with { File file ->
+        new File(targetPath, '/no/statkart/sktools/interfaceservice/InterfaceServiceInterface.java').with { File file ->
             file.parentFile.mkdirs()
             file.withPrintWriter { writer ->
                 writer.print """
@@ -157,7 +153,7 @@ class WsDocgenTestutilFilewriter extends AbstractTestutilFilewriter {
         }
 
 
-        generatedFiles.add projectHelper.project.file(targetPath + '/no/statkart/sktools/interfaceservice/InterfaceServiceWSBean.java').with { File file ->
+        new File(targetPath, '/no/statkart/sktools/interfaceservice/InterfaceServiceWSBean.java').with { File file ->
             file.parentFile.mkdirs()
             file.withPrintWriter { writer ->
                 writer.print """
@@ -198,8 +194,6 @@ class WsDocgenTestutilFilewriter extends AbstractTestutilFilewriter {
             }
             return file
         }
-
-        return generatedFiles;
     }
 
 
@@ -209,10 +203,8 @@ class WsDocgenTestutilFilewriter extends AbstractTestutilFilewriter {
      *
      * @since 1.3
      */
-    public static File writeSimpleXSLT(ProjectHelper projectHelper, String targetPath, String filename = 'transform.xslt') {
-        ArrayList<File> generatedFiles = new ArrayList<File>()
-
-        generatedFiles.add projectHelper.project.file(targetPath + '/' + filename).with { File file ->
+    public static File writeSimpleXSLT(File targetPath, String filename = 'transform.xslt') {
+        File file = new File(targetPath, '/' + filename)
             file.parentFile.mkdirs()
             file.withPrintWriter { writer ->
                 writer.print """
@@ -304,10 +296,9 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
                 """
             }
-            return file
-        }
 
-        return generatedFiles.iterator().next();
+            return file
+
     }
 
 }

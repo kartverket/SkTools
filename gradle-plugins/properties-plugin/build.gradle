@@ -1,18 +1,24 @@
-apply plugin: 'groovy'
-apply plugin: 'maven-publish'
+plugins {
+    id 'groovy'
+    id 'maven-publish'
+    id 'java-gradle-plugin'
+}
 
 group = 'no.statkart.sktools.gradle'
 
-
+gradlePlugin {
+    plugins {
+        properties {
+            id = 'sktools.properties'
+            implementationClass = 'no.statkart.sktools.gradle.plugins.properties.PropertiesPlugin'
+        }
+    }
+}
 
 dependencies {
-
-    //gradle api til byggesystemm blir benyttet som std
-    compile gradleApi()
-
-    //test
-    testCompile project(':build-utils:test-utils')
+    testImplementation project(':build-utils:test-utils')
 }
+
 
 
 task sourceJar(type: Jar) {
@@ -28,5 +34,3 @@ publishing {
         }
     }
 }
-
-

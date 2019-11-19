@@ -56,7 +56,7 @@ class IdeaExtensionsPlugin implements Plugin<Project> {
                     it.project.getConvention().getPlugin(JavaPluginConvention.class).sourceSets.each {
                         it.getAllSource().srcDirs.each {
                             if (!it.exists()) {
-                                project.logger.quiet("..creating folder {}", project.relativePath(it));
+                                project.logger.quiet("..creating folder {}", project.relativePath(it))
                                 project.mkdir(it)
                             }
                         }
@@ -64,7 +64,7 @@ class IdeaExtensionsPlugin implements Plugin<Project> {
                         it.getOutput().getDirs().each {
                             if (!it.exists()) {
                                 project.logger.quiet("..creating folder {} (output)", project.relativePath(it));
-                                project.mkdir(it)
+                                project.mkdirs(it)
                             }
                         }
                     }

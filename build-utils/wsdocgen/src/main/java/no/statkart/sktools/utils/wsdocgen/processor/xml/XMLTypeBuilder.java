@@ -19,6 +19,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import no.statkart.sktools.utils.wsdocgen.processor.util.*;
 
@@ -114,14 +115,12 @@ class XMLTypeBuilder {
         if (ns == null || "".equals(ns)) {
             return "";
         }
-        //String javadocPath = basePath == null ? "VALUE_NOT_PARAMETRIZED" : basePath;
         //NT 17.01.2014, tom streng vil trigge relativ url sti i browseren.
-        String javadocPath = (basePath == null) ? "" : basePath;
+        String javadocPath = Objects.toString(basePath, "");
         String remainingUrlPath = buildJavadocPath(ns, clazz);
         final StringBuilder buffer = new StringBuilder(javadocPath);
         if (remainingUrlPath != null && remainingUrlPath.trim().length() > 0)
-            buffer.append("?").append(remainingUrlPath);
-        //javadocPath += '?' + remainingUrlPath;
+            buffer.append('?').append(remainingUrlPath);
         return buffer.toString();
     }
 
@@ -139,10 +138,10 @@ class XMLTypeBuilder {
 
                 StringBuilder builder = new StringBuilder();
                 for (String str : host.split("\\.")) {
-                    builder.insert(0, str + "/");
+                    builder.insert(0, str + '/');
                 }
                 builder.append(path);
-                builder.append("/");
+                builder.append('/');
                 builder.append(clazz);
                 builder.append(".html");
 

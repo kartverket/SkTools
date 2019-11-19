@@ -1,165 +1,216 @@
 package no.statkart.sktools.gradle.plugins.ideaextensions
 
+import no.statkart.sktools.gradle.testutils.TestKitBase
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import org.testng.Assert
 import org.testng.annotations.Test
 
-import static InspectionProfileTestContext.IDEA_TEMPLATE_WITH_INSPECTIONS_XML
-import static InspectionProfileTestContext.INSPECTION_PROFILE_2_XML
-import static InspectionProfileTestContext.buildInspectionProfile
-import static InspectionProfileTestContext.INSPECTION_PROFILE_1_NAME
+import static org.assertj.core.api.Assertions.assertThat
+import static org.assertj.core.api.Assertions.contentOf
 
 /**
  * @author Leif Lislegård
  */
-class IdeaExtensionPluginTest {
+class IdeaExtensionPluginTest extends TestKitBase {
 
     /**
      * Tester registrering av plugin via navn
+     * og at extension er registrert.
      */
     @Test
-    void testAppplyPlugin() {
-        //forks a new project in a temp folder
-        Project project = ProjectBuilder.builder().build()
+    void testApplyPlugin() {
+        Project project = projectBuilder().build().tap {
+            apply plugin: 'sktools-ideaextensions-plugin'
+        }
 
-        project.apply plugin: 'sktools-ideaextensions-plugin'
-
-
-        assert project.ideaExtensions != null
         Assert.assertTrue(project.ideaExtensions instanceof IdeaExtensionsPluginExtension)
     }
 
-    /**
-     * Tester og demonstrerer angivelse av konfigurasjon
-     */
-    @Test(enabled = false)
-    void testConventionConfiguration() {
-        //todo
-    }
 
     /**
-     * Tester angivelse av ignore paths
+     * Tester at filer maskeres bort
+     * Tester at stier maskeres bort (paths)
      */
     @Test
-    void testAddIgnorePaths() {
-        final def testCase = new InspectionProfileTestContext()
-        testCase.templateXml = testCase.IDEA_IPR_EMPTY_XML
-        testCase.addInspectionProfileFile(testCase.INSPECTION_PROFILE_1_XML)
-        testCase.addInspectionProfileFile(testCase.INSPECTION_PROFILE_2_XML)
+    void testMasksAndPaths() {
+        writeFile("build.gradle", '''
+            plugins {
+              id 'sktools.ideaextensions'
+            }
+            
+            ideaExtensions {
+                ignoreMasks += '*.tmp'
+                ignorePaths += '.gradle/'
+            }
+        ''')
 
-        def rootNode = new XmlParser().parseText(testCase.templateXml)
+        writeFile("settings.gradle", '''
+            rootProject.name = 'myproject'
+        ''')
 
-        IdeaExtensionsPlugin.addInspectionProfile(rootNode, testCase.extension)
-        assert rootNode.component.findAll { it.@name == "InspectionProjectProfileManager" }.size() == 1 //forventet kun ett element
-
-        Node managerNode = rootNode.component.findAll { it.@name == "InspectionProjectProfileManager" }[0]
-        Assert.assertEquals(managerNode.profiles.profile.size(), 2, "forventer to profiler")
-    }
-
-    /**
-     * Tester angivelse xml for inspection profiles
-     * @since 1.3
-     */
-    @Test
-    void testAddInspectionProfileCleanIdea12() {
-        final def testCase = new IdeaTestContext()
-        testCase.templateXml = testCase.IDEA_IWS_EMPTY_XML
-
-        def rootNode = new XmlParser().parseText(testCase.templateXml)
-        testCase.extension.ignorePaths = ["dir1", "sub/dir2"]
-
-        IdeaExtensionsPlugin.addIgnoreMasksAndPaths(rootNode, testCase.extension)
-        assert rootNode.component.findAll { it.@name == "ChangeListManager" }.size() == 1 //forventet kun ett element
-
-        Node changeListManager = rootNode.component.findAll { it.@name == "ChangeListManager" }[0]
-        def ignoredPathNodes = changeListManager.ignored.findAll { it.@path != null }
-        Assert.assertEquals(ignoredPathNodes.size(), 2, "ignore paths")
-        Assert.assertEquals(ignoredPathNodes[0].@path, "dir1/")
-        Assert.assertEquals(ignoredPathNodes[1].@path, "sub/dir2/")
-    }
-
-    /**
-     * SKTOOLS-142: Tester angivelse xml for inspection profiles
-     * @since 2.0
-     */
-    @Test
-    void testAddInspectionProfileCleanIdea14() {
-        final def testCase = new InspectionProfileTestContext()
-        testCase.templateXml = testCase.IDEA_IPR_EMPTY_XML
-        testCase.addInspectionProfileFile(testCase.INSPECTION_PROFILE_1_XML)
-        testCase.addInspectionProfileFile(testCase.INSPECTION_PROFILE_2_XML)
-
-        def rootNode = new XmlParser().parseText(testCase.templateXml)
-
-        IdeaExtensionsPlugin.addInspectionProfile(rootNode, testCase.extension)
-        assert rootNode.component.findAll { it.@name == "InspectionProjectProfileManager" }.size() == 1 //forventet kun ett element
-
-        Node managerNode = rootNode.component.findAll { it.@name == "InspectionProjectProfileManager" }[0]
-        Assert.assertEquals(managerNode.profile.size(), 2, "forventer to profiler")
-    }
-
-    /**
-     * Tester angivelse xml for inspection profiles der profiler finnes ifra før (merge)
-     * @since 1.3
-     */
-    @Test
-    void testAddInspectionProfileMerge() {
-        final def testContext = new InspectionProfileTestContext()
-        testContext.templateXml = IDEA_TEMPLATE_WITH_INSPECTIONS_XML
-        testContext.addInspectionProfileFile(buildInspectionProfile(INSPECTION_PROFILE_1_NAME, 'invalidBooleanValue'))
-        testContext.addInspectionProfileFile(INSPECTION_PROFILE_2_XML)
-
-        def rootNode = new XmlParser().parseText(testContext.templateXml)
-
-        IdeaExtensionsPlugin.addInspectionProfile(rootNode, testContext.extension)
-        assert rootNode.component.findAll { it.@name == "InspectionProjectProfileManager" }.size() == 1 //forventet kun ett element
-
-        Node managerNode = rootNode.component.findAll { it.@name == "InspectionProjectProfileManager" }[0]
-        Assert.assertEquals(managerNode.profiles.profile.size(), 2, "forventer to profiler")
-        Assert.assertEquals(managerNode.profiles.profile[0].option.find {it.@name == 'myName'}.@value, INSPECTION_PROFILE_1_NAME)
-        Assert.assertEquals(managerNode.profiles.profile[0].option.find {it.@name == 'myLocal'}.@value, 'invalidBooleanValue')
+        testGradleBuild("ideaWorkspace")
+        assertThat(contentOf(file('myproject.iws')))
+                .contains('mask="*.tmp"')
+                .contains('path=".gradle/"');
     }
 
 
-    /**
-     * Tester deklarering av gradle
-     * @since 1.3
-     */
     @Test
-    void testAddGradleClean() {
-        final def testContext = new GradleTestContext()
-        testContext.templateXml = testContext.IDEA_IPR_EMPTY_XML
+    void testVCS() {
+        writeFile("build.gradle", '''
+            plugins {
+              id 'sktools.ideaextensions'
+            }
+            
+            ideaExtensions {
+                vcs 'Perforce'
+            }
+        ''')
 
-        def rootNode = new XmlParser().parseText(testContext.templateXml)
-        Assert.assertEquals(rootNode.component.findAll { it.@name == "GradleSettings" }.size(), 0, "forventet ingen elementer")
+        writeFile("settings.gradle", '''
+            rootProject.name = 'myproject'
+        ''')
 
-        IdeaExtensionsPlugin.addGradle(rootNode, testContext.extension)
-        Assert.assertEquals(rootNode.component.findAll { it.@name == "GradleSettings" }.size(), 1, "forventet ett element")
+        testGradleBuild("idea")
+        assertThat(contentOf(file('myproject.ipr')))
+                .contains('vcs="Perforce"');
     }
 
-    /**
-     * Tester angivelse xml for inspection profiles der profiler finnes ifra før (merge)
-     * @since 1.3
-     */
     @Test
-    void testGradleMerge() {
-        final def testContext = new GradleTestContext()
-        testContext.templateXml = testContext.IDEA_TEMPLATE_WITH_GRADLE_XML
+    void testInspections() {
+        writeFile("build.gradle", '''
+            plugins {
+              id 'sktools.ideaextensions'
+            }
+            
+            ideaExtensions {
+                inspectionProfile = 'inspections.xml'
+            }
+        ''')
 
-        def rootNode = new XmlParser().parseText(testContext.templateXml)
+        writeFile("inspections.xml", '''<?xml version="1.0" encoding="UTF-8"?>
+            <inspections version="1.0" is_locked="false">
+              <option name="myName" value="SKTools Default" />
+              <option name="myLocal" value="false" />
+            
+              <inspection_tool class="CollectionsFieldAccessReplaceableByMethodCall" enabled="true" level="WARNING" enabled_by_default="true" />
+            </inspections>
+        ''')
 
-        Assert.assertEquals(rootNode.component.findAll { it.@name == "GradleSettings" }.size(), 1)
-        Assert.assertNotNull(rootNode.component.find { it.@name == "GradleSettings" }.option.find { it.@name == "gradleHome" }, "forventet at option finnes")
-        Assert.assertEquals(rootNode.component.find { it.@name == "GradleSettings" }.option.find { it.@name == "gradleHome" }.@value, testContext.GRADLE_SETTINGS_1_GRADLE_HOME)
+        writeFile("settings.gradle", '''
+            rootProject.name = 'myproject'
+        ''')
 
-        IdeaExtensionsPlugin.addGradle(rootNode, testContext.extension)
-        Assert.assertEquals(rootNode.component.findAll { it.@name == "GradleSettings" }.size(), 1)
-        Assert.assertNotNull(rootNode.component.find { it.@name == "GradleSettings" }.option.find { it.@name == "gradleHome" }, "forventet at option finnes")
-        Assert.assertEquals(rootNode.component.find { it.@name == "GradleSettings" }.option.find { it.@name == "gradleHome" }.@value, testContext.project.gradle.gradleHomeDir)
+        testGradleBuild("idea")
+        assertThat(contentOf(file('myproject.ipr')))
+                .contains('"SKTools Default"');
+    }
 
-        IdeaExtensionsPlugin.addGradle(rootNode, testContext.extension)
-        Assert.assertEquals(rootNode.component.findAll { it.@name == "GradleSettings" }.size(), 1, "ikke flere elementer av denne typen")
+
+    @Test
+    void testCodeStyle() {
+        writeFile("build.gradle", '''
+            plugins {
+              id 'sktools.ideaextensions'
+            }
+            
+            ideaExtensions {
+                codeStyle = 'codestyle.xml'
+            }
+        ''')
+
+        writeFile("codestyle.xml", '''<?xml version="1.0" encoding="UTF-8"?>
+            <component name="ProjectCodeStyleSettingsManager">
+                <option name="PER_PROJECT_SETTINGS">
+                    <value>
+                        <XML>
+                            <option name="XML_ATTRIBUTE_WRAP" value="0" />
+                            <option name="XML_TEXT_WRAP" value="0" />
+                            <option name="XML_LEGACY_SETTINGS_IMPORTED" value="true" />
+                        </XML>
+                    </value>
+                </option>
+                <option name="USE_PER_PROJECT_SETTINGS" value="true" />
+            </component>
+        ''')
+
+        writeFile("settings.gradle", '''
+            rootProject.name = 'myproject'
+        ''')
+
+        testGradleBuild("idea")
+        assertThat(contentOf(file('myproject.ipr')))
+                .contains('name="XML_ATTRIBUTE_WRAP"');
+    }
+
+
+    @Test
+    void testFoldergeneration() {
+        writeFile("subproject/build.gradle", '''
+            plugins {
+              id 'sktools.ideaextensions'
+              id 'groovy'
+            }
+            
+            sourceSets {
+                //main sourceSet som blir brukt av Intellij
+                main {
+                    java.srcDir 'src/main2/java'
+                    allJava.srcDir 'src/main2/allJava' // defineres ikke som allSource
+                }
+            
+                //legger til nytt sourceSet
+                hiddenSource {
+                    java.srcDir 'src/hidden/java2'
+                    groovy.srcDir 'src/hidden/groovy2'
+                    resources.srcDir 'src/hidden/resources2'
+            
+                    allGroovy.srcDir 'src/hidden/allGroovy' // defineres ikke som allSource
+                    allJava.srcDir 'src/hidden/allJava' // defineres ikke som allSource
+                }
+            }            
+        ''')
+
+
+        writeFile("settings.gradle", '''
+            rootProject.name = 'myproject'
+            include ':subproject'
+        ''')
+
+
+        testGradleBuild("idea")
+
+        //tester at iml filen inneholder folders for main og test sourceSet  [SKIF-178]
+        assertThat(contentOf(file('subproject/subproject.iml')))
+                .describedAs("iml filen inneholder folders for main og test sourceSet")
+                .contains(
+                        'src/main/java',
+                        'src/main2/java',
+                        'src/main/groovy',
+                        'src/main/resources',
+
+                        'src/test/java',
+                        'src/test/groovy',
+                        'src/test/resources',
+                );
+
+        //tester at mapper blir generert opp ihht sourceSet  [SKIF-178]
+        assertThat(file('subproject/src/main/java')).exists();
+        assertThat(file('subproject/src/main2/java')).exists();
+        assertThat(file('subproject/src/main2/allJava')).doesNotExist();
+        assertThat(file('subproject/src/main/resources')).exists();
+
+        assertThat(file('subproject/src/hiddenSource/java')).exists();
+        assertThat(file('subproject/src/hidden/java2')).exists();
+        assertThat(file('subproject/src/hidden/allJava')).doesNotExist();
+
+        assertThat(file('subproject/src/hiddenSource/groovy')).exists();
+        assertThat(file('subproject/src/hidden/groovy2')).exists();
+        assertThat(file('subproject/src/hidden/allGroovy')).doesNotExist();
+
+        assertThat(file('subproject/src/hiddenSource/resources')).exists();
+        assertThat(file('subproject/src/hidden/resources2')).exists();
     }
 
 }

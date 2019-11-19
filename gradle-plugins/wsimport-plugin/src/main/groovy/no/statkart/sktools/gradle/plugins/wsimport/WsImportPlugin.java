@@ -5,6 +5,7 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.DependencySet;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.SourceSet;
@@ -19,7 +20,8 @@ import java.io.File;
  *   apply plugin: 'sktools-wsimport-plugin'
  *
  *   dependencies {
- *      jaxws 'com.sun.xml.ws:wscompile:2.2.10'
+ *      jaxws 'com.sun.xml.ws:jaxws-tools:2.2.10'
+ *      jaxws 'com.sun.xml.ws:wscompile:2.2.10' //gammel
  *   }
  * </pre>
  *
@@ -27,10 +29,16 @@ import java.io.File;
  */
 public class WsImportPlugin implements Plugin<Project> {
     @Override
-    public void apply(Project project) {
+    public void apply(final Project project) {
         project.getPlugins().apply(JavaPlugin.class);
 
         Configuration jaxwsConfiguration = project.getConfigurations().create("jaxws");
+        jaxwsConfiguration.defaultDependencies(new Action<DependencySet>() {
+            @Override
+            public void execute(DependencySet dependencies) {
+                dependencies.add(project.getDependencies().create("com.sun.xml.ws:jaxws-tools:2.2.10"));
+            }
+        });
 
         final File genSrcDir = new File(project.getBuildDir(), "wsimport");
 
@@ -51,6 +59,12 @@ public class WsImportPlugin implements Plugin<Project> {
             @Override
             public void execute(IdeaPlugin ideaPlugin) {
                 ideaPlugin.getModel().getModule().getGeneratedSourceDirs().add(genSrcDir);
+                project.getTasks().getByName("ideaModule").doFirst(new Action<Task>() {
+                    @Override
+                    public void execute(Task task) {
+                        genSrcDir.mkdirs();
+                    }
+                });
             }
         });
     }

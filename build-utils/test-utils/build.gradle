@@ -1,7 +1,5 @@
 apply plugin: 'groovy'
 
-//blir ikke eskponert
-//all testkode skal ligge i src/main sourceSet
 description = "Intern modul for felles test-logikk."
 
 def testPropertiesDir = "$buildDir/test-properties"
@@ -9,18 +7,23 @@ sourceSets {
     main {
         output.dir(testPropertiesDir, builtBy: 'createTestProperties')
     }
+    sample // ressurser for sample.jar til bruk i tester
 }
 
 def pluginProperties = [
         MAVEN_REPO : MAVEN_REPO as String,
+        WEBLOGIC_HOME : WEBLOGIC_HOME as String,
+        WEBLOGIC_VERSION : WEBLOGIC_VERSION as String,
+        libraries_hsqldb : libraries.hsqldb,
 ] as Properties
 
 dependencies {
+    implementation libraries.guava
+    implementation libraries.testng
+    implementation libraries.assertj
 
-    //gradle api til byggesystemm blir benyttet som std
-    compile gradleApi()
-    compile libraries.guava
-    compile libraries.testng
+    implementation gradleTestKit()
+    implementation localGroovy()
 }
 
 task createTestProperties() {
@@ -38,8 +41,22 @@ task createTestProperties() {
 }
 tasks.processResources.dependsOn createTestProperties
 
-// Testfunksjonalitet som avgjør om en kjører tester ifra IntelliJ eller ikke.
-// NB: Denne kildekoden skal IKKE med i gradle bygget!!
-idea.module {
-    testSourceDirs += file('src/idea/test-source')
+
+task createSampleJar(type: Jar) {
+    archiveName = 'sample.jar.bin'
+    from(project.sourceSets.sample.output)
+    manifest.attributes([
+        'Specification-Title': "Sample 1",
+        'Implementation-Version': "0.1",
+    ])
 }
+sourceSets.main.output.dir(createSampleJar, builtBy: createSampleJar)
+
+task createSample2Jar(type: Jar) {
+    archiveName = 'sample2.jar.bin'
+    from(project.sourceSets.sample.output)
+    manifest.attributes([
+        'Specification-Title': "Sample 2",
+    ])
+}
+sourceSets.main.output.dir(createSample2Jar, builtBy: createSample2Jar)

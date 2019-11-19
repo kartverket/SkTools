@@ -7,6 +7,8 @@ import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.*
 
+import java.nio.charset.StandardCharsets
+
 /**
  *
  * @author Leif Lislegård
@@ -149,7 +151,10 @@ class WebstartTask extends ConventionTask {
      * Writes xml to file, applying withXml transform if set
      */
     static protected void writeXml(File file, Node xml, Closure withXml) {
-        writeXml(new OutputStreamWriter(new BufferedOutputStream(new FileOutputStream(file)), 'UTF-8'), xml, withXml)
+        file.getParentFile().mkdirs()
+        def writer = new OutputStreamWriter(new BufferedOutputStream(new FileOutputStream(file)), StandardCharsets.UTF_8)
+        writeXml(writer, xml, withXml)
+        writer.close()
     }
 
     static protected void writeXml(Writer writer, Node xml, Closure withXml) {

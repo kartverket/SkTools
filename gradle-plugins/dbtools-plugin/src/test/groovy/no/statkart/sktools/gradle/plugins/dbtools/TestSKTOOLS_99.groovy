@@ -4,8 +4,8 @@ import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsConvention
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractDatabaseConvention
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.PatchConfiguration
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.SequenceTask
-import no.statkart.sktools.gradle.testutils.ProjectHelper
-import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
+import no.statkart.sktools.gradle.testutils.TestKitBase
+import org.gradle.api.Project
 import org.testng.annotations.Test
 
 import static org.testng.Assert.assertNotNull
@@ -16,7 +16,7 @@ import static org.testng.Assert.assertNotNull
  * @since 1.3 - ny grunnbok sprint 30
  * @author Leif Lislegård
  */
-class TestSKTOOLS_99 {
+class TestSKTOOLS_99 extends TestKitBase {
 
     /**
      * Tester bruk av
@@ -29,7 +29,7 @@ class TestSKTOOLS_99 {
      */
     @Test
     void testTaskSequenceOnProject() {
-        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+        final Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-dbtools-plugin'
 
             taskSequence('ProjectTaskA') {
@@ -47,13 +47,13 @@ class TestSKTOOLS_99 {
             }
         }
 
-        assertNotNull(testCase.project.tasks.findByName('ProjectTaskA'), 'Task definert av taskSequence(<name>, <closure>)')
-        assertNotNull(testCase.project.tasks.findByName('ProjectTaskAA'), 'SubTask definert av taskSequence(<name>, <closure>)')
+        assertNotNull(project.tasks.findByName('ProjectTaskA'), 'Task definert av taskSequence(<name>, <closure>)')
+        assertNotNull(project.tasks.findByName('ProjectTaskAA'), 'SubTask definert av taskSequence(<name>, <closure>)')
 
-        assertNotNull(testCase.project.tasks.findByName('ProjectTaskB'), 'Task definert av taskSequence(<name>, <params>, <closure>)')
-        assertNotNull(testCase.project.tasks.findByName('ProjectTaskBB'), 'SubTask definert av taskSequence(<name>, <params>, <closure>)')
+        assertNotNull(project.tasks.findByName('ProjectTaskB'), 'Task definert av taskSequence(<name>, <params>, <closure>)')
+        assertNotNull(project.tasks.findByName('ProjectTaskBB'), 'SubTask definert av taskSequence(<name>, <params>, <closure>)')
 
-        assertNotNull(testCase.project.tasks.findByName('ProjectTaskCC'), 'SubTask definert av taskSequence(<name>)')
+        assertNotNull(project.tasks.findByName('ProjectTaskCC'), 'SubTask definert av taskSequence(<name>)')
     }
 
     /**
@@ -67,8 +67,7 @@ class TestSKTOOLS_99 {
      */
     @Test
     void testTaskSequenceOnDatabaseConvention() {
-
-        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+        final Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-dbtools-plugin'
 
             configureDatabasePlugin {
@@ -91,13 +90,13 @@ class TestSKTOOLS_99 {
             }
         }
 
-        assertNotNull(testCase.project.tasks.findByName('testToolsetTaskA'), 'Task definert av taskSequence(<name>, <closure>)')
-        assertNotNull(testCase.project.tasks.findByName('testToolsetTaskAA'), 'SubTask definert av taskSequence(<name>, <closure>)')
+        assertNotNull(project.tasks.findByName('testToolsetTaskA'), 'Task definert av taskSequence(<name>, <closure>)')
+        assertNotNull(project.tasks.findByName('testToolsetTaskAA'), 'SubTask definert av taskSequence(<name>, <closure>)')
 
-        assertNotNull(testCase.project.tasks.findByName('testToolsetTaskB'), 'Task definert av taskSequence(<name>, <params>, <closure>)')
-        assertNotNull(testCase.project.tasks.findByName('testToolsetTaskBB'), 'SubTask definert av taskSequence(<name>, <params>, <closure>)')
+        assertNotNull(project.tasks.findByName('testToolsetTaskB'), 'Task definert av taskSequence(<name>, <params>, <closure>)')
+        assertNotNull(project.tasks.findByName('testToolsetTaskBB'), 'SubTask definert av taskSequence(<name>, <params>, <closure>)')
 
-        assertNotNull(testCase.project.tasks.findByName('testToolsetTaskCC'), 'SubTask definert av taskSequence(<name>)')
+        assertNotNull(project.tasks.findByName('testToolsetTaskCC'), 'SubTask definert av taskSequence(<name>)')
     }
 
     /**
@@ -111,8 +110,7 @@ class TestSKTOOLS_99 {
      */
     @Test
     void testTaskSequenceOnPatchConfiguration() {
-
-        final ProjectHelper testCase = GradleProjectBuilder.builder().build {
+        final Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-dbtools-plugin'
 
             configureDatabasePlugin {
@@ -136,13 +134,13 @@ class TestSKTOOLS_99 {
             }
         }
 
-        assertNotNull(testCase.project.tasks.findByName('testToolsetTaskA'), 'Task definert av taskSequence(<name>, <closure>)')
-        assertNotNull(testCase.project.tasks.findByName('testToolsetTaskAA'), 'SubTask definert av taskSequence(<name>, <closure>)')
+        assertNotNull(project.tasks.findByName('testToolsetTaskA'), 'Task definert av taskSequence(<name>, <closure>)')
+        assertNotNull(project.tasks.findByName('testToolsetTaskAA'), 'SubTask definert av taskSequence(<name>, <closure>)')
 
-        assertNotNull(testCase.project.tasks.findByName('testToolsetTaskB'), 'Task definert av taskSequence(<name>, <params>, <closure>)')
-        assertNotNull(testCase.project.tasks.findByName('testToolsetTaskBB'), 'SubTask definert av taskSequence(<name>, <params>, <closure>)')
+        assertNotNull(project.tasks.findByName('testToolsetTaskB'), 'Task definert av taskSequence(<name>, <params>, <closure>)')
+        assertNotNull(project.tasks.findByName('testToolsetTaskBB'), 'SubTask definert av taskSequence(<name>, <params>, <closure>)')
 
-        assertNotNull(testCase.project.tasks.findByName('testToolsetTaskCC'), 'SubTask definert av taskSequence(<name>)')
+        assertNotNull(project.tasks.findByName('testToolsetTaskCC'), 'SubTask definert av taskSequence(<name>)')
 
     }
 

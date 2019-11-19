@@ -3,13 +3,14 @@ apply plugin: 'groovy'
 apply plugin: 'maven-publish'
 
 dependencies {
-    compile project(':build-utils:sql-parser')
+    implementation project(':build-utils:sql-parser')
 
-    compile gradleApi()
-    compile libraries.slf4j_api
-    runtime libraries.slf4j_simple
+    compileOnly gradleApi()
+    implementation libraries.slf4j_api
+    runtimeOnly libraries.slf4j_simple
 
-    testCompile project(':build-utils:test-utils')
+    testImplementation project(':build-utils:test-utils')
+    testImplementation localGroovy()
 }
 
 

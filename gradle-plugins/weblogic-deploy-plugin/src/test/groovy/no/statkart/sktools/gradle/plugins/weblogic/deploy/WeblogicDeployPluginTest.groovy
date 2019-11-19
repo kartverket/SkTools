@@ -1,7 +1,6 @@
 package no.statkart.sktools.gradle.plugins.weblogic.deploy
 
-import no.statkart.sktools.gradle.testutils.ProjectHelper
-import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
+import no.statkart.sktools.gradle.testutils.TestKitBase
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import org.testng.Assert
@@ -13,19 +12,32 @@ import org.testng.annotations.Test
  * @author Tor Egil R. Strand
  * @since 1.2
  */
-class WeblogicDeployPluginTest {
+class WeblogicDeployPluginTest extends TestKitBase {
+
     /**
      * Tester registrering av plugin via navn
      */
     @Test
-    void testAppplyPlugin() {
-        //forks a new project in a temp folder
-        Project project = ProjectBuilder.builder().build()
+    void testApplyPlugin() {
+        final Project project = projectBuilder().build().tap {
+            apply plugin: 'sktools-weblogic-deploy-plugin'
+        }
 
-        project.apply plugin: 'sktools-weblogic-deploy-plugin'
-
-        assert project.convention.plugins.weblogicDeployConvention != null
         Assert.assertTrue(project.convention.plugins.weblogicDeployConvention instanceof WeblogicDeployConvention)
+    }
+
+    /**
+     * Tester plugin via alternativt navn
+     */
+    @Test
+    void testApplyPlugin2() {
+        writeFile("build.gradle", '''
+            plugins {
+                id 'sktools.weblogic-deploy'
+            }
+''')
+
+        assertNoFailures(testGradleBuild("tasks"))
     }
 
     /**
@@ -33,7 +45,7 @@ class WeblogicDeployPluginTest {
      */
     @Test
     void testConfiguration() {
-        ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+        final Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-weblogic-deploy-plugin'
 
             weblogicDeploy {
@@ -45,8 +57,6 @@ class WeblogicDeployPluginTest {
                 undeployTask('myUndeploy', description: 'Testkonfigurasjon av undeploy task') { url = 't3://test:port'}
             }
         }
-
-        Project project = projectHelper.project
 
         assert project.tasks['myDeploy'].group == 'Deployment'
         assert project.tasks['myUndeploy'].group == 'Deployment'
@@ -64,7 +74,7 @@ class WeblogicDeployPluginTest {
      */
     @Test
     void testDependsOn() {
-        ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+        final Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-weblogic-deploy-plugin'
 
             project.task 'myTask'
@@ -77,8 +87,6 @@ class WeblogicDeployPluginTest {
             }
         }
 
-        Project project = projectHelper.project
-
         assert project.tasks['deploy'].dependsOn.contains(project.tasks['myTask'])
         assert project.tasks['undeploy'].dependsOn.contains(project.tasks['deploy'])
     }
@@ -89,7 +97,7 @@ class WeblogicDeployPluginTest {
      */
     @Test
     void testConventionalWeblogicClasspath() {
-        ProjectHelper projectHelper = GradleProjectBuilder.builder().build {
+        final Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-weblogic-deploy-plugin'
 
             weblogicDeploy {
@@ -98,12 +106,11 @@ class WeblogicDeployPluginTest {
             }
         }
 
-        Project project = projectHelper.project
-
         assert project.tasks['deploy'].classpath.isEmpty()
         assert project.tasks['undeploy'].classpath.isEmpty()
 
-        projectHelper.withConventionalWEBLOGIC()
+        project.ext.WEBLOGIC_HOME = testProperties.WEBLOGIC_HOME
+        project.ext.WEBLOGIC_VERSION = testProperties.WEBLOGIC_VERSION
 
         assert !project.tasks['deploy'].classpath.isEmpty()
         assert !project.tasks['undeploy'].classpath.isEmpty()

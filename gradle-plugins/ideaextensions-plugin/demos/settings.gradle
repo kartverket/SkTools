@@ -1,5 +1,0 @@
-include ':foldergeneration'
-
-
-rootProject.name = 'ideaextensions-demo'
-

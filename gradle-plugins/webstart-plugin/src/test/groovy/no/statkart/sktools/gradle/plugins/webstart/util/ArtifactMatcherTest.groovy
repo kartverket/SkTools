@@ -1,9 +1,11 @@
 package no.statkart.sktools.gradle.plugins.webstart.util
 
-import no.statkart.sktools.gradle.testutils.ProjectHelper
-import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
+
+import no.statkart.sktools.gradle.testutils.SampleJarTestutil
 import org.testng.Assert
 import org.testng.annotations.Test
+
+import java.nio.file.Files
 
 /**
  * Test av {@link ArtifactMatcher}
@@ -125,11 +127,13 @@ class ArtifactMatcherTest {
      */
     @Test
     void testVersionViaManifest() {
-        ProjectHelper projectHelper = GradleProjectBuilder.builder().build()
+        File simpleJarFile = Files.createTempFile("simple", ".jar").toFile()
+        SampleJarTestutil.writeSampleJar(simpleJarFile)
 
-        final File groovyJarFile = projectHelper.project.configurations.detachedConfiguration(projectHelper.project.getDependencies().gradleApi()).filter {it.name.contains 'groovy'}.first()
-        final String versionInManifest = ArtifactMatcher.findImplementationVersionInManifest(groovyJarFile)
-        Assert.assertEquals(versionInManifest, GroovySystem.getVersion())
+        final String versionInManifest = ArtifactMatcher.findImplementationVersionInManifest(simpleJarFile)
+        Assert.assertEquals(versionInManifest, SampleJarTestutil.VERSION_simple_jar)
+
+        simpleJarFile.delete()
     }
 
     /**

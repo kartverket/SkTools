@@ -1,4 +1,4 @@
-# SkTools - Felles byggeverktøy i kartverket
+﻿# SkTools - Felles byggeverktøy i kartverket
 
 # Baseline
 Gradle 4.10.2 og nyere. 
@@ -16,9 +16,8 @@ Se [jenkinsfile for detaljert oversikt over testede versjoner](Jenkinsfile)
 
 UTF-8 for all kildekode
 
-JDK 8 - 1.8.0_202 (latest)
+JDK 8 - 1.8 (latest)
 
-IntelliJ - kjør gradlew og importer versjonert ipr fil
 
 
 
@@ -27,33 +26,29 @@ Opprett gradle.properties med innhold, feks:
 ```
 WEBLOGIC_HOME=C:/bea1213
 WEBLOGIC_VERSION=12.1.3
+
+!unikt prosjektnavn for vindu i IntelliJ
+project_name=sktools-1.5
 ```
 
 ## Releasetesting 
-For å teste virkemåten til de ulike plugins finnes det noen veldig enkle demo prosjekter. 
-Disse kan kjøres via `gradle publishToMavenLocal :gradle-demos:runDemos` 
-eller kortformen `gradle pTML runDemos`
-
-
-Følgende parametere er aktuelle å teste
-* `WEBLOGIC_VERSION` styrer default veblogic classpath.
+For å teste virkemåten til de ulike plugins finnes er jenkins satt opp til å teste med noen kombinasjoner av følgende:
+* `WEBLOGIC_VERSION` styrer default weblogic classpath.
 * `WEBLOGIC_HOME` dersom ikke en angir WEBLOGIC_VERSION kan denne brukes eksplisitt
 * Gradle versjon (runtime)
 * JDK versjon (runtime)
 
 
 ### Jenkins pipeline
-Til prosjektet er det intrumentert _continuous integration and testing_ i Jenkins. 
+Til prosjektet er det instrumentert _continuous integration and testing_ i Jenkins. 
 Jenkins finner du her [http://jenkins.statkart.no:8021/jenkins/job/sktools/](http://jenkins.statkart.no:8021/jenkins/job/sktools/) 
 
-Hver jobb automatiserer bygging, enhetstesting og integrasjonstesting av hver versjon.
+Hver jobb automatiserer bygging, testing og publisering av hver versjon.
 
 Flyten illustreres slik:
 
-1. Kompilering, enhetstesting -> publish til lokalt repo
-2. Integrasjonstesting ved kjøring av demoer mot artefakter installert lokalt
-   3. Integrasjonstesting ulike kompbinasjoner av gradle, weblogic osv
-4. Deploy til felles repo (nexus)
+1. Kompilering, enhetstesting 
+2. Publisering til felles repo (nexus)
   
    
 

@@ -30,7 +30,7 @@ import java.util.Set;
 
 
 /**
- * Processor implemented in {@code Pluggabable Annotation Processing API} (JSR 269)
+ * Processor implemented in {@code Pluggable Annotation Processing API} (JSR 269)
  *
  * <br/>
  * <b>XML-structure for XSLT processing built by {@link XMLBuilderFactory}: <b/><pre> {@code
@@ -211,9 +211,9 @@ public class WSDocProcessor extends AbstractProcessor {
         if (xsltFilePath != null) {
             final File xsltFile = new File(xsltFilePath);
             if (xsltFile.exists()) {
-                try {
+                try (OutputStream os = outputFile.openOutputStream()) {
                     final DOMSource in = new DOMSource(document);
-                    StreamResult out = new StreamResult(outputFile.openOutputStream());
+                    StreamResult out = new StreamResult(os);
                     StreamSource xsltStream = new StreamSource(xsltFile);
 
                     transform(in, out, xsltStream);

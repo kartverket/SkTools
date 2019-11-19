@@ -1,20 +1,29 @@
-apply plugin: 'groovy'
-apply plugin: 'maven-publish'
+plugins {
+    id 'groovy'
+    id 'maven-publish'
+    id 'java-gradle-plugin'
+}
 
+//deprecated - fjernes i 1.6
 group = 'no.statkart.sktools.gradle'
 
-
+gradlePlugin {
+    plugins {
+        weblogicWsclient {
+            id = 'sktools.weblogic-wsclient'
+            implementationClass = 'no.statkart.sktools.gradle.plugins.weblogic.wsclient.WeblogicWsClientPlugin'
+        }
+    }
+}
 
 dependencies {
+    compileOnly gradleApi()
 
-    //gradle api til byggesystemm blir benyttet som std
-    compile gradleApi()
+    implementation project(':gradle-plugins:weblogic-plugin')
 
-    compile project(':gradle-plugins:weblogic-plugin')
-
-    //test
-    testCompile project(':build-utils:test-utils')
-    testCompile project(':gradle-plugins:weblogic-wswar-plugin')
+    testImplementation gradleTestKit()
+    testImplementation project(':build-utils:test-utils')
+    testImplementation project(':gradle-plugins:weblogic-wswar-plugin')
 }
 
 task sourceJar(type: Jar) {

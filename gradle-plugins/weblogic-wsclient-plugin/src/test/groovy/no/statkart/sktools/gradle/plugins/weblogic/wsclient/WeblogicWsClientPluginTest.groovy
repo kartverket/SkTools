@@ -2,6 +2,7 @@ package no.statkart.sktools.gradle.plugins.weblogic.wsclient
 
 import no.statkart.sktools.gradle.plugins.weblogic.wswar.WeblogicWsWarPlugin
 import no.statkart.sktools.gradle.testutils.ProjectHelper
+import no.statkart.sktools.gradle.testutils.TestKitBase
 import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
@@ -17,7 +18,7 @@ import org.gradle.api.tasks.SourceSet
  *
  * @author Leif Lislegård
  */
-class WeblogicWsClientPluginTest {
+class WeblogicWsClientPluginTest extends TestKitBase {
 
     /**
      * Tester registrering av plugin via navn
@@ -33,6 +34,20 @@ class WeblogicWsClientPluginTest {
         assert project.convention.plugins.weblogicWsClient != null
         assert project.convention.plugins.weblogicWsClient instanceof WeblogicWsClientConvention
 
+    }
+
+    /**
+     * Tester plugin via alternativt navn
+     */
+    @Test
+    void testApplyPlugin2() {
+        writeFile("build.gradle", '''
+            plugins {
+                id 'sktools.weblogic-wsclient'
+            }
+''')
+
+        assertNoFailures(testGradleBuild("tasks"))
     }
 
     /**
