@@ -181,12 +181,4 @@ public abstract class TestKitBase {
         testProperties = Collections.unmodifiableMap(properties);
     }
 
-    //Workaround until Gradle 5 / Groovy 2.5
-    static {
-        try {
-            Class.forName("no.statkart.sktools.gradle.Workaround");
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-    }
 }
