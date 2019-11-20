@@ -126,7 +126,6 @@ class PatchConfiguration {
         String definePatchVersionTaskName = name
 
         DefinePatchversionTask task = configureDatabasePatchTask(params, definePatchVersionTaskName, DefinePatchversionTask.class, closure)
-
         return task
     }
     public DefinePatchversionTask definePatchVersionTask(String name, Closure closure) {
@@ -216,7 +215,7 @@ class PatchConfiguration {
     }
 
     private FileCollection findJdbcDependencies() {
-        Dependency[] dependenciesAsArray = dbtoolsConvention.jdbcDependencies.toArray(new Dependency[dbtoolsConvention.jdbcDependencies.size()])
+        Dependency[] dependenciesAsArray = dbtoolsConvention.jdbcDependencies.toArray(new Dependency[0])
 //        println "files: " + databaseConvention.project.configurations[DbtoolsPlugin.DBTOOLS_CONFIGURATION].fileCollection(dependenciesAsArray).files
         databaseConvention.project.configurations[DbtoolsPlugin.DBTOOLS_CONFIGURATION].fileCollection(dependenciesAsArray)
     }

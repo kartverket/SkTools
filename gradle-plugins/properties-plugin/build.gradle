@@ -27,10 +27,7 @@ task sourceJar(type: Jar) {
 }
 
 publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-            artifact sourceJar
-        }
+    publications.all {
+        if (it.name == 'pluginMaven') artifact sourceJar
     }
 }
