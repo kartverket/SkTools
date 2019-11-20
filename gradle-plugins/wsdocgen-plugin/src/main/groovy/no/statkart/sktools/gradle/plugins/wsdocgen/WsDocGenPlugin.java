@@ -2,14 +2,12 @@ package no.statkart.sktools.gradle.plugins.wsdocgen;
 
 import no.statkart.sktools.gradle.plugins.wsdocgen.internal.WsDocGroupContainer;
 import no.statkart.sktools.gradle.plugins.wsdocgen.internal.WsDocSourceSetExtension;
-import no.statkart.sktools.utils.wsdocgen.processor.WSDocProcessor;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
-import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
-import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.initialization.dsl.ScriptHandler;
 import org.gradle.api.internal.HasConvention;
 import org.gradle.api.internal.artifacts.publish.ArchivePublishArtifact;
@@ -19,16 +17,19 @@ import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.bundling.AbstractArchiveTask;
 import org.gradle.api.tasks.bundling.Zip;
 import org.gradle.api.tasks.compile.AbstractCompile;
+import org.gradle.plugin.devel.tasks.PluginUnderTestMetadata;
 import org.gradle.util.GUtil;
 
-import java.net.URLClassLoader;
-import java.util.HashMap;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Objects;
+import java.util.Properties;
 import java.util.concurrent.Callable;
 
 /**
  * Dokumentasjonsgenerering av {@code *WSBean.java} - JAX-WS implementasjon på server.
  *
- * Til hvert registrert {@link SourceSet} utivider pluginet med vedhengsfunksjonalitet; se {@link WsDocGroupContainer}
+ * Til hvert registrert {@link SourceSet} utvider pluginet med vedhengsfunksjonalitet; se {@link WsDocGroupContainer}
  *
  * @author Leif Lislegård
  * @since 1.0
@@ -38,6 +39,15 @@ public class WsDocGenPlugin implements Plugin<Project> {
     public final static String CONVENTION_NAME = "wsdoc";
     public final static String GEN_TASK_NAME = "genWsdoc";
     public final static String ARCHIVE_TASK_NAME = "packWsdoc";
+
+    public static final Properties pluginProperties = new Properties();
+    static {
+        try {
+            pluginProperties.load(WsDocGenPlugin.class.getResourceAsStream("/no/statkart/sktools/wsdocgen-gradle-plugin.properties"));
+        } catch (IOException ignored) {
+            System.err.println("Error loading plugin properties!");
+        }
+    }
 
     @Override
     public void apply(Project project) {
@@ -146,33 +156,39 @@ public class WsDocGenPlugin implements Plugin<Project> {
      * Docgen processor as dependency (needed on runtime classpath)
      */
     private static void configureDocgenDependencies(final Project project) {
-        final ScriptHandler buildscript = project.getRootProject().getBuildscript(); //root projects repo configuration
-        final Configuration wsDocGenConfiguration = buildscript.getConfigurations().detachedConfiguration(wsDocGenDependency(project));
+        final FileCollection wsDocGenConfiguration;
+
+        InputStream testKitMetadataStream = testEnvironmentClasspath();
+        if (testKitMetadataStream == null) {
+            ScriptHandler buildscript = project.getRootProject().getBuildscript(); //root projects repo configuration
+            wsDocGenConfiguration = buildscript.getConfigurations().detachedConfiguration(wsDocGenDependency(project));
+        } else {
+            Properties properties = GUtil.loadProperties(testKitMetadataStream);
+            String classpath = properties.getProperty(PluginUnderTestMetadata.IMPLEMENTATION_CLASSPATH_PROP_KEY);
+            // En trenger classpath for annotasjonsprosessor (wsdoc)
+            // disse ligger i egen modul
+            wsDocGenConfiguration = project.files((Object[]) classpath.split(";")); //NB: for GradleRunner i debug mode
+        }
+
 
         project.getTasks().withType(WsDocCompileTask.class, new Action<WsDocCompileTask>() {
             @Override
             public void execute(WsDocCompileTask task) {
                 task.getOptions().setAnnotationProcessorPath(wsDocGenConfiguration);
-
-                if (runningInIDEATestEnvironment()) {//hacker dette til for testing
-                    ConfigurableFileCollection fileCollection = project.files((Object[]) ((URLClassLoader) WSDocProcessor.class.getClassLoader()).getURLs());
-                    task.getOptions().setAnnotationProcessorPath(fileCollection);
-                }
             }
         });
     }
 
     static Dependency wsDocGenDependency(Project project) {
-        HashMap<String, String> props = new HashMap<>();
-        props.put("group", "no.statkart.sktools");
-        props.put("name", "wsdocgen");
-        props.put("version", WsDocGenPlugin.class.getPackage().getImplementationVersion()); //manifest informasjon satt ifra byggesystem
-        return project.getDependencies().create(props);
+        Object dependencyNotation = Objects.requireNonNull(pluginProperties.getProperty("sktools_wsdocgen"), "Skal settes av byggesystem");
+        return project.getDependencies().create(dependencyNotation);
     }
 
-    static boolean runningInIDEATestEnvironment() {
-        return !WsDocGenPlugin.class.getProtectionDomain().getCodeSource().getLocation().getPath().endsWith(".jar");
+    /**
+     * Classpath satt opp for Gradle TestKit
+     */
+    static InputStream testEnvironmentClasspath() {
+        return Class.class.getResourceAsStream('/' + PluginUnderTestMetadata.METADATA_FILE_NAME); //dersom denne finnes på classpath kjører man tester
     }
-
 
 }

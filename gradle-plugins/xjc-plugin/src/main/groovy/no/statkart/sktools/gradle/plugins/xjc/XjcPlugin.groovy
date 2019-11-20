@@ -15,6 +15,7 @@ import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSet
 import org.gradle.plugin.devel.tasks.PluginUnderTestMetadata
+import org.gradle.util.GUtil
 
 import java.util.concurrent.Callable
 
@@ -183,9 +184,7 @@ class XjcPlugin implements Plugin<Project> {
     public static FileCollection processorClasspathForXjcExtension(Project project) {
         InputStream testKitMetadataStream = testEnvironmentClasspath()
         if (testKitMetadataStream != null) {
-            Properties properties = new Properties()
-            properties.load(testKitMetadataStream)
-            testKitMetadataStream.close()
+            Properties properties = GUtil.loadProperties(testKitMetadataStream)
             def classpath = properties.getProperty(PluginUnderTestMetadata.IMPLEMENTATION_CLASSPATH_PROP_KEY)
             // En trenger classpath til egen-utvidelser av xjc (xjc plugins)
             // disse ligger i prosjektet no.statkart.sktools:xjc-plugins
@@ -207,7 +206,7 @@ class XjcPlugin implements Plugin<Project> {
      * Classpath satt opp for Gradle TestKit
      */
     static InputStream testEnvironmentClasspath() {
-        return getClass().getResourceAsStream("/" + PluginUnderTestMetadata.METADATA_FILE_NAME) //dersom denne finnes på classpath kjører man tester
+        return Class.class.getResourceAsStream('/' + PluginUnderTestMetadata.METADATA_FILE_NAME) //dersom denne finnes på classpath kjører man tester
     }
 
 }

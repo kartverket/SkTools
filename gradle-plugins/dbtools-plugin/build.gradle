@@ -15,6 +15,17 @@ gradlePlugin {
     }
 }
 
+def pluginPropertiesDir = "$buildDir/plugin-properties"
+sourceSets {
+    main {
+        output.dir(pluginPropertiesDir, builtBy: 'createPluginProperties')
+    }
+}
+
+def pluginProperties = [
+    sktools_dbtools : "no.statkart.sktools:db-tools:${version}" as String,
+] as Properties
+
 dependencies {
     implementation project(':build-utils:db-tools')
     implementation project(':build-utils:sql-parser') //pga SqlExecutor
@@ -22,6 +33,27 @@ dependencies {
     testImplementation project(':build-utils:test-utils')
     testImplementation libraries.hsqldb
 }
+
+pluginUnderTestMetadata.doFirst {
+    if (org.gradle.util.GradleVersion.current() >= org.gradle.util.GradleVersion.version('4.10')) {
+        pluginUnderTestMetadata.pluginClasspath.from project(':build-utils:db-tools').sourceSets.main.runtimeClasspath
+    } else {
+        pluginUnderTestMetadata.pluginClasspath += project(':build-utils:db-tools').sourceSets.main.runtimeClasspath
+    }
+}
+
+task createPluginProperties() {
+    outputs.dir pluginPropertiesDir
+    inputs.properties pluginProperties
+    doLast {
+        def file = project.file("$pluginPropertiesDir/no/statkart/sktools/dbtools-gradle-plugin.properties")
+        file.parentFile.mkdirs()
+        org.gradle.util.GUtil.saveProperties(pluginProperties, file)
+        logger.info "Created plugin info file: ${file.getAbsolutePath()}"
+    }
+}
+tasks.processResources.dependsOn createPluginProperties
+
 
 task sourceJar(type: Jar) {
     from sourceSets.main.allSource

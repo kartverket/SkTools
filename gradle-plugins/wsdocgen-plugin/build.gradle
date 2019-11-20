@@ -15,11 +15,41 @@ gradlePlugin {
     }
 }
 
-dependencies {
-    implementation project(':build-utils:wsdocgen')
+def pluginPropertiesDir = "$buildDir/plugin-properties"
+sourceSets {
+    main {
+        output.dir(pluginPropertiesDir, builtBy: 'createPluginProperties')
+    }
+}
 
+def pluginProperties = [
+    sktools_wsdocgen : "no.statkart.sktools:wsdocgen:${version}" as String,
+] as Properties
+
+dependencies {
     testImplementation project(':build-utils:test-utils')
 }
+
+pluginUnderTestMetadata.doFirst {
+    if (org.gradle.util.GradleVersion.current() >= org.gradle.util.GradleVersion.version('4.10')) {
+        pluginUnderTestMetadata.pluginClasspath.from project(':build-utils:wsdocgen').sourceSets.main.runtimeClasspath
+    } else {
+        pluginUnderTestMetadata.pluginClasspath += project(':build-utils:wsdocgen').sourceSets.main.runtimeClasspath
+    }
+}
+
+task createPluginProperties() {
+    outputs.dir pluginPropertiesDir
+    inputs.properties pluginProperties
+    doLast {
+        def file = project.file("$pluginPropertiesDir/no/statkart/sktools/wsdocgen-gradle-plugin.properties")
+        file.parentFile.mkdirs()
+        org.gradle.util.GUtil.saveProperties(pluginProperties, file)
+        logger.info "Created plugin info file: ${file.getAbsolutePath()}"
+    }
+}
+tasks.processResources.dependsOn createPluginProperties
+
 
 task sourceJar(type: Jar) {
     from sourceSets.main.allSource
