@@ -176,7 +176,7 @@ class WebstartTask extends ConventionTask {
             transformerClass = Class.forName('org.gradle.api.internal.xml.XmlTransformer') //gradle 2.1
         }
 
-        return transformerClass.newInstance()
+        return transformerClass.getConstructor(new Class[0]).newInstance()
     }
 
     public Logger getLogger() {
