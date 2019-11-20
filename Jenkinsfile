@@ -1,4 +1,4 @@
-﻿#!groovy
+#!groovy
 
 /*
  Multibranch Pipeline for Continuous integration (CI) prosess i Jenkins.
