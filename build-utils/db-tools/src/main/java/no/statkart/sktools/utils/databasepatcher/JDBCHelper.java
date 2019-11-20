@@ -4,6 +4,7 @@ import no.statkart.sktools.utils.databasepatcher.exception.OperationalException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
@@ -35,14 +36,15 @@ public class JDBCHelper {
     public static Connection createConnection(String driver, String url, String user, String pwd) throws SQLException {
         Connection connection;
         try {
-            Class claz = Class.forName(driver);
-            DriverManager.registerDriver((Driver) claz.newInstance());
+            @SuppressWarnings("unchecked")
+            Class<Driver> clazz = (Class<Driver>) Class.forName(driver);
+            DriverManager.registerDriver(clazz.getConstructor(new Class[0]).newInstance());
             connection = DriverManager.getConnection(url, user, pwd);
         } catch (ClassNotFoundException e) {
             throw new OperationalException(logger, "Feil under oppretting, finner ikke klassen: " + driver, e);
-        } catch (IllegalAccessException e) {
-            throw new OperationalException(logger, "Har ikke tillgang til konstruktør av klassen: " + driver, e);
-        } catch (InstantiationException e) {
+        } catch (IllegalAccessException | NoSuchMethodException e) {
+            throw new OperationalException(logger, "Har ikke tilgang til konstruktør av klassen: " + driver, e);
+        } catch (InstantiationException | InvocationTargetException e) {
             throw new OperationalException(logger, "Feil under oppretting av class: " + driver, e);
         }
         return connection;

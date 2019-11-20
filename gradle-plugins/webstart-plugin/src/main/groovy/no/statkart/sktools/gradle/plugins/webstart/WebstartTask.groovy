@@ -177,7 +177,7 @@ class WebstartTask extends ConventionTask {
             throw e;
         }
 
-        return transformerClass.newInstance()
+        return transformerClass.getConstructor(new Class[0]).newInstance()
     }
 
     public Logger getLogger() {
