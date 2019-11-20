@@ -112,81 +112,81 @@ class WeblogicWsClientPluginTest extends TestKitBase {
 
     }
 
-    /**
-     * Tester generering av wsclient der man peker til war modul i et annet gradle prosjekt.
-     * Benytter her JavaPlugin oppsett.
-     */
-    @Test
-    void testDependency() {
-        //forks a new wsClientProject in a temp folder
-        ProjectHelper wsClientProjectHelper = GradleProjectBuilder.builder('wsclient').withConventionalWEBLOGIC().build {
-            apply plugin: 'java'
-            apply plugin: 'sktools-weblogic-wsclient-plugin'
-        }
-
-        //forks a child wsClientProject within the same temp folder
-        ProjectHelper wsWarProjectHelper = GradleProjectBuilder.builder("wswar").withConventionalWEBLOGIC().withParent(wsClientProjectHelper).build {
-            apply plugin: 'sktools-weblogic-wswar-plugin'
-        }
-
-        //oppretter to servicer
-        use(WeblogicWsWarTestutilFilewriter) {
-            wsWarProjectHelper.writeDemoServiceWSBean2('src/weblogic/java')
-            wsWarProjectHelper.writePingServiceWSBean('src/weblogic/java')
-        }
-
-        //konfigurerer prosjekt
-        wsClientProjectHelper.configureProject {
-            weblogicWsClient {
-                webService {
-                    baseWar { project([path: ':wswar', configuration: 'weblogic']) }
-                }
-            }
-        }
-
-        wsClientProjectHelper.initializeProject()
-
-
-        //eksekverer - genererer wsclient artifakt
-        wsClientProjectHelper.executeTask('assemble')
-        //forventer at ovenstående kaller {@code WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME }
-
-        //tester at avhengighet er blit bygd.
-        wsWarProjectHelper.assertFileExists('build/libs/wswar-weblogic.war', 'Forventer at war modul er blitt generert og pakket.')
-
-        //tester at tasker er blitt eksekvert.
-        wsWarProjectHelper.assertTaskExecutedNotSkipped(WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME)
-
-        wsClientProjectHelper.assertTaskExecutedNotSkipped(WeblogicWsClientPlugin.GEN_CLIENT_TASK_NAME)
-        assert wsClientProjectHelper.project.tasks['processResources'].state.executed
-        assert wsClientProjectHelper.project.tasks['compileJava'].state.executed
-
-
-        //tester sourceSet
-        SourceSet sourceSet = wsClientProjectHelper.project.sourceSets.main;
-
-        //tester sourceSet.output
-        assert sourceSet.output.asFileTree.files.find { it.toURI().path.endsWith('/no/statkart/test/service/demotns/TestServiceWS.class')}
-        assert sourceSet.output.asFileTree.files.find { it.toURI().path.endsWith('/META-INF/wsdls/TestServiceWS.wsdl')}
-
-        //tester sourceSet.source
-        assert sourceSet.allSource.asFileTree.files.find { it.toURI().path.endsWith('/META-INF/wsdls/TestServiceWS.wsdl')}
-        assert sourceSet.allSource.asFileTree.files.find { it.toURI().path.endsWith('/META-INF/wsdls/PingServiceWS_schema1.xsd')}
-        assert sourceSet.allSource.asFileTree.files.find { it.toURI().path.endsWith('/no/statkart/test/service/demotns/TestServiceWS.java')}
-
-
-        //tester artifakt
-        wsClientProjectHelper.assertFileExists('build/libs/wsclient.jar') { File archiveFile ->
-            FileTree archiveFileTree = project.zipTree(archiveFile)
-            assert archiveFileTree.files.find { it.toURI().path.endsWith('/META-INF/wsdls/TestServiceWS.wsdl')}
-            assert archiveFileTree.files.find { it.toURI().path.endsWith('/no/statkart/test/service/demotns/TestServiceWS.class')}
-            assert !archiveFileTree.files.find { it.toURI().path.endsWith('/no/statkart/test/service/demotns/TestServiceWS.java')}
-
-            assert archiveFileTree.files.find { it.toURI().path.endsWith('/META-INF/wsdls/PingServiceWS_schema1.xsd')}
-        }
-
-
-    }
+//    /**
+//     * Tester generering av wsclient der man peker til war modul i et annet gradle prosjekt.
+//     * Benytter her JavaPlugin oppsett.
+//     */
+//    @Test
+//    void testDependency() {
+//        //forks a new wsClientProject in a temp folder
+//        ProjectHelper wsClientProjectHelper = GradleProjectBuilder.builder('wsclient').withConventionalWEBLOGIC().build {
+//            apply plugin: 'java'
+//            apply plugin: 'sktools-weblogic-wsclient-plugin'
+//        }
+//
+//        //forks a child wsClientProject within the same temp folder
+//        ProjectHelper wsWarProjectHelper = GradleProjectBuilder.builder("wswar").withConventionalWEBLOGIC().withParent(wsClientProjectHelper).build {
+//            apply plugin: 'sktools-weblogic-wswar-plugin'
+//        }
+//
+//        //oppretter to servicer
+//        use(WeblogicWsWarTestutilFilewriter) {
+//            wsWarProjectHelper.writeDemoServiceWSBean2('src/weblogic/java')
+//            wsWarProjectHelper.writePingServiceWSBean('src/weblogic/java')
+//        }
+//
+//        //konfigurerer prosjekt
+//        wsClientProjectHelper.configureProject {
+//            weblogicWsClient {
+//                webService {
+//                    baseWar { project([path: ':wswar', configuration: 'weblogic']) }
+//                }
+//            }
+//        }
+//
+//        wsClientProjectHelper.initializeProject()
+//
+//
+//        //eksekverer - genererer wsclient artifakt
+//        wsClientProjectHelper.executeTask('assemble')
+//        //forventer at ovenstående kaller {@code WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME }
+//
+//        //tester at avhengighet er blit bygd.
+//        wsWarProjectHelper.assertFileExists('build/libs/wswar-weblogic.war', 'Forventer at war modul er blitt generert og pakket.')
+//
+//        //tester at tasker er blitt eksekvert.
+//        wsWarProjectHelper.assertTaskExecutedNotSkipped(WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME)
+//
+//        wsClientProjectHelper.assertTaskExecutedNotSkipped(WeblogicWsClientPlugin.GEN_CLIENT_TASK_NAME)
+//        assert wsClientProjectHelper.project.tasks['processResources'].state.executed
+//        assert wsClientProjectHelper.project.tasks['compileJava'].state.executed
+//
+//
+//        //tester sourceSet
+//        SourceSet sourceSet = wsClientProjectHelper.project.sourceSets.main;
+//
+//        //tester sourceSet.output
+//        assert sourceSet.output.asFileTree.files.find { it.toURI().path.endsWith('/no/statkart/test/service/demotns/TestServiceWS.class')}
+//        assert sourceSet.output.asFileTree.files.find { it.toURI().path.endsWith('/META-INF/wsdls/TestServiceWS.wsdl')}
+//
+//        //tester sourceSet.source
+//        assert sourceSet.allSource.asFileTree.files.find { it.toURI().path.endsWith('/META-INF/wsdls/TestServiceWS.wsdl')}
+//        assert sourceSet.allSource.asFileTree.files.find { it.toURI().path.endsWith('/META-INF/wsdls/PingServiceWS_schema1.xsd')}
+//        assert sourceSet.allSource.asFileTree.files.find { it.toURI().path.endsWith('/no/statkart/test/service/demotns/TestServiceWS.java')}
+//
+//
+//        //tester artifakt
+//        wsClientProjectHelper.assertFileExists('build/libs/wsclient.jar') { File archiveFile ->
+//            FileTree archiveFileTree = project.zipTree(archiveFile)
+//            assert archiveFileTree.files.find { it.toURI().path.endsWith('/META-INF/wsdls/TestServiceWS.wsdl')}
+//            assert archiveFileTree.files.find { it.toURI().path.endsWith('/no/statkart/test/service/demotns/TestServiceWS.class')}
+//            assert !archiveFileTree.files.find { it.toURI().path.endsWith('/no/statkart/test/service/demotns/TestServiceWS.java')}
+//
+//            assert archiveFileTree.files.find { it.toURI().path.endsWith('/META-INF/wsdls/PingServiceWS_schema1.xsd')}
+//        }
+//
+//
+//    }
 
     /**
      * Verifiserer at build task er avhengig av forventede tasker.

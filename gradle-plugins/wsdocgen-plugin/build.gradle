@@ -31,11 +31,7 @@ dependencies {
 }
 
 pluginUnderTestMetadata.doFirst {
-    if (org.gradle.util.GradleVersion.current() >= org.gradle.util.GradleVersion.version('4.10')) {
-        pluginUnderTestMetadata.pluginClasspath.from project(':build-utils:wsdocgen').sourceSets.main.runtimeClasspath
-    } else {
-        pluginUnderTestMetadata.pluginClasspath += project(':build-utils:wsdocgen').sourceSets.main.runtimeClasspath
-    }
+    pluginUnderTestMetadata.pluginClasspath.from project(':build-utils:wsdocgen').sourceSets.main.runtimeClasspath
 }
 
 task createPluginProperties() {

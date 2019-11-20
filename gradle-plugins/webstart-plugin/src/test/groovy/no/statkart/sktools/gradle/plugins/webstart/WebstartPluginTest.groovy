@@ -9,6 +9,7 @@ import org.testng.annotations.Test
 
 import java.util.zip.ZipFile
 
+import static java.util.Collections.list
 import static no.statkart.sktools.gradle.testutils.ProjectTestutil.extractDependsOn
 import static no.statkart.sktools.gradle.testutils.SampleJarTestutil.writeSampleJar
 import static org.assertj.core.api.Assertions.assertThat
@@ -145,7 +146,7 @@ class WebstartPluginTest extends TestKitBase {
 
         ZipFile warFile = new ZipFile(warPath)
         try {
-            assertThat(warFile.entries() as List)
+            assertThat(list(warFile.entries()))
                 .extractingResultOf("getName")
                 .contains('root.jnlp', 'lib/webstartHelper__Vunknown.jar', 'lib/wsClientRuntime__V1.0.jar', 'lib/projectA__V1.0.jar', 'lib/projectB__V1.2.jar')
         } finally {

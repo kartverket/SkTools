@@ -24,68 +24,68 @@ class WeblogicGenClientTaskTest {
      *
      * Til sist blir en kompiler instans opprettet og konfigurert, deretter eksekvert og testet.
      */
-    @Test
-    void testDefaults() {
-        //forks a new project in a temp folder
-        ProjectHelper rootProjectHelper = GradleProjectBuilder.builder("rootProject").withConventionalWEBLOGIC().build()
-        Project rootProject = rootProjectHelper.project
-
-        //forks a new project in a temp folder
-        ProjectHelper wsWarProjectHelper = GradleProjectBuilder.builder('wswar').withParent(rootProject).withConventionalWEBLOGIC().build()
-        wsWarProjectHelper.configureProject {
-            apply plugin: 'sktools-weblogic-wswar-plugin'
-        }
-
-        //oppretter to servicer
-        use(WeblogicWsWarTestutilFilewriter) {
-            wsWarProjectHelper.writeDemoServiceWSBean2('src/weblogic/java')
-            wsWarProjectHelper.writePingServiceWSBean('src/weblogic/java')
-        }
-
-        wsWarProjectHelper.executeTask(WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME)
-        wsWarProjectHelper.assertTaskExecutedNotSkipped(WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME)
-
-        // pakker ut schema filer ifra generert war
-        assert wsWarProjectHelper.assertFileExists(wsWarProjectHelper.project.configurations['weblogic'].artifacts.files.singleFile) { warFile ->
-            rootProject.copy {
-                into 'somedir'
-                from wsWarProjectHelper.project.zipTree(warFile).matching { include '**/TestService*.wsdl', '**/TestService*.xsd' }.files
-            }
-            rootProject.copy {
-                into 'additional'
-                from wsWarProjectHelper.project.zipTree(warFile).matching { include '**/PingService*.wsdl', '**/PingService*.xsd' }.files
-            }
-        }
-
-        rootProjectHelper.assertFileExists('somedir/TestServiceWS.wsdl')
-        rootProjectHelper.assertFileExists('somedir/TestServiceWS_schema1.xsd')
-        rootProjectHelper.assertFileExists('additional/PingServiceWS.wsdl')
-        rootProjectHelper.assertFileExists('additional/PingServiceWS_schema1.xsd')
-
-        FileCollection someDirFiles = rootProject.files('somedir')
-        FileCollection additionalFiles = rootProject.files('additional')
-
-        //konfigurerer compiler
-        WeblogicGenClientTask genClientTask = rootProject.tasks.create('genClient', WeblogicGenClientTask)
-        genClientTask.webServiceConfig = createWebServiceConfigFor(rootProject)
-        genClientTask.webServiceConfig.schemaFiles someDirFiles, additionalFiles
-        genClientTask.setWeblogicClasspath(rootProject.files(
-                WeblogicWsClientPlugin.conventionalWeblogicDependencies(rootProject),
-                WeblogicBasePlugin.toolsJar(rootProject)))
-        genClientTask.setDestinationDir(rootProject.buildDir)
-        genClientTask.source = genClientTask.webServiceConfig.schemaFiles
-
-        //eksekverer
-        genClientTask.gen()
-
-        //tester at enkelte filer er generert
-        rootProjectHelper.assertFileExists('build/META-INF/wsdls/TestServiceWS.wsdl')
-        rootProjectHelper.assertFileExists('build/no/statkart/test/service/demotns/TestServiceWS.class')
-        rootProjectHelper.assertFileExists('build/no/statkart/test/service/demotns/TestServiceWS.java')
-
-        rootProjectHelper.assertFileExists('build/META-INF/wsdls/PingServiceWS_schema1.xsd')
-
-    }
+//    @Test
+//    void testDefaults() {
+//        //forks a new project in a temp folder
+//        ProjectHelper rootProjectHelper = GradleProjectBuilder.builder("rootProject").withConventionalWEBLOGIC().build()
+//        Project rootProject = rootProjectHelper.project
+//
+//        //forks a new project in a temp folder
+//        ProjectHelper wsWarProjectHelper = GradleProjectBuilder.builder('wswar').withParent(rootProject).withConventionalWEBLOGIC().build()
+//        wsWarProjectHelper.configureProject {
+//            apply plugin: 'sktools-weblogic-wswar-plugin'
+//        }
+//
+//        //oppretter to servicer
+//        use(WeblogicWsWarTestutilFilewriter) {
+//            wsWarProjectHelper.writeDemoServiceWSBean2('src/weblogic/java')
+//            wsWarProjectHelper.writePingServiceWSBean('src/weblogic/java')
+//        }
+//
+//        wsWarProjectHelper.executeTask(WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME)
+//        wsWarProjectHelper.assertTaskExecutedNotSkipped(WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME)
+//
+//        // pakker ut schema filer ifra generert war
+//        assert wsWarProjectHelper.assertFileExists(wsWarProjectHelper.project.configurations['weblogic'].artifacts.files.singleFile) { warFile ->
+//            rootProject.copy {
+//                into 'somedir'
+//                from wsWarProjectHelper.project.zipTree(warFile).matching { include '**/TestService*.wsdl', '**/TestService*.xsd' }.files
+//            }
+//            rootProject.copy {
+//                into 'additional'
+//                from wsWarProjectHelper.project.zipTree(warFile).matching { include '**/PingService*.wsdl', '**/PingService*.xsd' }.files
+//            }
+//        }
+//
+//        rootProjectHelper.assertFileExists('somedir/TestServiceWS.wsdl')
+//        rootProjectHelper.assertFileExists('somedir/TestServiceWS_schema1.xsd')
+//        rootProjectHelper.assertFileExists('additional/PingServiceWS.wsdl')
+//        rootProjectHelper.assertFileExists('additional/PingServiceWS_schema1.xsd')
+//
+//        FileCollection someDirFiles = rootProject.files('somedir')
+//        FileCollection additionalFiles = rootProject.files('additional')
+//
+//        //konfigurerer compiler
+//        WeblogicGenClientTask genClientTask = rootProject.tasks.create('genClient', WeblogicGenClientTask)
+//        genClientTask.webServiceConfig = createWebServiceConfigFor(rootProject)
+//        genClientTask.webServiceConfig.schemaFiles someDirFiles, additionalFiles
+//        genClientTask.setWeblogicClasspath(rootProject.files(
+//                WeblogicWsClientPlugin.conventionalWeblogicDependencies(rootProject),
+//                WeblogicBasePlugin.toolsJar(rootProject)))
+//        genClientTask.setDestinationDir(rootProject.buildDir)
+//        genClientTask.source = genClientTask.webServiceConfig.schemaFiles
+//
+//        //eksekverer
+//        genClientTask.gen()
+//
+//        //tester at enkelte filer er generert
+//        rootProjectHelper.assertFileExists('build/META-INF/wsdls/TestServiceWS.wsdl')
+//        rootProjectHelper.assertFileExists('build/no/statkart/test/service/demotns/TestServiceWS.class')
+//        rootProjectHelper.assertFileExists('build/no/statkart/test/service/demotns/TestServiceWS.java')
+//
+//        rootProjectHelper.assertFileExists('build/META-INF/wsdls/PingServiceWS_schema1.xsd')
+//
+//    }
 
     /**
      * Tester compiler mtp exception rewrite funksjonalitet.
@@ -94,68 +94,68 @@ class WeblogicGenClientTaskTest {
      *
      * Til sist blir en kompiler instans opprettet og konfigurert, deretter eksekvert og testet.
      */
-    @Test
-    void testExceptionRewrite() {
-        //forks a new project in a temp folder
-        ProjectHelper rootProjectHelper = GradleProjectBuilder.builder("rootProject").withConventionalWEBLOGIC().build()
-        Project rootProject = rootProjectHelper.project
-
-        //forks a new project in a temp folder
-        ProjectHelper wsWarProjectHelper = GradleProjectBuilder.builder('wswar').withParent(rootProject).withConventionalWEBLOGIC().build()
-        wsWarProjectHelper.configureProject {
-            apply plugin: 'sktools-weblogic-wswar-plugin'
-            apply plugin: 'java'
-        }
-
-        wsWarProjectHelper.configureProject() {
-            dependencies {
-                weblogicCompile project(path: project.path, configuration: 'runtime')    //
-            }
-        }
-
-        //oppretter servicer
-        use(WeblogicWsWarTestutilFilewriter) {
-            wsWarProjectHelper.writeExceptionDemoWithTwoServicesDomain('src/main/java')
-            wsWarProjectHelper.writeExceptionDemoWithTwoServicesService('src/weblogic/java')
-        }
-
-        wsWarProjectHelper.executeTask(WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME)
-        wsWarProjectHelper.assertTaskExecutedNotSkipped(WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME)
-
-        // pakker ut schema filer ifra generert war
-        assert wsWarProjectHelper.assertFileExists(wsWarProjectHelper.project.configurations['weblogic'].artifacts.files.singleFile) { warFile ->
-            rootProject.copy {
-                into 'somedir'
-                from wsWarProjectHelper.project.zipTree(warFile).matching { include '**/*.wsdl', '**/*.xsd' }.files
-            }
-        }
-        rootProjectHelper.assertFileExists('somedir/ExceptionService1WS.wsdl')
-
-        FileCollection schemaFiles = rootProject.fileTree('somedir').matching(new PatternSet(includes: ['*.wsdl']))
-
-        //konfigurerer compiler
-        WeblogicGenClientTask genClientTask = rootProject.tasks.create('genClient', WeblogicGenClientTask)
-        genClientTask.webServiceConfig = createWebServiceConfigFor(rootProject)
-        genClientTask.webServiceConfig.schemaFiles(schemaFiles)
-        genClientTask.webServiceConfig.exceptionReusePackage('no.statkart.test.exceptiondemo01.common')
-
-        genClientTask.setWeblogicClasspath(rootProject.files(
-                WeblogicWsClientPlugin.conventionalWeblogicDependencies(rootProject),
-                WeblogicBasePlugin.toolsJar(rootProject)))
-        genClientTask.setDestinationDir(rootProject.file('src/main/java'))
-        genClientTask.source = schemaFiles
-
-        //eksekverer
-        genClientTask.gen()
-
-        //tester at enkelte filer er generert
-        rootProjectHelper.assertFileExists('src/main/java/no/statkart/test/exceptiondemo01/service/service1/ExceptionService1.java')
-        rootProjectHelper.assertFileExists('src/main/java/no/statkart/test/exceptiondemo01/displaced/service/service2/ExceptionService2.java')
-
-        rootProjectHelper.assertFileExists('src/main/java/no/statkart/test/exceptiondemo01/common/ServiceException.java')
-
-
-    }
+//    @Test
+//    void testExceptionRewrite() {
+//        //forks a new project in a temp folder
+//        ProjectHelper rootProjectHelper = GradleProjectBuilder.builder("rootProject").withConventionalWEBLOGIC().build()
+//        Project rootProject = rootProjectHelper.project
+//
+//        //forks a new project in a temp folder
+//        ProjectHelper wsWarProjectHelper = GradleProjectBuilder.builder('wswar').withParent(rootProject).withConventionalWEBLOGIC().build()
+//        wsWarProjectHelper.configureProject {
+//            apply plugin: 'sktools-weblogic-wswar-plugin'
+//            apply plugin: 'java'
+//        }
+//
+//        wsWarProjectHelper.configureProject() {
+//            dependencies {
+//                weblogicCompile project(path: project.path, configuration: 'runtime')    //
+//            }
+//        }
+//
+//        //oppretter servicer
+//        use(WeblogicWsWarTestutilFilewriter) {
+//            wsWarProjectHelper.writeExceptionDemoWithTwoServicesDomain('src/main/java')
+//            wsWarProjectHelper.writeExceptionDemoWithTwoServicesService('src/weblogic/java')
+//        }
+//
+//        wsWarProjectHelper.executeTask(WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME)
+//        wsWarProjectHelper.assertTaskExecutedNotSkipped(WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME)
+//
+//        // pakker ut schema filer ifra generert war
+//        assert wsWarProjectHelper.assertFileExists(wsWarProjectHelper.project.configurations['weblogic'].artifacts.files.singleFile) { warFile ->
+//            rootProject.copy {
+//                into 'somedir'
+//                from wsWarProjectHelper.project.zipTree(warFile).matching { include '**/*.wsdl', '**/*.xsd' }.files
+//            }
+//        }
+//        rootProjectHelper.assertFileExists('somedir/ExceptionService1WS.wsdl')
+//
+//        FileCollection schemaFiles = rootProject.fileTree('somedir').matching(new PatternSet(includes: ['*.wsdl']))
+//
+//        //konfigurerer compiler
+//        WeblogicGenClientTask genClientTask = rootProject.tasks.create('genClient', WeblogicGenClientTask)
+//        genClientTask.webServiceConfig = createWebServiceConfigFor(rootProject)
+//        genClientTask.webServiceConfig.schemaFiles(schemaFiles)
+//        genClientTask.webServiceConfig.exceptionReusePackage('no.statkart.test.exceptiondemo01.common')
+//
+//        genClientTask.setWeblogicClasspath(rootProject.files(
+//                WeblogicWsClientPlugin.conventionalWeblogicDependencies(rootProject),
+//                WeblogicBasePlugin.toolsJar(rootProject)))
+//        genClientTask.setDestinationDir(rootProject.file('src/main/java'))
+//        genClientTask.source = schemaFiles
+//
+//        //eksekverer
+//        genClientTask.gen()
+//
+//        //tester at enkelte filer er generert
+//        rootProjectHelper.assertFileExists('src/main/java/no/statkart/test/exceptiondemo01/service/service1/ExceptionService1.java')
+//        rootProjectHelper.assertFileExists('src/main/java/no/statkart/test/exceptiondemo01/displaced/service/service2/ExceptionService2.java')
+//
+//        rootProjectHelper.assertFileExists('src/main/java/no/statkart/test/exceptiondemo01/common/ServiceException.java')
+//
+//
+//    }
 
     /**
      * Tester {@link WsClientGenerator#fixResourceLoaders()}
@@ -192,69 +192,69 @@ class WeblogicGenClientTaskTest {
      *
      * Til sist blir en kompiler instans opprettet og konfigurert, deretter eksekvert og testet.
      */
-    @Test
-    void testApiPrefix() {
-        //forks a new project in a temp folder
-        ProjectHelper rootProjectHelper = GradleProjectBuilder.builder("rootProject").withConventionalWEBLOGIC().build()
-        Project rootProject = rootProjectHelper.project
-
-        //forks a new project in a temp folder
-        ProjectHelper wsWarProjectHelper = GradleProjectBuilder.builder("wswar").withParent(rootProject).withConventionalWEBLOGIC().build();
-        wsWarProjectHelper.configureProject {
-            apply plugin: 'sktools-weblogic-wswar-plugin'
-        }
-
-        //oppretter to servicer
-        use(WeblogicWsWarTestutilFilewriter) {
-            wsWarProjectHelper.writeDemoServiceWSBean2('src/weblogic/java')
-            wsWarProjectHelper.writePingServiceWSBean('src/weblogic/java')
-        }
-
-        wsWarProjectHelper.executeTask(WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME)
-        wsWarProjectHelper.assertTaskExecutedNotSkipped(WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME)
-
-        // pakker ut schema filer ifra generert war
-        assert wsWarProjectHelper.assertFileExists(wsWarProjectHelper.project.configurations['weblogic'].artifacts.files.singleFile) { warFile ->
-            rootProject.copy {
-                into 'somedir'
-                from wsWarProjectHelper.project.zipTree(warFile).matching { include '**/TestService*.wsdl', '**/TestService*.xsd' }.files
-            }
-            rootProject.copy {
-                into 'additional'
-                from wsWarProjectHelper.project.zipTree(warFile).matching { include '**/PingService*.wsdl', '**/PingService*.xsd' }.files
-            }
-        }
-
-        rootProjectHelper.assertFileExists('somedir/TestServiceWS.wsdl')
-        rootProjectHelper.assertFileExists('somedir/TestServiceWS_schema1.xsd')
-        rootProjectHelper.assertFileExists('additional/PingServiceWS.wsdl')
-        rootProjectHelper.assertFileExists('additional/PingServiceWS_schema1.xsd')
-
-        FileCollection someDirFiles = rootProject.files('somedir')
-        FileCollection additionalFiles = rootProject.files('additional')
-
-        //konfigurerer compiler
-        WeblogicGenClientTask genClientTask = rootProject.tasks.create('genClient', WeblogicGenClientTask)
-        genClientTask.webServiceConfig = createWebServiceConfigFor(rootProject)
-        genClientTask.webServiceConfig.schemaFiles someDirFiles, additionalFiles
-        genClientTask.webServiceConfig.apiPrefix 'sktoolstest'
-        genClientTask.setWeblogicClasspath(rootProject.files(
-                WeblogicWsClientPlugin.conventionalWeblogicDependencies(rootProject),
-                WeblogicBasePlugin.toolsJar(rootProject)))
-        genClientTask.setDestinationDir(rootProject.buildDir)
-        genClientTask.source = genClientTask.webServiceConfig.schemaFiles
-
-        //eksekverer
-        genClientTask.gen()
-
-        //tester at enkelte filer er generert
-        rootProjectHelper.assertFileExists('build/META-INF/wsdls/sktoolstest/TestServiceWS.wsdl')
-        rootProjectHelper.assertFileExists('build/no/statkart/test/service/demotns/TestServiceWS.class')
-        rootProjectHelper.assertFileExists('build/no/statkart/test/service/demotns/TestServiceWS.java')
-
-        rootProjectHelper.assertFileExists('build/META-INF/wsdls/sktoolstest/PingServiceWS_schema1.xsd')
-
-    }
+//    @Test
+//    void testApiPrefix() {
+//        //forks a new project in a temp folder
+//        ProjectHelper rootProjectHelper = GradleProjectBuilder.builder("rootProject").withConventionalWEBLOGIC().build()
+//        Project rootProject = rootProjectHelper.project
+//
+//        //forks a new project in a temp folder
+//        ProjectHelper wsWarProjectHelper = GradleProjectBuilder.builder("wswar").withParent(rootProject).withConventionalWEBLOGIC().build();
+//        wsWarProjectHelper.configureProject {
+//            apply plugin: 'sktools-weblogic-wswar-plugin'
+//        }
+//
+//        //oppretter to servicer
+//        use(WeblogicWsWarTestutilFilewriter) {
+//            wsWarProjectHelper.writeDemoServiceWSBean2('src/weblogic/java')
+//            wsWarProjectHelper.writePingServiceWSBean('src/weblogic/java')
+//        }
+//
+//        wsWarProjectHelper.executeTask(WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME)
+//        wsWarProjectHelper.assertTaskExecutedNotSkipped(WeblogicWsWarPlugin.WEBLOGIC_WAR_TASK_NAME)
+//
+//        // pakker ut schema filer ifra generert war
+//        assert wsWarProjectHelper.assertFileExists(wsWarProjectHelper.project.configurations['weblogic'].artifacts.files.singleFile) { warFile ->
+//            rootProject.copy {
+//                into 'somedir'
+//                from wsWarProjectHelper.project.zipTree(warFile).matching { include '**/TestService*.wsdl', '**/TestService*.xsd' }.files
+//            }
+//            rootProject.copy {
+//                into 'additional'
+//                from wsWarProjectHelper.project.zipTree(warFile).matching { include '**/PingService*.wsdl', '**/PingService*.xsd' }.files
+//            }
+//        }
+//
+//        rootProjectHelper.assertFileExists('somedir/TestServiceWS.wsdl')
+//        rootProjectHelper.assertFileExists('somedir/TestServiceWS_schema1.xsd')
+//        rootProjectHelper.assertFileExists('additional/PingServiceWS.wsdl')
+//        rootProjectHelper.assertFileExists('additional/PingServiceWS_schema1.xsd')
+//
+//        FileCollection someDirFiles = rootProject.files('somedir')
+//        FileCollection additionalFiles = rootProject.files('additional')
+//
+//        //konfigurerer compiler
+//        WeblogicGenClientTask genClientTask = rootProject.tasks.create('genClient', WeblogicGenClientTask)
+//        genClientTask.webServiceConfig = createWebServiceConfigFor(rootProject)
+//        genClientTask.webServiceConfig.schemaFiles someDirFiles, additionalFiles
+//        genClientTask.webServiceConfig.apiPrefix 'sktoolstest'
+//        genClientTask.setWeblogicClasspath(rootProject.files(
+//                WeblogicWsClientPlugin.conventionalWeblogicDependencies(rootProject),
+//                WeblogicBasePlugin.toolsJar(rootProject)))
+//        genClientTask.setDestinationDir(rootProject.buildDir)
+//        genClientTask.source = genClientTask.webServiceConfig.schemaFiles
+//
+//        //eksekverer
+//        genClientTask.gen()
+//
+//        //tester at enkelte filer er generert
+//        rootProjectHelper.assertFileExists('build/META-INF/wsdls/sktoolstest/TestServiceWS.wsdl')
+//        rootProjectHelper.assertFileExists('build/no/statkart/test/service/demotns/TestServiceWS.class')
+//        rootProjectHelper.assertFileExists('build/no/statkart/test/service/demotns/TestServiceWS.java')
+//
+//        rootProjectHelper.assertFileExists('build/META-INF/wsdls/sktoolstest/PingServiceWS_schema1.xsd')
+//
+//    }
 
 
     /**

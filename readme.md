@@ -1,7 +1,7 @@
 ﻿# SkTools - Felles byggeverktøy i kartverket
 
 # Baseline
-Gradle 4.10.2 og nyere. 
+Gradle 5.0 og nyere. 
 
 Java 8.
 

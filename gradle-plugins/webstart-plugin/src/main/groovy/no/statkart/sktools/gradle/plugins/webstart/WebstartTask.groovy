@@ -171,9 +171,10 @@ class WebstartTask extends ConventionTask {
     static private Object findXmlTransformer() {
         Class transformerClass;
         try {
-            transformerClass = Class.forName('org.gradle.internal.xml.XmlTransformer') //gradle 2.2
-        } catch (ClassNotFoundException ignored) {
-            transformerClass = Class.forName('org.gradle.api.internal.xml.XmlTransformer') //gradle 2.1
+            transformerClass = Class.forName('org.gradle.internal.xml.XmlTransformer') //gradle 2.2+
+        } catch (ClassNotFoundException e) {
+            logger.error("No xml-transformer found!", e)
+            throw e;
         }
 
         return transformerClass.newInstance()
