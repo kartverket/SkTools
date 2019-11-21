@@ -36,8 +36,10 @@ dependencies {
 pluginUnderTestMetadata.doFirst {
     if (org.gradle.util.GradleVersion.current() >= org.gradle.util.GradleVersion.version('4.10')) {
         pluginUnderTestMetadata.pluginClasspath.from project(':build-utils:xjc-plugins').sourceSets.main.runtimeClasspath
+        pluginUnderTestMetadata.pluginClasspath.from outputDirectory
     } else {
         pluginUnderTestMetadata.pluginClasspath += project(':build-utils:xjc-plugins').sourceSets.main.runtimeClasspath
+        pluginUnderTestMetadata.pluginClasspath += files(outputDirectory)
     }
 }
 
