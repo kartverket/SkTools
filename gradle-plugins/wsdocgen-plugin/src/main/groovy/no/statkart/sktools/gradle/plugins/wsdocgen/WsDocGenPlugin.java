@@ -35,7 +35,6 @@ import java.util.concurrent.Callable;
  * @since 1.0
  */
 public class WsDocGenPlugin implements Plugin<Project> {
-
     public final static String CONVENTION_NAME = "wsdoc";
     public final static String GEN_TASK_NAME = "genWsdoc";
     public final static String ARCHIVE_TASK_NAME = "packWsdoc";
@@ -53,32 +52,28 @@ public class WsDocGenPlugin implements Plugin<Project> {
     public void apply(Project project) {
         project.getPlugins().apply(JavaBasePlugin.class);
 
-        final WsDocGenConvention convention = new WsDocGenConvention();
-        project.getConvention().getPlugins().put(CONVENTION_NAME, convention);
-
         //common super task
         configureGenTask(project);
         configureArchives(project);
 
-        configureSourceSetDefaults(project, convention);
+        configureSourceSetDefaults(project);
 
         configureDocgenDependencies(project);
     }
 
-    private static void configureSourceSetDefaults(final Project project, final WsDocGenConvention convention) {
+    private static void configureSourceSetDefaults(final Project project) {
         final AbstractArchiveTask archiveTask = (AbstractArchiveTask) project.getTasks().getByName(ARCHIVE_TASK_NAME);
 
         //for hvert source sett som finnes/blir lagt til
         project.getConvention().getPlugin(JavaPluginConvention.class).getSourceSets().all(new Action<SourceSet>() {
             public void execute(final SourceSet sourceSet) {
-                final WsDocGroupContainer container = new WsDocGroupContainer(sourceSet, convention);
+                final WsDocGroupContainer container = new WsDocGroupContainer(sourceSet);
 
                 //hekter inn utvidelser på source settet
                 ((HasConvention) sourceSet).getConvention().getPlugins().put(CONVENTION_NAME, new WsDocSourceSetExtension(container));
 
                 container.all(new Action<WsDocGroup>() {
                     //samletask for alle grupper for dette source settet
-                    /** @see WsDocGenConvention#GEN_TASK_NAME_PATTERN */
                     final String commonSourceSetTaskName = "gen" + GUtil.toCamelCase(sourceSet.getName()) + "Wsdoc";
 
                     @Override
@@ -145,11 +140,7 @@ public class WsDocGenPlugin implements Plugin<Project> {
 
     private static AbstractCompile createWsDocGenForGroupTask(Project project, WsDocGroup docGroup) {
         final String taskName = docGroup.getWsdocTaskName();
-        final WsDocCompileTask task = project.getTasks().create(taskName, WsDocCompileTask.class);
-        //SKTOOLS-131: configuration have to be configured at this point
-        task.init(docGroup);
-
-        return task;
+        return project.getTasks().create(taskName, WsDocCompileTask.class, docGroup);
     }
 
     /**

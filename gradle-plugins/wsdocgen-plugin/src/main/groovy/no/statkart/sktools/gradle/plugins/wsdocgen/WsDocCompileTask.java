@@ -10,6 +10,7 @@ import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.compile.CompileOptions;
 import org.gradle.api.tasks.compile.JavaCompile;
 
+import javax.inject.Inject;
 import java.io.File;
 import java.util.List;
 
@@ -25,23 +26,22 @@ public class WsDocCompileTask extends JavaCompile {
    /**
     * Gradle 1.2/2.0 - no arg constructor or @Inject annotated constructor
     */
-   public WsDocCompileTask() {
-      super();
-      getLogging().captureStandardOutput(LogLevel.INFO);
-      getLogging().captureStandardError(LogLevel.DEBUG);
+   @Inject
+   public WsDocCompileTask(WsDocGroup docGroup) {
+       super();
+       setDocGroup(docGroup);
+
+       getLogging().captureStandardOutput(LogLevel.INFO);
+       getLogging().captureStandardError(LogLevel.DEBUG);
+
+       getOptions().getCompilerArgs().add("-proc:only"); //only annotation processing is done, without any subsequent compilation.
+       getOptions().getCompilerArgs().add("-processor");
+       getOptions().getCompilerArgs().add("no.statkart.sktools.utils.wsdocgen.processor.WSDocProcessor"); //Names of the annotation processors to run. This bypasses the default discovery process.
    }
 
-   /**
-    * Initial input values - no mutation of state in {@code @TaskAction} [SKTOOLS-131]
-    */
-   public void init(WsDocGroup docGroup) {
-      setDocGroup(docGroup);
+   void init() {
       initCompilerArgs(getOptions().getCompilerArgs());
       initEncoding();
-
-      if (getDocGroup().includes != null) {
-         setIncludes(getDocGroup().includes); //up to date affects getSource()
-      }
    }
 
    private void initEncoding() {
@@ -52,12 +52,6 @@ public class WsDocCompileTask extends JavaCompile {
    }
 
    private void initCompilerArgs(final List<String> compilerArgs) {
-      compilerArgs.add("-proc:only"); //only annotation processing is done, without any subsequent compilation.
-      compilerArgs.add("-processor");
-      compilerArgs.add("no.statkart.sktools.utils.wsdocgen.processor.WSDocProcessor"); //Names of the annotation processors to run. This bypasses the default discovery process.
-
-      //-processorpath settes via CompileOptions#annotationProcessorPath (Gradle 3.4)
-
       final File xsl = getServiceXsltFile();
       if (!xsl.exists()) {
          throw new RuntimeException("xslt file not found: " + getProject().relativePath(xsl));
@@ -78,11 +72,10 @@ public class WsDocCompileTask extends JavaCompile {
    @TaskAction
    @Override
    protected void compile() {
-      logger.info("args: {}", getOptions().getCompilerArgs());
-      if (logger.isDebugEnabled()) {
-         logger.debug("Classpath for generating WsDoc: {}", getClasspath().getFiles());
-      }
-      super.compile();
+       init();
+       logger.info("args: {}", getOptions().getCompilerArgs());
+       logger.debug("Classpath for generating WsDoc: {}", getClasspath().getFiles());
+       super.compile();
    }
 
    @Optional
@@ -106,16 +99,12 @@ public class WsDocCompileTask extends JavaCompile {
       return options;
    }
 
-   @Optional
    @InputFile
    public File getServiceXsltFile() {
-      if (getDocGroup().serviceXsltPath != null) {
-         return getProject().file(getDocGroup().serviceXsltPath);
-      } else {
-         logger.warn("WARNING: no xslt file specified - using template for TESTING purposes..");
-         WsDocGenConvention convention = (WsDocGenConvention) getProject().getConvention().getPlugins().get(WsDocGenPlugin.CONVENTION_NAME);
-         return convention.generateTestFile(new File(getProject().getBuildDir(), "Transform.xsl")); //can't write to output dir because it gets wiped when not up to date...
-      }
+       if (getDocGroup().serviceXsltPath != null) {
+           return getProject().file(getDocGroup().serviceXsltPath);
+       }
+       return null;
    }
 
    @Optional
@@ -135,6 +124,10 @@ public class WsDocCompileTask extends JavaCompile {
 
    private void setDocGroup(WsDocGroup docGroup) {
       this.docGroup = docGroup;
+
+       if (docGroup.includes != null) {
+           setIncludes(docGroup.includes); //up to date affects getSource()
+       }
    }
 
    @Override

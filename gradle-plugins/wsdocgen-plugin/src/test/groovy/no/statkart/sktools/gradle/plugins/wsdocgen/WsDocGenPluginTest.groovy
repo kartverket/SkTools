@@ -3,7 +3,11 @@ package no.statkart.sktools.gradle.plugins.wsdocgen
 
 import no.statkart.sktools.gradle.testutils.TestKitBase
 import org.gradle.api.Project
+import org.gradle.util.GFileUtils
 import org.testng.annotations.Test
+
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 
 import static no.statkart.sktools.gradle.testutils.filewriter.WsDocgenTestutilFilewriter.writeInterfaceServiceWSBean
 import static no.statkart.sktools.gradle.testutils.filewriter.WsDocgenTestutilFilewriter.writeSimpleDemoServiceWSBean
@@ -22,6 +26,11 @@ import static org.testng.Assert.*
  */
 class WsDocGenPluginTest extends TestKitBase {
 
+    static void writeServiceLayout(File file) {
+        GFileUtils.parentMkdirs(file)
+        Files.copy(WsDocGenPluginTest.class.getResourceAsStream('/DefaultTransform.xsl'), file.toPath(), StandardCopyOption.REPLACE_EXISTING)
+    }
+
     /**
      * Tester registrering av plugin via navn
      */
@@ -32,7 +41,6 @@ class WsDocGenPluginTest extends TestKitBase {
         }
 
         assertThat(project.getPlugins().getPlugin(WsDocGenPlugin.class)).isNotNull()
-        assertThat(project.convention.plugins.wsdoc).isInstanceOf(WsDocGenConvention.class)
     }
 
 
@@ -45,13 +53,18 @@ class WsDocGenPluginTest extends TestKitBase {
             }
 
             sourceSets {
-                main.wsdoc.group { }
-                other.wsdoc.group { }
+                main.wsdoc.group {
+                    serviceXslt 'transform.xsl'
+                }
+                other.wsdoc.group { 
+                    serviceXslt 'transform.xsl'
+                }
             }
         """)
 
         writeSimpleDemoServiceWSBean(file("src/main/java")) //generates simple source file
         writeSimpleDemoServiceWSBean(file("src/other/java")) //generates simple source file
+        writeServiceLayout(file('transform.xsl'))
 
         assertNoFailures(testGradleBuild(WsDocGenPlugin.GEN_TASK_NAME))
 
@@ -191,12 +204,14 @@ class WsDocGenPluginTest extends TestKitBase {
                 main.wsdoc.group {
                     targetPath 'build/mydocs'
                     lookupPath '../wacky/path'
+                    serviceXslt 'transform.xsl'
                 }
             }
         """)
 
-        //generer eksempel-kildekode som har domene-klasse definert
+        // eksempel-kildekode som har domene-klasse definert
         writeInterfaceServiceWSBean(file('src/main/java'))
+        writeServiceLayout(file('transform.xsl'))
 
         assertNoFailures(testGradleBuild(WsDocGenPlugin.GEN_TASK_NAME))
 
@@ -225,13 +240,15 @@ class WsDocGenPluginTest extends TestKitBase {
                 java.srcDir 'src/main/morejava'
                 wsdoc.group {
                     targetPath 'build'
+                    serviceXslt 'transform.xsl'
                 }
             }
         """)
 
-        //generer eksempel-kildekode som har domene-klasse definert
+        // eksempel-kildekode som har domene-klasse definert
         writeSimpleDemoServiceWSBean(file("src/main/java"))
         writeInterfaceServiceWSBean(file('src/main/morejava'))
+        writeServiceLayout(file('transform.xsl'))
 
 
         assertNoFailures(testGradleBuild(WsDocGenPlugin.GEN_TASK_NAME))

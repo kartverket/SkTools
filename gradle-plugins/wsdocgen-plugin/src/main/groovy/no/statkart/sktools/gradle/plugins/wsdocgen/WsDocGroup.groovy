@@ -10,7 +10,6 @@ import org.gradle.util.GUtil
  */
 public class WsDocGroup {
    private final transient SourceSet sourceSet
-   private final transient WsDocGenConvention convention
 
    /**
     * Navn for gruppe - blir automatisk tildelt dersom ikke spesifisert
@@ -33,10 +32,9 @@ public class WsDocGroup {
    protected def indexXsltPath
 
 
-   WsDocGroup(String name, SourceSet sourceSet, WsDocGenConvention convention) {
+   WsDocGroup(String name, SourceSet sourceSet) {
       this.name = name
       this.sourceSet = sourceSet
-      this.convention = convention
    }
 
    protected WsDocGroup configure(Closure closure) {
@@ -53,7 +51,7 @@ public class WsDocGroup {
       if (includes == null) {
          includes = new ArrayList<String>();
       }
-      includes.addAll(patterns);
+      Collections.addAll(includes, patterns)
       return this
    }
 
@@ -104,10 +102,6 @@ public class WsDocGroup {
       return this;
    }
 
-   /**
-    * @see WsDocGenConvention#GEN_TASK_NAME_PATTERN
-    * @return {@link WsDocGenConvention#GEN_TASK_NAME_PATTERN}
-    */
    public String getWsdocTaskName() {
       return "gen" + GUtil.toCamelCase(sourceSet.getName() + " Wsdoc " + name)
    }
