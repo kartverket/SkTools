@@ -106,6 +106,7 @@ public class WsDocCompileTask extends JavaCompile {
       return options;
    }
 
+   @Optional
    @InputFile
    public File getServiceXsltFile() {
       if (getDocGroup().serviceXsltPath != null) {
