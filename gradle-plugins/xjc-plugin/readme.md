@@ -38,9 +38,8 @@ Configuration
     }
     
     dependencies {
-        jaxb 'org.glassfish.jaxb:jaxb-xjc:2.2.11', //default
-             'org.glassfish.jaxb:jaxb-runtime:2.2.11' //default
-             'com.sun.activation:javax.activation:1.2.0' //default
+        jaxb 'org.glassfish.jaxb:jaxb-xjc:2.3.2', //default
+             'org.glassfish.jaxb:jaxb-runtime:2.3.2' //default
     }
 
 ### List adapter

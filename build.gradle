@@ -28,12 +28,12 @@ project.ext.libraries = [
         slf4j_api: "org.slf4j:slf4j-api:${libVersion('slf4j', '1.7.29')}",
         slf4j_simple: "org.slf4j:slf4j-simple:${libVersion('slf4j', '1.7.29')}",
 
-        saxon : 'net.sf.saxon:Saxon-HE:9.8.0-12', //xslt 2.0
+        saxon : 'net.sf.saxon:Saxon-HE:9.9.1-5', //xslt 2.0
 
-        guava: 'com.google.guava:guava:27.0.1-jre',
+        guava: 'com.google.guava:guava:28.1-jre',
 
-        jaxb_xjc : 'org.glassfish.jaxb:jaxb-xjc:2.2.11',
-        jaxb_rt : 'org.glassfish.jaxb:jaxb-runtime:2.2.11',
+        jaxb_xjc : 'org.glassfish.jaxb:jaxb-xjc:2.3.2',
+        jaxb_rt : 'org.glassfish.jaxb:jaxb-runtime:2.3.2',
 
         jaxb_api : 'javax.xml.bind:jaxb-api:2.3.0@jar',
         jaxws_annotations : 'javax.jws:jsr181-api:1.0-MR1@jar',

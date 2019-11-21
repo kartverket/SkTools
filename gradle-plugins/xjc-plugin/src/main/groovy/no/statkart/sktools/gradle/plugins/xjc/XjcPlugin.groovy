@@ -158,10 +158,6 @@ class XjcPlugin implements Plugin<Project> {
                 def jaxbNotation = Objects.requireNonNull(pluginProperties.getProperty("default_jaxb_ri_implementation"), "Skal settes av byggesystem")
                 def jaxbDependency = project.getDependencies().create(jaxbNotation)
                 dependencies.add(jaxbDependency);
-
-                if (jaxbDependency.getVersion() < '2.3.1') { // workaround [SKTOOLS-185]
-                    dependencies.add(project.getDependencies().create('com.sun.activation:javax.activation:1.2.0'))
-                }
             }
         })
         return configuration;
