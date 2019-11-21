@@ -398,7 +398,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
 
                     credentials.username = defaultCredentials.username
                     credentials.password = defaultCredentials.password
-1
+
                     url = sql.connection.properties.URL
                     driver = jdbcDriverClassString
 
