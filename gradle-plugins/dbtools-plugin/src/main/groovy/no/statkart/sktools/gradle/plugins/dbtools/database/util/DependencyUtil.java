@@ -47,7 +47,7 @@ public class DependencyUtil {
      * Classpath satt opp for Gradle TestKit
      */
     static InputStream testEnvironmentClasspath() {
-        return Class.class.getResourceAsStream('/' + PluginUnderTestMetadata.METADATA_FILE_NAME); //dersom denne finnes på classpath kjører man tester
+        return DependencyUtil.class.getResourceAsStream('/' + PluginUnderTestMetadata.METADATA_FILE_NAME); //dersom denne finnes på classpath kjører man tester
     }
 
 

@@ -35,6 +35,7 @@ dependencies {
 
 pluginUnderTestMetadata.doFirst {
     pluginUnderTestMetadata.pluginClasspath.from project(':build-utils:xjc-plugins').sourceSets.main.runtimeClasspath
+    pluginUnderTestMetadata.pluginClasspath.from outputDirectory
 }
 
 task createPluginProperties() {

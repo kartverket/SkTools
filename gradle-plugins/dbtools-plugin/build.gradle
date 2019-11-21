@@ -36,6 +36,7 @@ dependencies {
 
 pluginUnderTestMetadata.doFirst {
     pluginUnderTestMetadata.pluginClasspath.from project(':build-utils:db-tools').sourceSets.main.runtimeClasspath
+    pluginUnderTestMetadata.pluginClasspath.from outputDirectory
 }
 
 task createPluginProperties() {

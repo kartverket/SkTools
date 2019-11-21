@@ -32,6 +32,7 @@ dependencies {
 
 pluginUnderTestMetadata.doFirst {
     pluginUnderTestMetadata.pluginClasspath.from project(':build-utils:wsdocgen').sourceSets.main.runtimeClasspath
+    pluginUnderTestMetadata.pluginClasspath.from outputDirectory
 }
 
 task createPluginProperties() {

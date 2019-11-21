@@ -188,7 +188,7 @@ public class WsDocGenPlugin implements Plugin<Project> {
      * Classpath satt opp for Gradle TestKit
      */
     static InputStream testEnvironmentClasspath() {
-        return Class.class.getResourceAsStream('/' + PluginUnderTestMetadata.METADATA_FILE_NAME); //dersom denne finnes på classpath kjører man tester
+        return WsDocGenPlugin.class.getResourceAsStream('/' + PluginUnderTestMetadata.METADATA_FILE_NAME); //dersom denne finnes på classpath kjører man tester
     }
 
 }
