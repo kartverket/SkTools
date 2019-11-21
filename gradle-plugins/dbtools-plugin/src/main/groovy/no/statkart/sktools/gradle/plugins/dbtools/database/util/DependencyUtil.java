@@ -27,12 +27,12 @@ public class DependencyUtil {
      * Gir deg dependencies avhengig av om det kjøres som test eller ikke.
      */
     public static FileCollection getDatabasePatcherClasspath(Project project) {
-        InputStream testKitMetadataStream = testEnvironmentClasspath();
-        if (testKitMetadataStream == null) {
+        Properties testProperties = injectedTestProperties();
+        if (testProperties == null) {
             return project.getBuildscript().getConfigurations().detachedConfiguration(dbutilsDependency(project));
         }
-        Properties properties = GUtil.loadProperties(testKitMetadataStream);
-        String classpath = properties.getProperty(PluginUnderTestMetadata.IMPLEMENTATION_CLASSPATH_PROP_KEY);
+
+        String classpath = testProperties.getProperty("sktools_dbtools_classpath");
         // En trenger classpath for dbtools (db-tools)
         // disse ligger i egen modul
         return project.files((Object[]) classpath.split(";")); //NB: for GradleRunner i debug mode
@@ -44,10 +44,12 @@ public class DependencyUtil {
     }
 
     /**
-     * Classpath satt opp for Gradle TestKit
+     * Test properties når man kjører tester, ellers null.
      */
-    static InputStream testEnvironmentClasspath() {
-        return DependencyUtil.class.getResourceAsStream('/' + PluginUnderTestMetadata.METADATA_FILE_NAME); //dersom denne finnes på classpath kjører man tester
+    static Properties injectedTestProperties() {
+        InputStream stream = DbtoolsPlugin.class.getResourceAsStream("/DbtoolsPluginTest.properties");
+        //dersom denne finnes på classpath kjører man tester
+        return stream == null ? null : GUtil.loadProperties(stream);
     }
 
 

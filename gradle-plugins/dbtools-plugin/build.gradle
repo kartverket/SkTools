@@ -34,10 +34,25 @@ dependencies {
     testImplementation libraries.hsqldb
 }
 
-pluginUnderTestMetadata.doFirst {
-    pluginUnderTestMetadata.pluginClasspath.from project(':build-utils:db-tools').sourceSets.main.runtimeClasspath
-    pluginUnderTestMetadata.pluginClasspath.from outputDirectory
+
+// inject av verktøy i testkjøring
+task testProperties {
+    def outputDir = file("$buildDir/$name")
+
+    inputs.files project(':build-utils:db-tools').sourceSets.main.runtimeClasspath
+    outputs.dir outputDir
+
+    doLast {
+        def properties = [
+            sktools_dbtools_classpath: project(':build-utils:db-tools').sourceSets.main.runtimeClasspath.asPath,
+        ]
+        outputDir.mkdirs()
+        org.gradle.util.GUtil.saveProperties(properties as Properties, file("$outputDir/DbtoolsPluginTest.properties"))
+    }
 }
+pluginUnderTestMetadata.pluginClasspath.from files(testProperties)
+pluginUnderTestMetadata.pluginClasspath.from sourceSets.main.output
+
 
 task createPluginProperties() {
     outputs.dir pluginPropertiesDir

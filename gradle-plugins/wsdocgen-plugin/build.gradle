@@ -30,10 +30,24 @@ dependencies {
     testImplementation project(':build-utils:test-utils')
 }
 
-pluginUnderTestMetadata.doFirst {
-    pluginUnderTestMetadata.pluginClasspath.from project(':build-utils:wsdocgen').sourceSets.main.runtimeClasspath
-    pluginUnderTestMetadata.pluginClasspath.from outputDirectory
+
+// inject av verktøy i testkjøring
+task testProperties {
+    def outputDir = file("$buildDir/$name")
+
+    inputs.files project(':build-utils:wsdocgen').sourceSets.main.runtimeClasspath
+    outputs.dir outputDir
+
+    doLast {
+        def properties = [
+            sktools_wsdocgen_classpath: project(':build-utils:wsdocgen').sourceSets.main.runtimeClasspath.asPath,
+        ]
+        outputDir.mkdirs()
+        org.gradle.util.GUtil.saveProperties(properties as Properties, file("$outputDir/WsDocGenPluginTest.properties"))
+    }
 }
+pluginUnderTestMetadata.pluginClasspath.from files(testProperties)
+pluginUnderTestMetadata.pluginClasspath.from sourceSets.main.output
 
 task createPluginProperties() {
     outputs.dir pluginPropertiesDir

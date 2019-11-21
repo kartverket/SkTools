@@ -149,13 +149,12 @@ public class WsDocGenPlugin implements Plugin<Project> {
     private static void configureDocgenDependencies(final Project project) {
         final FileCollection wsDocGenConfiguration;
 
-        InputStream testKitMetadataStream = testEnvironmentClasspath();
-        if (testKitMetadataStream == null) {
+        Properties testProperties = injectedTestProperties();
+        if (testProperties == null) {
             ScriptHandler buildscript = project.getRootProject().getBuildscript(); //root projects repo configuration
             wsDocGenConfiguration = buildscript.getConfigurations().detachedConfiguration(wsDocGenDependency(project));
         } else {
-            Properties properties = GUtil.loadProperties(testKitMetadataStream);
-            String classpath = properties.getProperty(PluginUnderTestMetadata.IMPLEMENTATION_CLASSPATH_PROP_KEY);
+            String classpath = testProperties.getProperty("sktools_wsdocgen_classpath");
             // En trenger classpath for annotasjonsprosessor (wsdoc)
             // disse ligger i egen modul
             wsDocGenConfiguration = project.files((Object[]) classpath.split(";")); //NB: for GradleRunner i debug mode
@@ -176,10 +175,12 @@ public class WsDocGenPlugin implements Plugin<Project> {
     }
 
     /**
-     * Classpath satt opp for Gradle TestKit
+     * Test properties når man kjører tester, ellers null.
      */
-    static InputStream testEnvironmentClasspath() {
-        return WsDocGenPlugin.class.getResourceAsStream('/' + PluginUnderTestMetadata.METADATA_FILE_NAME); //dersom denne finnes på classpath kjører man tester
+    static Properties injectedTestProperties() {
+        InputStream stream = WsDocGenPlugin.class.getResourceAsStream("/WsDocGenPluginTest.properties");
+        //dersom denne finnes på classpath kjører man tester
+        return stream == null ? null : GUtil.loadProperties(stream);
     }
 
 }
