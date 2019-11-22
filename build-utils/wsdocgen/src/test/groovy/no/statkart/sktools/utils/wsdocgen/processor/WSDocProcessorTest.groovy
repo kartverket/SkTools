@@ -22,7 +22,7 @@ import static org.testng.Assert.fail
 class WSDocProcessorTest extends TestKitBase {
     static final Logger log = LoggerFactory.getLogger(WSDocProcessorTest)
 
-    static final String processorPath = WSDocProcessorTest.getClass().getResource("/processor-classpath.txt").text
+    static final String processorPath = WSDocProcessorTest.class.getResource("/processor-classpath.txt").text
 
     void test(String... command) {
         Process javac = Runtime.getRuntime().exec(command)
