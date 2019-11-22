@@ -18,7 +18,7 @@ import java.io.File;
 /**
  * Task for kompilering av java-ws weblogic server implementasjon
  *
- * PS: Merk at denne kun kompilerer ws spesifik implementasjon. Det forutsettes derfor at resten ligger som kompilert kode på classpath
+ * PS: Merk at denne kun kompilerer ws spesifikk implementasjon. Det forutsettes derfor at resten ligger som kompilert kode på classpath
  *
  * @since 1.1
  * @author Leif Lislegård
@@ -69,14 +69,15 @@ public class WeblogicWsCompileTask extends AbstractCompile implements WeblogicTa
 
         final String javaEndorsedDirs = System.getProperty("java.endorsed.dirs");
         try {
-            if (javaEndorsedDirs.contains(" ")) {
+            if (javaEndorsedDirs != null && javaEndorsedDirs.contains(" ")) {
                 logger.warn("WARNING: Invalid java.endorsed.dirs=\"{}\". No whitespace allowed. Discarding this property for jwsc!", javaEndorsedDirs);
                 System.setProperty("java.endorsed.dirs", "");
             }
             WorkResult result = compiler.execute(spec);
             setDidWork(result.getDidWork());
         } finally {
-            System.setProperty("java.endorsed.dirs", javaEndorsedDirs); //reverting modification as this could have unwanted side effects elsewhere in the build system
+            //reverting modification as this could have unwanted side effects elsewhere in the build system
+            if (javaEndorsedDirs != null) System.setProperty("java.endorsed.dirs", javaEndorsedDirs);
         }
 
 
