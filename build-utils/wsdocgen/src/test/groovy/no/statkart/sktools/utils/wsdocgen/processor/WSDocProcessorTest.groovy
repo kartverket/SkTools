@@ -23,6 +23,7 @@ class WSDocProcessorTest extends TestKitBase {
     static final Logger log = LoggerFactory.getLogger(WSDocProcessorTest)
 
     static final String processorPath = WSDocProcessorTest.class.getResource("/processor-classpath.txt").text
+    static final String classpath = WSDocProcessorTest.class.getResource("/processor-classpath.txt").text
 
     void test(String... command) {
         Process javac = Runtime.getRuntime().exec(command)
@@ -56,6 +57,7 @@ class WSDocProcessorTest extends TestKitBase {
             "-proc:only",
             "-processor", WSDocProcessor.class.getName(),
             "-processorpath", processorPath,
+            "-classpath", classpath,
             "-sourcepath", resourcePath.toString(),
             "-d", outputPath.toString(), //d = generated class files
 
@@ -143,6 +145,7 @@ class WSDocProcessorTest extends TestKitBase {
             "-proc:only",
             "-processor", WSDocProcessor.class.getName(),
             "-processorpath", processorPath,
+            "-classpath", classpath,
             "-sourcepath", resourcePath.toString(),
             "-d", outputPath.toString(), //d = generated class files
 
@@ -170,7 +173,7 @@ class WSDocProcessorTest extends TestKitBase {
 
         // eksempel-kildekode
         File javaFile = writeFile('src/main/java/TestWSBean.java',
-                """
+            """
                  @javax.jws.WebService(
                      name = "TestService",
                      serviceName = "TestServiceWS",
@@ -186,7 +189,7 @@ class WSDocProcessorTest extends TestKitBase {
                 """)
 
         File xslt = writeFile('minimal.xsl',
-                """
+            """
                 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
                 <xsl:output method="text" version="1.0" media-type="text/plain" omit-xml-declaration="yes" />
@@ -207,6 +210,7 @@ class WSDocProcessorTest extends TestKitBase {
             "-proc:only",
             "-processor", WSDocProcessor.class.getName(),
             "-processorpath", processorPath,
+            "-classpath", classpath,
             "-sourcepath", resourcePath.toString(),
             "-d", outputPath.toString(), //d = generated class files
 
@@ -232,7 +236,7 @@ class WSDocProcessorTest extends TestKitBase {
 
         // eksempel-kildekode
         File javaFile = writeFile('src/main/java/TestWSBean.java',
-                """
+            """
                 package test1;
 
                 /**
@@ -262,7 +266,7 @@ class WSDocProcessorTest extends TestKitBase {
                 """)
 
         File xslt = writeFile('minimal.xsl',
-                """
+            """
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
 <xsl:output method="xml" version="1.0" indent="yes"
@@ -312,6 +316,7 @@ class WSDocProcessorTest extends TestKitBase {
             "-proc:only",
             "-processor", WSDocProcessor.class.getName(),
             "-processorpath", processorPath,
+            "-classpath", classpath,
             "-sourcepath", resourcePath.toString(),
             "-encoding", 'UTF-8',
             "-d", outputPath.toString(), //d = generated class files
@@ -349,7 +354,7 @@ class WSDocProcessorTest extends TestKitBase {
 
         // eksempel-kildekode
         File javaFile = writeFile('src/main/java/TestWSBean.java',
-                """
+            """
                 package test1;
 
                 /**
@@ -389,7 +394,7 @@ class WSDocProcessorTest extends TestKitBase {
                 """)
 
         File xslt = writeFile('minimal.xsl',
-                """
+            """
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
 <xsl:output method="xml" version="1.0" indent="yes"
@@ -449,6 +454,7 @@ class WSDocProcessorTest extends TestKitBase {
             "-proc:only",
             "-processor", WSDocProcessor.class.getName(),
             "-processorpath", processorPath,
+            "-classpath", classpath,
             "-sourcepath", resourcePath.toString(),
             "-d", outputPath.toString(), //d = generated class files
 
@@ -493,7 +499,7 @@ class WSDocProcessorTest extends TestKitBase {
 
         // eksempel-kildekode
         File javaFile = writeFile('src/main/java/TestWSBean.java',
-                """
+            """
                 package test1;
 
                 /**
@@ -522,8 +528,8 @@ class WSDocProcessorTest extends TestKitBase {
                  }
                 """)
 
-    File xslt = writeFile('minimal.xsl',
-                """
+        File xslt = writeFile('minimal.xsl',
+            """
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
 <xsl:output method="xml" version="1.0" indent="yes"
@@ -573,6 +579,7 @@ class WSDocProcessorTest extends TestKitBase {
             "-proc:only",
             "-processor", WSDocProcessor.class.getName(),
             "-processorpath", processorPath,
+            "-classpath", classpath,
             "-sourcepath", resourcePath.toString(),
             "-d", outputPath.toString(), //d = generated class files
 
@@ -610,7 +617,7 @@ class WSDocProcessorTest extends TestKitBase {
 
         // eksempel-kildekode
         File javaFile1 = writeFile('src/main/java/Service1WSBean.java',
-                """
+            """
                 package test1;
 
                 /**
@@ -630,7 +637,7 @@ class WSDocProcessorTest extends TestKitBase {
                 """)
 
         File javaFile2 = writeFile('src/main/java/Service2WSBean.java',
-                """
+            """
                 package test2;
 
                 /**
@@ -664,7 +671,7 @@ class WSDocProcessorTest extends TestKitBase {
                 """)
 
         File xslt = writeFile('minimal.xsl',
-                """
+            """
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
 <xsl:output method="xml" version="1.0" indent="yes"
@@ -690,7 +697,7 @@ class WSDocProcessorTest extends TestKitBase {
 
 
         File indexXslt = writeFile('index.xsl',
-                """
+            """
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
 <xsl:output method="xml" version="1.0" indent="yes"
@@ -725,6 +732,7 @@ class WSDocProcessorTest extends TestKitBase {
             "-proc:only",
             "-processor", WSDocProcessor.class.getName(),
             "-processorpath", processorPath,
+            "-classpath", classpath,
             "-sourcepath", resourcePath.toString(),
             "-d", outputPath.toString(), //d = generated class files
 
@@ -784,7 +792,7 @@ class WSDocProcessorTest extends TestKitBase {
 
         // eksempel-kildekode
         File javaFile = writeFile('src/main/java/TestWSBean.java',
-                """
+            """
                 package test1;
 
                 /**
@@ -803,7 +811,7 @@ class WSDocProcessorTest extends TestKitBase {
                 """)
 
         File xslt = writeFile('minimal.xsl',
-                """
+            """
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
 <xsl:output method="xml" version="1.0" indent="yes"
@@ -872,6 +880,7 @@ class WSDocProcessorTest extends TestKitBase {
             "-proc:only",
             "-processor", WSDocProcessor.class.getName(),
             "-processorpath", processorPath,
+            "-classpath", classpath,
             "-sourcepath", resourcePath.toString(),
             "-d", outputPath.toString(), //d = generated class files
 
@@ -905,7 +914,7 @@ class WSDocProcessorTest extends TestKitBase {
 
         // eksempel-kildekode
         File javaFile = writeFile('src/main/java/TestWSBean.java',
-                """
+            """
                 package test1;
 
                 /**
@@ -942,7 +951,7 @@ class WSDocProcessorTest extends TestKitBase {
                 """)
 
         File xslt = writeFile('minimal.xsl',
-                """
+            """
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
 <xsl:output method="xml" version="1.0" indent="yes"
@@ -992,6 +1001,7 @@ class WSDocProcessorTest extends TestKitBase {
             "-proc:only",
             "-processor", WSDocProcessor.class.getName(),
             "-processorpath", processorPath,
+            "-classpath", classpath,
             "-sourcepath", resourcePath.toString(),
             "-d", outputPath.toString(), //d = generated class files
 
@@ -1038,7 +1048,7 @@ class WSDocProcessorTest extends TestKitBase {
 
         // eksempel-kildekode
         File javaFile = writeFile('src/main/java/TestWSBean.java',
-                """
+            """
                 package test1;
 
                 /**
@@ -1068,7 +1078,7 @@ class WSDocProcessorTest extends TestKitBase {
                 """)
 
         File xslt = writeFile('minimal.xsl',
-                """
+            """
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
 <xsl:output method="xml" version="1.0" indent="yes"
@@ -1166,6 +1176,7 @@ class WSDocProcessorTest extends TestKitBase {
             "-proc:only",
             "-processor", WSDocProcessor.class.getName(),
             "-processorpath", processorPath,
+            "-classpath", classpath,
             "-sourcepath", resourcePath.toString(),
             "-d", outputPath.toString(), //d = generated class files
 
@@ -1219,7 +1230,7 @@ class WSDocProcessorTest extends TestKitBase {
 
         // eksempel-kildekode
         File javaFile = writeFile('src/main/java/TestWSBean.java',
-                """
+            """
                 package test1;
 
                  @javax.jws.WebService(
@@ -1239,7 +1250,7 @@ class WSDocProcessorTest extends TestKitBase {
                 """)
 
         File xslt = writeFile('minimal.xsl',
-                """
+            """
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
 <xsl:output method="xml" version="1.0" indent="yes"
@@ -1323,6 +1334,7 @@ class WSDocProcessorTest extends TestKitBase {
             "-proc:only",
             "-processor", WSDocProcessor.class.getName(),
             "-processorpath", processorPath,
+            "-classpath", classpath,
             "-sourcepath", resourcePath.toString(),
             "-d", outputPath.toString(), //d = generated class files
 
