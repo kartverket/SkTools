@@ -99,8 +99,8 @@ class WsImportPluginTest extends TestKitBase {
 
     private void writeTestSchemaTo(String path) {
         file(path).mkdirs()
-        Files.copy(getClass().getResourceAsStream('/TestServiceWS.wsdl'), file("$path/TestServiceWS.wsdl").toPath())
-        Files.copy(getClass().getResourceAsStream('/TestServiceWS_schema1.xsd'), file("$path/TestServiceWS_schema1.xsd").toPath())
-        Files.copy(getClass().getResourceAsStream('/TestServiceWS_schema2.xsd'), file("$path/TestServiceWS_schema2.xsd").toPath())
+        Files.copy(WsImportPluginTest.class.getResourceAsStream('/TestServiceWS.wsdl'), file("$path/TestServiceWS.wsdl").toPath())
+        Files.copy(WsImportPluginTest.class.getResourceAsStream('/TestServiceWS_schema1.xsd'), file("$path/TestServiceWS_schema1.xsd").toPath())
+        Files.copy(WsImportPluginTest.class.getResourceAsStream('/TestServiceWS_schema2.xsd'), file("$path/TestServiceWS_schema2.xsd").toPath())
     }
 }

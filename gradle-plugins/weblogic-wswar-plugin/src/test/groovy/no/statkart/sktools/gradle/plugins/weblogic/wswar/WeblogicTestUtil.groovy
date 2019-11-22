@@ -53,8 +53,8 @@ class WeblogicTestUtil {
     public static void writeExceptionService01Exceptions(File targetPath) {
         Path exceptionPath = new File(targetPath, "exceptiondemo01/exception").toPath()
         Files.createDirectories(exceptionPath);
-        Files.copy(getClass().getResourceAsStream("/demo01/java/exceptiondemo01/exception/ServiceException.java"), exceptionPath.resolve("ServiceException.java"))
-        Files.copy(getClass().getResourceAsStream("/demo01/java/exceptiondemo01/exception/ServiceFaultInfo.java"), exceptionPath.resolve("ServiceFaultInfo.java"))
+        Files.copy(WeblogicTestUtil.class.getResourceAsStream("/demo01/java/exceptiondemo01/exception/ServiceException.java"), exceptionPath.resolve("ServiceException.java"))
+        Files.copy(WeblogicTestUtil.class.getResourceAsStream("/demo01/java/exceptiondemo01/exception/ServiceFaultInfo.java"), exceptionPath.resolve("ServiceFaultInfo.java"))
     }
 
     /**
@@ -65,8 +65,8 @@ class WeblogicTestUtil {
     public static void writeExceptionService01(File targetPath) {
         Path servicePath = new File(targetPath, "exceptiondemo01").toPath()
         Files.createDirectories(servicePath);
-        Files.copy(getClass().getResourceAsStream("/demo01/java/exceptiondemo01/ExceptionService1WSBean.java"), servicePath.resolve("ExceptionService1WSBean.java"))
-        Files.copy(getClass().getResourceAsStream("/demo01/java/exceptiondemo01/WebConfig.java"), servicePath.resolve("WebConfig.java"))
+        Files.copy(WeblogicTestUtil.class.getResourceAsStream("/demo01/java/exceptiondemo01/ExceptionService1WSBean.java"), servicePath.resolve("ExceptionService1WSBean.java"))
+        Files.copy(WeblogicTestUtil.class.getResourceAsStream("/demo01/java/exceptiondemo01/WebConfig.java"), servicePath.resolve("WebConfig.java"))
     }
 
 }
