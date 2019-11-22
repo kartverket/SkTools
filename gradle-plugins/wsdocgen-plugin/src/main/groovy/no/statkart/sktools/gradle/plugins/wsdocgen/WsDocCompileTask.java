@@ -27,8 +27,9 @@ public class WsDocCompileTask extends JavaCompile {
     */
    public WsDocCompileTask() {
       super();
-      getLogging().captureStandardOutput(LogLevel.INFO);
-      getLogging().captureStandardError(LogLevel.DEBUG);
+       getLogging().captureStandardError(LogLevel.LIFECYCLE);
+       getLogging().captureStandardOutput(LogLevel.DEBUG);
+       getOptions().setWarnings(false);
    }
 
    /**
