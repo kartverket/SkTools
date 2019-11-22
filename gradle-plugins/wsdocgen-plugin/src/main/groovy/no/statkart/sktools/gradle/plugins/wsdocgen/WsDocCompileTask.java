@@ -31,8 +31,9 @@ public class WsDocCompileTask extends JavaCompile {
        super();
        setDocGroup(docGroup);
 
-       getLogging().captureStandardOutput(LogLevel.INFO);
-       getLogging().captureStandardError(LogLevel.DEBUG);
+       getLogging().captureStandardError(LogLevel.LIFECYCLE);
+       getLogging().captureStandardOutput(LogLevel.DEBUG);
+       getOptions().setWarnings(false);
 
        getOptions().getCompilerArgs().add("-proc:only"); //only annotation processing is done, without any subsequent compilation.
        getOptions().getCompilerArgs().add("-processor");
