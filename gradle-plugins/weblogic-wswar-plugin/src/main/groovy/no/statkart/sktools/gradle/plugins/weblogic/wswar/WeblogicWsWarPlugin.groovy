@@ -328,8 +328,8 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
         //dersom javaplugin er aktivert..
         SourceSet mainSourceSet = javaConvention.getSourceSets().findByName(SourceSet.MAIN_SOURCE_SET_NAME);
         if (mainSourceSet != null) {
-            Configuration compileConfiguration = project.getConfigurations().findByName(mainSourceSet.getCompileConfigurationName());
-            Configuration runtimeConfiguration = project.getConfigurations().findByName(mainSourceSet.getRuntimeConfigurationName());
+            Configuration compileConfiguration = project.getConfigurations().findByName(mainSourceSet.getCompileClasspathConfigurationName())
+            Configuration runtimeConfiguration = project.getConfigurations().findByName(mainSourceSet.getRuntimeClasspathConfigurationName())
 
             if (compileConfiguration != null) {
                 weblogicCompileConfiguration.extendsFrom(compileConfiguration);     //compile configuration arver fra main sin compile
