@@ -40,6 +40,7 @@ pipeline { //declarative pipeline syntax
         //legger gradle til byggenodens workspace - dette forhindrer kollisjoner i tilfeller der man har ibruk flyktige snapshot versjoner slik at to jobber kan komme i konflikt.
         //PS: erstatter '\' med '/' via char verdier da jenkins parser og kompilerer regex uttrykk på en håpløs måte...
         GRADLE_USER_HOME = "${WORKSPACE.replace(0x5c as char, 0x2f as char)}/gradle"
+        WEBLOGIC_VERSION = '12.2.1.3'
         ORG_GRADLE_PROJECT_sktools_versjon = "${params.sktools_versjon}"
         BRANCH_NAME = "${params.BRANCH_NAME}"
 
@@ -67,7 +68,7 @@ pipeline { //declarative pipeline syntax
                     }
                     environment {
                         WEBLOGIC_VERSION = '12.1.3.0'
-                        WEBLOGIC_HOME = "${WEBLOGIC_HOME('12.1.3.0', env)}"
+                        WEBLOGIC_HOME = "${WEBLOGIC_HOME('12.1.3.0', this)}"
                     }
                     steps {
                         bat "gradle --version"
@@ -85,7 +86,7 @@ pipeline { //declarative pipeline syntax
                     }
                     environment {
                         WEBLOGIC_VERSION = '12.2.1.3'
-                        WEBLOGIC_HOME = "${WEBLOGIC_HOME('12.2.1.3', env)}"
+                        WEBLOGIC_HOME = "${WEBLOGIC_HOME('12.2.1.3', this)}"
                     }
                     steps {
                         bat "gradle --version"
