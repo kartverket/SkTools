@@ -27,7 +27,6 @@ pipeline { //declarative pipeline syntax
     }
 
     parameters {
-        string(name: 'WEBLOGIC_VERSION', defaultValue: '12.2.1.3', description: 'Weblogic versjon. Det kreves tilhørende env variabel "WEBLOGIC_HOME_${env.WEBLOGIC_VERSION}" peker til weblogic lib-katalog på byggenode.')
         string(name: 'sktools_versjon', defaultValue: "${env.BRANCH_NAME ?: 'trunk'}-build${env.BUILD_NUMBER}", description: 'Versjon for publisert artefakt.')
         string(name: 'BRANCH_NAME', defaultValue: "${env.BRANCH_NAME ?: 'trunk'}", description: 'Branch for kildekode.')
     }
@@ -41,8 +40,6 @@ pipeline { //declarative pipeline syntax
         //legger gradle til byggenodens workspace - dette forhindrer kollisjoner i tilfeller der man har ibruk flyktige snapshot versjoner slik at to jobber kan komme i konflikt.
         //PS: erstatter '\' med '/' via char verdier da jenkins parser og kompilerer regex uttrykk på en håpløs måte...
         GRADLE_USER_HOME = "${WORKSPACE.replace(0x5c as char, 0x2f as char)}/gradle"
-        WEBLOGIC_VERSION = "${params.WEBLOGIC_VERSION}"
-        WEBLOGIC_HOME = "${WEBLOGIC_HOME("${params.WEBLOGIC_VERSION}", env)}"
         ORG_GRADLE_PROJECT_sktools_versjon = "${params.sktools_versjon}"
         BRANCH_NAME = "${params.BRANCH_NAME}"
 
@@ -66,14 +63,15 @@ pipeline { //declarative pipeline syntax
             parallel {
                 stage('Test gradle baseline') {
                     tools {
-                        jdk 'Java 8 Latest'
+                        jdk 'Java 8 Latest'  //tester med spesifiserte minstekrav
+                    }
+                    environment {
+                        WEBLOGIC_VERSION = '12.1.3.0'
+                        WEBLOGIC_HOME = "${WEBLOGIC_HOME('12.1.3.0', env)}"
                     }
                     steps {
-                        //tester med spesifiserte minstekrav
-                        withEnv(['WEBLOGIC_VERSION=12.1.3.0', "WEBLOGIC_HOME=${WEBLOGIC_HOME('12.1.3.0', env)}"]) {
-                            bat "gradle --version"
-                            bat "gradle testGradle5.0 -DignoreFailures=true ${gradleOptions(this)}"
-                        }
+                        bat "gradle --version"
+                        bat "gradle testGradle5.0 -DignoreFailures=true ${gradleOptions(this)}"
                     }
                     post {
                         always {
@@ -84,6 +82,10 @@ pipeline { //declarative pipeline syntax
                 stage('Test gradle latest') {
                     tools {
                         gradle 'Gradle 5.6.4' //latest og greatest (kan også være neste major versjon)
+                    }
+                    environment {
+                        WEBLOGIC_VERSION = '12.2.1.3'
+                        WEBLOGIC_HOME = "${WEBLOGIC_HOME('12.2.1.3', env)}"
                     }
                     steps {
                         bat "gradle --version"
