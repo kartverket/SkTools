@@ -93,8 +93,8 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
         if (wlsVersion.startsWith("12.")) {
             if (wlsVersion.startsWith("12.1")) {
                 if (JavaVersion.current().isJava9Compatible()) {
-                    project.getLogger().warn("Weblogic 12.1.x does not support " + JavaVersion.current())
-                    return
+                    project.getLogger().warn('WARNING: Weblogic 12.1.x does not support java ' + JavaVersion.current())
+                    return project.files()
                 }
                 return project.files(
                         "${WEBLOGIC_HOME}/wlserver/modules/databinding.override_1.2.0.0.jar",
@@ -109,7 +109,7 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
                 );
             }
 
-            project.logger.warn("WARNING: no optimalization found for weblogic version " + wlsVersion);
+            project.logger.warn('WARNING: no optimization found for Weblogic version ' + wlsVersion);
             return project.fileTree(dir: WEBLOGIC_HOME, includes: [
                     "wlserver/modules/databinding.override*.jar",
                     "wlserver/server/lib/weblogic.jar",
