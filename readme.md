@@ -24,8 +24,12 @@ JDK 12 / JDK 1.8
 ## Utvikleroppsett
 Opprett gradle.properties med innhold, feks:
 ```
-WEBLOGIC_HOME=C:/bea1213
-WEBLOGIC_VERSION=12.1.3
+WEBLOGIC_HOME=C:/wls1221
+WEBLOGIC_VERSION=12.2.1
+
+!! Weblogic 12.1 requires JDK8 !!
+#WEBLOGIC_HOME=C:/bea1213
+#WEBLOGIC_VERSION=12.1.3
 
 !unikt prosjektnavn for vindu i IntelliJ
 project_name=sktools-1.5

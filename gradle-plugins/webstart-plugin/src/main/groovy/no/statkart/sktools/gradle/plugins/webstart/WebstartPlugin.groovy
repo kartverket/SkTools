@@ -82,11 +82,8 @@ class WebstartPlugin implements Plugin<Project> {
     }
 
     private static WebstartTask configureGenJnlp(Project project, ClientConfiguration clientConfiguration, JarSigner jarSigner) {
-        HashMap<String, Object> args = new HashMap<String, Object>();
-        args.put(Task.TASK_TYPE, WebstartTask.class);
-        args.put(Task.TASK_OVERWRITE, "false");
-
-        final WebstartTask webstartTask = (WebstartTask) project.task(args, makeTaskName('gen', clientConfiguration.name, 'Jnlp'));
+        String taskName = makeTaskName('gen', clientConfiguration.name, 'Jnlp')
+        final WebstartTask webstartTask = project.tasks.create(taskName, WebstartTask.class)
 
         webstartTask.dependsOn(jarSigner);
         webstartTask.jarResources(new Callable<Object>() {

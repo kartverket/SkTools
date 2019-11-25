@@ -37,7 +37,7 @@ class WeblogicTaskTest extends TestKitBase {
         project.configurations.getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME).extendsFrom(project.configurations.getByName(JavaPlugin.IMPLEMENTATION_CONFIGURATION_NAME))
 
 
-        TestClasspathForWeblogicTask task = project.task('someWeblogicTask', type: TestClasspathForWeblogicTask)
+        TestClasspathForWeblogicTask task = project.tasks.create('someWeblogicTask', TestClasspathForWeblogicTask.class)
         task.compile()
 
         //sjekker task objektet

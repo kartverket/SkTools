@@ -187,7 +187,7 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
      */
     private static WeblogicWsCompileTask configureGenTask(final Project project, final SourceSet weblogicSourceSet) {
 
-        WeblogicWsCompileTask genTask = (WeblogicWsCompileTask) project.task(WEBLOGIC_GEN_TASK_NAME, type: WeblogicWsCompileTask.class)
+        WeblogicWsCompileTask genTask = project.tasks.create(WEBLOGIC_GEN_TASK_NAME, WeblogicWsCompileTask.class)
         genTask.dependsOn weblogicSourceSet.compileJavaTaskName
 
         genTask.description = 'Generates the web service implementation on server using Weblogic jwsc'

@@ -37,7 +37,7 @@ class JarSignerTest extends TestKitBase {
         //forks a new project in a temp folder
         Project root = projectBuilder().withName('root').build()
 
-        JarSigner jarSigner1 = root.task('jarSigner1', type: JarSigner)
+        JarSigner jarSigner1 = root.tasks.create('jarSigner1', JarSigner)
         jarSigner1.setCertificateFile(certificateFile)
         jarSigner1.setPassword(KeystoreTestutil.KeystorePassword)
         jarSigner1.setAlias(KeystoreTestutil.KeystoreAlias)
@@ -59,7 +59,7 @@ class JarSignerTest extends TestKitBase {
         final long modified1 = jarSigner1.outputs.files.singleFile.lastModified()
 
         Project subProject = projectBuilder().withParent(root).build()
-        JarSigner jarSigner2 = subProject.task('jarSigner2', type: JarSigner)
+        JarSigner jarSigner2 = subProject.tasks.create('jarSigner2', JarSigner)
         jarSigner2.setCertificateFile(certificateFile)
         jarSigner2.setPassword(KeystoreTestutil.KeystorePassword)
         jarSigner2.setAlias(KeystoreTestutil.KeystoreAlias)
@@ -96,7 +96,7 @@ class JarSignerTest extends TestKitBase {
         //forks a new project in a temp folder
         Project root = projectBuilder().withName('root').build()
 
-        JarSigner jarSigner = root.task('jarSigner1', type: JarSigner)
+        JarSigner jarSigner = root.tasks.create('jarSigner1', JarSigner)
         jarSigner.setCertificateFile(certificateFile)
         jarSigner.setPassword(KeystoreTestutil.KeystorePassword)
         jarSigner.setAlias(KeystoreTestutil.KeystoreAlias)
@@ -129,7 +129,7 @@ class JarSignerTest extends TestKitBase {
         //forks a new project in a temp folder
         Project root = projectBuilder().withName('root').build()
 
-        JarSigner jarSigner = root.task('jarSigner1', type: JarSigner)
+        JarSigner jarSigner = root.tasks.create('jarSigner1', JarSigner)
         jarSigner.setCertificateFile(certificateFile)
         jarSigner.setPassword(KeystoreTestutil.KeystorePassword)
         jarSigner.setAlias(KeystoreTestutil.KeystoreAlias)
@@ -162,7 +162,7 @@ class JarSignerTest extends TestKitBase {
 
         File java1JarFile = SampleJarTestutil.writeSampleJar(file('unsigned/sample.jar'))
 
-        JarSigner jarSigner = root.task('jarSigner1', type: JarSigner)
+        JarSigner jarSigner = root.tasks.create('jarSigner1', JarSigner)
         jarSigner.setCertificateFile(certificateFile)
         jarSigner.setPassword(KeystoreTestutil.KeystorePassword)
         jarSigner.setAlias(KeystoreTestutil.KeystoreAlias)

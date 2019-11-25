@@ -24,7 +24,7 @@ insert into TABLE1(ID, TEXT) VALUES (2, '@CUSTOM@');
             apply plugin: 'sktools-dbtools-plugin'
         }
 
-        SQLTask sqlTask = project.task('sqlTask', type: SQLTask) as SQLTask
+        SQLTask sqlTask = project.tasks.create('sqlTask', SQLTask)
         sqlTask.setEncoding('IBM-865')
         sqlTask.setSqlFile(file('sql/insertData.sql'))
         sqlTask.parseStatements()

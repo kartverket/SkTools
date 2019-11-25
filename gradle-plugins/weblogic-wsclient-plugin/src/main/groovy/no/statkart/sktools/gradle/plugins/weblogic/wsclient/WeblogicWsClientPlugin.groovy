@@ -108,7 +108,7 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
      */
     private static WeblogicGenClientTask createGenerateSourceTask(Project project, WebServiceConfig webServiceConfig, Task collectSchemaTask) {
         String taskName = "gen" + GUtil.toCamelCase(webServiceConfig.name) + "WsClientSource";
-        WeblogicGenClientTask genTask = (WeblogicGenClientTask) project.task(type: WeblogicGenClientTask.class, taskName)
+        WeblogicGenClientTask genTask = project.tasks.create(taskName, WeblogicGenClientTask.class)
         genTask.setDescription(String.format("Generates WS-client source based on Weblogic tools for " + webServiceConfig.name));
         genTask.setGroup(BasePlugin.BUILD_GROUP);
 

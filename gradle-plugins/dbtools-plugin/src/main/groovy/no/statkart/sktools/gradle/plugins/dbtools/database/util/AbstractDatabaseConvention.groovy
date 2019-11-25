@@ -161,7 +161,7 @@ abstract class AbstractDatabaseConvention {
         return task
     }
 
-    AbstractSQLTask configureAbstractSQLTask(Map params, String name, Class type, Closure closure) {
+    AbstractSQLTask configureAbstractSQLTask(Map params, String name, Class<? extends AbstractSQLTask> type, Closure closure) {
         validate()
 
         if (name == null || name.trim().isEmpty()) {
@@ -169,7 +169,7 @@ abstract class AbstractDatabaseConvention {
         }
 
         String taskName = getTaskName(name);
-        AbstractSQLTask task = (AbstractSQLTask) project.task(type:type, taskName);
+        AbstractSQLTask task = project.getTasks().create(taskName, type)
         task.doFirst(filterClosure)
 
         task.conventionMapping.with {
@@ -183,7 +183,6 @@ abstract class AbstractDatabaseConvention {
             params['sqlFile'] = project.file(params['sqlFile'])
         }
         ConfigureUtil.configureByMap(params, task)
-
         ConfigureUtil.configure(closure, task);
 
         getTasks().addTask(name, task)

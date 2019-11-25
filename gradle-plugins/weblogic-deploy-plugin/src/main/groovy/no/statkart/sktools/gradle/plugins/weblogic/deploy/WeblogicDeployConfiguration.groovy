@@ -97,7 +97,7 @@ class WeblogicDeployConfiguration {
         if (name == null || name.trim().isEmpty()) {
             throw new GradleException('name parameter not supplied for task!')
         }
-        undeployTask = (WeblogicUndeployTask) project.task(type: WeblogicUndeployTask.class, name)
+        undeployTask = project.tasks.create(name, WeblogicUndeployTask.class)
 
         ConfigureUtil.configureByMap(params, undeployTask)
         ConfigureUtil.configure(config, undeployTask)
@@ -113,7 +113,7 @@ class WeblogicDeployConfiguration {
             throw new GradleException('name parameter not supplied for task!')
         }
 
-        Task task = project.task(type: WeblogicDeployTask.class, name)
+        WeblogicDeployTask task = project.tasks.create(name, WeblogicDeployTask.class)
         deployTask = (WeblogicDeployTask) task
         deployTask.conventionMapping 'file', { this.getFile() }
 

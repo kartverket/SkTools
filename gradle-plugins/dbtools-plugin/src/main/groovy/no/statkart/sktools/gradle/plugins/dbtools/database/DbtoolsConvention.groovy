@@ -9,6 +9,7 @@ import no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractDatabase
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.Task
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.SequenceTask
+import org.gradle.util.ConfigureUtil
 
 /**
  * Pluginen kan konfigureres til å håndtere flere ulike databaser og flere instanser av denne.
@@ -173,11 +174,13 @@ configureDatabasePlugin {
     }
 
     public Task taskSequence(String verb, Closure config = null) {
-        return taskSequence([:], verb, config)
+        SequenceTask task = project.tasks.create(verb, SequenceTask.class)
+        return ConfigureUtil.configure(config, task);
     }
     public Task taskSequence(Map params, String verb, Closure config = null) {
-        params['type'] = SequenceTask.class
-        return project.task(params, verb, config)
+        SequenceTask task = project.tasks.create(verb, SequenceTask.class)
+        ConfigureUtil.configureByMap(params, task)
+        return ConfigureUtil.configure(config, task);
     }
 
 }
