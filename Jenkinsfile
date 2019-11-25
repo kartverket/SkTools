@@ -27,7 +27,7 @@ pipeline { //declarative pipeline syntax
     }
 
     parameters {
-        string(name: 'WEBLOGIC_VERSION', defaultValue: '12.1.3.0', description: 'Weblogic versjon. Det kreves tilhørende env variabel "WEBLOGIC_HOME_${env.WEBLOGIC_VERSION}" peker til weblogic lib-katalog på byggenode.')
+        string(name: 'WEBLOGIC_VERSION', defaultValue: '12.2.1.3', description: 'Weblogic versjon. Det kreves tilhørende env variabel "WEBLOGIC_HOME_${env.WEBLOGIC_VERSION}" peker til weblogic lib-katalog på byggenode.')
         string(name: 'sktools_versjon', defaultValue: "${env.BRANCH_NAME ?: 'trunk'}-build${env.BUILD_NUMBER}", description: 'Versjon for publisert artefakt.')
         string(name: 'BRANCH_NAME', defaultValue: "${env.BRANCH_NAME ?: 'trunk'}", description: 'Branch for kildekode.')
     }

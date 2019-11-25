@@ -1,6 +1,7 @@
 package no.statkart.sktools.gradle.plugins.weblogic.wswar
 
 import no.statkart.sktools.gradle.plugins.weblogic.WeblogicBasePlugin
+import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -90,20 +91,11 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
         def WEBLOGIC_HOME = project.property("WEBLOGIC_HOME");
 
         if (wlsVersion.startsWith("12.")) {
-            if (wlsVersion.startsWith("12.1.2")) {
-                return project.files(
-                        "${WEBLOGIC_HOME}/wlserver/modules/databinding.override_1.2.0.0.jar",
-                        "${WEBLOGIC_HOME}/wlserver/server/lib/weblogic.jar",
-                );
-            }
-            if (wlsVersion.startsWith("12.1.3")) {
-                return project.files(
-                        "${WEBLOGIC_HOME}/wlserver/modules/databinding.override_1.2.0.0.jar",
-                        "${WEBLOGIC_HOME}/wlserver/server/lib/weblogic.jar",
-                );
-            }
-
             if (wlsVersion.startsWith("12.1")) {
+                if (JavaVersion.current().isJava9Compatible()) {
+                    project.getLogger().warn("Weblogic 12.1.x does not support " + JavaVersion.current())
+                    return
+                }
                 return project.files(
                         "${WEBLOGIC_HOME}/wlserver/modules/databinding.override_1.2.0.0.jar",
                         "${WEBLOGIC_HOME}/wlserver/server/lib/weblogic.jar",
@@ -124,63 +116,7 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
             ]);
         }
 
-
-        if (wlsVersion.startsWith("10.3")) {
-            //tidligere prosjektoppsett splittet ikke weblogic classpath ned i forskjellige deler og benyttet her samtlige jarfiler som var nødvendig for å kompilere i IntellJ
-            if (wlsVersion.startsWith("10.3.6")) {
-                return project.files(
-                        "${WEBLOGIC_HOME}/wlserver_10.3/server/lib/weblogic.jar",
-                        "${WEBLOGIC_HOME}/wlserver_10.3/server/lib/webservices.jar",
-                        "${WEBLOGIC_HOME}/wlserver_10.3/server/lib/wljmsclient.jar",
-                        "${WEBLOGIC_HOME}/modules/javax.annotation_1.0.0.0_1-0.jar",
-                        "${WEBLOGIC_HOME}/modules/javax.servlet_1.0.0.0_2-5.jar",
-
-                        "${WEBLOGIC_HOME}/modules/javax.ejb_3.0.1.jar",
-                        "${WEBLOGIC_HOME}/modules/javax.interceptor_1.0.jar",
-                        "${WEBLOGIC_HOME}/modules/javax.transaction_1.0.0.0_1-1.jar",
-
-                        "${WEBLOGIC_HOME}/modules/com.bea.core.transaction_2.7.1.0.jar",
-                        "${WEBLOGIC_HOME}/modules/com.bea.core.datasource6_1.10.0.0.jar",
-                        "${WEBLOGIC_HOME}/modules/glassfish.jaxws.rt_1.3.0.0_2-1-5.jar",
-                )
-            }
-            if (wlsVersion.startsWith("10.3.5")) {
-                return project.files(
-                        "${WEBLOGIC_HOME}/wlserver_10.3/server/lib/weblogic.jar",
-                        "${WEBLOGIC_HOME}/wlserver_10.3/server/lib/webservices.jar",
-                        "${WEBLOGIC_HOME}/wlserver_10.3/server/lib/wljmsclient.jar",
-                        "${WEBLOGIC_HOME}/modules/javax.annotation_1.0.0.0_1-0.jar",
-                        "${WEBLOGIC_HOME}/modules/javax.servlet_1.0.0.0_2-5.jar",
-
-                        "${WEBLOGIC_HOME}/modules/javax.ejb_3.0.1.jar",
-                        "${WEBLOGIC_HOME}/modules/javax.interceptor_1.0.jar",
-                        "${WEBLOGIC_HOME}/modules/javax.transaction_1.0.0.0_1-1.jar",
-
-                        "${WEBLOGIC_HOME}/modules/com.bea.core.transaction_2.7.0.0.jar",
-                        "${WEBLOGIC_HOME}/modules/com.bea.core.datasource6_1.9.0.0.jar",
-                        "${WEBLOGIC_HOME}/modules/glassfish.jaxws.rt_1.2.0.0_2-1-5.jar",
-                )
-            }
-
-            project.logger.warn("WARNING: no optimalization found for weblogic version " + wlsVersion);
-            return project.fileTree(dir: WEBLOGIC_HOME, includes: [
-                    "wlserver_10.3/server/lib/weblogic.jar",
-                    "wlserver_10.3/server/lib/webservices.jar",
-                    "wlserver_10.3/server/lib/wljmsclient.jar",
-                    "modules/javax.annotation_*.jar",
-                    "modules/javax.servlet_*.jar",
-
-                    "modules/javax.ejb_3.0.1.jar",
-                    "modules/javax.interceptor_1.0.jar",
-                    "modules/javax.transaction_*.jar",
-
-                    "modules/com.bea.core.transaction_*.jar",
-                    "modules/com.bea.core.datasource6_*.jar",
-                    "modules/glassfish.jaxws.rt_*.jar",
-            ]);
-        }
-
-        throw new Exception("Unsupported weblogic version found - please add support for " + wlsVersion);
+        throw new Exception("Unsupported Weblogic version found - please add support for " + wlsVersion);
     }
 
     private static void configureIdea(final Project project, final SourceSet weblogicSourceSet) {
