@@ -38,8 +38,8 @@ Configuration
     }
     
     dependencies {
-        jaxb 'org.glassfish.jaxb:jaxb-xjc:2.3.2', //default
-             'org.glassfish.jaxb:jaxb-runtime:2.3.2' //default
+        jaxb 'org.glassfish.jaxb:jaxb-xjc:2.3.2' //default
+        compileOnly 'org.glassfish.jaxb:jaxb-runtime:2.3.2' //default
     }
 
 ### List adapter

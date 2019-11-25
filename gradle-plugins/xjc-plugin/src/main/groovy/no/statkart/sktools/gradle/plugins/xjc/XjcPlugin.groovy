@@ -146,6 +146,18 @@ class XjcPlugin implements Plugin<Project> {
      * jaxb libs (needed on runtime classpath)
      */
     private static Configuration createConfiguration(Project project) {
+        //default verdi for enkelt å komme igang / testing ...
+        Configuration compileOnly = project.configurations.getByName(JavaPlugin.COMPILE_ONLY_CONFIGURATION_NAME)
+            .defaultDependencies(new Action<DependencySet>() {
+                @Override
+                void execute(DependencySet dependencies) {
+                    /* As of jaxb 2.2.7 they have split the jaxb libraries into several components. xjc is now decoupled from any particular jaxb runtime. To fix this issue, ensure a jaxb runtime is made available on the classpath when executing xjc */
+                    def jaxbNotation = Objects.requireNonNull(pluginProperties.getProperty("default_jaxb_ri_implementation"), "Skal settes av byggesystem")
+                    def jaxbDependency = project.getDependencies().create(jaxbNotation)
+                    dependencies.add(jaxbDependency)
+                }
+            })
+
         Configuration configuration = project.configurations.create(JAXB_CONFIGURATION_NAME).setVisible(false).setDescription("Classpath for jaxb library and extensions.");
         configuration.exclude([group: 'org.apache.ant', module: 'ant'])
         configuration.defaultDependencies(new Action<DependencySet>() {
@@ -153,12 +165,9 @@ class XjcPlugin implements Plugin<Project> {
             void execute(DependencySet dependencies) {
                 def xjcNotation = Objects.requireNonNull(pluginProperties.getProperty("default_xjc_implementation"), "Skal settes av byggesystem")
                 dependencies.add(project.getDependencies().create(xjcNotation));
-                /* As of jaxb 2.2.7 they have split the jaxb libraries into several components. xjc is now decoupled from any particular jaxb runtime. To fix this issue, ensure a jaxb runtime is made available on the classpath when executing xjc */
-                def jaxbNotation = Objects.requireNonNull(pluginProperties.getProperty("default_jaxb_ri_implementation"), "Skal settes av byggesystem")
-                def jaxbDependency = project.getDependencies().create(jaxbNotation)
-                dependencies.add(jaxbDependency);
             }
         })
+        configuration.extendsFrom(compileOnly)
         return configuration;
     }
 

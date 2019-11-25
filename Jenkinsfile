@@ -34,7 +34,7 @@ pipeline { //declarative pipeline syntax
 
     tools {
         gradle 'Gradle 5.0' //kompilerer artefakter til denne versjonen
-        jdk 'Java 8 Latest' //spesifisert java versjon for bygging av release
+        jdk 'Java 12 Latest' //spesifisert java versjon for bygging av release
     }
 
     environment {
@@ -65,6 +65,9 @@ pipeline { //declarative pipeline syntax
         stage('Unit tests') {
             parallel {
                 stage('Test gradle baseline') {
+                    tools {
+                        jdk 'Java 8 Latest'
+                    }
                     steps {
                         //tester med spesifiserte minstekrav
                         withEnv(['WEBLOGIC_VERSION=12.1.3.0', "WEBLOGIC_HOME=${WEBLOGIC_HOME('12.1.3.0', env)}"]) {

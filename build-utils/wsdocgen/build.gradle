@@ -4,8 +4,8 @@ apply plugin: 'maven-publish'
 
 dependencies {
 
-    implementation libraries.jaxb_api
-    implementation libraries.jaxws_annotations
+    compileOnly 'com.sun.xml.ws:jaxws-rt:2.3.2'
+    implementation 'jakarta.xml.ws:jakarta.xml.ws-api:2.3.2'
 
     //Saxon for xslt 2.0
     //Saxon HE is the open source version

@@ -84,8 +84,8 @@ class WsImportPluginTest extends TestKitBase {
 
         JarFile jar = new JarFile(file)
         try {
-            assertThat(list(jar.entries()))
-                .extractingResultOf("getName")
+            def jarFileEntryNames = list(jar.entries()).collect { it.getName() }
+            assertThat(jarFileEntryNames)
                 .as("Contents of jar file")
                 .contains(
                     'META-INF/wsdls/TestServiceWS.wsdl',

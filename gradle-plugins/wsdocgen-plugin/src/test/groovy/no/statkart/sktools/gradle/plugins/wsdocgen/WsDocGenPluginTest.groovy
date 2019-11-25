@@ -60,6 +60,16 @@ class WsDocGenPluginTest extends TestKitBase {
                     serviceXslt 'transform.xsl'
                 }
             }
+
+            repositories {
+                maven { url = '${testProperties.MAVEN_REPO}' }
+            }
+
+            dependencies {
+                compileOnly 'com.sun.xml.ws:jaxws-rt:2.3.2'
+                otherCompileOnly 'com.sun.xml.ws:jaxws-rt:2.3.2'
+            }
+            
         """)
 
         writeSimpleDemoServiceWSBean(file("src/main/java")) //generates simple source file
@@ -207,6 +217,14 @@ class WsDocGenPluginTest extends TestKitBase {
                     serviceXslt 'transform.xsl'
                 }
             }
+            
+            repositories {
+                maven { url = '${testProperties.MAVEN_REPO}' }
+            }
+
+            dependencies {
+                compileOnly 'com.sun.xml.ws:jaxws-rt:2.3.2'
+            }
         """)
 
         // eksempel-kildekode som har domene-klasse definert
@@ -242,6 +260,14 @@ class WsDocGenPluginTest extends TestKitBase {
                     targetPath 'build'
                     serviceXslt 'transform.xsl'
                 }
+            }
+                        
+            repositories {
+                maven { url = '${testProperties.MAVEN_REPO}' }
+            }
+
+            dependencies {
+                compileOnly 'com.sun.xml.ws:jaxws-rt:2.3.2'
             }
         """)
 

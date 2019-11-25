@@ -294,6 +294,15 @@ class WeblogicWsWarPluginTest extends TestKitBase {
               id 'java'
               id 'sktools.weblogic-wswar'
             }
+
+            repositories {
+                maven { url = '${testProperties.MAVEN_REPO}' }
+            }
+
+            dependencies {
+                compileOnly 'jakarta.xml.ws:jakarta.xml.ws-api:2.3.2' 
+            }
+
         """)
         writeGradleProperties(testProperties.findAll {
             'WEBLOGIC_HOME'.equals(it.key) || 'WEBLOGIC_VERSION'.equals(it.key)
