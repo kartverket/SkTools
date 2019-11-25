@@ -101,11 +101,13 @@ pipeline { //declarative pipeline syntax
                     tools {
                         gradle 'Gradle 2.4' //spesifisert minstekrav
                     }
+                    environment {
+                        WEBLOGIC_VERSION = '10.3.5.0'
+                        WEBLOGIC_HOME = "${WEBLOGIC_HOME('10.3.5.0', env)}"
+                    }
                     steps {
-                        withEnv(['WEBLOGIC_VERSION=10.3.5.0', "WEBLOGIC_HOME=${WEBLOGIC_HOME('10.3.5.0', env)}"]) {
-                            bat "gradle --version"
-                            bat "gradle runDemos ${gradleOptions(this)}"
-                        }
+                        bat "gradle --version"
+                        bat "gradle runDemos ${gradleOptions(this)}"
                     }
                 }
                 stage('Integration Test Latest') {
@@ -113,12 +115,14 @@ pipeline { //declarative pipeline syntax
                         gradle 'Gradle 2.14' //latest og greatest (kan også være neste major versjon)
                         jdk 'Java 8 Latest' //weblogic krever denne major versjonen av java
                     }
+                    environment {
+                        WEBLOGIC_VERSION = "${params.WEBLOGIC_VERSION}"
+                        WEBLOGIC_HOME = "${WEBLOGIC_HOME("${params.WEBLOGIC_VERSION}", env)}"
+                    }
                     steps {
                         sleep 5 //sleep time in seconds - helps seed randomness in choosing port# in database demos
-                        withEnv(['WEBLOGIC_VERSION=12.1.3.0', "WEBLOGIC_HOME=${WEBLOGIC_HOME('12.1.3.0', env)}"]) {
-                            bat "gradle --version"
-                            bat "gradle runDemos ${gradleOptions(this)} -DbuildDirName=gradle2.14"
-                        }
+                        bat "gradle --version"
+                        bat "gradle runDemos ${gradleOptions(this)} -DbuildDirName=gradle2.14"
                     }
                 }
             }
@@ -135,13 +139,13 @@ pipeline { //declarative pipeline syntax
         always {
             //for mulig substituert innhold se https://github.com/jenkinsci/email-ext-plugin/tree/master/src/main/java/hudson/plugins/emailext/plugins/content
             emailext to: 'lislei@kartverket.no',
-                    subject: '$PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS!',
+                    subject: '$JOB_NAME - build# $BUILD_NUMBER - $BUILD_STATUS',
                     replyTo: 'noreply@kartverket.no',
                     mimeType: 'text/html',
                     body: '''
 <html>
 <body>
-You are receiving this email because <a href="$BUILD_URL">Build $BUILD_NUMBER $BUILD_CAUSE has been set to: $BUILD_STATUS</a>
+You are receiving this email because $PROJECT_NAME build <a href="$BUILD_URL">$JOB_NAME #$BUILD_NUMBER</a> has been set to: $BUILD_STATUS
 
 <br>
 <br>
