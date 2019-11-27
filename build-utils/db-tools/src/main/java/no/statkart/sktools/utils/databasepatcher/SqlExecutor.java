@@ -214,8 +214,9 @@ public class SqlExecutor {
         return rsList.toArray(new java.sql.ResultSet[0]);
     }
 
+    static final String newlineRgex = "\\u000D\\u000A|[\\u000A\\u000B\\u000C\\u000D\\u0085\\u2028\\u2029]"; //JDK8: "\\R"
     static boolean isWarning(SQLException e) {
-        String msg = e.getMessage().split("\\R", 0)[0];
+        String msg = e.getMessage().split(newlineRgex, 0)[0];
         return msg.contains("ORA-02443")  // cannot drop nonexistent constraint
             || msg.contains("ORA-02275")  // referential constraint already exists in the table
             || msg.contains("ORA-00955")  // name is already being used by existing object
