@@ -7,12 +7,31 @@ import org.testng.annotations.Test;
 import java.sql.SQLException;
 
 public class SqlExecutorTest {
-    private final static Condition<String> WARNING = new Condition<String>() {
+    private final static Condition<String> WARNING = new Condition<String>("classified as warning") {
         @Override
         public boolean matches(String exceptionMessage) {
             return SqlExecutor.isWarning(new SQLException(exceptionMessage));
         }
     };
+
+    @Test
+    public void warningIsContainedByFirstLineOnly() {
+        Assertions.assertThat("ORA-02443").is(WARNING);
+        Assertions.assertThat("ORA-02443 \n ORA-02443").is(WARNING);
+        Assertions.assertThat(" ORA-00000 \n ORA-02443").isNot(WARNING);
+        Assertions.assertThat("           \n ORA-02443").isNot(WARNING);
+        Assertions.assertThat("\n ORA-02443").isNot(WARNING);
+
+        Assertions.assertThat("\r\n ORA-02443").isNot(WARNING);
+        Assertions.assertThat("\f ORA-02443").isNot(WARNING);
+        Assertions.assertThat("\r ORA-02443").isNot(WARNING);
+
+        //some more chars defined as line breaks (in unicode)
+        Assertions.assertThat("\u000B ORA-02443").isNot(WARNING); //vertical tab (LINE TABULATION)
+        Assertions.assertThat("\u0085 ORA-02443").isNot(WARNING); //next line
+        Assertions.assertThat("\u2028 ORA-02443").isNot(WARNING); //line-separator
+        Assertions.assertThat("\u2029 ORA-02443").isNot(WARNING); //paragraph-separator
+    }
 
     @Test
     public void dropNoneExistingConstraintIsWarning() {

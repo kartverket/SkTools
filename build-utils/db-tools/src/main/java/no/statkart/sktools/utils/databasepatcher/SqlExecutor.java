@@ -215,8 +215,13 @@ public class SqlExecutor {
     }
 
     static boolean isWarning(SQLException e) {
-        String msg = e.getMessage();
-        return msg.contains("02443") || msg.contains("02275") || msg.contains("00955") || msg.contains("01418") || msg.contains("00942");
+        String msg = e.getMessage().split("\\R", 0)[0];
+        return msg.contains("ORA-02443")  // cannot drop nonexistent constraint
+            || msg.contains("ORA-02275")  // referential constraint already exists in the table
+            || msg.contains("ORA-00955")  // name is already being used by existing object
+            || msg.contains("ORA-01418")  // index does not exist
+            || msg.contains("ORA-00942")  // table or view does not exist
+            ;
     }
 
     private static void callCallable(String scriptLine, Connection connection, List<java.sql.ResultSet> rsList) throws SQLException {
