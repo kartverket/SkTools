@@ -120,7 +120,7 @@ pipeline { //declarative pipeline syntax
                         WEBLOGIC_HOME = "${WEBLOGIC_HOME("${params.WEBLOGIC_VERSION}", env)}"
                     }
                     steps {
-                        sleep 5 //sleep time in seconds - helps seed randomness in choosing port# in database demos
+                        sleep 50 //sleep time in seconds - helps seed randomness in choosing port# in database demos
                         bat "gradle --version"
                         bat "gradle runDemos ${gradleOptions(this)} -DbuildDirName=gradle2.14"
                     }
