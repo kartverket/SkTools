@@ -29,7 +29,8 @@ class IdeaExtensionsPlugin implements Plugin<Project> {
 
     @Override
     void apply(Project project) {
-        project.getPluginManager().apply(IdeaPlugin.class);
+        project.getPluginManager().apply(IdeaPlugin.class)
+        project.getLogger().warn("WARNING: IdeaExtensionsPlugin is deprecated and scheduled to be removed!")
 
         IdeaExtensionsPluginExtension extension = project.extensions.create(EXTENSION_NAME, IdeaExtensionsPluginExtension.class, project)
 
