@@ -84,10 +84,10 @@ public class DbtoolsPlugin implements Plugin<Project> {
         infoTask.setDescription("Displays current configuration of dbToolsets");
         infoTask.setGroup("help");
         infoTask.doLast(new Action<Task>() {
-            final Logger logger = project.getLogger();
 
             @Override
             public void execute(Task task) {
+                final Logger logger = task.getLogger();
                 logger.quiet("Dbtools configuration for {}", project.getPath());
 
                 for (Map.Entry<String, ? extends AbstractDatabaseConvention> entry : dbtoolsConvention.dbToolSets.entrySet()) {
@@ -110,17 +110,14 @@ public class DbtoolsPlugin implements Plugin<Project> {
         checkSQLTasks.setGroup(JavaBasePlugin.VERIFICATION_GROUP);
         checkSQLTasks.doLast(new Action<Task>() {
             @Override
-            public void execute(Task task) {
-                task.getProject().getTasks().withType(AbstractSQLTask.class, new Action<AbstractSQLTask>() {
-                    @Override
-                    public void execute(AbstractSQLTask task) {
-                        try {
-                            task.validate(); //SKTOOLS-81
-                        } catch (Throwable t) {
-                            task.getProject().getLogger().error("Error when validating task %s", task.getPath());
-                        }
+            public void execute(Task ignored) {
+                for (AbstractSQLTask task : project.getTasks().withType(AbstractSQLTask.class)) {
+                    try {
+                        task.validate(); //SKTOOLS-81
+                    } catch (Throwable t) {
+                        task.getLogger().error("Error when validating task {}", task.getPath());
                     }
-                });
+                }
             }
         });
 
