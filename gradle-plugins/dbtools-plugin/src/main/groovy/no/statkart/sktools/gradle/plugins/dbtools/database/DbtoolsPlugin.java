@@ -17,7 +17,10 @@ import org.gradle.api.execution.TaskExecutionGraph;
 import org.gradle.api.execution.TaskExecutionGraphListener;
 import org.gradle.api.internal.ConventionTask;
 import org.gradle.api.logging.Logger;
+import org.gradle.api.plugins.BasePlugin;
 import org.gradle.api.plugins.JavaBasePlugin;
+import org.gradle.api.tasks.TaskProvider;
+import org.gradle.language.base.plugins.LifecycleBasePlugin;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -49,23 +52,33 @@ import java.util.concurrent.Callable;
  *
  * @see DbtoolsConvention
  */
+@SuppressWarnings("CodeBlock2Expr")
 public class DbtoolsPlugin implements Plugin<Project> {
     public static final String CONVENTION_NAME = "db";
     public static final String DBTOOLS_CONFIGURATION = "dbTools";
+    /**
+     * @see LifecycleBasePlugin#CHECK_TASK_NAME
+     */
     public static final String CHECK_TASK_NAME = "check";
 
     public DbtoolsConvention dbtoolsConvention;
 
 
     public void apply(final Project project) {
+        project.getPlugins().apply(BasePlugin.class);
+
         dbtoolsConvention = new DbtoolsConvention(project);
         project.getConvention().getPlugins().put(CONVENTION_NAME, dbtoolsConvention);
 
         final Configuration configuration = project.getConfigurations().create(DBTOOLS_CONFIGURATION);
         assignConventionMappings(project);
 
-        configureTest(project); //SKTOOLS-81
-        configureInfo(project); //SKTOOLS-88
+        configureInfo(project, "info");
+
+        TaskProvider<Task> checkSQLTasks = configureTest(project, "checkSQLTasks");
+        project.getTasks().named(CHECK_TASK_NAME).configure(checkTask -> {
+            checkTask.dependsOn(checkSQLTasks);
+        });
 
         project.afterEvaluate(new Action<Project>() {
             @Override
@@ -78,15 +91,12 @@ public class DbtoolsPlugin implements Plugin<Project> {
 
     /**
      * @since 1.3 - SKTOOLS-88
-     **/
-    private Task configureInfo(final Project project) {
-        final Task infoTask = project.task("info");
-        infoTask.setDescription("Displays current configuration of dbToolsets");
-        infoTask.setGroup("help");
-        infoTask.doLast(new Action<Task>() {
-
-            @Override
-            public void execute(Task task) {
+     */
+    private TaskProvider<Task> configureInfo(final Project project, String taskName) {
+        return project.getTasks().register(taskName, infoTask -> {
+            infoTask.setDescription("Displays current configuration of dbToolsets");
+            infoTask.setGroup("help");
+            infoTask.doLast(task -> {
                 final Logger logger = task.getLogger();
                 logger.quiet("Dbtools configuration for {}", project.getPath());
 
@@ -96,21 +106,18 @@ public class DbtoolsPlugin implements Plugin<Project> {
                 if (dbtoolsConvention.dbToolSets.isEmpty()) {
                     logger.quiet("\n\nNo toolsets defined.");
                 }
-            }
+            });
         });
-        return infoTask;
     }
 
     /**
      * @since 1.3 - SKTOOLS-81
      **/
-    private static Task configureTest(final Project project) {
-        final Task checkSQLTasks = project.task("checkSQLTasks");
-        checkSQLTasks.setDescription("Verifies configuration of SQLTasks");
-        checkSQLTasks.setGroup(JavaBasePlugin.VERIFICATION_GROUP);
-        checkSQLTasks.doLast(new Action<Task>() {
-            @Override
-            public void execute(Task ignored) {
+    private static TaskProvider<Task> configureTest(final Project project, String taskName) {
+        return project.getTasks().register(taskName, checkSQLTasks -> {
+            checkSQLTasks.setDescription("Verifies configuration of SQLTasks");
+            checkSQLTasks.setGroup(JavaBasePlugin.VERIFICATION_GROUP);
+            checkSQLTasks.doLast(ignored -> {
                 for (AbstractSQLTask task : project.getTasks().withType(AbstractSQLTask.class)) {
                     try {
                         task.validate(); //SKTOOLS-81
@@ -118,23 +125,8 @@ public class DbtoolsPlugin implements Plugin<Project> {
                         task.getLogger().error("Error when validating task {}", task.getPath());
                     }
                 }
-            }
+            });
         });
-
-        project.afterEvaluate(new Action<Project>() {
-            @Override
-            public void execute(Project project) {
-                Task checkTask = project.getTasks().findByName(CHECK_TASK_NAME);
-                if (checkTask == null) {
-                    checkTask = project.task(CHECK_TASK_NAME);
-                    checkTask.setDescription("Checks the dbTools configuration");
-                    checkTask.setGroup(JavaBasePlugin.VERIFICATION_GROUP);
-                    checkTask.dependsOn(checkSQLTasks);
-                }
-            }
-        });
-
-        return checkSQLTasks;
     }
 
     static void assignConventionMappings(Project project) {
