@@ -9,7 +9,7 @@ Installation
 Build script snippet for new plugin DSL syntax:
 
     plugins {
-        id 'sktools.wsdoc' version '1.5'
+        id 'sktools.wsdoc' version '5.0'
     }
 
 Build script snippet for use in all versions:
@@ -19,9 +19,9 @@ Build script snippet for use in all versions:
             maven { url 'https://nexus.statkart.no/repository/public/' }
         }
         dependencies {
-            classpath 'no.statkart.sktools.gradle:wsdocgen-plugin:1.5'
-            // or 
-            classpath 'no.statkart.sktools.gradle:gradle-plugins:1.5'
+            classpath 'no.statkart.sktools.gradle:wsdocgen-plugin:5.0'
+            // or
+            classpath 'no.statkart.sktools.gradle:gradle-plugins:5.0'
         }
     }
     apply plugin: 'sktools-wsdocgen-plugin'

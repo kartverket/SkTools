@@ -9,7 +9,7 @@ Installation
 Build script snippet for new plugin DSL syntax:
 
     plugins {
-        id 'sktools.xjc' version '1.5'
+        id 'sktools.xjc' version '5.0'
     }
 
 Build script snippet for use in all versions:
@@ -19,9 +19,9 @@ Build script snippet for use in all versions:
             maven { url 'https://nexus.statkart.no/repository/public/' }
         }
         dependencies {
-            classpath 'no.statkart.sktools.gradle:xjc-plugin:1.5'
-            // or 
-            classpath 'no.statkart.sktools.gradle:gradle-plugins:1.5'
+            classpath 'no.statkart.sktools.gradle:xjc-plugin:5.0'
+            // or
+            classpath 'no.statkart.sktools.gradle:gradle-plugins:5.0'
         }
     }
     apply plugin: 'sktools-xjc-plugin'
@@ -36,7 +36,7 @@ Configuration
             }
         }
     }
-    
+
     dependencies {
         jaxb 'org.glassfish.jaxb:jaxb-xjc:2.3.2' //default
         compileOnly 'org.glassfish.jaxb:jaxb-runtime:2.3.2' //default
@@ -49,7 +49,7 @@ Schema can be augmented with list adapter of choice:
             ...
             withListAdapter 'custom.implemented.ListAdapter'
         }
-        
+
 ### Grunnbok Doc
 
         schema {

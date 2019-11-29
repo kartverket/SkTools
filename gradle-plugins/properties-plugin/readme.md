@@ -1,7 +1,7 @@
 Properties Gradle Plugin
 ------------------
 
-Tool for convenient handling of properties. 
+Tool for convenient handling of properties.
 
 Installation
 ------------
@@ -9,7 +9,7 @@ Installation
 Build script snippet for new plugin DSL syntax:
 
     plugins {
-        id 'sktools.properties' version '1.5'
+        id 'sktools.properties' version '5.0'
     }
 
 Build script snippet for use in all versions:
@@ -19,9 +19,9 @@ Build script snippet for use in all versions:
             maven { url 'https://nexus.statkart.no/repository/public/' }
         }
         dependencies {
-            classpath 'no.statkart.sktools.gradle:properties-plugin:1.5'
-            // or 
-            classpath 'no.statkart.sktools.gradle:gradle-plugins:1.5'
+            classpath 'no.statkart.sktools.gradle:properties-plugin:5.0'
+            // or
+            classpath 'no.statkart.sktools.gradle:gradle-plugins:5.0'
         }
 
     }
@@ -32,13 +32,13 @@ Build script snippet for use in all versions:
 Use
 ----
     propertyUtils.assignPropertiesToProject fromFile('build-user.properties') << gradle.startParameter.projectProperties
-     
+
     //konfigurerer andre property verdier før ekspandering her...
-     
+
     //husk at alle verdier som skal substitueres ved ekspansion må være satt!
     propertyUtils.propertyUtils.expandProjectProperties()
-     
+
     subprojects {
       ...
     }
-          
+

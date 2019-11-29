@@ -9,7 +9,7 @@ Installation
 Build script snippet for new plugin DSL syntax:
 
     plugins {
-        id 'sktools.wsgen' version '1.5'
+        id 'sktools.wsgen' version '5.0'
     }
 
 Build script snippet for use in all versions:
@@ -19,9 +19,9 @@ Build script snippet for use in all versions:
             maven { url 'https://nexus.statkart.no/repository/public/' }
         }
         dependencies {
-            classpath 'no.statkart.sktools.gradle:wsgen-plugin:1.5'
-            // or 
-            classpath 'no.statkart.sktools.gradle:gradle-plugins:1.5'
+            classpath 'no.statkart.sktools.gradle:wsgen-plugin:5.0'
+            // or
+            classpath 'no.statkart.sktools.gradle:gradle-plugins:5.0'
         }
     }
     apply plugin: 'sktools-wsgen-plugin'
@@ -33,7 +33,7 @@ Configuration
         jaxws 'com.sun.xml.ws:jaxws-tools:2.2.10' //default
         jaxws 'com.sun.xml.ws:wscompile:2.2.10' //old (not recommended)
     }
-     
+
     war {
         into ('WEB-INF') {
             from tasks.genWsdls

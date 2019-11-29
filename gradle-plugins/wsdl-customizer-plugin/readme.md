@@ -9,7 +9,7 @@ Installation
 Build script snippet for new plugin DSL syntax:
 
     plugins {
-        id 'sktools.wsdl-customizer' version '1.5'
+        id 'sktools.wsdl-customizer' version '5.0'
     }
 
 Build script snippet for use in all versions:
@@ -19,9 +19,9 @@ Build script snippet for use in all versions:
             maven { url 'https://nexus.statkart.no/repository/public/' }
         }
         dependencies {
-            classpath 'no.statkart.sktools.gradle:wsdl-customizer-plugin:1.5'
-            // or 
-            classpath 'no.statkart.sktools.gradle:gradle-plugins:1.5'
+            classpath 'no.statkart.sktools.gradle:wsdl-customizer-plugin:5.0'
+            // or
+            classpath 'no.statkart.sktools.gradle:gradle-plugins:5.0'
         }
     }
     apply plugin: 'sktools-wsdl-customizer-plugin'
@@ -41,29 +41,29 @@ Configuration
             include '**/*.wsdl', '**/*.xsd'
             exclude '**/*Internal*ServiceWS*'
         }
-        
+
         includeNamespaces(
               'http://matrikkel.statkart.no/matrikkelapi/wsapi/v1/exception',
               'http://matrikkel.statkart.no/matrikkelapi/wsapi/v1/domain',
               ...
         )
     }
-          
+
 
 
 ### Using weblogic-wswar
-Når man bruker denne i samme modul som sktools-weblogic-wswar-plugin, 
-så tenger man ikke bruke generatedSchemas-konfigurasjonen. 
-Merk at man i dette eksempelet må ha satt opp `example-v1-wsschema` 
+Når man bruker denne i samme modul som sktools-weblogic-wswar-plugin,
+så tenger man ikke bruke generatedSchemas-konfigurasjonen.
+Merk at man i dette eksempelet må ha satt opp `example-v1-wsschema`
 til å publisere et zip-artefakt med skjemafilene i en schemas-konfigurasjon.
 
     apply plugin: 'sktools-weblogic-wswar-plugin'
     apply plugin: 'sktools-wsdl-customizer-plugin'
-     
+
     dependencies {
         originalSchemas project(path: ':example-v1-wsschema', configuration: 'schemas')
     }
-      
+
     customizeWsdls {
         dependsOn genWeblogic
         generatedWsdlAndSchemaFiles files(tasks.genWeblogic.destinationDir).asFileTree.matching {
