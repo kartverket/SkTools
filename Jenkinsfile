@@ -27,8 +27,8 @@ pipeline { //declarative pipeline syntax
     }
 
     parameters {
-        string(name: 'sktools_versjon', defaultValue: "${env.BRANCH_NAME ?: 'trunk'}-build${env.BUILD_NUMBER}", description: 'Versjon for publisert artefakt.')
-        string(name: 'BRANCH_NAME', defaultValue: "${env.BRANCH_NAME ?: 'trunk'}", description: 'Branch for kildekode.')
+        string(name: 'sktools_versjon', defaultValue: "${env.BRANCH_NAME ?: '5.1'}-build${env.BUILD_NUMBER}", description: 'Versjon for publisert artefakt.')
+        string(name: 'BRANCH_NAME', defaultValue: "${env.BRANCH_NAME ?: '5'}", description: 'Branch for kildekode.')
     }
 
     tools {
