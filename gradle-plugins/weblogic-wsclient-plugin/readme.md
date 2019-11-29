@@ -1,9 +1,9 @@
 Weblogic-wsclient Gradle Plugin
 ------------------
 
-> PS: This plugin in deprecated and to be removed in version 1.6
+> PS: This plugin in deprecated and to be removed in version 6.0
 
-Generates client stubs for JAX-WS web services.  
+Generates client stubs for JAX-WS web services.
 
 Installation
 ------------
@@ -11,7 +11,7 @@ Installation
 Build script snippet for new plugin DSL syntax:
 
     plugins {
-        id 'sktools.weblogic-wsclient' version '1.5'
+        id 'sktools.weblogic-wsclient' version '5.0'
     }
 
 Build script snippet for use in all versions:
@@ -21,9 +21,9 @@ Build script snippet for use in all versions:
             maven { url 'https://nexus.statkart.no/repository/public/' }
         }
         dependencies {
-            classpath 'no.statkart.sktools.gradle:weblogic-wsclient-plugin:1.5'
-            // or 
-            classpath 'no.statkart.sktools.gradle:gradle-plugins:1.5'
+            classpath 'no.statkart.sktools.gradle:weblogic-wsclient-plugin:5.0'
+            // or
+            classpath 'no.statkart.sktools.gradle:gradle-plugins:5.0'
         }
 
     }
@@ -42,4 +42,4 @@ Configuration
             lastWsdl 'StoreServiceWS.wsdl'
         }
     }
-          
+

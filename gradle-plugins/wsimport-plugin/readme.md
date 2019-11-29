@@ -9,7 +9,7 @@ Installation
 Build script snippet for new plugin DSL syntax:
 
     plugins {
-        id 'sktools.wsimport' version '1.5'
+        id 'sktools.wsimport' version '5.0'
     }
 
 Build script snippet for use in all versions:
@@ -19,9 +19,9 @@ Build script snippet for use in all versions:
             maven { url 'https://nexus.statkart.no/repository/public/' }
         }
         dependencies {
-            classpath 'no.statkart.sktools.gradle:wsimport-plugin:1.5'
-            // or 
-            classpath 'no.statkart.sktools.gradle:gradle-plugins:1.5'
+            classpath 'no.statkart.sktools.gradle:wsimport-plugin:5.0'
+            // or
+            classpath 'no.statkart.sktools.gradle:gradle-plugins:5.0'
         }
     }
     apply plugin: 'sktools-wsimport-plugin'
@@ -32,28 +32,28 @@ Configuration
     configurations {
         wsdls
     }
-     
+
     dependencies {
         wsdls project(path: ':wswar', configuration: 'wsdls')
         jaxws 'com.sun.xml.ws:jaxws-tools:2.2.10' //default
     }
-     
+
     // https://discuss.gradle.org/t/right-way-to-copy-contents-from-dependency-archives/7449/13
     task importWsdls(type: Sync) {
         dependsOn configurations.wsdls
-     
+
         into ('wsdls') {
             from { configurations.wsdls.collect { zipTree(it) } }
         }
-     
+
         into "$buildDir/wsdls/"
     }
-     
+
     processResources.dependsOn importWsdls
     sourceSets.main.resources.srcDir importWsdls.destinationDir
-     
+
     wsimport {
         exceptionReusePackage 'no.statkart.example.wsapi.v1.exception'
         lastWsdl 'wsdls/StoreServiceWS.wsdl'
-    }    
+    }
 

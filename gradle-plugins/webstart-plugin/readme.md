@@ -11,7 +11,7 @@ Installation
 Build script snippet for new plugin DSL syntax:
 
     plugins {
-        id 'sktools.webstart' version '1.5'
+        id 'sktools.webstart' version '5.0'
     }
 
 Build script snippet for use in all versions:
@@ -21,9 +21,9 @@ Build script snippet for use in all versions:
             maven { url 'https://nexus.statkart.no/repository/public/' }
         }
         dependencies {
-            classpath 'no.statkart.sktools.gradle:webstart-plugin:1.5'
-            // or 
-            classpath 'no.statkart.sktools.gradle:gradle-plugins:1.5'
+            classpath 'no.statkart.sktools.gradle:webstart-plugin:5.0'
+            // or
+            classpath 'no.statkart.sktools.gradle:gradle-plugins:5.0'
         }
     }
     apply plugin: 'sktools-webstart-plugin'
@@ -52,4 +52,4 @@ Configuration
             }
         }
     }
-          
+

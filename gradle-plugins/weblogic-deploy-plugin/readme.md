@@ -9,7 +9,7 @@ Installation
 Build script snippet for new plugin DSL syntax:
 
     plugins {
-        id 'sktools.weblogic-deploy' version '1.5'
+        id 'sktools.weblogic-deploy' version '5.0'
     }
 
 Build script snippet for use in all versions:
@@ -19,9 +19,9 @@ Build script snippet for use in all versions:
             maven { url 'https://nexus.statkart.no/repository/public/' }
         }
         dependencies {
-            classpath 'no.statkart.sktools.gradle:weblogic-deploy-plugin:1.5'
-            // or 
-            classpath 'no.statkart.sktools.gradle:gradle-plugins:1.5'
+            classpath 'no.statkart.sktools.gradle:weblogic-deploy-plugin:5.0'
+            // or
+            classpath 'no.statkart.sktools.gradle:gradle-plugins:5.0'
         }
 
     }
@@ -37,15 +37,15 @@ Configuration
         targets = matrikkel_server_deploy_targets
         username = matrikkel_server_deploy_username
         password = matrikkel_server_deploy_password
-    
+
         file = ear //using ear plugin
         name = 'matrikkelear'
-    
+
         undeployTask('undeploy', description: "Undeployer ${name} til ${url}")
-    
+
         deployTask('deploy', dependsOn: [undeployTask], description: "Deployer ${name} til ${url}") {
             failOnError = true
             timeout = 1200000
         }
     }
-          
+

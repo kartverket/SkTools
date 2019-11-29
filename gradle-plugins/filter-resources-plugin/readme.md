@@ -1,7 +1,7 @@
 Filter Resources Gradle Plugin
 ------------------
 
-Resources filtering substituting ant style @keys@ with values (gradle properties). 
+Resources filtering substituting ant style @keys@ with values (gradle properties).
 
 Installation
 ------------
@@ -9,7 +9,7 @@ Installation
 Build script snippet for new plugin DSL syntax:
 
     plugins {
-        id 'sktools.filter-resources' version '1.5'
+        id 'sktools.filter-resources' version '5.0'
     }
 
 Build script snippet for use in all versions:
@@ -19,9 +19,9 @@ Build script snippet for use in all versions:
             maven { url 'https://nexus.statkart.no/repository/public/' }
         }
         dependencies {
-            classpath 'no.statkart.sktools.gradle:filter-resources-plugin:1.5'
-            // or 
-            classpath 'no.statkart.sktools.gradle:gradle-plugins:1.5'
+            classpath 'no.statkart.sktools.gradle:filter-resources-plugin:5.0'
+            // or
+            classpath 'no.statkart.sktools.gradle:gradle-plugins:5.0'
         }
 
     }
