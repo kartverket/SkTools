@@ -8,7 +8,6 @@ include ':build-utils:xjc-plugins'
 
 include ':gradle-plugins'
 include ':gradle-plugins:dbtools-plugin'
-include ':gradle-plugins:ideaextensions-plugin'
 include ':gradle-plugins:provided-plugin'
 include ':gradle-plugins:weblogic-plugin'
 include ':gradle-plugins:weblogic-wsclient-plugin'
