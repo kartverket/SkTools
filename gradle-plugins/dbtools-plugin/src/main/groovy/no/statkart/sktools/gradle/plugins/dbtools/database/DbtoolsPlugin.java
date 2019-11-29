@@ -65,7 +65,7 @@ public class DbtoolsPlugin implements Plugin<Project> {
 
 
     public void apply(final Project project) {
-        project.getPlugins().apply(BasePlugin.class);
+        project.getPluginManager().apply(BasePlugin.class);
 
         dbtoolsConvention = new DbtoolsConvention(project);
         project.getConvention().getPlugins().put(CONVENTION_NAME, dbtoolsConvention);

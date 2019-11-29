@@ -17,7 +17,6 @@ import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.bundling.AbstractArchiveTask;
 import org.gradle.api.tasks.bundling.Zip;
 import org.gradle.api.tasks.compile.AbstractCompile;
-import org.gradle.plugin.devel.tasks.PluginUnderTestMetadata;
 import org.gradle.util.GUtil;
 
 import java.io.IOException;
@@ -50,7 +49,7 @@ public class WsDocGenPlugin implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
-        project.getPlugins().apply(JavaBasePlugin.class);
+        project.getPluginManager().apply(JavaBasePlugin.class);
 
         //common super task
         configureGenTask(project);

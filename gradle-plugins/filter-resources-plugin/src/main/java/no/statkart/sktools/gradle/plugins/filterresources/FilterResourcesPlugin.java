@@ -42,7 +42,7 @@ public class FilterResourcesPlugin implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
-        project.getPlugins().apply(JavaBasePlugin.class);
+        project.getPluginManager().apply(JavaBasePlugin.class);
 
         final FilterResourcesConvention filterPropertiesConvention = new FilterResourcesConvention(project);
         project.getConvention().getPlugins().put(CONVENTION_NAME, filterPropertiesConvention);

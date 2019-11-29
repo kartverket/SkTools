@@ -4,12 +4,9 @@ import no.statkart.sktools.gradle.plugins.webstart.util.ArtifactMatcher
 import org.gradle.api.Action
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.Task
 import org.gradle.api.file.CopySpec
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileCopyDetails
-import org.gradle.api.logging.Logger
-import org.gradle.api.logging.Logging
 import org.gradle.api.plugins.WarPlugin
 import org.gradle.api.tasks.Delete
 import org.gradle.api.tasks.bundling.War
@@ -37,15 +34,13 @@ import java.util.concurrent.Callable
  * @author Tor Egil R. Strand
  */
 class WebstartPlugin implements Plugin<Project> {
-    protected static Logger logger = Logging.getLogger(WebstartPlugin.class)
-
     public static final String WEBSTART_CONVENTION_NAME = 'webstart';
     public static final String CLEAN_JARSIGNER_CACHES_TASK_NAME = 'cleanJarSignerCaches'
 
 
     @Override
     void apply(Project project) {
-        project.plugins.apply(WarPlugin)
+        project.getPluginManager().apply(WarPlugin)
 
         WebstartConvention convention = new WebstartConvention(project)
         project.convention.plugins.put(WEBSTART_CONVENTION_NAME, convention)

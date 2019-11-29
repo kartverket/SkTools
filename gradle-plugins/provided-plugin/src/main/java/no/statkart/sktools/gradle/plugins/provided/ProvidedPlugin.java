@@ -17,7 +17,7 @@ public class ProvidedPlugin implements Plugin<Project> {
 
     @Override
     public void apply(final Project project) {
-        project.getPlugins().apply(JavaPlugin.class);
+        project.getPluginManager().apply(JavaPlugin.class);
 
         final Configuration providedConfiguration = project.getConfigurations().create(PROVIDED_CONFIGURATION_NAME);
         providedConfiguration.setVisible(true);

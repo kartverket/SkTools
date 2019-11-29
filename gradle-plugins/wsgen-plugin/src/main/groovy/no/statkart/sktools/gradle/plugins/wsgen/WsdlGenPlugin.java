@@ -25,7 +25,7 @@ import java.io.File;
 public class WsdlGenPlugin implements Plugin<Project> {
     @Override
     public void apply(final Project project) {
-        project.getPlugins().apply(WarPlugin.class);
+        project.getPluginManager().apply(WarPlugin.class);
 
         Configuration jaxwsConfiguration = project.getConfigurations().create("jaxws")
             .setDescription("JAX-WS tools")

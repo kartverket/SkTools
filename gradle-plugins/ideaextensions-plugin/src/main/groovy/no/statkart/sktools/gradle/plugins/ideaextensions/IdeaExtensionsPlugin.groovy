@@ -29,7 +29,7 @@ class IdeaExtensionsPlugin implements Plugin<Project> {
 
     @Override
     void apply(Project project) {
-        project.getPlugins().apply(IdeaPlugin.class);
+        project.getPluginManager().apply(IdeaPlugin.class);
 
         IdeaExtensionsPluginExtension extension = project.extensions.create(EXTENSION_NAME, IdeaExtensionsPluginExtension.class, project)
 
