@@ -34,7 +34,8 @@ public class SqlExecutor {
     private static final Logger logger = LoggerFactory.getLogger(SqlExecutor.class);
 
     //SKTOOLS-84: error håndtering
-    boolean failOnError, failOnWarning;
+    boolean failOnError = true;
+    boolean failOnWarning = true;
 
     //SKTOOLS-21
     static Charset sqlFileEncoding = Charset.defaultCharset();
@@ -206,26 +207,27 @@ public class SqlExecutor {
             }
         }
         if (feilet) {
-            logger.error(String.format("Script had errors! Statements: %d. Warnings: %d, errors: %d.", antallStatements, antallWarnings, antallFeil));
+            logger.error("Script had errors! Statements: {}. Warnings: {}, errors: {}.", antallStatements, antallWarnings, antallFeil);
         } else {
-            logger.info(String.format("Script completed. Statements: %d. Warnings: %d.", antallStatements, antallWarnings));
+            logger.info("Script completed. Statements: {}. Warnings: {}.", antallStatements, antallWarnings);
         }
         return rsList.toArray(new java.sql.ResultSet[0]);
     }
 
+    static final String newlineRgex = "\\u000D\\u000A|[\\u000A\\u000B\\u000C\\u000D\\u0085\\u2028\\u2029]"; //JDK8: "\\R"
     static boolean isWarning(SQLException e) {
-        String msg = e.getMessage();
-        //ORA-02443: Cannot drop constraint - nonexistent constraint
-        //ORA-02275: such a referential constraint already exists in the table
-        //ORA-00955: name is already being used by existing object
-        //ORA-01418: specified index does not exist
-        //ORA-00942: table or view does not exist
-        return msg.contains("02443") || msg.contains("02275") || msg.contains("00955") || msg.contains("01418") || msg.contains("00942");
+        String msg = e.getMessage().split(newlineRgex, 0)[0];
+        return msg.contains("ORA-02443")  // cannot drop nonexistent constraint
+            || msg.contains("ORA-02275")  // referential constraint already exists in the table
+            || msg.contains("ORA-00955")  // name is already being used by existing object
+            || msg.contains("ORA-01418")  // index does not exist
+            || msg.contains("ORA-00942")  // table or view does not exist
+            ;
     }
 
     private static void callCallable(String scriptLine, Connection connection, List<java.sql.ResultSet> rsList) throws SQLException {
         //prøver å ta hensyn til at det kan returneres flere Resultset fra ett storedProcedure kall.
-        logger.info("Procedure: " + scriptLine);
+        logger.info("Procedure: {}", scriptLine);
         try (CallableStatement callablStatement = connection.prepareCall(scriptLine)) {
             boolean isResultset = callablStatement.execute();
             if (isResultset) {
