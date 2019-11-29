@@ -10,7 +10,7 @@ Installation
 Build script snippet for new plugin DSL syntax:
 
     plugins {
-        id 'sktools.dbtools' version '5.0'
+        id 'sktools.dbtools' version '6.0'
     }
 
 Build script snippet for use in all versions:
@@ -20,9 +20,9 @@ Build script snippet for use in all versions:
             maven { url 'https://nexus.statkart.no/repository/public/' }
         }
         dependencies {
-            classpath 'no.statkart.sktools.gradle:dbtools-plugin:5.0'
+            classpath 'no.statkart.sktools.gradle:dbtools-plugin:6.0'
             // or
-            classpath 'no.statkart.sktools.gradle:gradle-plugins:5.0'
+            classpath 'no.statkart.sktools.gradle:gradle-plugins:6.0'
         }
 
     }

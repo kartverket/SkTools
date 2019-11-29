@@ -1,7 +1,7 @@
 ﻿# SkTools - Felles byggeverktøy i kartverket
 
 # Baseline
-Gradle 5.0 og nyere.
+Gradle 6.0 og nyere.
 
 Java 8.
 
@@ -16,7 +16,7 @@ Se [jenkinsfile for detaljert oversikt over testede versjoner](Jenkinsfile)
 
 UTF-8 for all kildekode
 
-JDK 12 / JDK 1.8
+JDK 13 / JDK 1.8
 
 
 
@@ -32,7 +32,7 @@ WEBLOGIC_VERSION=12.2.1
 #WEBLOGIC_VERSION=12.1.3
 
 !unikt prosjektnavn for vindu i IntelliJ
-project_name=sktools-5.x
+project_name=sktools-6.x
 ```
 
 ## Releasetesting

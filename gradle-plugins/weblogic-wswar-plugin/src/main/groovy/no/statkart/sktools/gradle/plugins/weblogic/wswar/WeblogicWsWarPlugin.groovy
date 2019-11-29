@@ -57,6 +57,8 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
         project.apply plugin: JavaBasePlugin.class
         project.apply plugin: WeblogicBasePlugin.class
 
+        project.getLogger().warn("WARNING: WeblogicWsWarPlugin is deprecated and is scheduled for removal!")
+
         // wswar har alltid trengt tools.jar (weblogic 10.3.5, 10.3.6, 12.1.x)
         project.getDependencies().add(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME, WeblogicBasePlugin.toolsJar(project));
         project.getDependencies().add(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME, conventionalWeblogicDependencies(project));

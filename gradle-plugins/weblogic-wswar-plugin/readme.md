@@ -1,6 +1,9 @@
 Weblogic-wswar Gradle Plugin
 ------------------
 
+> PS: This plugin in deprecated and to be removed in version 7.0
+>     Please migrate your scripts to wsgen-plugin.
+
 Generates web service modules for Weblogic Server.
 
 Installation
@@ -9,7 +12,7 @@ Installation
 Build script snippet for new plugin DSL syntax:
 
     plugins {
-        id 'sktools.weblogic-wswar' version '5.0'
+        id 'sktools.weblogic-wswar' version '6.0'
     }
 
 Build script snippet for use in all versions:
@@ -19,9 +22,9 @@ Build script snippet for use in all versions:
             maven { url 'https://nexus.statkart.no/repository/public/' }
         }
         dependencies {
-            classpath 'no.statkart.sktools.gradle:weblogic-wswar-plugin:5.0'
+            classpath 'no.statkart.sktools.gradle:weblogic-wswar-plugin:6.0'
             // or
-            classpath 'no.statkart.sktools.gradle:gradle-plugins:5.0'
+            classpath 'no.statkart.sktools.gradle:gradle-plugins:6.0'
         }
     }
     apply plugin: 'sktools-weblogic-wswar-plugin'

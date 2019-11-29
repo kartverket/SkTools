@@ -36,6 +36,8 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
         project.apply plugin: JavaBasePlugin.class;
         project.apply plugin: WeblogicBasePlugin.class;
 
+        project.getLogger().warn("WARNING: WeblogicWsClientPlugin is deprecated and is scheduled for removal!")
+
         // SKTOOLS-17: weblogic 10.3.5 eller nyerer avhenger av tools.jar på classpath for wsclient
         project.getDependencies().add(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME, WeblogicBasePlugin.toolsJar(project))
         project.getDependencies().add(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME, conventionalWeblogicDependencies(project))
