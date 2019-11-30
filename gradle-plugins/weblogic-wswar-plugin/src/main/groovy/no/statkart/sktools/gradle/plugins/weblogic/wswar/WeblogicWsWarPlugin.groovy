@@ -54,8 +54,8 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
 
     @Override
     void apply(Project project) {
-        project.apply plugin: JavaBasePlugin.class
-        project.apply plugin: WeblogicBasePlugin.class
+        project.getPluginManager().apply(JavaBasePlugin.class)
+        project.getPluginManager().apply(WeblogicBasePlugin.class)
 
         // wswar har alltid trengt tools.jar (weblogic 10.3.5, 10.3.6, 12.1.x)
         project.getDependencies().add(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME, WeblogicBasePlugin.toolsJar(project));

@@ -33,8 +33,8 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
 
     @Override
     void apply(Project project) {
-        project.apply plugin: JavaBasePlugin.class;
-        project.apply plugin: WeblogicBasePlugin.class;
+        project.getPluginManager().apply(JavaBasePlugin.class)
+        project.getPluginManager().apply(WeblogicBasePlugin.class)
 
         // SKTOOLS-17: weblogic 10.3.5 eller nyerer avhenger av tools.jar på classpath for wsclient
         project.getDependencies().add(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME, WeblogicBasePlugin.toolsJar(project))

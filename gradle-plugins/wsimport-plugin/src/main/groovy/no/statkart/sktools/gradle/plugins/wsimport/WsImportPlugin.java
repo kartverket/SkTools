@@ -30,7 +30,7 @@ import java.io.File;
 public class WsImportPlugin implements Plugin<Project> {
     @Override
     public void apply(final Project project) {
-        project.getPlugins().apply(JavaPlugin.class);
+        project.getPluginManager().apply(JavaPlugin.class);
 
         Configuration jaxwsConfiguration = project.getConfigurations().create("jaxws")
             .setDescription("JAX-WS tools")
