@@ -2,9 +2,11 @@ package no.statkart.sktools.gradle.plugins.xjc;
 
 import no.statkart.sktools.gradle.plugins.xjc.internal.XjcGenerator;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.logging.Logger;
-import org.gradle.api.logging.Logging;
-import org.gradle.api.tasks.*;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.Nested;
+import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.SourceTask;
+import org.gradle.api.tasks.TaskAction;
 
 import java.io.File;
 
@@ -28,8 +30,6 @@ import java.io.File;
  * @author Leif Lislegård
  */
 class XjcTask extends SourceTask {
-    protected static final Logger logger = Logging.getLogger(XjcTask.class);
-
     private XjcConfig config;
     private File outputDirectory;
     private FileCollection classpath;
@@ -84,11 +84,6 @@ class XjcTask extends SourceTask {
     @SuppressWarnings("UnusedDeclaration")
     public void setClasspath(FileCollection classpath) {
         this.classpath = classpath;
-    }
-
-    @Override
-    public Logger getLogger() {
-        return logger;
     }
 
 }
