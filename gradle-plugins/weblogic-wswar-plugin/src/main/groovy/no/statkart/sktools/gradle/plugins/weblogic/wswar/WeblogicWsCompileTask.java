@@ -10,7 +10,12 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
-import org.gradle.api.tasks.*;
+import org.gradle.api.tasks.Classpath;
+import org.gradle.api.tasks.Internal;
+import org.gradle.api.tasks.Nested;
+import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.WorkResult;
 import org.gradle.api.tasks.compile.AbstractCompile;
 
 import java.io.File;
@@ -141,6 +146,7 @@ public class WeblogicWsCompileTask extends AbstractCompile implements WeblogicTa
         this.genSourcesDir = genSourcesDir;
     }
 
+    @Internal
     public File getGenDir() {
         return genDir != null ? genDir : getProject().file("${project.buildDir}/weblogic/jwsc");
     }
@@ -164,7 +170,7 @@ public class WeblogicWsCompileTask extends AbstractCompile implements WeblogicTa
         this.weblogicClasspath = weblogicClasspath;
     }
 
-    @InputFiles
+    @Classpath
     public FileCollection getWeblogicClasspath() {
         return weblogicClasspath;
     }

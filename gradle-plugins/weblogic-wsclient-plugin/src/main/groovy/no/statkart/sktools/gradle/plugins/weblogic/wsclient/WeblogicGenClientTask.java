@@ -1,14 +1,14 @@
 package no.statkart.sktools.gradle.plugins.weblogic.wsclient;
 
-import no.statkart.sktools.gradle.plugins.weblogic.compile.CompileOptions;
 import no.statkart.sktools.gradle.plugins.weblogic.WeblogicTaskInterface;
+import no.statkart.sktools.gradle.plugins.weblogic.compile.CompileOptions;
 import no.statkart.sktools.gradle.plugins.weblogic.wsclient.internal.WsClientGenerator;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
+import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.TaskAction;
@@ -95,17 +95,18 @@ class WeblogicGenClientTask extends AbstractCompile implements WeblogicTaskInter
         this.weblogicClasspath = weblogicClasspath;
     }
 
-    @InputFiles
+    @Classpath
     public FileCollection getWeblogicClasspath() {
         return weblogicClasspath;
     }
 
-    @InputFiles
+    @Classpath
     @Optional
     public FileCollection getClasspath() { //markerer denne som optional
         return super.getClasspath() != null ? super.getClasspath() : getProject().files();
     }
 
+    @Override
     public Logger getLogger() {
         return logger;
     }

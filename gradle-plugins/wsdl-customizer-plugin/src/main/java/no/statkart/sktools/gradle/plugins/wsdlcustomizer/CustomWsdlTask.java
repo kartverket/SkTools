@@ -5,8 +5,6 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.file.CopySpec;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.logging.Logger;
-import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputDirectory;
@@ -54,7 +52,6 @@ import java.util.Set;
  * @author Tor Egil R. Strand
  */
 public class CustomWsdlTask extends DefaultTask {
-    protected static final Logger logger = Logging.getLogger(CustomWsdlTask.class);
     protected static final String xsdNamespace = "http://www.w3.org/2001/XMLSchema";
 
     private final List<Object> originalSchemaFiles = new ArrayList<>();
@@ -366,10 +363,6 @@ public class CustomWsdlTask extends DefaultTask {
         public Iterator getPrefixes(String namespaceURI) {
             return Collections.singletonList(getPrefix(namespaceURI)).iterator();
         }
-    }
-
-    public Logger getLogger() {
-        return logger;
     }
 
 }

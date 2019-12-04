@@ -1,7 +1,6 @@
 package no.statkart.sktools.gradle.plugins.weblogic;
 
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.tasks.InputFiles;
 
 /**
  * Interface for {@link org.gradle.api.internal.ConventionTask}-implementasjoner
@@ -12,7 +11,7 @@ import org.gradle.api.tasks.InputFiles;
  */
 public interface WeblogicTaskInterface {
 
-    @InputFiles
+    //PS: implementerende klasser bør annotere denne med @Classpath
     public FileCollection getWeblogicClasspath();
 
     public void setWeblogicClasspath(FileCollection weblogicClasspath);
