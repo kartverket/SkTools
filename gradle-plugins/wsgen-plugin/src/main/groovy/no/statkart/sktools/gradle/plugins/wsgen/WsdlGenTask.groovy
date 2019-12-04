@@ -38,6 +38,7 @@ public class WsdlGenTask extends SourceTask {
                         destdir: getTemporaryDir(),
                         resourcedestdir: getDestinationDir(),
                         genwsdl: 'true',
+                        encoding: 'UTF-8',
                         keep: 'true',
                         xnocompile: 'true',
                         fork: 'true',
