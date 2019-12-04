@@ -33,7 +33,7 @@ class WsdlGenPluginTest extends TestKitBase {
             plugins {
               id 'sktools.wsgen'
             }
-            
+
             repositories {
                 maven { url = '${testProperties.MAVEN_REPO}' }
             }
@@ -41,7 +41,7 @@ class WsdlGenPluginTest extends TestKitBase {
 
         writeExceptiondemo01()
 
-        BuildResult buildResult = testGradleBuild("genWsdl")
+        BuildResult buildResult = testGradleBuild("genWsdls")
 
         assertThat(file('build/genWsdls/ExceptionService1WS.wsdl')).exists()
         assertThat(file('build/genWsdls/ExceptionService1WS_schema1.xsd')).exists()
@@ -55,7 +55,7 @@ class WsdlGenPluginTest extends TestKitBase {
             plugins {
               id 'sktools.wsgen'
             }
-            
+
             repositories {
                 maven { url = '${testProperties.MAVEN_REPO}' }
             }
@@ -90,6 +90,7 @@ class WsdlGenPluginTest extends TestKitBase {
                 .filteredOn(NO_FOLDERS)
                 .as("Contents of war file (ignoring META-INF)")
                 .containsOnly(
+                    'WEB-INF/web.xml',
                     'WEB-INF/classes/WebConfig.class',
                     'WEB-INF/classes/exceptiondemo01/ExceptionService1WSBean.class',
                     'WEB-INF/classes/exceptiondemo01/ExceptionService2WSBean.class',
@@ -115,7 +116,7 @@ class WsdlGenPluginTest extends TestKitBase {
             Files.copy(testResources, destinationFile.toPath())
         }
 
-        writeFile('source/main/webapp/WEB-INF/web.xml', '''<?xml version='1.0' encoding='UTF-8'?>
+        writeFile('src/main/webapp/WEB-INF/web.xml', '''<?xml version='1.0' encoding='UTF-8'?>
 <web-app xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="3.0">
     <display-name>dummy</display-name>
 </web-app>

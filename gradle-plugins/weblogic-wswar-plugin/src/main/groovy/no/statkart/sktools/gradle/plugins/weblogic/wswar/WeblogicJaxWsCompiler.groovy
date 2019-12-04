@@ -80,7 +80,7 @@ class WeblogicJaxWsCompiler implements no.statkart.sktools.gradle.plugins.weblog
         logger.debug('Defining Ant classpath id={}', id)
         ant.path(id: id) {
             classpath.each {
-                logger.debug("\t{} += {}", id, it)
+                logger.debug('\t{} += {}', id, it)
                 pathelement(location: it)
             }
         }
