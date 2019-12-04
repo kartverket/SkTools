@@ -30,7 +30,7 @@ public class ProvidedPluginTest extends TestKitBase {
         Project project = ProjectBuilder.builder().build();
 
         //konfigurerer project
-        project.getPlugins().apply("sktools-provided-plugin");
+        project.getPluginManager().apply("sktools-provided-plugin");
 
         Assertions.assertThat(project.getPlugins().withType(ProvidedPlugin.class))
                 .withFailMessage("Plugin er registrert").isNotEmpty();
@@ -57,8 +57,8 @@ public class ProvidedPluginTest extends TestKitBase {
     @Test
     public void testProvidedConfiguration() {
         Project project = ProjectBuilder.builder().build();
-        project.getPlugins().apply("sktools-provided-plugin");
-        project.getPlugins().apply("java");
+        project.getPluginManager().apply("sktools-provided-plugin");
+        project.getPluginManager().apply("java");
 
         //en eller annen dependency - dersom ikke denne fungerer bør testen skrives om til en demo
         project.getDependencies().add("provided", project.getDependencies().localGroovy());
@@ -102,8 +102,8 @@ public class ProvidedPluginTest extends TestKitBase {
     @Test
     public void testSinglevmConfiguration() {
         Project project = ProjectBuilder.builder().build();
-        project.getPlugins().apply("sktools-provided-plugin");
-        project.getPlugins().apply("java");
+        project.getPluginManager().apply("sktools-provided-plugin");
+        project.getPluginManager().apply("java");
 
         //en eller annen dependency - dersom ikke denne fungerer bør testen skrives om til en demo
         project.getDependencies().add("singlevm", project.getDependencies().localGroovy());

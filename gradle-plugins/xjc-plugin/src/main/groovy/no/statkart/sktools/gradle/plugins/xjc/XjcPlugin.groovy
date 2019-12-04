@@ -68,7 +68,7 @@ class XjcPlugin implements Plugin<Project> {
 
     @Override
     void apply(Project project) {
-        project.apply plugin: JavaPlugin.class
+        project.getPluginManager().apply(JavaPlugin.class)
 
         final Configuration configuration = createConfiguration(project);
         configureSourceSets(project, configuration)

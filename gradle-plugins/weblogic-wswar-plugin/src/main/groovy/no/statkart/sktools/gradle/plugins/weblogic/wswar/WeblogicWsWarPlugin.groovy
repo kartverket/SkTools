@@ -54,8 +54,8 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
 
     @Override
     void apply(Project project) {
-        project.apply plugin: JavaBasePlugin.class
-        project.apply plugin: WeblogicBasePlugin.class
+        project.getPluginManager().apply(JavaBasePlugin.class)
+        project.getPluginManager().apply(WeblogicBasePlugin.class)
 
         project.getLogger().warn("WARNING: WeblogicWsWarPlugin is deprecated and is scheduled for removal!")
 

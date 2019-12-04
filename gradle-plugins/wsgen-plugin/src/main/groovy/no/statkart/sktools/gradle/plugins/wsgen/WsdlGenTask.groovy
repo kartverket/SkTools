@@ -24,22 +24,37 @@ public class WsdlGenTask extends SourceTask {
 
         def wsBeans = getSource().matching { include '**/*WSBean.class' }
 
-        ant.path(id: this.getPath() ,path: getClasspath().asPath)
+        def classpathRef = getPath().replace(':' as char, '_' as char)
+        createAntClassPath(getClasspath(), classpathRef)
 
         wsBeans.visit { FileVisitDetails details ->
             if (!details.directory) {
-                String path = details.relativePath
-                String classname = path.replace('/', '.').substring(0, path.length() - 6)
+                String path = details.getRelativePath()
+                String classname = path.substring(0, path.length() - 6) //removing '.class'
+                    .replace('/' as char, '.' as char)
                 ant.wsgen(
                         sei: classname,
-                        classpathref: this.getPath(),
+                        classpathref: classpathRef,
                         destdir: getTemporaryDir(),
                         resourcedestdir: getDestinationDir(),
                         genwsdl: 'true',
+                        encoding: 'UTF-8',
                         keep: 'true',
+                        xnocompile: 'true',
                         fork: 'true',
                 )
             }
         }
     }
+
+    private void createAntClassPath(Iterable classpath, String id) {
+        getLogger().debug('Defining Ant classpath id={}', id)
+        getAnt().path(id: id) {
+            classpath.each {
+                getLogger().debug('\t{} += {}', id, it)
+                pathelement(location: it)
+            }
+        }
+    }
+
 }
