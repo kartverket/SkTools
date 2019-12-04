@@ -20,6 +20,7 @@ import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 
 import java.sql.SQLException
+import java.sql.SQLInvalidAuthorizationSpecException
 import java.text.MessageFormat
 
 /**
@@ -48,7 +49,7 @@ class SQLExecutor {
             sql = Sql.newInstance(specs.url, specs.username, specs.password, specs.driver)
         } catch (SQLException e) {
             String message
-            if (e.getMessage().contains('invalid username/password')) {
+            if (e instanceof SQLInvalidAuthorizationSpecException || e.getMessage().contains('invalid username/password')) {
                 char[] passwordArray = specs.password.toCharArray()
                 if (passwordArray.length > 2){
                     Arrays.fill(passwordArray, 1, passwordArray.length-1, '*' as char)

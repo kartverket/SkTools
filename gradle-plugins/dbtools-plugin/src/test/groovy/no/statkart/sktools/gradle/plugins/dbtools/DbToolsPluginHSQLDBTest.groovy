@@ -10,6 +10,7 @@ import org.gradle.api.Task
 import org.testng.Assert
 import org.testng.annotations.Test
 
+import java.sql.SQLInvalidAuthorizationSpecException
 import java.sql.SQLSyntaxErrorException
 
 import static no.statkart.sktools.gradle.plugins.dbtools.testutils.PatchTestutil.createSimplePatchFile
@@ -119,10 +120,43 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
             void call() throws Throwable {
                 createSchema2Task.exec()
             }
-        }).hasMessage("invalid authorization specification - not found: foo");
+        })
+            .hasRootCauseMessage("invalid authorization specification - not found: foo")
+            .hasCauseInstanceOf(SQLInvalidAuthorizationSpecException.class)
     }
 
+    @Test
+    void connectingUsingUnknownUserGivesInformativeMessage() {
+        Preconditions.checkState(sql.connection.isValid(0), "Invalid connection - see %s", 'getSql()')
 
+        final Project project = projectBuilder().build().tap {
+            apply plugin: 'sktools-dbtools-plugin'
+
+            configureDatabasePlugin {
+                toolset( type:'hsqldb', prefix:'Prefix_', name:'hsql' ) {
+                    sqlTask('CreateSchema', sqlString: 'ignored')
+
+                    url = sql.connection.properties.URL
+                    driver = jdbcDriverClassString
+
+                    credentials.username = 'foo'
+                    credentials.password = 'bar'
+                }
+            }
+        }
+
+        SQLTask createSchemaTask = project.tasks.getByName('prefix_CreateSchema') as SQLTask
+
+        Assertions.assertThatThrownBy(new ThrowableAssert.ThrowingCallable() {
+            @Override
+            void call() throws Throwable {
+                createSchemaTask.exec()
+            }
+        })
+        .describedAs("SKTOOLS-204: Informativ feilmelding")
+            .hasMessage("ERROR connecting to database jdbc:hsqldb:mem:DbToolsPluginHSQLDBTest [foo/b*r]")
+            .hasCauseInstanceOf(SQLInvalidAuthorizationSpecException.class)
+    }
 
     /**
      * Tester plugin mot flere database-oppsett mot forskjellige databaser
@@ -341,7 +375,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
             }
 
             configureDatabasePlugin {
-                useDrivers "${testProperties.libraries_hsqldb}" 
+                useDrivers "${testProperties.libraries_hsqldb}"
 
                 toolset(name: 'Prefix', type: 'hsqldb', prefix: 'Prefix') {
 
