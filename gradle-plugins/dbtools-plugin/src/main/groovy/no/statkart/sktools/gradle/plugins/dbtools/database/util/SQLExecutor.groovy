@@ -20,6 +20,7 @@ import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 
 import java.sql.SQLException
+import java.text.MessageFormat
 
 /**
  * Eksekverer sql statements til basen.
@@ -42,13 +43,27 @@ class SQLExecutor {
 
         waitForConnectionRate(15)
 
-        def sql = Sql.newInstance(specs.url, specs.username, specs.password, specs.driver)
+        Sql sql;
+        try {
+            sql = Sql.newInstance(specs.url, specs.username, specs.password, specs.driver)
+        } catch (SQLException e) {
+            String message
+            if (e.getMessage().contains('invalid username/password')) {
+                char[] passwordArray = specs.password.toCharArray()
+                if (passwordArray.length > 2){
+                    Arrays.fill(passwordArray, 1, passwordArray.length-1, '*' as char)
+                }
+                message = MessageFormat.format('ERROR connecting to database {0} [{1}/{2}]', specs.url, specs.username, new String(passwordArray))
+            } else {
+                message = MessageFormat.format('ERROR connecting to database {0} [{1}]', specs.url, specs.username)
+            }
+            throw new RuntimeException(message, e);
+        }
         logger.lifecycle('connected to database: {} [{}]', specs.url, specs.username);
 
         setAutoCommit(sql.getConnection(), specs.getAutoCommit());
 
-        statements.each() { Statement statement ->
-
+        for (Statement statement : statements) {
             logger.info('Executing {}: \n{}', statement.class.simpleName, statement.sql)
 
             try {
