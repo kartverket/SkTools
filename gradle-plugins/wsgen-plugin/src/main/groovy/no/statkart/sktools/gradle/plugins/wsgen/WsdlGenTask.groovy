@@ -2,15 +2,16 @@ package no.statkart.sktools.gradle.plugins.wsgen
 
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileVisitDetails
-import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.CompileClasspath
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.SourceTask
 import org.gradle.api.tasks.TaskAction
 
 public class WsdlGenTask extends SourceTask {
-    @InputFiles
+    @CompileClasspath
     FileCollection classpath;
 
+    @CompileClasspath
     FileCollection jaxwsClasspath;
 
     @OutputDirectory

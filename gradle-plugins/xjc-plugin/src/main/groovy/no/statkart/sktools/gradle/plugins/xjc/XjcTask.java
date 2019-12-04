@@ -2,7 +2,7 @@ package no.statkart.sktools.gradle.plugins.xjc;
 
 import no.statkart.sktools.gradle.plugins.xjc.internal.XjcGenerator;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.CompileClasspath;
 import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.SourceTask;
@@ -76,7 +76,7 @@ class XjcTask extends SourceTask {
         this.outputDirectory = outputDirectory;
     }
 
-    @Input
+    @CompileClasspath
     public FileCollection getClasspath() {
         return classpath;
     }

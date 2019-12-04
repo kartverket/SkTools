@@ -3,8 +3,8 @@ package no.statkart.sktools.gradle.plugins.weblogic.deploy
 import org.gradle.api.file.FileCollection
 import org.gradle.api.internal.ConventionTask
 import org.gradle.api.logging.Logger
+import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.JavaExecSpec
@@ -25,7 +25,7 @@ import org.gradle.process.JavaExecSpec
  */
 abstract class AbstractWeblogicDeployTask extends ConventionTask {
 
-    @InputFiles
+    @Classpath
     FileCollection classpath
 
 
