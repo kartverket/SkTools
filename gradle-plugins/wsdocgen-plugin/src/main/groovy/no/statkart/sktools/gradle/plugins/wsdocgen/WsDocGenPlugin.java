@@ -131,7 +131,7 @@ public class WsDocGenPlugin implements Plugin<Project> {
 
     static void configureArchives(Project project) {
         Zip zip = project.getTasks().create(ARCHIVE_TASK_NAME, Zip.class);
-        zip.setClassifier(CONVENTION_NAME);
+        zip.getArchiveClassifier().set(CONVENTION_NAME);
 
         project.getArtifacts().add(Dependency.ARCHIVES_CONFIGURATION, new ArchivePublishArtifact(zip));
     }

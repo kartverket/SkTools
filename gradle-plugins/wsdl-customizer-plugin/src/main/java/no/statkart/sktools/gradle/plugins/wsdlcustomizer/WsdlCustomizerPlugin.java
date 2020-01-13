@@ -47,7 +47,7 @@ public class WsdlCustomizerPlugin implements Plugin<Project> {
 
     private static Zip configureZipTask(Project project, CustomWsdlTask customWsdlTask) {
         Zip zipTask = project.getTasks().create("zipCustomizedWsdls", Zip.class);
-        zipTask.setClassifier("wsdls");
+        zipTask.getArchiveClassifier().set("wsdls");
         zipTask.from(customWsdlTask);
         return zipTask;
     }
