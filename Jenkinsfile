@@ -32,7 +32,7 @@ pipeline { //declarative pipeline syntax
     }
 
     tools {
-        gradle 'Gradle 5.0' //kompilerer artefakter til denne versjonen
+        gradle 'Gradle 6.0' //kompilerer artefakter mot denne API-versjonen
         jdk 'Java 12 Latest' //spesifisert java versjon for bygging av release
     }
 
@@ -72,17 +72,17 @@ pipeline { //declarative pipeline syntax
                     }
                     steps {
                         bat "gradle --version"
-                        bat "gradle testGradle5.0 -DignoreFailures=true ${gradleOptions(this)}"
+                        bat "gradle testGradle6.0 -DignoreFailures=true ${gradleOptions(this)}"
                     }
                     post {
                         always {
-                            junit '**/test-results/testGradle5.0/*.xml'
+                            junit '**/test-results/testGradle6.0/*.xml'
                         }
                     }
                 }
                 stage('Test gradle latest') {
                     tools {
-                        gradle 'Gradle 5.6.4' //latest og greatest (kan også være neste major versjon)
+                        gradle 'Gradle 6.0.1' //latest og greatest (kan også være neste major versjon)
                     }
                     environment {
                         WEBLOGIC_VERSION = '12.2.1.3'
@@ -90,11 +90,11 @@ pipeline { //declarative pipeline syntax
                     }
                     steps {
                         bat "gradle --version"
-                        bat "gradle testGradle5.6.4 -DignoreFailures=true ${gradleOptions(this)} -DbuildDirName=build/gradle5.6.4" //buildDirName for å kjøre flere bygg med forskjellige gradle versjoner
+                        bat "gradle testGradle6.0.1 -DignoreFailures=true ${gradleOptions(this)} -DbuildDirName=build/gradle6.0.1" //buildDirName for å kjøre flere bygg med forskjellige gradle versjoner
                     }
                     post {
                         always {
-                            junit '**/test-results/testGradle5.6.4/*.xml'
+                            junit '**/test-results/testGradle6.0.1/*.xml'
                         }
                     }
                 }
