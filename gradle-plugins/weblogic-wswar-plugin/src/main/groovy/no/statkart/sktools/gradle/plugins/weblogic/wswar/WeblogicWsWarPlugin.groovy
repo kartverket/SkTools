@@ -158,7 +158,7 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
         war.setDescription("Assembles a war archive containing the main classes.");
         war.dependsOn(genTask);
 
-        war.setAppendix(WEBLOGIC_SOURCE_SET_NAME);
+        war.getArchiveAppendix().set(WEBLOGIC_SOURCE_SET_NAME);
         war.setGroup(BasePlugin.BUILD_GROUP);
 
         // following duplicate files will be excluded (first one into archive stays)
