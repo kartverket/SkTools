@@ -18,7 +18,7 @@ import java.io.File;
  *
  *   dependencies {
  *      jaxws 'com.sun.xml.ws:jaxws-tools:2.3.2'
- *      jaxws 'com.sun.xml.ws:wscompile:2.2.10' //gammelt koordinat
+ *      jaxws 'com.sun.xml.ws:wscompile:2.3.2' //gammelt koordinat
  *   }
  * </pre>
  */

@@ -35,7 +35,7 @@ Configuration
 
     dependencies {
         wsdls project(path: ':wswar', configuration: 'wsdls')
-        jaxws 'com.sun.xml.ws:jaxws-tools:2.2.10' //default
+        jaxws 'com.sun.xml.ws:jaxws-tools:2.3.2' //default
     }
 
     // https://discuss.gradle.org/t/right-way-to-copy-contents-from-dependency-archives/7449/13

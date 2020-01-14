@@ -38,7 +38,7 @@ public class JDBCHelper {
         try {
             @SuppressWarnings("unchecked")
             Class<Driver> clazz = (Class<Driver>) Class.forName(driver);
-            DriverManager.registerDriver(clazz.getConstructor(new Class[0]).newInstance());
+            DriverManager.registerDriver(clazz.getConstructor().newInstance());
             connection = DriverManager.getConnection(url, user, pwd);
         } catch (ClassNotFoundException e) {
             throw new OperationalException(logger, "Feil under oppretting, finner ikke klassen: " + driver, e);
