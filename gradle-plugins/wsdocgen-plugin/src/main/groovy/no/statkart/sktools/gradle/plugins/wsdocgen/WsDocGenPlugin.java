@@ -150,7 +150,7 @@ public class WsDocGenPlugin implements Plugin<Project> {
 
         Properties testProperties = injectedTestProperties();
         if (testProperties == null) {
-            ScriptHandler buildscript = project.getRootProject().getBuildscript(); //root projects repo configuration
+            ScriptHandler buildscript = project.getBuildscript().getRepositories().isEmpty() ? project.getRootProject().getBuildscript() : project.getBuildscript(); //root projects repo configuration
             wsDocGenConfiguration = buildscript.getConfigurations().detachedConfiguration(wsDocGenDependency(project));
         } else {
             String classpath = testProperties.getProperty("sktools_wsdocgen_classpath");
