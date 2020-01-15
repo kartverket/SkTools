@@ -53,28 +53,31 @@ public class WsDocCompileTask extends JavaCompile {
         }
     }
 
+    @SuppressWarnings("Convert2Lambda")
     private CommandLineArgumentProvider lazyCompilerArgs() {
-        return () -> {
-            final List<String> compilerArgs = new ArrayList<>();
+        return new CommandLineArgumentProvider() {
+            @Override
+            public Iterable<String> asArguments() {
+                final List<String> compilerArgs = new ArrayList<>(3);
 
-            final File xsl = getServiceXsltFile();
-            if (!xsl.exists()) {
-                throw new RuntimeException("xslt file not found: " + getProject().relativePath(xsl));
+                final File xsl = WsDocCompileTask.this.getServiceXsltFile();
+                if (!xsl.exists()) {
+                    throw new RuntimeException("xslt file not found: " + WsDocCompileTask.this.getProject().relativePath(xsl));
+                }
+                compilerArgs.add("-Axslt=" + xsl.getPath()); //xslt file
+
+                if (WsDocCompileTask.this.getLookupPath() != null) {
+                    compilerArgs.add("-AjavaDocLookupPath=" + WsDocCompileTask.this.getLookupPath()); //lookup path
+                }
+
+                if (WsDocCompileTask.this.getIndexXsltFile() != null) {
+                    compilerArgs.add("-AindexXslt=" + WsDocCompileTask.this.getIndexXsltFile().getPath()); //oversikt over services
+                }
+
+                return compilerArgs;
             }
-            compilerArgs.add("-Axslt=" + xsl.getPath()); //xslt file
-
-            if (getLookupPath() != null) {
-                compilerArgs.add("-AjavaDocLookupPath=" + getLookupPath()); //lookup path
-            }
-
-            if (getIndexXsltFile() != null) {
-                compilerArgs.add("-AindexXslt=" + getIndexXsltFile().getPath()); //SKTOOLS-105
-            }
-
-            return compilerArgs;
         };
     }
-
 
     @Optional
     @Input //not up to date when changed
