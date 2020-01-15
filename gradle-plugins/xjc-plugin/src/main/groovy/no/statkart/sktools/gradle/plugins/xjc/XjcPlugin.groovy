@@ -185,7 +185,7 @@ class XjcPlugin implements Plugin<Project> {
         })
     }
 
-    public static FileCollection processorClasspathForXjcExtension(Project project) {
+    private static FileCollection processorClasspathForXjcExtension(Project project) {
         Properties testProperties = injectedTestProperties()
         if (testProperties != null) {
             def classpath = testProperties.getProperty("sktools_xjc_classpath")
@@ -194,7 +194,7 @@ class XjcPlugin implements Plugin<Project> {
             // avhengighet til jaxb og jaxb-xjc legges på fra annen konfigurasjon
             return project.files(classpath.split(File.pathSeparator)) //NB: for GradleRunner i debug mode
         }
-        final def buildscript = project.getRootProject().getBuildscript(); //root projects repo configuration
+        final def buildscript = project.getBuildscript().getRepositories().isEmpty() ? project.getRootProject().getBuildscript() : project.getBuildscript()
         return buildscript.getConfigurations().detachedConfiguration(wsDocGenDependency(project))
     }
 

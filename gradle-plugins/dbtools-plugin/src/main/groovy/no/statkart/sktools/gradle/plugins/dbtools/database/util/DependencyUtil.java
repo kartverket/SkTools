@@ -4,7 +4,7 @@ import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsPlugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.file.FileCollection;
-import org.gradle.plugin.devel.tasks.PluginUnderTestMetadata;
+import org.gradle.api.initialization.dsl.ScriptHandler;
 import org.gradle.util.GUtil;
 
 import java.io.File;
@@ -30,7 +30,8 @@ public class DependencyUtil {
     public static FileCollection getDatabasePatcherClasspath(Project project) {
         Properties testProperties = injectedTestProperties();
         if (testProperties == null) {
-            return project.getBuildscript().getConfigurations().detachedConfiguration(dbutilsDependency(project));
+            final ScriptHandler buildscript = project.getBuildscript().getRepositories().isEmpty() ? project.getRootProject().getBuildscript() : project.getBuildscript();
+            return buildscript.getConfigurations().detachedConfiguration(dbutilsDependency(project));
         }
 
         String classpath = testProperties.getProperty("sktools_dbtools_classpath");
