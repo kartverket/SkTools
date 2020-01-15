@@ -3,6 +3,8 @@ package no.statkart.sktools.gradle.plugins.wsdocgen
 
 import no.statkart.sktools.gradle.testutils.TestKitBase
 import org.gradle.api.Project
+import org.gradle.testkit.runner.BuildResult
+import org.gradle.testkit.runner.TaskOutcome
 import org.gradle.util.GFileUtils
 import org.testng.annotations.Test
 
@@ -56,7 +58,7 @@ class WsDocGenPluginTest extends TestKitBase {
                 main.wsdoc.group {
                     serviceXslt 'transform.xsl'
                 }
-                other.wsdoc.group { 
+                other.wsdoc.group {
                     serviceXslt 'transform.xsl'
                 }
             }
@@ -69,7 +71,7 @@ class WsDocGenPluginTest extends TestKitBase {
                 compileOnly 'com.sun.xml.ws:jaxws-rt:2.3.2'
                 otherCompileOnly 'com.sun.xml.ws:jaxws-rt:2.3.2'
             }
-            
+
         """)
 
         writeSimpleDemoServiceWSBean(file("src/main/java")) //generates simple source file
@@ -90,7 +92,7 @@ class WsDocGenPluginTest extends TestKitBase {
             apply plugin: 'sktools-wsdocgen-plugin'
 
             sourceSets {
-                main.wsdoc.group { }
+                main.wsdoc.group {}
             }
         }
 
@@ -112,8 +114,8 @@ class WsDocGenPluginTest extends TestKitBase {
             apply plugin: 'sktools-wsdocgen-plugin'
 
             sourceSets {
-                main { }
-                other.wsdoc.group { }
+                main {}
+                other.wsdoc.group {}
             }
         }
 
@@ -135,7 +137,7 @@ class WsDocGenPluginTest extends TestKitBase {
             apply plugin: 'sktools-wsdocgen-plugin'
 
             sourceSets {
-                main.wsdoc.group { }
+                main.wsdoc.group {}
                 other
             }
         }
@@ -185,7 +187,6 @@ class WsDocGenPluginTest extends TestKitBase {
     }
 
 
-
     @Test
     void canCustomizeInclude() {
         final Project project = projectBuilder().build().tap {
@@ -217,7 +218,7 @@ class WsDocGenPluginTest extends TestKitBase {
                     serviceXslt 'transform.xsl'
                 }
             }
-            
+
             repositories {
                 maven { url = '${testProperties.MAVEN_REPO}' }
             }
@@ -261,7 +262,7 @@ class WsDocGenPluginTest extends TestKitBase {
                     serviceXslt 'transform.xsl'
                 }
             }
-                        
+
             repositories {
                 maven { url = '${testProperties.MAVEN_REPO}' }
             }
@@ -284,4 +285,41 @@ class WsDocGenPluginTest extends TestKitBase {
     }
 
 
+    @Test
+    void genWsdocIsUpToDate() {
+        writeFile("build.gradle", """
+            plugins {
+                id 'java'
+                id 'sktools.wsdoc'
+            }
+
+            sourceSets.main {
+                wsdoc.group {
+                    serviceXslt 'transform.xsl'
+                }
+            }
+
+            repositories {
+                maven { url = '${testProperties.MAVEN_REPO}' }
+            }
+            dependencies {
+                compileOnly 'com.sun.xml.ws:jaxws-rt:2.3.2'
+            }
+        """)
+
+        // eksempel-kildekode som har domene-klasse definert
+        writeInterfaceServiceWSBean(file('src/main/java'))
+        writeServiceLayout(file('transform.xsl'))
+
+
+        BuildResult buildResult1 = testGradleBuild(':genWsdoc')
+
+        assertThat(buildResult1.task(":genWsdoc").getOutcome()).isEqualTo(TaskOutcome.SUCCESS)
+        assertThat(file('build/main/wsdoc/Group1/InterfaceService.html')).exists()
+
+        BuildResult buildResult2 = testGradleBuild(':genWsdoc')
+        assertThat(buildResult2.task(":genWsdoc").getOutcome())
+            .as("Task up to date ved andre gangs kjøring").isEqualTo(TaskOutcome.UP_TO_DATE)
+        assertThat(file('build/main/wsdoc/Group1/InterfaceService.html')).exists()
+    }
 }
