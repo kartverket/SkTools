@@ -160,7 +160,7 @@ public class WsDocGenPlugin implements Plugin<Project> {
 
         InputStream testKitMetadataStream = testEnvironmentClasspath();
         if (testKitMetadataStream == null) {
-            ScriptHandler buildscript = project.getRootProject().getBuildscript(); //root projects repo configuration
+            ScriptHandler buildscript = project.getBuildscript().getRepositories().isEmpty() ? project.getRootProject().getBuildscript() : project.getBuildscript(); //root projects repo configuration
             wsDocGenConfiguration = buildscript.getConfigurations().detachedConfiguration(wsDocGenDependency(project));
         } else {
             Properties properties = GUtil.loadProperties(testKitMetadataStream);
