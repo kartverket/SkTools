@@ -1,0 +1,15 @@
+#!/bin/sh
+
+interval=10800
+
+while [ /bin/true ]; do
+  time=$(date)
+  neste=$(date -d "$time + $interval seconds")
+  echo "Venter $interval sekunder (til $neste) for å logge ut og inn av perforce ..."
+  sleep $interval
+  echo "Logger ut og inn ..."
+  p4relogin $1 $2
+  echo ""
+  echo "Ferdig!"
+  p4 -u $1 tickets
+done

@@ -1,0 +1,9 @@
+#!/usr/bin/expect
+
+set username [lindex $argv 0]
+set password [lindex $argv 1]
+
+spawn p4 -u $username logout
+spawn p4 -u $username login
+expect "Enter password:"
+send "$password\r"
