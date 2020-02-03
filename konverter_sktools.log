@@ -1,0 +1,114 @@
+$ ./konverter_sktools.sh
+
+Perforce info:
+Perforce - The Fast Software Configuration Management System.
+Copyright 1995-2019 Perforce Software.  All rights reserved.
+This product includes software developed by the OpenSSL Project
+for use in the OpenSSL Toolkit (http://www.openssl.org/)
+Version of OpenSSL Libraries: OpenSSL 1.0.2q  20 Nov 2018
+See 'p4 help [ -l ] legal' for additional license information on
+these licenses and others.
+Extensions/scripting support built-in.
+Parallel sync threading built-in.
+Rev. P4/NTX64/2018.2/1751184 (2019/01/21).
+
+Python info:
+Python 2.7.16
+
+Git info:
+git version 2.23.0.windows.1
+
+Git global config:
+user.name=Leif Lislegard
+user.email=lislei@kartverket.no
+git-p4.pathencoding=iso8859-1
+git-p4.retries=100
+git-p4.port=perforce.statkart.no:1666
+core.autocrlf=input
+core.editor="C:/Program Files (x86)/GitExtensions/GitExtensions.exe" fileeditor
+
+
+Cloning into /c/dev/matrikkelen/migrering-perforce-til-git/sktools ...
+Initialized empty Git repository in C:/dev/matrikkelen/migrering-perforce-til-git/sktools/.git/
+Importing from //sktools/SKToolsKode@all into .
+Importing revision 48445 (20%)
+    Importing new branch SKToolsKode/1.2
+
+    Resuming with change 48445
+Importing revision 60133 (44%)
+    Importing new branch SKToolsKode/1.3
+
+    Resuming with change 60133
+Importing revision 85373 (72%)
+    Importing new branch SKToolsKode/1.4
+
+    Resuming with change 85373
+Importing revision 85374 (72%)
+    Importing new branch SKToolsKode/1.5
+
+    Resuming with change 85374
+Importing revision 92840 (97%)
+    Importing new branch SKToolsKode/5.x
+
+    Resuming with change 92840
+Importing revision 92950 (100%)
+Updated branches: 1.4 1.5 1.2 1.3 5.x trunk
+('labelDetails=', {'code': 'stat', 'View0': '//sktools/SKToolsKode/1.5/...', 'Description': 'SKTOOLS-208\tFeil ved resolving av transitive avhengigheter ved bruk av ny plugins DSL\n', 'Update': '2020/01/15 19:31:20', 'Label': 'sktools-1.5.1', 'Access': '2020/01/31 16:49:21', 'Owner': 'lislei', 'Options': 'locked noautoreload'})
+('labelDetails=', {'code': 'stat', 'View0': '//sktools/SKToolsKode/1.5/...', 'Description': 'Created by lislei.\n', 'Update': '2019/11/29 18:47:50', 'Label': 'sktools-1.5.0', 'Access': '2020/01/31 16:49:21', 'Owner': 'lislei', 'Options': 'locked noautoreload'})
+('labelDetails=', {'code': 'stat', 'View0': '//sktools/SKToolsKode/1.4/...', 'Description': 'Created by lislei.\n', 'Update': '2019/11/29 18:39:07', 'Label': 'sktools-1.4.0', 'Access': '2020/01/31 16:49:21', 'Owner': 'lislei', 'Options': 'locked noautoreload'})
+('labelDetails=', {'code': 'stat', 'View0': '//sktools/SKToolsKode/1.2/...', 'Description': 'SKTools versjon 1.2\n', 'Update': '2013/06/11 16:49:55', 'Label': 'sktools-1.2.0', 'Access': '2020/01/31 16:49:21', 'Owner': 'lislei', 'Options': 'locked noautoreload'})
+('labelDetails=', {'code': 'stat', 'View0': '//sktools/SKToolsKode/5.x/...', 'Description': 'Created by lislei.\n', 'Update': '2020/01/15 19:45:46', 'Label': 'sktools-5.0', 'Access': '2020/01/31 16:49:21', 'Owner': 'lislei', 'Options': 'locked noautoreload'})
+('labelDetails=', {'code': 'stat', 'View0': '//sktools/SKToolsKode/5.x/...', 'Description': 'Created by lislei.\n', 'Update': '2020/01/15 19:37:16', 'Label': 'sktools-5.1', 'Access': '2020/01/31 16:49:22', 'Owner': 'lislei', 'Options': 'locked noautoreload'})
+('labelDetails=', {'code': 'stat', 'View0': '//sktools/SKToolsKode/5.x/...', 'Description': 'Created by lislei.\n', 'Update': '2020/01/15 19:34:23', 'Label': 'sktools-5.2', 'Access': '2020/01/31 16:49:22', 'Owner': 'lislei', 'Options': 'locked noautoreload'})
+Not checking out any branch, use "git checkout -q -b master <branch>"
+
+All refs:
+
+72eae9369e3ed4a8a76b59c8d34b199415185d22 refs/remotes/p4/SKToolsKode/1.2
+29f17dd88ec4159706927ac66d988f61b18d88e2 refs/remotes/p4/SKToolsKode/1.3
+0d8cf706b04b6aee206d30749411a8aaaa7579a5 refs/remotes/p4/SKToolsKode/1.4
+7a9667b8da4d424b011aeae1a85c53fbed9cdd99 refs/remotes/p4/SKToolsKode/1.5
+c2ca1e8b5a425681241c09a4edc22105596812d5 refs/remotes/p4/SKToolsKode/5.x
+1b38d2914f20d1eb359e477942fac1efaceab2c2 refs/remotes/p4/SKToolsKode/trunk
+588618d2a399734e58ca8d80907c3d0981e99eb1 refs/tags/sktools-1.2.0
+95b548a0d6eeeeb239890a931b209e9a642bcfbd refs/tags/sktools-1.4.0
+9da8e8f5957b0c79cebcb69ec1d0adbd3d1c1657 refs/tags/sktools-1.5.0
+f2ef7dd039ba576e43cf4661c14be1be4e1259ba refs/tags/sktools-1.5.1
+1366d251554e04aa3ff9d912d8479e5f0c2b99b3 refs/tags/sktools-5.0
+532f3e89e2888c02119b71dbd86483a671184ef8 refs/tags/sktools-5.1
+a32a8b330bb5e791ce1cba12c4852ad233de3f40 refs/tags/sktools-5.2
+Defining branch 1.5 ...
+Switched to a new branch '1.5'
+HEAD is now at 7a9667b8 SKTOOLS-208: resolving av transitive plugin-avhengigheter fallbackes til root project. Dersom prosjektet selv har buildscript (plugin DSL oppførsel) så benyttes denne.
+Defining branch 5.x ...
+Switched to a new branch '5.x'
+HEAD is now at c2ca1e8b SKTOOLS-207: fix av up-to-date ved ingen endringer
+Defining branch trunk ...
+Switched to a new branch 'trunk'
+HEAD is now at 1b38d291 trunk <- 5.x
+
+
+Converted tags:
+sktools-1.2.0
+sktools-1.4.0
+sktools-1.5.0
+sktools-1.5.1
+sktools-5.0
+sktools-5.1
+sktools-5.2
+
+
+Converted branches:
+  1.5
+  5.x
+* trunk
+
+
+To push branches to origin do:
+
+git remote add origin <url>
+git push --set-upstream origin 1.5
+git push --set-upstream origin 5.x
+git push --set-upstream origin trunk
+
+nJoy!
