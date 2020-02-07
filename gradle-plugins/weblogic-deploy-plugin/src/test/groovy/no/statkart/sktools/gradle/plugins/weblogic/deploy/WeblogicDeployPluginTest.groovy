@@ -109,8 +109,8 @@ class WeblogicDeployPluginTest extends TestKitBase {
         assert project.tasks['deploy'].classpath.isEmpty()
         assert project.tasks['undeploy'].classpath.isEmpty()
 
-        project.ext.WEBLOGIC_HOME = testProperties.WEBLOGIC_HOME
-        project.ext.WEBLOGIC_VERSION = testProperties.WEBLOGIC_VERSION
+        project.ext.WEBLOGIC_HOME = 'mock1'
+        project.ext.WEBLOGIC_VERSION = '12.2'
 
         assert !project.tasks['deploy'].classpath.isEmpty()
         assert !project.tasks['undeploy'].classpath.isEmpty()
