@@ -22,7 +22,7 @@ pipeline { //declarative pipeline syntax
     // agent defines where the pipeline will run.
     agent {
         // This also could have been 'agent any' - that has the same meaning as: label "".
-        label ""
+        label 'sktools||matrikkel'
     }
 
     parameters {
@@ -49,12 +49,12 @@ pipeline { //declarative pipeline syntax
     stages {
         stage('Prepare') {
             steps {
-                bat "gradle clean --refresh-dependencies ${gradleOptions(this)}"
+                sh "gradle clean --refresh-dependencies ${gradleOptions(this)}"
             }
         }
         stage('Build') {
             steps {
-                bat "gradle assemble ${gradleOptions(this)}"
+                sh "gradle assemble ${gradleOptions(this)}"
             }
         }
 
@@ -65,8 +65,8 @@ pipeline { //declarative pipeline syntax
                         jdk 'Java 8 Latest'  //tester med spesifiserte minstekrav
                     }
                     steps {
-                        bat "gradle --version"
-                        bat "gradle testGradle6.0 -DignoreFailures=true ${gradleOptions(this)}"
+                        sh "gradle --version"
+                        sh "gradle testGradle6.0 -DignoreFailures=true ${gradleOptions(this)}"
                     }
                     post {
                         always {
@@ -79,8 +79,8 @@ pipeline { //declarative pipeline syntax
                         gradle 'Gradle 6.0.1' //latest og greatest (kan også være neste major versjon)
                     }
                     steps {
-                        bat "gradle --version"
-                        bat "gradle testGradle6.0.1 -DignoreFailures=true ${gradleOptions(this)} -DbuildDirName=build/gradle6.0.1" //buildDirName for å kjøre flere bygg med forskjellige gradle versjoner
+                        sh "gradle --version"
+                        sh "gradle testGradle6.0.1 -DignoreFailures=true ${gradleOptions(this)} -DbuildDirName=build/gradle6.0.1" //buildDirName for å kjøre flere bygg med forskjellige gradle versjoner
                     }
                     post {
                         always {
