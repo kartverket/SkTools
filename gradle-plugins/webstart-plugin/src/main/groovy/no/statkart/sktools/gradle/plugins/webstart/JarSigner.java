@@ -168,7 +168,7 @@ public class JarSigner extends ConventionTask {
 
                 //legger til signert fil i eksekvering av task - blir også lagt til ved beregning av output-filer
                 signedJarFilesDir.mkdirs();
-                Files.copy(signedJarFile.toPath(), new File(signedJarFilesDir, signedJarFile.getName()).toPath(), StandardCopyOption.REPLACE_EXISTING);
+                Files.copy(signedJarFile.toPath(), signedJarFilesDir.toPath().resolve(signedJarFile.getName()), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
 
                 //kan ikke bruke symlink pga kartverkets UAC policy -- kan evt kjøres med admin privilegier
                 // se også https://stackoverflow.com/questions/23217460/how-to-create-soft-symbolic-link-using-java-nio-files
