@@ -7,6 +7,7 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.initialization.dsl.ScriptHandler;
 import org.gradle.util.GUtil;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
@@ -36,7 +37,7 @@ public class DependencyUtil {
         String classpath = testProperties.getProperty("sktools_dbtools_classpath");
         // En trenger classpath for dbtools (db-tools)
         // disse ligger i egen modul
-        return project.files((Object[]) classpath.split(";")); //NB: for GradleRunner i debug mode
+        return project.files((Object[]) classpath.split(File.pathSeparator)); //NB: for GradleRunner i debug mode
     }
 
     static Dependency dbutilsDependency(Project project) {

@@ -19,6 +19,7 @@ import org.gradle.api.tasks.bundling.Zip;
 import org.gradle.api.tasks.compile.AbstractCompile;
 import org.gradle.util.GUtil;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
@@ -156,7 +157,7 @@ public class WsDocGenPlugin implements Plugin<Project> {
             String classpath = testProperties.getProperty("sktools_wsdocgen_classpath");
             // En trenger classpath for annotasjonsprosessor (wsdoc)
             // disse ligger i egen modul
-            wsDocGenConfiguration = project.files((Object[]) classpath.split(";")); //NB: for GradleRunner i debug mode
+            wsDocGenConfiguration = project.files((Object[]) classpath.split(File.pathSeparator)); //NB: for GradleRunner i debug mode
         }
 
 

@@ -192,7 +192,7 @@ class XjcPlugin implements Plugin<Project> {
             // En trenger classpath til egen-utvidelser av xjc (xjc plugins)
             // disse ligger i prosjektet no.statkart.sktools:xjc-plugins
             // avhengighet til jaxb og jaxb-xjc legges på fra annen konfigurasjon
-            return project.files(classpath.split(';')) //NB: for GradleRunner i debug mode
+            return project.files(classpath.split(File.pathSeparator)) //NB: for GradleRunner i debug mode
         }
         final def buildscript = project.getBuildscript().getRepositories().isEmpty() ? project.getRootProject().getBuildscript() : project.getBuildscript()
         return buildscript.getConfigurations().detachedConfiguration(wsDocGenDependency(project))
