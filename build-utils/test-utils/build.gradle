@@ -12,8 +12,6 @@ sourceSets {
 
 def pluginProperties = [
         MAVEN_REPO : MAVEN_REPO as String,
-        WEBLOGIC_HOME : WEBLOGIC_HOME as String,
-        WEBLOGIC_VERSION : WEBLOGIC_VERSION as String,
         libraries_hsqldb : libraries.hsqldb,
 ] as Properties
 

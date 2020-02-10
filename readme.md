@@ -24,21 +24,12 @@ JDK 12 / JDK 1.8
 ## Utvikleroppsett
 Opprett gradle.properties med innhold, feks:
 ```
-WEBLOGIC_HOME=C:/wls1221
-WEBLOGIC_VERSION=12.2.1
-
-!! Weblogic 12.1 requires JDK8 !!
-#WEBLOGIC_HOME=C:/bea1213
-#WEBLOGIC_VERSION=12.1.3
-
 !unikt prosjektnavn for vindu i IntelliJ
 project_name=sktools-5.x
 ```
 
 ## Releasetesting
 For å teste virkemåten til de ulike plugins finnes er jenkins satt opp til å teste med noen kombinasjoner av følgende:
-* `WEBLOGIC_VERSION` styrer default weblogic classpath.
-* `WEBLOGIC_HOME` dersom ikke en angir WEBLOGIC_VERSION kan denne brukes eksplisitt
 * Gradle versjon (runtime)
 * JDK versjon (runtime)
 
