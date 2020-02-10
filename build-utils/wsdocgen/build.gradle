@@ -29,7 +29,7 @@ task processorClasspathManifest {
 
     doLast {
         outputDir.mkdirs()
-        file("$outputDir/processor-classpath.txt").text = sourceSets.main.runtimeClasspath.join(";")
+        file("$outputDir/processor-classpath.txt").text = sourceSets.main.runtimeClasspath.asPath
     }
 }
 
