@@ -114,17 +114,6 @@ class ProjectHelper {
         return dependsOnTaskNames.reverse()
     }
 
-    /**
-     * Setter conventional {@code WEBLOGIC_HOME} og {@code WEBLOGIC_VERSION} property for prosjekt
-     */
-    public ProjectHelper withConventionalWEBLOGIC() {
-        project.ext.set('WEBLOGIC_HOME', TestKitBase.testProperties.get('WEBLOGIC_HOME'))
-        project.ext.set('WEBLOGIC_VERSION', TestKitBase.testProperties.get('WEBLOGIC_VERSION'))
-
-        return this
-    }
-
-
 
     /**
      * Debug string

@@ -2,11 +2,13 @@ package no.statkart.sktools.gradle.plugins.weblogic.wswar
 
 
 import no.statkart.sktools.gradle.testutils.TestKitBase
+import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.compile.AbstractCompile
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
+import org.testng.SkipException
 import org.testng.annotations.Test
 
 import java.util.zip.ZipFile
@@ -23,6 +25,28 @@ import static org.assertj.core.api.Assertions.assertThat
  * @author Leif Lislegård
  */
 class WeblogicWsWarPluginTest extends TestKitBase {
+
+    /**
+     * Dependencies to run jwsc for WLS 12.2.1.3 with JDK8
+     */
+    static String WLS12_2_1_TOOLS = '''([
+        'com.oracle.fmwshare:com.oracle.webservices.wls.wls-soap-stack-impl:12.2.1-3-0',
+        'com.oracle.weblogic:wls_sharedLibraries.com.oracle.webservices.wls.jaxws-wlswss-client:12.2.1-3-0',
+        'com.oracle.weblogic:pcl2:12.2.1-3-0',
+        'com.oracle.weblogic:com.bea.core.jsr166e:12.2.1-3-0',
+        'com.oracle.weblogic:com.bea.core.beangen:12.2.1-3-0',
+        'com.oracle.weblogic:com.bea.core.annogen:12.2.1-3-0',
+        'com.oracle.weblogic:com.oracle.weblogic.application:12.2.1-3-0',
+        'com.oracle.weblogic:com.bea.core.descriptor.application:12.2.1-3-0',
+        'com.oracle.weblogic:com.bea.core.descriptor.application.binding:12.2.1-3-0',
+        'com.oracle.weblogic:com.bea.core.descriptor.j2ee:12.2.1-3-0',
+        'com.oracle.weblogic:com.bea.core.descriptor.settable.binding:12.2.1-2-0',
+        'com.oracle.weblogic:com.bea.core.xml.staxb.runtime:12.2.1-3-0',
+        'com.oracle.weblogic:javax.javaee-api:12.2.1-3-0',
+        'com.oracle.soa:com.bea.core.xml.xmlbeans:12.2.1-3-0',
+    ])'''
+
+
 
     /**
      * Tester registrering av plugin via navn
@@ -87,10 +111,19 @@ class WeblogicWsWarPluginTest extends TestKitBase {
             plugins {
               id 'sktools.weblogic-wswar'
             }
+
+            repositories {
+                maven { url = '${testProperties.MAVEN_REPO}' }
+            }
+
+            dependencies {
+              weblogicProvided $WLS12_2_1_TOOLS
+            }
         """)
-        writeGradleProperties(testProperties.findAll {
-            'WEBLOGIC_HOME'.equals(it.key) || 'WEBLOGIC_VERSION'.equals(it.key)
-        });
+
+        if (JavaVersion.current().isJava9Compatible()) {
+            throw new SkipException("JwscTask only for JDK8!")
+        }
 
         // java kildekode for en testservice
         writeDemoServiceWSBean(file("src/weblogic/java"))
@@ -111,10 +144,19 @@ class WeblogicWsWarPluginTest extends TestKitBase {
             plugins {
               id 'sktools.weblogic-wswar'
             }
+
+        repositories {
+            maven { url = '${testProperties.MAVEN_REPO}' }
+        }
+
+        dependencies {
+            weblogicProvided $WLS12_2_1_TOOLS
+        }
         """)
-        writeGradleProperties(testProperties.findAll {
-            'WEBLOGIC_HOME'.equals(it.key) || 'WEBLOGIC_VERSION'.equals(it.key)
-        });
+
+        if (JavaVersion.current().isJava9Compatible()) {
+            throw new SkipException("JwscTask only for JDK8!")
+        }
 
         // java kildekode for en testservice
         writeDemoServiceWSBean(file("src/weblogic/java"))
@@ -300,14 +342,14 @@ class WeblogicWsWarPluginTest extends TestKitBase {
             }
 
             dependencies {
-                compileOnly 'jakarta.xml.ws:jakarta.xml.ws-api:2.3.2' 
+                compileOnly 'jakarta.xml.ws:jakarta.xml.ws-api:2.3.2'
+                weblogicProvided $WLS12_2_1_TOOLS
             }
-
         """)
-        writeGradleProperties(testProperties.findAll {
-            'WEBLOGIC_HOME'.equals(it.key) || 'WEBLOGIC_VERSION'.equals(it.key)
-        });
 
+        if (JavaVersion.current().isJava9Compatible()) {
+            throw new SkipException("JwscTask only for JDK8!")
+        }
 
         // exception klasser
         writeExceptionService01Exceptions(file("src/main/java"))

@@ -30,14 +30,6 @@ rootProject.name += '-gradle-' + org.gradle.util.GradleVersion.current().getVers
 
 
 gradle.rootProject { project -> //nested projects fallback to properties of root project
-    [
-            'WEBLOGIC_HOME',
-            'WEBLOGIC_VERSION',
-    ].each { key ->
-        if (!project.hasProperty(key) && System.getenv(key) != null) {
-            project.ext.setProperty(key, System.getenv(key))
-        }
-    }
 
     if (!project.hasProperty('sktools_versjon')) {
         project.ext.setProperty('sktools_versjon', Project.DEFAULT_VERSION)
