@@ -24,7 +24,7 @@ class WeblogicGenClientTaskTest {
      *
      * Til sist blir en kompiler instans opprettet og konfigurert, deretter eksekvert og testet.
      */
-    @Test
+    @Test(enabled = false) //manuel testing med WEBLOGIC_HOME
     void testDefaults() {
         //forks a new project in a temp folder
         ProjectHelper rootProjectHelper = GradleProjectBuilder.builder("rootProject").withConventionalWEBLOGIC().build()
@@ -94,7 +94,7 @@ class WeblogicGenClientTaskTest {
      *
      * Til sist blir en kompiler instans opprettet og konfigurert, deretter eksekvert og testet.
      */
-    @Test
+    @Test(enabled = false) //manuel testing med WEBLOGIC_HOME
     void testExceptionRewrite() {
         //forks a new project in a temp folder
         ProjectHelper rootProjectHelper = GradleProjectBuilder.builder("rootProject").withConventionalWEBLOGIC().build()
@@ -164,7 +164,7 @@ class WeblogicGenClientTaskTest {
     void testResourceRewrite() {
 
         //forks a new project in a temp folder
-        ProjectHelper rootProjectHelper = GradleProjectBuilder.builder().withConventionalWEBLOGIC().build()
+        ProjectHelper rootProjectHelper = GradleProjectBuilder.builder().build()
         Project project = rootProjectHelper.getProject()
         def dir = project.mkdir('build')
 
@@ -192,7 +192,7 @@ class WeblogicGenClientTaskTest {
      *
      * Til sist blir en kompiler instans opprettet og konfigurert, deretter eksekvert og testet.
      */
-    @Test
+    @Test(enabled = false) //manuel testing med WEBLOGIC_HOME
     void testApiPrefix() {
         //forks a new project in a temp folder
         ProjectHelper rootProjectHelper = GradleProjectBuilder.builder("rootProject").withConventionalWEBLOGIC().build()

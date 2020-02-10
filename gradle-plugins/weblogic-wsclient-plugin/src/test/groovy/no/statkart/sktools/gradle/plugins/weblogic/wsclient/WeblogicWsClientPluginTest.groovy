@@ -116,7 +116,7 @@ class WeblogicWsClientPluginTest extends TestKitBase {
      * Tester generering av wsclient der man peker til war modul i et annet gradle prosjekt.
      * Benytter her JavaPlugin oppsett.
      */
-    @Test
+    @Test(enabled = false) //manuel testing med WEBLOGIC_HOME
     void testDependency() {
         //forks a new wsClientProject in a temp folder
         ProjectHelper wsClientProjectHelper = GradleProjectBuilder.builder('wsclient').withConventionalWEBLOGIC().build {

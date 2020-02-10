@@ -46,12 +46,6 @@ project.ext.libraries = [
 ]
 
 
-// Oracle Weblogic dependencies
-
-assert WEBLOGIC_VERSION //husk å utvide byggesystem med ny weblogic version..
-assert WEBLOGIC_HOME //WEBLOGIC_HOME maa vaere gitt
-
-
 
 
 subprojects { Project project ->

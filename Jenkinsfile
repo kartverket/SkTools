@@ -6,7 +6,6 @@
 
  CI prosessen har følgende parameteriserbare dimensjoner:
 
-   WEBLOGIC_VERSION : WEBLOGIC_HOME blir utledet via denne. Det kreves tilhørende env variabel "WEBLOGIC_HOME_${env.WEBLOGIC_VERSION}" peker til weblogic lib-katalog på byggenode
    sktools_versjon : versjon for publisering til nexus maven repo
 
  For jenkins pipeline documentation https://jenkins.io/doc/book/pipeline/
@@ -27,7 +26,6 @@ pipeline { //declarative pipeline syntax
     }
 
     parameters {
-        string(name: 'WEBLOGIC_VERSION', defaultValue: '12.1.3.0', description: 'Weblogic versjon. Det kreves tilhørende env variabel "WEBLOGIC_HOME_${env.WEBLOGIC_VERSION}" peker til weblogic lib-katalog på byggenode.')
         string(name: 'sktools_versjon', defaultValue: "${env.BRANCH_NAME ?: 'trunk'}-build${env.BUILD_NUMBER}", description: 'Versjon for publisert artefakt.')
         string(name: 'BRANCH_NAME', defaultValue: "${env.BRANCH_NAME ?: 'trunk'}", description: 'Branch for kildekode.')
     }
@@ -64,11 +62,6 @@ pipeline { //declarative pipeline syntax
         stage('Unit tests') {
             parallel {
                 stage('Test gradle baseline') {
-                    //tester med spesifiserte minstekrav
-                    environment {
-                        WEBLOGIC_VERSION = '10.3.5.0'
-                        WEBLOGIC_HOME = "${WEBLOGIC_HOME('10.3.5.0', env)}"
-                    }
                     steps {
                         bat "gradle --version"
                         bat "gradle testGradle4.2 -DignoreFailures=true ${gradleOptions(this)}"
@@ -82,10 +75,6 @@ pipeline { //declarative pipeline syntax
                 stage('Test gradle latest') {
                     tools {
                         gradle 'Gradle 4.10.2' //latest og greatest (kan også være neste major versjon)
-                    }
-                    environment {
-                        WEBLOGIC_VERSION = "${params.WEBLOGIC_VERSION}"
-                        WEBLOGIC_HOME = "${WEBLOGIC_HOME("${params.WEBLOGIC_VERSION}", env)}"
                     }
                     steps {
                         bat "gradle --version"
@@ -174,19 +163,9 @@ Build : $BUILD_URL <br>
 
 static def gradleOptions(script) {
     return [
-            "-PWEBLOGIC_VERSION=${script.env.WEBLOGIC_VERSION}",
-            "-PWEBLOGIC_HOME=${WEBLOGIC_HOME(script.env.WEBLOGIC_VERSION, script.env)}",
             '-Dorg.gradle.daemon=false',
             "-Djava.io.tmpdir=${script.pwd(tmp: true)}", //temp dir settes til samme mappe som jenkins (<workspace name>@tmp)
             '--stacktrace'
     ].join(' ')
 }
 
-/**
- * Krever at byggenoder er satt opp med konvensjonell environment variabel knyttet til WEBLOGIC_VERSION
- */
-static def WEBLOGIC_HOME(version, env) {
-    def path = env."WEBLOGIC_HOME_${version}"
-    Objects.requireNonNull(path, "Missing env var for '${'WEBLOGIC_HOME_' + version}' on Jenkins node!")
-    return path
-}
