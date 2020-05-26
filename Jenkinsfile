@@ -76,15 +76,15 @@ pipeline { //declarative pipeline syntax
                 }
                 stage('Test gradle latest') {
                     tools {
-                        gradle 'Gradle 6.0.1' //latest og greatest (kan også være neste major versjon)
+                        gradle 'Gradle 6.4.1' //latest og greatest (kan også være neste major versjon)
                     }
                     steps {
                         sh "gradle --version"
-                        sh "gradle testGradle6.0.1 -DignoreFailures=true ${gradleOptions(this)} -DbuildDirName=build/gradle6.0.1" //buildDirName for å kjøre flere bygg med forskjellige gradle versjoner
+                        sh "gradle testGradle6.4.1 -DignoreFailures=true ${gradleOptions(this)} -DbuildDirName=build/gradle6.4.1" //buildDirName for å kjøre flere bygg med forskjellige gradle versjoner
                     }
                     post {
                         always {
-                            junit '**/test-results/testGradle6.0.1/*.xml'
+                            junit '**/test-results/testGradle6.4.1/*.xml'
                         }
                     }
                 }
