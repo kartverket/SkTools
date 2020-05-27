@@ -4,6 +4,7 @@ import groovy.lang.Closure;
 import no.statkart.sktools.gradle.plugins.wsdocgen.WsDocGroup;
 import org.gradle.api.Action;
 import org.gradle.api.InvalidUserDataException;
+import org.gradle.api.Project;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.util.ConfigureUtil;
 
@@ -18,16 +19,18 @@ import java.util.List;
  */
 public class WsDocGroupContainer extends AbstractList<WsDocGroup> {
     private final List<WsDocGroup> store = new ArrayList<>();
+    private final Project project;
     private final SourceSet sourceSet;
 
     private final List<Action<WsDocGroup>> configActions = new ArrayList<>();
 
-    public WsDocGroupContainer(SourceSet sourceSet) {
+    public WsDocGroupContainer(Project project, SourceSet sourceSet) {
+        this.project = project;
         this.sourceSet = sourceSet;
     }
 
     WsDocGroup create(String name) throws InvalidUserDataException {
-        return new WsDocGroup(name, sourceSet);
+        return new WsDocGroup(project, name, sourceSet);
     }
 
     WsDocGroup create(String name, Closure configureClosure) throws InvalidUserDataException {
