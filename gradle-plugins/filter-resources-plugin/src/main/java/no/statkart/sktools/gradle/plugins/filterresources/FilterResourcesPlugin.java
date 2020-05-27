@@ -13,6 +13,7 @@ import org.gradle.api.tasks.Delete;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.plugins.ide.idea.IdeaPlugin;
 
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -113,7 +114,8 @@ public class FilterResourcesPlugin implements Plugin<Project> {
                     public void execute(Project project) {
                         //default verdier for filterResources source set
                         if (sourceSetOutputConvention.getFilterResourcesOutputDir() == null) {
-                            sourceSetOutputConvention.filterResourcesOutput(String.format("build/filteredResources/%s", sourceSet.getName()));
+                            sourceSetOutputConvention.filterResourcesOutput(
+                                Paths.get(String.valueOf(project.getBuildDir()), "filteredResources", sourceSet.getName()));
                         }
 
                         //registrerer sourceDir
