@@ -33,7 +33,7 @@ public class XjcSchemaContainer extends AbstractList<XjcConfig> {
     protected XjcConfig create(String name) throws InvalidUserDataException {
         String schemaName = sourceSet.getName() + GUtil.toCamelCase(name);
         ConfigurableFileCollection sourceFiles = project.files();
-        return new XjcConfig(sourceSet, schemaName, sourceFiles);
+        return new XjcConfig(sourceSet, schemaName, sourceFiles, String.valueOf(project.getBuildDir()));
     }
 
     protected XjcConfig create(String name, Closure configureClosure) throws InvalidUserDataException {

@@ -7,6 +7,8 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.SourceSet
 import org.gradle.util.ConfigureUtil
 
+import java.nio.file.Paths
+
 /**
  * Konfigurasjon for en xjc eksekvering.
  * <br />
@@ -38,11 +40,11 @@ class XjcConfig {
     public Map<String, Map> xjcOptions = [:] as HashMap
 
 
-    XjcConfig(SourceSet sourceSet, String name, ConfigurableFileCollection sourceFiles) {
+    XjcConfig(SourceSet sourceSet, String name, ConfigurableFileCollection sourceFiles, String buildDir) {
         this.name = name;
 
         this.source = sourceFiles
-        this.genOutputPath = String.format("build/xjc/%s/%s", sourceSet.getName(), name)
+        this.genOutputPath = Paths.get(buildDir, "xjc", sourceSet.getName(), name)
 
         this.genTaskName = sourceSet.getTaskName("gen", name); //SKTOOLS-10: mulighet for konfigurering av navn
     }
