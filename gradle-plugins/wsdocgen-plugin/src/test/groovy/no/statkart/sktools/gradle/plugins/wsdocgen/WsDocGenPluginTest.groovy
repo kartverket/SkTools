@@ -148,8 +148,7 @@ class WsDocGenPluginTest extends TestKitBase {
         assertEquals project.sourceSets.main.wsdoc.size(), 1
         assertEquals project.sourceSets.other.wsdoc.size(), 0
 
-        assertEquals project.sourceSets.main.wsdoc[0].includes, ['**/*Bean.java']
-        assertEquals project.sourceSets.main.wsdoc[0].targetPath, 'build/main/wsdoc/Group1'
+        assertEquals project.sourceSets.main.wsdoc[0].targetPath.get(), project.file('build/main/wsdoc/Group1')
     }
 
 
@@ -172,34 +171,18 @@ class WsDocGenPluginTest extends TestKitBase {
 
 
         //tests vanilla configuration
-        assertEquals project.sourceSets.main.wsdoc[0].targetPath, 'build/main/wsdoc/Group1'
+        assertEquals project.sourceSets.main.wsdoc[0].targetPath.get(), project.file('build/main/wsdoc/Group1')
         assertEquals project.tasks.genMainWsdocGroup1.destinationDir, project.file('build/main/wsdoc/Group1')
 
         //test override
-        assertEquals project.sourceSets.other.wsdoc[0].targetPath, 'gen/doc'
+        assertEquals project.sourceSets.other.wsdoc[0].targetPath.get(), project.file('gen/doc')
         assertEquals project.tasks.genOtherWsdocGroup1.destinationDir, project.file('gen/doc')
 
         //test multiple groups
-        assertEquals project.sourceSets.multi.wsdoc[0].targetPath, 'gen/doc'
-        assertEquals project.sourceSets.multi.wsdoc[1].targetPath, 'gen/doc2'
+        assertEquals project.sourceSets.multi.wsdoc[0].targetPath.get(), project.file('gen/doc')
+        assertEquals project.sourceSets.multi.wsdoc[1].targetPath.get(), project.file('gen/doc2')
         assertEquals project.tasks.genMultiWsdocGroup1.destinationDir, project.file('gen/doc')
         assertEquals project.tasks.genMultiWsdocGroup2.destinationDir, project.file('gen/doc2')
-    }
-
-
-    @Test
-    void canCustomizeInclude() {
-        final Project project = projectBuilder().build().tap {
-            apply plugin: 'sktools-wsdocgen-plugin'
-
-            sourceSets {
-                main.wsdoc.group { include '**/TestServiceWSBean.java' }
-            }
-        }
-
-        assertEquals project.sourceSets.main.wsdoc[0].includes, ['**/TestServiceWSBean.java']
-        assertEquals project.tasks.genMainWsdocGroup1.includes.size(), 1
-        assertTrue project.tasks.genMainWsdocGroup1.includes.contains('**/TestServiceWSBean.java')
     }
 
 

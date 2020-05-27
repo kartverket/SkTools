@@ -1,5 +1,7 @@
 package no.statkart.sktools.gradle.plugins.wsdocgen
 
+import org.gradle.api.Project
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.SourceSet
 import org.gradle.util.GUtil
 
@@ -8,102 +10,96 @@ import org.gradle.util.GUtil
  *
  * @since 1.1
  */
-public class WsDocGroup {
-   private final transient SourceSet sourceSet
+class WsDocGroup {
+    private final Project project
+    private final SourceSet sourceSet
 
-   /**
-    * Navn for gruppe - blir automatisk tildelt dersom ikke spesifisert
-    * @since 1.3
-    */
-   protected String name;
+    /**
+     * Navn for gruppe - blir automatisk tildelt dersom ikke spesifisert
+     * @since 1.3
+     */
+    protected String name
 
-   protected Collection<String> includes;
+    /**
+     * Hvilket dir det skal legges til
+     */
+    final Property<File> targetPath
 
-   /**
-    * Hvilket dir det skal legges til
-    */
-   protected Object targetPath
+    final Property<String> lookupPath
 
-   protected String lookupPath
+    final Property<String> encoding
 
-   protected String encoding
-
-   protected def serviceXsltPath
-   protected def indexXsltPath
+    final Property<File> serviceXsltPath
+    final Property<File> indexXsltPath
 
 
-   WsDocGroup(String name, SourceSet sourceSet) {
-      this.name = name
-      this.sourceSet = sourceSet
-   }
+    WsDocGroup(Project project, String name, SourceSet sourceSet) {
+        this.name = name
+        this.project = project
+        this.sourceSet = sourceSet
+        this.targetPath = project.getObjects().property(File)
+        this.lookupPath = project.getObjects().property(String)
+        this.encoding = project.getObjects().property(String)
+        this.serviceXsltPath = project.getObjects().property(File)
+        this.indexXsltPath = project.getObjects().property(File)
+    }
 
-   protected WsDocGroup configure(Closure closure) {
-      closure.setDelegate(this)
-      closure.resolveStrategy = Closure.DELEGATE_FIRST
-      closure()
-      return this
-   }
+    protected WsDocGroup configure(Closure closure) {
+        closure.setDelegate(this)
+        closure.resolveStrategy = Closure.DELEGATE_FIRST
+        closure()
+        return this
+    }
 
-   /**
-    * @since 1.1
-    */
-   WsDocGroup include(String... patterns) {
-      if (includes == null) {
-         includes = new ArrayList<String>();
-      }
-      Collections.addAll(includes, patterns)
-      return this
-   }
+    /**
+     * @since 1.1
+     */
+    WsDocGroup targetPath(Object path) {
+        targetPath.set(project.file(path))
+        return this
+    }
 
-   /**
-    * @since 1.1
-    */
-   WsDocGroup targetPath(Object path) {
-      targetPath = path;
-      return this;
-   }
+    /**
+     * @since 1.1
+     */
+    WsDocGroup lookupPath(String relativePath) {
+        lookupPath.set(relativePath)
+        return this
+    }
 
-   /**
-    * @since 1.1
-    */
-   WsDocGroup lookupPath(String relativePath) {
-      lookupPath = relativePath;
-      return this;
-   }
+    /**
+     * @since 1.3
+     */
+    WsDocGroup xslt(Object path) {
+        serviceXsltPath.set(project.file(path))
+        return this
+    }
 
-   /**
-    * @since 1.3
-    */
-   WsDocGroup xslt(Object path) {
-      serviceXsltPath = path;
-      return this;
-   }
+    /**
+     * SKTOOLS-105
+     * @see #xslt(Object)
+     * @since 1.3
+     */
+    WsDocGroup serviceXslt(Object path) {
+        return xslt(path)
+    }
 
-   /**
-    * SKTOOLS-105
-    * @see #xslt(Object)
-    * @since 1.3
-    */
-   WsDocGroup serviceXslt(Object path) {
-      return xslt(path);
-   }
+    /**
+     * SKTOOLS-105
+     * @since 1.3
+     */
+    WsDocGroup indexXslt(Object path) {
+        indexXsltPath.set(project.file(path))
+        return this
+    }
 
-   /**
-    * SKTOOLS-105
-    * @since 1.3
-    */
-   WsDocGroup indexXslt(Object path) {
-      indexXsltPath = path;
-      return this;
-   }
+    WsDocGroup encoding(String encoding) {
+        this.encoding.set(encoding)
+        return this
+    }
 
-   WsDocGroup encoding(String encoding) {
-      this.encoding = encoding;
-      return this;
-   }
-
-   public String getWsdocTaskName() {
-      return "gen" + GUtil.toCamelCase(sourceSet.getName() + " Wsdoc " + name)
-   }
+    String getWsdocTaskName() {
+        return "gen" + GUtil.toCamelCase(sourceSet.getName() + " Wsdoc " + name)
+    }
 
 }

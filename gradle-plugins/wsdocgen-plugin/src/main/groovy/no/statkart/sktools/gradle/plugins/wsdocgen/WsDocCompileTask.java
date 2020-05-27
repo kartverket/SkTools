@@ -1,6 +1,8 @@
 package no.statkart.sktools.gradle.plugins.wsdocgen;
 
 import org.gradle.api.logging.LogLevel;
+import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.Optional;
@@ -18,15 +20,21 @@ import java.util.List;
  * @since 2.0
  */
 public class WsDocCompileTask extends JavaCompile {
-    private WsDocGroup docGroup;
+    private final Property<String> lookupPath;
+    private final Property<String> encoding;
+
+    private final Property<File> serviceXsltPath;
+    private final Property<File> indexXsltPath;
 
     /**
      * Gradle 1.2/2.0 - no arg constructor or @Inject annotated constructor
      */
     @Inject
-    public WsDocCompileTask(WsDocGroup docGroup) {
-        super();
-        setDocGroup(docGroup);
+    public WsDocCompileTask(ObjectFactory objectFactory) {
+        lookupPath = objectFactory.property(String.class);
+        encoding = objectFactory.property(String.class);
+        serviceXsltPath = objectFactory.property(File.class);
+        indexXsltPath = objectFactory.property(File.class);
 
         getLogging().captureStandardError(LogLevel.LIFECYCLE);
         getLogging().captureStandardOutput(LogLevel.DEBUG);
@@ -42,15 +50,6 @@ public class WsDocCompileTask extends JavaCompile {
         compileOptions.setVerbose(getLogger().isInfoEnabled());
 
         compileOptions.getCompilerArgumentProviders().add(lazyCompilerArgs());
-        initEncoding(compileOptions);
-
-    }
-
-    private void initEncoding(final CompileOptions options) {
-        String encoding = getEncoding();
-        if (encoding != null && !encoding.isEmpty()) {
-            options.setEncoding(encoding);
-        }
     }
 
     @SuppressWarnings("Convert2Lambda")
@@ -60,18 +59,18 @@ public class WsDocCompileTask extends JavaCompile {
             public Iterable<String> asArguments() {
                 final List<String> compilerArgs = new ArrayList<>(3);
 
-                final File xsl = WsDocCompileTask.this.getServiceXsltFile();
+                final File xsl = getServiceXsltFile().get();
                 if (!xsl.exists()) {
-                    throw new RuntimeException("xslt file not found: " + WsDocCompileTask.this.getProject().relativePath(xsl));
+                    throw new RuntimeException("xslt file not found: " + getProject().relativePath(xsl));
                 }
                 compilerArgs.add("-Axslt=" + xsl.getPath()); //xslt file
 
-                if (WsDocCompileTask.this.getLookupPath() != null) {
-                    compilerArgs.add("-AjavaDocLookupPath=" + WsDocCompileTask.this.getLookupPath()); //lookup path
+                if (getLookupPath().isPresent()) {
+                    compilerArgs.add("-AjavaDocLookupPath=" + getLookupPath().get()); //lookup path
                 }
 
-                if (WsDocCompileTask.this.getIndexXsltFile() != null) {
-                    compilerArgs.add("-AindexXslt=" + WsDocCompileTask.this.getIndexXsltFile().getPath()); //oversikt over services
+                if (getIndexXsltFile().isPresent()) {
+                    compilerArgs.add("-AindexXslt=" + getIndexXsltFile().get().getPath()); //SKTOOLS-105
                 }
 
                 return compilerArgs;
@@ -81,14 +80,14 @@ public class WsDocCompileTask extends JavaCompile {
 
     @Optional
     @Input //not up to date when changed
-    public String getLookupPath() {
-        return getDocGroup().lookupPath;
+    public Property<String> getLookupPath() {
+        return lookupPath;
     }
 
     @Optional
     @Input
-    public String getEncoding() {
-        return getDocGroup().encoding;
+    public Property<String> getEncoding() {
+        return encoding;
     }
 
     @Override
@@ -96,38 +95,19 @@ public class WsDocCompileTask extends JavaCompile {
         final CompileOptions options = super.getOptions();
         options.setListFiles(getLogger().isDebugEnabled());
         options.setVerbose(getLogger().isInfoEnabled());
-
+        options.setEncoding(getEncoding().getOrNull());
         return options;
     }
 
     @InputFile
-    public File getServiceXsltFile() {
-        if (getDocGroup().serviceXsltPath != null) {
-            return getProject().file(getDocGroup().serviceXsltPath);
-        }
-        return null;
+    public Property<File> getServiceXsltFile() {
+        return serviceXsltPath;
     }
 
     @Optional
     @InputFile //file content aware
-    File getIndexXsltFile() {
-        if (getDocGroup().indexXsltPath != null) {
-            return getProject().file(getDocGroup().indexXsltPath);
-        } else {
-            return null; //optional null
-        }
-    }
-
-    private WsDocGroup getDocGroup() {
-        return docGroup;
-    }
-
-    private void setDocGroup(WsDocGroup docGroup) {
-        this.docGroup = docGroup;
-
-        if (docGroup.includes != null) {
-            setIncludes(docGroup.includes); //up to date affects getSource()
-        }
+    public Property<File> getIndexXsltFile() {
+        return indexXsltPath;
     }
 
 }
