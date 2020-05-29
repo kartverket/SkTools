@@ -15,9 +15,6 @@ import static org.testng.Assert.fail
 
 /**
  * Tester {@link WSDocProcessor}
- *
- * @since 1.3 - ny grunnbok sprint 30
- * @author Leif Lislegård
  */
 class WSDocProcessorTest extends TestKitBase {
     static final Logger log = LoggerFactory.getLogger(WSDocProcessorTest)
@@ -54,6 +51,7 @@ class WSDocProcessorTest extends TestKitBase {
         outputPath.mkdirs()
         test(
             "javac",
+            "-encoding", "UTF-8",
             "-proc:only",
             "-processor", WSDocProcessor.class.getName(),
             "-processorpath", processorPath,
@@ -124,7 +122,7 @@ class WSDocProcessorTest extends TestKitBase {
                 """)
 
         File xslt = writeFile('minimal.xsl',
-            """
+            """<?xml version="1.0" encoding="UTF-8"?>
                 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
                 <xsl:output method="text" version="1.0" media-type="text/plain" omit-xml-declaration="yes" />
@@ -142,6 +140,7 @@ class WSDocProcessorTest extends TestKitBase {
         outputPath.mkdirs()
         test(
             "javac",
+            "-encoding", "UTF-8",
             "-proc:only",
             "-processor", WSDocProcessor.class.getName(),
             "-processorpath", processorPath,
@@ -189,7 +188,7 @@ class WSDocProcessorTest extends TestKitBase {
                 """)
 
         File xslt = writeFile('minimal.xsl',
-            """
+            """<?xml version="1.0" encoding="UTF-8"?>
                 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
                 <xsl:output method="text" version="1.0" media-type="text/plain" omit-xml-declaration="yes" />
@@ -207,6 +206,7 @@ class WSDocProcessorTest extends TestKitBase {
         outputPath.mkdirs()
         test(
             "javac",
+            "-encoding", "UTF-8",
             "-proc:only",
             "-processor", WSDocProcessor.class.getName(),
             "-processorpath", processorPath,
@@ -266,7 +266,7 @@ class WSDocProcessorTest extends TestKitBase {
                 """)
 
         File xslt = writeFile('minimal.xsl',
-            """
+            """<?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
 <xsl:output method="xml" version="1.0" indent="yes"
@@ -313,12 +313,12 @@ class WSDocProcessorTest extends TestKitBase {
         outputPath.mkdirs()
         test(
             "javac",
+            "-encoding", 'UTF-8',
             "-proc:only",
             "-processor", WSDocProcessor.class.getName(),
             "-processorpath", processorPath,
             "-classpath", classpath,
             "-sourcepath", resourcePath.toString(),
-            "-encoding", 'UTF-8',
             "-d", outputPath.toString(), //d = generated class files
 
             "-Axslt=${xslt}", //xslt file
@@ -394,7 +394,7 @@ class WSDocProcessorTest extends TestKitBase {
                 """)
 
         File xslt = writeFile('minimal.xsl',
-            """
+            """<?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
 <xsl:output method="xml" version="1.0" indent="yes"
@@ -451,6 +451,7 @@ class WSDocProcessorTest extends TestKitBase {
         outputPath.mkdirs()
         test(
             "javac",
+            "-encoding", "UTF-8",
             "-proc:only",
             "-processor", WSDocProcessor.class.getName(),
             "-processorpath", processorPath,
@@ -529,7 +530,7 @@ class WSDocProcessorTest extends TestKitBase {
                 """)
 
         File xslt = writeFile('minimal.xsl',
-            """
+            """<?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
 <xsl:output method="xml" version="1.0" indent="yes"
@@ -576,6 +577,7 @@ class WSDocProcessorTest extends TestKitBase {
         outputPath.mkdirs()
         test(
             "javac",
+            "-encoding", "UTF-8",
             "-proc:only",
             "-processor", WSDocProcessor.class.getName(),
             "-processorpath", processorPath,
@@ -662,7 +664,7 @@ class WSDocProcessorTest extends TestKitBase {
                       * Intended for asserting a conversion.
                       *
                       * @throws Exception ved feil i konvertering
-                      * @throws RuntimeException ved andre mystiske feil 
+                      * @throws RuntimeException ved andre mystiske feil
                       */
                      public int longToInt(long value, int base) throws RuntimeException, Exception {
                          return 0;
@@ -671,7 +673,7 @@ class WSDocProcessorTest extends TestKitBase {
                 """)
 
         File xslt = writeFile('minimal.xsl',
-            """
+            """<?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
 <xsl:output method="xml" version="1.0" indent="yes"
@@ -697,7 +699,7 @@ class WSDocProcessorTest extends TestKitBase {
 
 
         File indexXslt = writeFile('index.xsl',
-            """
+            """<?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
 <xsl:output method="xml" version="1.0" indent="yes"
@@ -729,6 +731,7 @@ class WSDocProcessorTest extends TestKitBase {
         outputPath.mkdirs()
         test(
             "javac",
+            "-encoding", "UTF-8",
             "-proc:only",
             "-processor", WSDocProcessor.class.getName(),
             "-processorpath", processorPath,
@@ -811,7 +814,7 @@ class WSDocProcessorTest extends TestKitBase {
                 """)
 
         File xslt = writeFile('minimal.xsl',
-            """
+            """<?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
 <xsl:output method="xml" version="1.0" indent="yes"
@@ -877,6 +880,7 @@ class WSDocProcessorTest extends TestKitBase {
         outputPath.mkdirs()
         test(
             "javac",
+            "-encoding", "UTF-8",
             "-proc:only",
             "-processor", WSDocProcessor.class.getName(),
             "-processorpath", processorPath,
@@ -951,7 +955,7 @@ class WSDocProcessorTest extends TestKitBase {
                 """)
 
         File xslt = writeFile('minimal.xsl',
-            """
+            """<?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
 <xsl:output method="xml" version="1.0" indent="yes"
@@ -998,6 +1002,7 @@ class WSDocProcessorTest extends TestKitBase {
         outputPath.mkdirs()
         test(
             "javac",
+            "-encoding", "UTF-8",
             "-proc:only",
             "-processor", WSDocProcessor.class.getName(),
             "-processorpath", processorPath,
@@ -1078,7 +1083,7 @@ class WSDocProcessorTest extends TestKitBase {
                 """)
 
         File xslt = writeFile('minimal.xsl',
-            """
+            """<?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
 <xsl:output method="xml" version="1.0" indent="yes"
@@ -1173,6 +1178,7 @@ class WSDocProcessorTest extends TestKitBase {
         outputPath.mkdirs()
         test(
             "javac",
+            "-encoding", "UTF-8",
             "-proc:only",
             "-processor", WSDocProcessor.class.getName(),
             "-processorpath", processorPath,
@@ -1250,7 +1256,7 @@ class WSDocProcessorTest extends TestKitBase {
                 """)
 
         File xslt = writeFile('minimal.xsl',
-            """
+            """<?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
 <xsl:output method="xml" version="1.0" indent="yes"
@@ -1331,6 +1337,7 @@ class WSDocProcessorTest extends TestKitBase {
         outputPath.mkdirs()
         test(
             "javac",
+            "-encoding", "UTF-8",
             "-proc:only",
             "-processor", WSDocProcessor.class.getName(),
             "-processorpath", processorPath,

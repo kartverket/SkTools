@@ -38,7 +38,7 @@ public class SqlExecutor {
     boolean failOnWarning = true;
 
     //SKTOOLS-21
-    static Charset sqlFileEncoding = Charset.defaultCharset();
+    public static Charset sqlFileEncoding = Charset.defaultCharset();
     static {
         String encoding = System.getProperty("sql.file.encoding");
         if (encoding != null) {

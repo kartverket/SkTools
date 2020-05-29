@@ -75,7 +75,7 @@ INSERT INTO TEST_TABLE (ID, NAVN) VALUES (1, 'CHUCK NORRIS');
      *     <li> 1.0 patch#3 - Inserting Chuck Norris -> {@link #PATCH_03}
      * </ul>
      */
-    static File createSimplePatchFile(File dir = null) {
+    File createSimplePatchFile(File dir = null) {
         createTempFile(DbToolsTestContext.FILE_TYPE.SQL, dir, """
 
 --kommentar
@@ -85,7 +85,7 @@ ${PATCH_01}
 
 ${PATCH_03}
 
-""")
+""", encoding)
     }
 
 }

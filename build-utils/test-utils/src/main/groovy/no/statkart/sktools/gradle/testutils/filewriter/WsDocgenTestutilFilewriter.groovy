@@ -25,7 +25,7 @@ class WsDocgenTestutilFilewriter {
     public static File writeSimpleDemoServiceWSBean(File targetPath) {
         File file = new File(targetPath, '/no/statkart/sktools/test/SimpleDemoServiceWSBean.java')
         file.parentFile.mkdirs()
-        Files.write(file.toPath(), ["""
+        Files.write(file.toPath(), ["""\
                      package no.statkart.sktools.test;
 
                      /**
@@ -62,8 +62,7 @@ class WsDocgenTestutilFilewriter {
                          }
 
                      }
-                """], StandardCharsets.UTF_8,
-            StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.APPEND)
+                """], StandardCharsets.UTF_8, StandardOpenOption.WRITE, StandardOpenOption.CREATE)
 
         return file;
     }
@@ -87,8 +86,7 @@ class WsDocgenTestutilFilewriter {
 
         new File(targetPath, '/no/statkart/sktools/interfaceservice/domain/SimpleClass.java').with { File file ->
             file.parentFile.mkdirs()
-            file.withPrintWriter { writer ->
-                writer.print """
+            Files.write(file.toPath(), ["""\
                     package no.statkart.sktools.interfaceservice.domain;
 
                     import javax.xml.bind.annotation.XmlAccessType;
@@ -116,16 +114,14 @@ class WsDocgenTestutilFilewriter {
                         }
 
                     }
-                 """
-            }
+                """], StandardCharsets.UTF_8, StandardOpenOption.WRITE, StandardOpenOption.CREATE)
             return file
         }
 
 
         new File(targetPath, '/no/statkart/sktools/interfaceservice/InterfaceServiceInterface.java').with { File file ->
             file.parentFile.mkdirs()
-            file.withPrintWriter { writer ->
-                writer.print """
+            Files.write(file.toPath(), ["""\
                      package no.statkart.sktools.interfaceservice;
 
                      import no.statkart.sktools.interfaceservice.domain.SimpleClass;
@@ -147,16 +143,14 @@ class WsDocgenTestutilFilewriter {
                          Character stringToChar(String value);
 
                      }
-                 """
-            }
+                """], StandardCharsets.UTF_8, StandardOpenOption.WRITE, StandardOpenOption.CREATE)
             return file
         }
 
 
         new File(targetPath, '/no/statkart/sktools/interfaceservice/InterfaceServiceWSBean.java').with { File file ->
             file.parentFile.mkdirs()
-            file.withPrintWriter { writer ->
-                writer.print """
+            Files.write(file.toPath(), ["""\
                     package no.statkart.sktools.interfaceservice;
 
                     import no.statkart.sktools.interfaceservice.domain.SimpleClass;
@@ -188,14 +182,11 @@ class WsDocgenTestutilFilewriter {
                             return null;
                         }
 
-
                     }
-             """
-            }
+                """], StandardCharsets.UTF_8, StandardOpenOption.WRITE, StandardOpenOption.CREATE)
             return file
         }
     }
-
 
 
     /**
@@ -204,10 +195,10 @@ class WsDocgenTestutilFilewriter {
      * @since 1.3
      */
     public static File writeSimpleXSLT(File targetPath, String filename = 'transform.xslt') {
-        File file = new File(targetPath, '/' + filename)
-            file.parentFile.mkdirs()
-            file.withPrintWriter { writer ->
-                writer.print """
+        File file = new File(targetPath, filename)
+        file.parentFile.mkdirs()
+        Files.write(file.toPath(), ["""\
+<?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="2.0"
 xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
@@ -294,11 +285,9 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
 </xsl:stylesheet>
 
-                """
-            }
+                """], StandardCharsets.UTF_8, StandardOpenOption.WRITE, StandardOpenOption.CREATE)
 
-            return file
-
+        return file
     }
 
 }
