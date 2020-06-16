@@ -30,7 +30,7 @@ class WsImportPluginTest extends TestKitBase {
     @Test
     void ideaIntegration() {
 
-        writeFile("build.gradle", """
+        writeFileUTF8("build.gradle", """\
             plugins {
               id 'sktools.wsimport'
               id 'idea'
@@ -45,11 +45,11 @@ class WsImportPluginTest extends TestKitBase {
 
     @Test
     void wsimport_generates_sources() {
-        writeFile("build.gradle", """
+        writeFileUTF8("build.gradle", """\
             plugins {
               id 'sktools.wsimport'
             }
-            
+
             repositories {
                 maven { url = '${testProperties.MAVEN_REPO}' }
             }
@@ -65,11 +65,11 @@ class WsImportPluginTest extends TestKitBase {
 
     @Test
     void jarFileIncludesResources() {
-        writeFile("build.gradle", """
+        writeFileUTF8("build.gradle", """\
             plugins {
               id 'sktools.wsimport'
             }
-            
+
             repositories {
                 maven { url = '${testProperties.MAVEN_REPO}' }
             }

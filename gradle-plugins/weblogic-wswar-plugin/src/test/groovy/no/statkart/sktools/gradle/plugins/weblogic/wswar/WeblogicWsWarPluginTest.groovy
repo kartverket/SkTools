@@ -107,7 +107,7 @@ class WeblogicWsWarPluginTest extends TestKitBase {
      */
     @Test
     void testCompileTask() {
-        writeFile("build.gradle", """
+        writeFileUTF8("build.gradle", """\
             plugins {
               id 'sktools.weblogic-wswar'
             }
@@ -140,7 +140,7 @@ class WeblogicWsWarPluginTest extends TestKitBase {
      */
     @Test
     void testWarTask() {
-        writeFile("build.gradle", """
+        writeFileUTF8("build.gradle", """\
             plugins {
               id 'sktools.weblogic-wswar'
             }
@@ -183,8 +183,8 @@ class WeblogicWsWarPluginTest extends TestKitBase {
             apply plugin: 'sktools-weblogic-wswar-plugin'
         }
 
-        File weblogicSourceFile = writeFile("src/weblogic/java/SomeFile.java")
-        File mainSourceFile = writeFile("src/main/java/Main.java")
+        File weblogicSourceFile = createEmptyFile("src/weblogic/java/SomeFile.java")
+        File mainSourceFile = createEmptyFile("src/main/java/Main.java")
 
         assert project.tasks['compileWeblogicJava'].source.contains(weblogicSourceFile)    //forventer tilgang til kildekode i weblogic source set
         assert !project.tasks['compileWeblogicJava'].source.contains(mainSourceFile)   //forventer ingen tilgang til kildekode i main source set
@@ -201,9 +201,9 @@ class WeblogicWsWarPluginTest extends TestKitBase {
         }
 
         //definerer noen filer
-        File weblogicResourceFile = writeFile("src/weblogic/resources/weblogic.txt")
-        File mainResourceFile = writeFile("src/main/resources/main.txt")
-        File otherResourceFile = writeFile("src/other/resources/other.txt")
+        File weblogicResourceFile = createEmptyFile("src/weblogic/resources/weblogic.txt")
+        File mainResourceFile = createEmptyFile("src/main/resources/main.txt")
+        File otherResourceFile = createEmptyFile("src/other/resources/other.txt")
 
 
         //tester tilgang for en kjent task
@@ -235,8 +235,8 @@ class WeblogicWsWarPluginTest extends TestKitBase {
         }
 
         // some java files...
-        File weblogicSourceFile = writeFile('src/weblogic/java/DummyWLS.java')
-        File divSourceFile = writeFile('src/div/java/Div.java')
+        File weblogicSourceFile = createEmptyFile('src/weblogic/java/DummyWLS.java')
+        File divSourceFile = createEmptyFile('src/div/java/Div.java')
 
         assert project.tasks['compileWeblogicJava'].source.contains(weblogicSourceFile)    //forventer tilgang til kildekode i weblogic source set
         assert !project.tasks['compileWeblogicJava'].source.contains(divSourceFile)   //forventer INGEN tilgang til kildekode i div source set
@@ -284,12 +284,12 @@ class WeblogicWsWarPluginTest extends TestKitBase {
             }
         }
 
-        File weblogicSourceFile = writeFile("src/weblogic/java/WLS.java")
-        File mainSourceFile = writeFile("src/main/java/Main.java")
+        File weblogicSourceFile = createEmptyFile("src/weblogic/java/WLS.java")
+        File mainSourceFile = createEmptyFile("src/main/java/Main.java")
 
-        File weblogicResource = writeFile("src/weblogic/resources/wls.txt")
-        File mainResource = writeFile("src/main/resources/main.txt")
-        File commonResource = writeFile("src/common/resources/common.txt")
+        File weblogicResource = createEmptyFile("src/weblogic/resources/wls.txt")
+        File mainResource = createEmptyFile("src/main/resources/main.txt")
+        File commonResource = createEmptyFile("src/common/resources/common.txt")
 
 
         assert project.tasks['compileWeblogicJava'].source.contains(weblogicSourceFile)    //forventer tilgang til kildekode for  weblogicCompile configuration
@@ -331,7 +331,7 @@ class WeblogicWsWarPluginTest extends TestKitBase {
      */
     @Test
     void testCustomExceptions() {
-        writeFile("build.gradle", """
+        writeFileUTF8("build.gradle", """\
             plugins {
               id 'java'
               id 'sktools.weblogic-wswar'

@@ -34,14 +34,14 @@ class PropertiesPluginTest extends TestKitBase {
      */
     @Test
     void testInteroperabilityWithMavenPublish() {
-        writeFile("build.gradle", '''
+        writeFileUTF8("build.gradle", '''\
             plugins {
               id 'maven-publish'
               id 'sktools.properties'
             }
-            
+
             project.propertyUtils.expandProjectProperties()
-    
+
             //feilen kom her..
             project.plugins.withType(org.gradle.api.publish.maven.plugins.MavenPublishPlugin.class) {
                 project.publishing {
@@ -67,7 +67,7 @@ class PropertiesPluginTest extends TestKitBase {
      */
     @Test
     void testParentProjectProperties() {
-        writeFile("subproject/build.gradle", '''
+        writeFileUTF8("subproject/build.gradle", '''\
             plugins {
               id 'sktools.properties'
             }
@@ -76,19 +76,19 @@ class PropertiesPluginTest extends TestKitBase {
 
             //expanding properties in build config..
             propertyUtils.expandProjectProperties()
-            
+
             task echoProperty() {
               doFirst {
-                 println "My filtered property is: " + filteredProperty 
-               } 
+                 println "My filtered property is: " + filteredProperty
+               }
             }
         ''')
 
-        writeFile("build.gradle", '''
+        writeFileUTF8("build.gradle", '''\
             ext.testProperty = 'TestValue'
         ''')
 
-        writeFile("settings.gradle", "include ':subproject'")
+        writeFileUTF8("settings.gradle", "include ':subproject'")
 
 
         BuildResult result = testGradleBuild("echoProperty")

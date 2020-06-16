@@ -47,7 +47,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
 
         // STEG 1 - oppretter sql-filer relativt til prosjekt
 
-        final File createShemaFile = writeFile('src/hsql/CreateSchema.sql', """\
+        final File createShemaFile = writeFileUTF8('src/hsql/CreateSchema.sql', """\
             CREATE TABLE TEST_TABLE (
                ID INTEGER NOT NULL,
                NAVN VARCHAR(32) NOT NULL,
@@ -56,7 +56,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
             """
         )
 
-        final File createShema2File = writeFile('src/hsql/CreateSchema2.sql', """
+        final File createShema2File = writeFileUTF8('src/hsql/CreateSchema2.sql', """\
                 CREATE TABLE TEST_TABLE2 (
                    ID INTEGER NOT NULL,
                    NAVN VARCHAR(32) NOT NULL,
@@ -188,7 +188,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
 
 
         // STEG 1 - oppretter sql-filer relativt til prosjekt
-        File createShemaFile = writeFile('src/hsql/CreateSchema.sql', """\
+        File createShemaFile = writeFileUTF8('src/hsql/CreateSchema.sql', """\
             CREATE TABLE TEST_TABLE (
                ID INTEGER NOT NULL,
                NAVN VARCHAR(32) NOT NULL,
@@ -196,7 +196,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
             );
             """
         )
-        File createShema2File = writeFile('src/hsql2/CreateSchema2.sql', """\
+        File createShema2File = writeFileUTF8('src/hsql2/CreateSchema2.sql', """\
             CREATE TABLE TEST_TABLE2 (
                ID INTEGER NOT NULL,
                NAVN VARCHAR(32) NOT NULL,
@@ -365,7 +365,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
         createSimplePatchFile(file('patch.sql'))
 
         // STEG 2 - konfigurering av plugin
-        writeFile("build.gradle", """
+        writeFileUTF8("build.gradle", """\
             plugins {
               id 'sktools.dbtools'
             }

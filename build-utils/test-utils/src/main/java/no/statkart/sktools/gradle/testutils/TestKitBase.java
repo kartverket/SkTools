@@ -99,14 +99,18 @@ public abstract class TestKitBase {
         }
     }
 
-    protected File writeFile(String relativePath, CharSequence... lines) throws IOException {
-        return writeFile(toPath(relativePath), lines);
+    protected File createEmptyFile(String relativePath) throws IOException {
+        return writeFileUTF8(relativePath, "");
     }
 
-    protected File writeFile(Path destination, CharSequence... lines) throws IOException {
+    protected File writeFileUTF8(String relativePath, CharSequence... lines) throws IOException {
+        return writeFileUTF8(toPath(relativePath), lines);
+    }
+
+    protected File writeFileUTF8(Path destination, CharSequence... lines) throws IOException {
         Files.createDirectories(destination.getParent());
         Files.write(destination, Arrays.asList(lines), StandardCharsets.UTF_8,
-            StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+            StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW);
         return destination.toFile();
     }
 

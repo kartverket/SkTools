@@ -1,6 +1,6 @@
 package no.statkart.sktools.gradle.plugins.weblogic.wsclient
 
-import no.statkart.sktools.gradle.plugins.weblogic.wswar.WeblogicWsWarPlugin
+
 import no.statkart.sktools.gradle.testutils.ProjectHelper
 import no.statkart.sktools.gradle.testutils.TestKitBase
 import no.statkart.sktools.gradle.testutils.builder.GradleProjectBuilder
@@ -8,10 +8,7 @@ import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import org.testng.annotations.Test
 import org.gradle.api.plugins.BasePlugin
-import no.statkart.sktools.gradle.testutils.filewriter.WeblogicWsWarTestutilFilewriter
 import org.gradle.api.Task
-import org.gradle.api.file.FileTree
-import org.gradle.api.tasks.SourceSet
 
 /**
  * Test  av {@link WeblogicWsClientPlugin}-funksjonalitet.
@@ -41,11 +38,11 @@ class WeblogicWsClientPluginTest extends TestKitBase {
      */
     @Test
     void testApplyPlugin2() {
-        writeFile("build.gradle", '''
+        writeFileUTF8("build.gradle", '''\
             plugins {
                 id 'sktools.weblogic-wsclient'
             }
-''')
+        ''')
 
         assertNoFailures(testGradleBuild("tasks"))
     }

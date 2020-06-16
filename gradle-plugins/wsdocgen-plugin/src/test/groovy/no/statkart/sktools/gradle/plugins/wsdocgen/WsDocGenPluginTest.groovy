@@ -48,7 +48,7 @@ class WsDocGenPluginTest extends TestKitBase {
 
     @Test
     void genWsDocGeneratesDocumentationForAllSourceSets() {
-        writeFile("build.gradle", """
+        writeFileUTF8("build.gradle", """\
             plugins {
               id 'java'
               id 'sktools.wsdoc'
@@ -189,7 +189,7 @@ class WsDocGenPluginTest extends TestKitBase {
     @Test
     void generatedFilesHasLookupPathWhenConfigured() {
 
-        writeFile("build.gradle", """
+        writeFileUTF8("build.gradle", """\
             plugins {
               id 'sktools.wsdoc'
             }
@@ -232,7 +232,7 @@ class WsDocGenPluginTest extends TestKitBase {
 
         //forks a new java project in a temp folder
         //ps: notice that the java plugin is applied after the plugin, at a  later stage.
-        writeFile("build.gradle", """
+        writeFileUTF8("build.gradle", """\
             plugins {
               id 'sktools.wsdoc'
               id 'java' //after
@@ -270,7 +270,7 @@ class WsDocGenPluginTest extends TestKitBase {
 
     @Test
     void genWsdocIsUpToDate() {
-        writeFile("build.gradle", """
+        writeFileUTF8("build.gradle", """\
             plugins {
                 id 'java'
                 id 'sktools.wsdoc'

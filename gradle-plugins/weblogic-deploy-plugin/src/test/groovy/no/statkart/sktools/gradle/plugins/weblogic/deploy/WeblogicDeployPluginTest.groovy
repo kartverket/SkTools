@@ -2,7 +2,6 @@ package no.statkart.sktools.gradle.plugins.weblogic.deploy
 
 import no.statkart.sktools.gradle.testutils.TestKitBase
 import org.gradle.api.Project
-import org.gradle.testfixtures.ProjectBuilder
 import org.testng.Assert
 import org.testng.annotations.Test
 
@@ -31,7 +30,7 @@ class WeblogicDeployPluginTest extends TestKitBase {
      */
     @Test
     void testApplyPlugin2() {
-        writeFile("build.gradle", '''
+        writeFileUTF8("build.gradle", '''\
             plugins {
                 id 'sktools.weblogic-deploy'
             }

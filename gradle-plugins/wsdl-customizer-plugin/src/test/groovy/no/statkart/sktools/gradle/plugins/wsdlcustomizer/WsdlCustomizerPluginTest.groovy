@@ -2,7 +2,6 @@ package no.statkart.sktools.gradle.plugins.wsdlcustomizer
 
 import no.statkart.sktools.gradle.testutils.TestKitBase
 import org.gradle.api.Project
-import org.testng.Assert
 import org.testng.annotations.Test
 
 import static org.assertj.core.api.Assertions.assertThat
@@ -27,11 +26,11 @@ class WsdlCustomizerPluginTest extends TestKitBase {
      */
     @Test
     void testApplyPlugin2() {
-        writeFile("build.gradle", '''
+        writeFileUTF8("build.gradle", '''\
             plugins {
                 id 'sktools.wsdl-customizer'
             }
-''')
+        ''')
         assertNoFailures(testGradleBuild("tasks"))
     }
 

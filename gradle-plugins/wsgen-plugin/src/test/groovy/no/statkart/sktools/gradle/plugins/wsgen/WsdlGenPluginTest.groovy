@@ -29,7 +29,7 @@ class WsdlGenPluginTest extends TestKitBase {
 
     @Test
     void genWsdl_generates_sources() {
-        writeFile("build.gradle", """
+        writeFileUTF8("build.gradle", """\
             plugins {
               id 'sktools.wsgen'
             }
@@ -51,7 +51,7 @@ class WsdlGenPluginTest extends TestKitBase {
 
     @Test
     void warFileIncludesResources() {
-        writeFile("build.gradle", """
+        writeFileUTF8("build.gradle", """\
             plugins {
               id 'sktools.wsgen'
             }
@@ -62,7 +62,7 @@ class WsdlGenPluginTest extends TestKitBase {
         """)
 
         writeExceptiondemo01()
-        writeFile('src/main/java/WebConfig.java', "public class WebConfig {} //dummy class")
+        writeFileUTF8('src/main/java/WebConfig.java', "public class WebConfig {} //dummy class")
 
         BuildResult buildResult = testGradleBuild("war")
 
@@ -116,10 +116,10 @@ class WsdlGenPluginTest extends TestKitBase {
             Files.copy(testResources, destinationFile.toPath())
         }
 
-        writeFile('src/main/webapp/WEB-INF/web.xml', '''<?xml version='1.0' encoding='UTF-8'?>
+        writeFileUTF8('src/main/webapp/WEB-INF/web.xml', '''<?xml version='1.0' encoding='UTF-8'?>
 <web-app xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="3.0">
     <display-name>dummy</display-name>
 </web-app>
-''')
+        ''')
     }
 }

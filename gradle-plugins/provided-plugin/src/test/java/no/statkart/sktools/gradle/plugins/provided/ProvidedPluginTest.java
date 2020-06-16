@@ -7,10 +7,7 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.testfixtures.ProjectBuilder;
-import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import java.io.IOException;
 
 
 /**
@@ -44,10 +41,10 @@ public class ProvidedPluginTest extends TestKitBase {
      */
     @Test
     void testApplyPlugin2() throws Exception {
-        writeFile("build.gradle",  "" +
-            "plugins {                                  " +
-            "       id 'sktools.provided'        " +
-            "}                                          "
+        writeFileUTF8("build.gradle"
+            ,"plugins { "
+            , "       id 'sktools.provided' "
+            , "} "
         );
 
         assertNoFailures(testGradleBuild("tasks"));

@@ -38,7 +38,7 @@ class DbToolsPluginTest extends TestKitBase {
      */
     @Test
     void testApplyPlugin2() {
-        writeFile("build.gradle", '''
+        writeFileUTF8("build.gradle", '''\
             plugins {
               id 'sktools.dbtools'
             }
@@ -59,7 +59,7 @@ class DbToolsPluginTest extends TestKitBase {
             apply plugin: 'sktools-dbtools-plugin'
         };
 
-        writeFile('src/hsql/PleaseAuthenticateMe.sql')
+        createEmptyFile('src/hsql/PleaseAuthenticateMe.sql')
 
         project.tap {
             configureDatabasePlugin {
@@ -143,8 +143,8 @@ class DbToolsPluginTest extends TestKitBase {
             apply plugin: 'sktools-dbtools-plugin'
         };
 
-        writeFile('src/hsql/PleaseAuthenticateMe.sql')
-        writeFile('lib/testfile-2.3.3.jar')
+        createEmptyFile('src/hsql/PleaseAuthenticateMe.sql')
+        createEmptyFile('lib/testfile-2.3.3.jar')
 
         Assert.assertEquals(project.configurations.dbTools.state.toString(), "UNRESOLVED")
 
