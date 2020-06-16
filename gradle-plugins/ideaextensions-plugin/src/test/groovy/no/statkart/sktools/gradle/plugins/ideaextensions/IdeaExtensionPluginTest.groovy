@@ -2,7 +2,6 @@ package no.statkart.sktools.gradle.plugins.ideaextensions
 
 import no.statkart.sktools.gradle.testutils.TestKitBase
 import org.gradle.api.Project
-import org.gradle.testfixtures.ProjectBuilder
 import org.testng.Assert
 import org.testng.annotations.Test
 
@@ -34,18 +33,18 @@ class IdeaExtensionPluginTest extends TestKitBase {
      */
     @Test
     void testMasksAndPaths() {
-        writeFile("build.gradle", '''
+        writeFileUTF8("build.gradle", '''\
             plugins {
               id 'sktools.ideaextensions'
             }
-            
+
             ideaExtensions {
                 ignoreMasks += '*.tmp'
                 ignorePaths += '.gradle/'
             }
         ''')
 
-        writeFile("settings.gradle", '''
+        writeFileUTF8("settings.gradle", '''\
             rootProject.name = 'myproject'
         ''')
 
@@ -58,17 +57,17 @@ class IdeaExtensionPluginTest extends TestKitBase {
 
     @Test
     void testVCS() {
-        writeFile("build.gradle", '''
+        writeFileUTF8("build.gradle", '''\
             plugins {
               id 'sktools.ideaextensions'
             }
-            
+
             ideaExtensions {
                 vcs 'Perforce'
             }
         ''')
 
-        writeFile("settings.gradle", '''
+        writeFileUTF8("settings.gradle", '''\
             rootProject.name = 'myproject'
         ''')
 
@@ -79,26 +78,26 @@ class IdeaExtensionPluginTest extends TestKitBase {
 
     @Test
     void testInspections() {
-        writeFile("build.gradle", '''
+        writeFileUTF8("build.gradle", '''\
             plugins {
               id 'sktools.ideaextensions'
             }
-            
+
             ideaExtensions {
                 inspectionProfile = 'inspections.xml'
             }
         ''')
 
-        writeFile("inspections.xml", '''<?xml version="1.0" encoding="UTF-8"?>
+        writeFileUTF8("inspections.xml", '''<?xml version="1.0" encoding="UTF-8"?>
             <inspections version="1.0" is_locked="false">
               <option name="myName" value="SKTools Default" />
               <option name="myLocal" value="false" />
-            
+
               <inspection_tool class="CollectionsFieldAccessReplaceableByMethodCall" enabled="true" level="WARNING" enabled_by_default="true" />
             </inspections>
         ''')
 
-        writeFile("settings.gradle", '''
+        writeFileUTF8("settings.gradle", '''\
             rootProject.name = 'myproject'
         ''')
 
@@ -110,17 +109,17 @@ class IdeaExtensionPluginTest extends TestKitBase {
 
     @Test
     void testCodeStyle() {
-        writeFile("build.gradle", '''
+        writeFileUTF8("build.gradle", '''\
             plugins {
               id 'sktools.ideaextensions'
             }
-            
+
             ideaExtensions {
                 codeStyle = 'codestyle.xml'
             }
         ''')
 
-        writeFile("codestyle.xml", '''<?xml version="1.0" encoding="UTF-8"?>
+        writeFileUTF8("codestyle.xml", '''<?xml version="1.0" encoding="UTF-8"?>
             <component name="ProjectCodeStyleSettingsManager">
                 <option name="PER_PROJECT_SETTINGS">
                     <value>
@@ -135,7 +134,7 @@ class IdeaExtensionPluginTest extends TestKitBase {
             </component>
         ''')
 
-        writeFile("settings.gradle", '''
+        writeFileUTF8("settings.gradle", '''\
             rootProject.name = 'myproject'
         ''')
 
@@ -147,33 +146,33 @@ class IdeaExtensionPluginTest extends TestKitBase {
 
     @Test
     void testFoldergeneration() {
-        writeFile("subproject/build.gradle", '''
+        writeFileUTF8("subproject/build.gradle", '''\
             plugins {
               id 'sktools.ideaextensions'
               id 'groovy'
             }
-            
+
             sourceSets {
                 //main sourceSet som blir brukt av Intellij
                 main {
                     java.srcDir 'src/main2/java'
                     allJava.srcDir 'src/main2/allJava' // defineres ikke som allSource
                 }
-            
+
                 //legger til nytt sourceSet
                 hiddenSource {
                     java.srcDir 'src/hidden/java2'
                     groovy.srcDir 'src/hidden/groovy2'
                     resources.srcDir 'src/hidden/resources2'
-            
+
                     allGroovy.srcDir 'src/hidden/allGroovy' // defineres ikke som allSource
                     allJava.srcDir 'src/hidden/allJava' // defineres ikke som allSource
                 }
-            }            
+            }
         ''')
 
 
-        writeFile("settings.gradle", '''
+        writeFileUTF8("settings.gradle", '''\
             rootProject.name = 'myproject'
             include ':subproject'
         ''')

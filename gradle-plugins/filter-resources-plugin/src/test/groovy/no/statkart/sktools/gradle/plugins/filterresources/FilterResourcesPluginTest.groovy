@@ -33,18 +33,18 @@ class FilterResourcesPluginTest extends TestKitBase {
      */
     @Test
     void testDefaultValues() {
-        writeFile("build.gradle", '''
+        writeFileUTF8("build.gradle", '''\
             plugins {
               id 'java'
               id 'sktools.filter-resources'
             }
-            
+
             project.ext.myProperty2 = 'testValue'
             project.ext.myEmail = 'unittest'
-            
+
         ''')
 
-        writeFile("settings.gradle", '''
+        writeFileUTF8("settings.gradle", '''\
             rootProject.name = 'PropertiesFilterTest'
         ''')
 
@@ -68,12 +68,12 @@ class FilterResourcesPluginTest extends TestKitBase {
      */
     @Test
     void testCustomProperties() {
-        writeFile("build.gradle", '''
+        writeFileUTF8("build.gradle", '''\
             plugins {
               id 'java'
               id 'sktools.filter-resources'
             }
-            
+
             project.ext.myProperty1 = 'testValue'
 
             filterResources {
@@ -81,7 +81,7 @@ class FilterResourcesPluginTest extends TestKitBase {
                 properties myProperty1: 'overriddenValue', 'name': 'overriddenName'
                 properties version: project.version
             }
-            
+
         ''')
 
         writeTwoSimpleResources(projectPath, "src/main/filterResources");
@@ -100,12 +100,12 @@ class FilterResourcesPluginTest extends TestKitBase {
      */
     @Test
     void testClean() {
-        writeFile("build.gradle", '''
+        writeFileUTF8("build.gradle", '''\
             plugins {
               id 'java'
               id 'sktools.filter-resources'
             }
-            
+
             sourceSets {
               main {
                 output.filterResourcesOutput 'gen/filtered' //utenfor mappen "build" som alltid slettes
@@ -127,12 +127,12 @@ class FilterResourcesPluginTest extends TestKitBase {
      */
     @Test
     void testCustomPathsConfiguration() {
-        writeFile("build.gradle", '''
+        writeFileUTF8("build.gradle", '''\
             plugins {
               id 'java'
               id 'sktools.filter-resources'
             }
-            
+
             sourceSets {
                 main {
                     filterResources {
@@ -150,8 +150,8 @@ class FilterResourcesPluginTest extends TestKitBase {
         ''')
 
         //skriver noen filer til disk
-        writeFile("src/special/main/file1.txt", "file1.version=@version@")
-        writeFile("src/special/test/file2.txt", "file2.version=@version@")
+        writeFileUTF8("src/special/main/file1.txt", "file1.version=@version@")
+        writeFileUTF8("src/special/test/file2.txt", "file2.version=@version@")
 
 
         BuildResult buildResult = testGradleBuild(FilterResourcesPlugin.FILTER_MAIN_RESOURCES_TASK_NAME, FilterResourcesPlugin.FILTER_TEST_RESOURCES_TASK_NAME)
@@ -171,35 +171,35 @@ class FilterResourcesPluginTest extends TestKitBase {
      */
     @Test
     void testClasspathForSourceSet() {
-        writeFile("build.gradle", '''
+        writeFileUTF8("build.gradle", '''\
             plugins {
               id 'java'
               id 'sktools.filter-resources'
             }
-            
+
             sourceSets {
                 coolCode {
                     filterResources.srcDirs = ['src/code/unfiltered', 'src/easter/eggs']
                     output.filterResourcesOutput 'build/gen/so/cool'
                 }
             }
-            
+
             task printRuntimeClasspath() {
               doLast {
                 sourceSets.main.runtimeClasspath.each { println it }
               }
             }
-            
+
             task printCoolCodeRuntimeClasspath() {
               doLast {
                 sourceSets.coolCode.runtimeClasspath.each { println it }
               }
             }
-            
+
         ''')
 
-        writeFile("src/easter/eggs/resource1.txt", "text1")
-        writeFile("src/code/unfiltered/resource2.txt", "text2")
+        writeFileUTF8("src/easter/eggs/resource1.txt", "text1")
+        writeFileUTF8("src/code/unfiltered/resource2.txt", "text2")
 
 
         def runtimeClasspath = testGradleBuild("printRuntimeClasspath").getOutput()
@@ -225,13 +225,13 @@ class FilterResourcesPluginTest extends TestKitBase {
      */
     @Test
     void testIdeaIntegration() {
-        writeFile("build.gradle", '''
+        writeFileUTF8("build.gradle", '''\
             plugins {
               id 'java'
               id 'sktools.filter-resources'
               id 'idea'
             }
-            
+
             sourceSets {
                 main {
                     output.filterResourcesOutput 'build/gen/so/cool' //custom placement

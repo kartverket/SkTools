@@ -42,7 +42,7 @@ class XjcPluginTest extends TestKitBase {
         writeSimpleSchema(file("src/main/xsd/simple.xsd"))
 
         //config
-        writeFile("build.gradle", """
+        writeFileUTF8("build.gradle", """\
             plugins {
                 id 'sktools.xjc'
             }
@@ -79,7 +79,7 @@ class XjcPluginTest extends TestKitBase {
         writeSimpleSchemaWithGdoc(file("src/main/xsd/simple.xsd"))
 
         //config
-        writeFile("build.gradle", """
+        writeFileUTF8("build.gradle", """\
             plugins {
               id 'sktools.xjc'
             }
@@ -114,11 +114,11 @@ class XjcPluginTest extends TestKitBase {
         //generates a simple source file
         writeSimpleSchema(file("src/main/xsd/simple.xsd"))
 
-        writeFile("src/adaper/java/some_adapter/Fqn.java",
+        writeFileUTF8("src/adaper/java/some_adapter/Fqn.java",
             "package some_adapter;\n public class Fqn { }")
 
 
-        writeFile("build.gradle", """
+        writeFileUTF8("build.gradle", """\
             plugins {
               id 'sktools.xjc'
             }
@@ -159,12 +159,12 @@ class XjcPluginTest extends TestKitBase {
      */
     @Test
     void ideaTasksCanHandleSourceSetConfiguration() {
-        writeFile("build.gradle", '''
+        writeFileUTF8("build.gradle", '''\
             plugins {
               id 'sktools.xjc'
               id 'idea'
             }
-            
+
             sourceSets {
                 main {
                     xjc {
@@ -184,11 +184,11 @@ class XjcPluginTest extends TestKitBase {
 
     @Test
     void canSpecifyTaskNameForGen() {
-        writeFile("build.gradle", '''
+        writeFileUTF8("build.gradle", '''\
             plugins {
               id 'sktools.xjc'
             }
-            
+
             sourceSets {
                 main.xjc {
                     schema {
@@ -206,12 +206,12 @@ class XjcPluginTest extends TestKitBase {
 
     @Test
     void canSpecifyGenOutputPath() {
-        writeFile("build.gradle", '''
+        writeFileUTF8("build.gradle", '''\
             plugins {
               id 'sktools.xjc'
               id 'idea'
             }
-            
+
             sourceSets {
                 main.xjc {
                     schema {
@@ -236,17 +236,16 @@ class XjcPluginTest extends TestKitBase {
      */
     @Test
     void testSrcDirs() {
+        createEmptyFile("src/main/xsd/simple.xsd")
+        createEmptyFile("src/main/xsd1/simple1.xsd")
+        createEmptyFile("src/main/xsd2/simple2.xsd")
+        createEmptyFile("src/main/xsd3/simple3.xsd")
 
-        writeFile("src/main/xsd/simple.xsd", "")
-        writeFile("src/main/xsd1/simple1.xsd", "")
-        writeFile("src/main/xsd2/simple2.xsd", "")
-        writeFile("src/main/xsd3/simple3.xsd", "")
-
-        writeFile("build.gradle", '''
+        writeFileUTF8("build.gradle", '''\
             plugins {
               id 'sktools.xjc'
             }
-            
+
             sourceSets {
                 main.xjc {
                     schema {
@@ -256,7 +255,7 @@ class XjcPluginTest extends TestKitBase {
                     }
                 }
             }
-            
+
             task echoSourceFiles() {
               doLast {
                 project.tasks[project.sourceSets.main.xjc[0].genTaskName].getSource().files.each {
@@ -264,7 +263,7 @@ class XjcPluginTest extends TestKitBase {
                 }
               }
             }
-            
+
         ''')
 
         BuildResult buildResult = testGradleBuild("echoSourceFiles")

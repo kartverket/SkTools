@@ -105,8 +105,7 @@ class WSDocProcessorTest extends TestKitBase {
         File resourcePath = file('src/main/resources')
 
         //eksempel-kildekode
-        File javaFile = writeFile('src/main/java/TestWSBean.java',
-            """
+        File javaFile = writeFileUTF8('src/main/java/TestWSBean.java', """\
                  @javax.jws.WebService(
                      name = "TestService",
                      serviceName = "TestServiceWS",
@@ -121,7 +120,7 @@ class WSDocProcessorTest extends TestKitBase {
                  }
                 """)
 
-        File xslt = writeFile('minimal.xsl',
+        File xslt = writeFileUTF8('minimal.xsl',
             """<?xml version="1.0" encoding="UTF-8"?>
                 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
@@ -171,8 +170,7 @@ class WSDocProcessorTest extends TestKitBase {
         File resourcePath = file('src/main/resources')
 
         // eksempel-kildekode
-        File javaFile = writeFile('src/main/java/TestWSBean.java',
-            """
+        File javaFile = writeFileUTF8('src/main/java/TestWSBean.java', """\
                  @javax.jws.WebService(
                      name = "TestService",
                      serviceName = "TestServiceWS",
@@ -187,7 +185,7 @@ class WSDocProcessorTest extends TestKitBase {
                  }
                 """)
 
-        File xslt = writeFile('minimal.xsl',
+        File xslt = writeFileUTF8('minimal.xsl',
             """<?xml version="1.0" encoding="UTF-8"?>
                 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
@@ -235,8 +233,7 @@ class WSDocProcessorTest extends TestKitBase {
         File resourcePath = file('src/main/resources')
 
         // eksempel-kildekode
-        File javaFile = writeFile('src/main/java/TestWSBean.java',
-            """
+        File javaFile = writeFileUTF8('src/main/java/TestWSBean.java', """\
                 package test1;
 
                 /**
@@ -265,7 +262,7 @@ class WSDocProcessorTest extends TestKitBase {
                  }
                 """)
 
-        File xslt = writeFile('minimal.xsl',
+        File xslt = writeFileUTF8('minimal.xsl',
             """<?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
@@ -353,8 +350,7 @@ class WSDocProcessorTest extends TestKitBase {
         File resourcePath = file('src/main/resources')
 
         // eksempel-kildekode
-        File javaFile = writeFile('src/main/java/TestWSBean.java',
-            """
+        File javaFile = writeFileUTF8('src/main/java/TestWSBean.java', """\
                 package test1;
 
                 /**
@@ -393,7 +389,7 @@ class WSDocProcessorTest extends TestKitBase {
                  }
                 """)
 
-        File xslt = writeFile('minimal.xsl',
+        File xslt = writeFileUTF8('minimal.xsl',
             """<?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
@@ -499,8 +495,7 @@ class WSDocProcessorTest extends TestKitBase {
         File resourcePath = file('src/main/resources')
 
         // eksempel-kildekode
-        File javaFile = writeFile('src/main/java/TestWSBean.java',
-            """
+        File javaFile = writeFileUTF8('src/main/java/TestWSBean.java', """\
                 package test1;
 
                 /**
@@ -529,7 +524,7 @@ class WSDocProcessorTest extends TestKitBase {
                  }
                 """)
 
-        File xslt = writeFile('minimal.xsl',
+        File xslt = writeFileUTF8('minimal.xsl',
             """<?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
@@ -618,8 +613,7 @@ class WSDocProcessorTest extends TestKitBase {
         File resourcePath = file('src/main/resources')
 
         // eksempel-kildekode
-        File javaFile1 = writeFile('src/main/java/Service1WSBean.java',
-            """
+        File javaFile1 = writeFileUTF8('src/main/java/Service1WSBean.java', """\
                 package test1;
 
                 /**
@@ -638,8 +632,7 @@ class WSDocProcessorTest extends TestKitBase {
                  }
                 """)
 
-        File javaFile2 = writeFile('src/main/java/Service2WSBean.java',
-            """
+        File javaFile2 = writeFileUTF8('src/main/java/Service2WSBean.java', """\
                 package test2;
 
                 /**
@@ -672,7 +665,7 @@ class WSDocProcessorTest extends TestKitBase {
                  }
                 """)
 
-        File xslt = writeFile('minimal.xsl',
+        File xslt = writeFileUTF8('minimal.xsl',
             """<?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
@@ -698,7 +691,7 @@ class WSDocProcessorTest extends TestKitBase {
                 """)
 
 
-        File indexXslt = writeFile('index.xsl',
+        File indexXslt = writeFileUTF8('index.xsl',
             """<?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
@@ -794,8 +787,7 @@ class WSDocProcessorTest extends TestKitBase {
         File resourcePath = file('src/main/resources')
 
         // eksempel-kildekode
-        File javaFile = writeFile('src/main/java/TestWSBean.java',
-            """
+        File javaFile = writeFileUTF8('src/main/java/TestWSBean.java', """\
                 package test1;
 
                 /**
@@ -813,7 +805,7 @@ class WSDocProcessorTest extends TestKitBase {
                  }
                 """)
 
-        File xslt = writeFile('minimal.xsl',
+        File xslt = writeFileUTF8('minimal.xsl',
             """<?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
@@ -917,8 +909,7 @@ class WSDocProcessorTest extends TestKitBase {
         File resourcePath = file('src/main/resources')
 
         // eksempel-kildekode
-        File javaFile = writeFile('src/main/java/TestWSBean.java',
-            """
+        File javaFile = writeFileUTF8('src/main/java/TestWSBean.java', """\
                 package test1;
 
                 /**
@@ -954,7 +945,7 @@ class WSDocProcessorTest extends TestKitBase {
                  }
                 """)
 
-        File xslt = writeFile('minimal.xsl',
+        File xslt = writeFileUTF8('minimal.xsl',
             """<?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
@@ -1052,8 +1043,7 @@ class WSDocProcessorTest extends TestKitBase {
         File resourcePath = file('src/main/resources')
 
         // eksempel-kildekode
-        File javaFile = writeFile('src/main/java/TestWSBean.java',
-            """
+        File javaFile = writeFileUTF8('src/main/java/TestWSBean.java', """\
                 package test1;
 
                 /**
@@ -1082,7 +1072,7 @@ class WSDocProcessorTest extends TestKitBase {
                  }
                 """)
 
-        File xslt = writeFile('minimal.xsl',
+        File xslt = writeFileUTF8('minimal.xsl',
             """<?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
@@ -1235,8 +1225,7 @@ class WSDocProcessorTest extends TestKitBase {
         File resourcePath = file('src/main/resources')
 
         // eksempel-kildekode
-        File javaFile = writeFile('src/main/java/TestWSBean.java',
-            """
+        File javaFile = writeFileUTF8('src/main/java/TestWSBean.java', """\
                 package test1;
 
                  @javax.jws.WebService(
@@ -1255,7 +1244,7 @@ class WSDocProcessorTest extends TestKitBase {
                  }
                 """)
 
-        File xslt = writeFile('minimal.xsl',
+        File xslt = writeFileUTF8('minimal.xsl',
             """<?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 

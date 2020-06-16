@@ -20,7 +20,7 @@ class WeblogicTaskTest extends TestKitBase {
     @Test
     void testWeblogicClasspath() {
         //creates a dummy.jar
-        writeFile('some.jar')
+        createEmptyFile("some.jar")
 
 
         Project project = ProjectBuilder.builder().build().tap {

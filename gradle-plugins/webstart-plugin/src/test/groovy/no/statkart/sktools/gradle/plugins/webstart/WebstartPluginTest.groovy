@@ -45,7 +45,7 @@ class WebstartPluginTest extends TestKitBase {
     void testDefaultWebstart() {
         writeSampleJar(file("lib/simple.jar"))
 
-        writeFile("build.gradle", """
+        writeFileUTF8("build.gradle", """\
             plugins {
               id 'sktools.webstart'
             }
@@ -72,18 +72,18 @@ class WebstartPluginTest extends TestKitBase {
     @Test
     void testConventionConfigurationResources() {
 
-        writeFile("settings.gradle",
+        writeFileUTF8("settings.gradle",
             "rootProject.name = 'root'",
             "include ':projectA'",
             "include ':projectB'",
         )
 
-        writeFile("projectA/build.gradle", """
+        writeFileUTF8("projectA/build.gradle", """\
             plugins {
               id 'java'
             }
             version = '1.0'
-           
+
             dependencies {
                 runtime project(':projectB')    //dependency on projectB
             }
@@ -93,12 +93,12 @@ class WebstartPluginTest extends TestKitBase {
         File wsClientRuntimeJar = file('wsClientRuntime-1.0.jar')
         assert wsClientRuntimeJar.createNewFile()
 
-        writeFile("projectB/build.gradle", """
+        writeFileUTF8("projectB/build.gradle", """\
             plugins {
               id 'java'
             }
             version = '1.2'
-            
+
             dependencies {
                 runtime files('../wsClientRuntime-1.0.jar')
             }
@@ -108,12 +108,12 @@ class WebstartPluginTest extends TestKitBase {
         File webstartHelperJar = file('webstartHelper.jar')
         assert webstartHelperJar.createNewFile()
 
-        writeFile("build.gradle", """
+        writeFileUTF8("build.gradle", """\
             plugins {
               id 'sktools.webstart'
             }
             version = '2.0'
-            
+
             configurations {
                 webstartJars
             }
@@ -135,7 +135,7 @@ class WebstartPluginTest extends TestKitBase {
                         }
                     }
                 }
-            }            
+            }
         """)
 
         testGradleBuild(":assemble")
@@ -313,13 +313,13 @@ class WebstartPluginTest extends TestKitBase {
     @Test
     void cleanJarSignerCacheDeletesCacheDir() {
         File customCacheDir = file("customCacheDir")
-        writeFile("customCacheDir/willBeDeleted.txt")
+        createEmptyFile("customCacheDir/willBeDeleted.txt")
 
-        writeFile("build.gradle", """
+        writeFileUTF8("build.gradle", """\
             plugins {
               id 'sktools.webstart'
             }
-            
+
             webstart {
                 client {
                     sign(cacheDir: file('customCacheDir'))
