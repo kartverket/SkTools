@@ -1,27 +1,8 @@
 #!groovy
 
-/*
- Multibranch Pipeline for Continuous integration (CI) prosess i Jenkins.
- Hver branch har denne innsjekket på fast plassering: Jenkinsfile
-
- CI prosessen har følgende parameteriserbare dimensjoner:
-
-   sktools_versjon : versjon for publisering til nexus maven repo
-
- For jenkins pipeline documentation https://jenkins.io/doc/book/pipeline/
- TIP: Import DSL into your IntelliJ from http://jenkins.statkart.no:8021/jenkins/pipeline-syntax/gdsl
-
- Branch navn delegeres av Multibranch Pipeline som variabel BRANCH_NAME
-
- Polling skjer via oppsett av multibranch-jobb og defineres derfor ikke her i denne filen.
-
- Multibranch oppsett sjekker ut kodebasen automatisk. Denne havner som i roten til hvert workspace (som default).
-*/
-
-pipeline { //declarative pipeline syntax
-    // agent defines where the pipeline will run.
+//declarative pipeline syntax
+pipeline {
     agent {
-        // This also could have been 'agent any' - that has the same meaning as: label "".
         label 'sktools||matrikkel'
     }
 
@@ -76,15 +57,15 @@ pipeline { //declarative pipeline syntax
                 }
                 stage('Test gradle latest') {
                     tools {
-                        gradle 'Gradle 6.4.1' //latest og greatest (kan også være neste major versjon)
+                        gradle 'Gradle 6.5' //latest og greatest (kan også være neste major versjon)
                     }
                     steps {
                         sh "gradle --version"
-                        sh "gradle testGradle6.4.1 -DignoreFailures=true ${gradleOptions(this)} -DbuildDirName=build/gradle6.4.1" //buildDirName for å kjøre flere bygg med forskjellige gradle versjoner
+                        sh "gradle testGradle6.5 -DignoreFailures=true ${gradleOptions(this)} -DbuildDirName=build/gradle6.5" //buildDirName for å kjøre flere bygg med forskjellige gradle versjoner
                     }
                     post {
                         always {
-                            junit '**/test-results/testGradle6.4.1/*.xml'
+                            junit '**/test-results/testGradle6.5/*.xml'
                         }
                     }
                 }
