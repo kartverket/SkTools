@@ -7,8 +7,7 @@ pipeline {
     }
 
     parameters {
-        string(name: 'sktools_versjon', defaultValue: "${env.BRANCH_NAME ?: 'trunk'}-build${env.BUILD_NUMBER}", description: 'Versjon for publisert artefakt.')
-        string(name: 'BRANCH_NAME', defaultValue: "${env.BRANCH_NAME ?: 'trunk'}", description: 'Branch for kildekode.')
+        string(name: 'sktools_versjon', defaultValue: '', description: 'Versjon for publisert artefakt.')
     }
 
     tools {
@@ -20,8 +19,6 @@ pipeline {
         //legger gradle til byggenodens workspace - dette forhindrer kollisjoner i tilfeller der man har ibruk flyktige snapshot versjoner slik at to jobber kan komme i konflikt.
         //PS: erstatter '\' med '/' via char verdier da jenkins parser og kompilerer regex uttrykk på en håpløs måte...
         GRADLE_USER_HOME = "${WORKSPACE.replace(0x5c as char, 0x2f as char)}/gradle"
-        ORG_GRADLE_PROJECT_sktools_versjon = "${params.sktools_versjon}"
-        BRANCH_NAME = "${params.BRANCH_NAME}"
 
         //for publisering til sentralt maven repo bindes opp via jenkins credential (secret text)
         MAVEN_PUBLISH = credentials('MAVEN_DEPLOY_RELEASES')
@@ -146,9 +143,9 @@ Build : $BUILD_URL <br>
 
 static def gradleOptions(script) {
     return [
+            '-Psktools_versjon=' + (script.params.sktools_versjon ?: "${script.BRANCH_NAME}-build${script.BUILD_NUMBER}"),
             '-Dorg.gradle.daemon=false',
             "-Djava.io.tmpdir=${script.pwd(tmp: true)}", //temp dir settes til samme mappe som jenkins (<workspace name>@tmp)
             '--stacktrace'
     ].join(' ')
 }
-
