@@ -2,12 +2,17 @@ package no.statkart.sktools.gradle.plugins.xjc;
 
 import no.statkart.sktools.gradle.plugins.xjc.internal.XjcGenerator;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
+import org.gradle.api.provider.ProviderFactory;
 import org.gradle.api.tasks.CompileClasspath;
 import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.SourceTask;
 import org.gradle.api.tasks.TaskAction;
 
+import javax.inject.Inject;
 import java.io.File;
 
 /**
@@ -31,14 +36,14 @@ import java.io.File;
  */
 class XjcTask extends SourceTask {
     private XjcConfig config;
-    private File outputDirectory;
+    private final Property<File> outputDirectory;
     private FileCollection classpath;
 
 
-    /**
-     * Gradle 1.2/2.0 - no arg constructor or @Inject annotated constructor
-     */
-    public XjcTask() {
+    @Inject
+    public XjcTask(ObjectFactory objectFactory, ProviderFactory providerFactory) {
+        outputDirectory = objectFactory.property(File.class);
+        outputDirectory.set(providerFactory.provider(() -> getConfig().genOutputPath.get()));
     }
 
 
@@ -50,7 +55,7 @@ class XjcTask extends SourceTask {
         final XjcGenerator generator = new XjcGenerator(getProject()
                 , getConfig() //kandidat for parameter objekt (klasse)
                 , getSource()
-                , getOutputDirectory()
+                , getOutputDirectory().get()
                 , getClasspath()
         );
 
@@ -68,12 +73,8 @@ class XjcTask extends SourceTask {
     }
 
     @OutputDirectory
-    public File getOutputDirectory() {
+    public Provider<File> getOutputDirectory() {
         return outputDirectory;
-    }
-
-    public void setOutputDirectory(File outputDirectory) {
-        this.outputDirectory = outputDirectory;
     }
 
     @CompileClasspath

@@ -1,8 +1,9 @@
 package no.statkart.sktools.gradle.plugins.xjc
 
-import no.statkart.sktools.gradle.plugins.xjc.internal.XjcSchemaContainer
 import no.statkart.sktools.gradle.plugins.xjc.internal.XjcSourceSetConvention
 import org.gradle.api.Action
+import org.gradle.api.NamedDomainObjectContainer
+import org.gradle.api.NamedDomainObjectFactory
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -14,9 +15,8 @@ import org.gradle.api.internal.HasConvention
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSet
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.util.GUtil
-
-import java.util.concurrent.Callable
 
 /**
  * Genererer JAXB java klasser basert på <code>*.xsd</code> filer. <br>
@@ -86,7 +86,13 @@ class XjcPlugin implements Plugin<Project> {
 
         javaConvention.getSourceSets().all(new Action<SourceSet>() {
             public void execute(final SourceSet sourceSet) {
-                final XjcSchemaContainer xjcSchemas = new XjcSchemaContainer(sourceSet, project);
+                final NamedDomainObjectContainer<XjcConfig> xjcSchemas = project.container(XjcConfig.class, new NamedDomainObjectFactory<XjcConfig>() {
+                    @Override
+                    XjcConfig create(String name) {
+                        String schemaName = sourceSet.getName() + GUtil.toCamelCase(name);
+                        return new XjcConfig(schemaName, sourceSet, project);
+                    }
+                });
 
                 //hekter inn utvidelser på source settet
                 ((HasConvention) sourceSet).getConvention().getPlugins().put(CONVENTION_NAME, new XjcSourceSetConvention(xjcSchemas));
@@ -95,48 +101,40 @@ class XjcPlugin implements Plugin<Project> {
                     void execute(XjcConfig xjcConfig) {
                         //setter ingen default plassering av kildefiler for sourceSet - dette må eksplisitt deklareres i konfigurasjon
 
-                        final File genOutputDir = project.file(xjcConfig.genOutputPath)
+                        TaskProvider<XjcTask> xjcTask = createXjcTaskForSourceSet(xjcConfig);
 
-                        XjcTask xjcTask = createXjcTaskForSourceSet(xjcConfig, genOutputDir);
-                        xjcTask.dependsOn(configuration);
-
-                        sourceSet.getJava().srcDir(genOutputDir);
-                        project.tasks.getByName(sourceSet.getCompileJavaTaskName()).dependsOn(xjcTask)
-
-                        project.plugins.withId('idea') {
-                            project.idea.module.generatedSourceDirs += genOutputDir
-                            project.tasks.getByName('ideaModule').doFirst {
-                                genOutputDir.mkdirs()
-                            }
+                        sourceSet.getJava().srcDir(xjcConfig.genOutputPath);
+                        project.tasks.named(sourceSet.getCompileJavaTaskName()) {compileJava ->
+                            compileJava.dependsOn(xjcTask)
                         }
+
                     }
 
 
-                    private XjcTask createXjcTaskForSourceSet(final XjcConfig config, File genOutputDir) {
+                    private TaskProvider<XjcTask> createXjcTaskForSourceSet(final XjcConfig config) {
                         final String taskName = config.genTaskName;
-                        XjcTask task = (XjcTask) project.task(type: XjcTask.class, taskName);
-                        task.getConventionMapping().with {
-                            map("source", new Callable() {
-                                public Object call() {
-                                    return config.source.asFileTree;
-                                }
-                            });
-                            map("config", new Callable() {
-                                public Object call() {
-                                    return config;
-                                }
-                            });
-                            map("outputDirectory", new Callable() {
-                                public Object call() {
-                                    return genOutputDir;
-                                }
-                            });
+                        project.getTasks().register(taskName, XjcTask.class) { XjcTask task ->
+                            task.dependsOn(configuration)
+                            task.setSource(config.source.asFileTree)
+                            task.setConfig(config)
                         }
-                        return task
                     }
-
 
                 });
+
+                //intellij stuff...
+                project.plugins.withId('idea') {
+                    project.afterEvaluate {
+                        xjcSchemas.all(new Action<XjcConfig>() {
+                            void execute(XjcConfig xjcConfig) {
+                                project.idea.module.generatedSourceDirs += xjcConfig.genOutputPath.get()
+                                project.tasks.named('ideaModule') {
+                                    doFirst { project.mkdir(xjcConfig.genOutputPath) }
+                                }
+                            }
+                        });
+                    }
+                }
             }
         });
 

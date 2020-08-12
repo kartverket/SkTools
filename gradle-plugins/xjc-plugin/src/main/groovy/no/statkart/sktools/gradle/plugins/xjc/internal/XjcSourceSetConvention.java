@@ -1,6 +1,8 @@
 package no.statkart.sktools.gradle.plugins.xjc.internal;
 
 import groovy.lang.Closure;
+import no.statkart.sktools.gradle.plugins.xjc.XjcConfig;
+import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.util.ConfigureUtil;
 
 /**
@@ -10,13 +12,13 @@ import org.gradle.util.ConfigureUtil;
  * @since 1.2
  */
 public class XjcSourceSetConvention {
-    final private XjcSchemaContainer xjcSchemas;
+    final private NamedDomainObjectContainer<XjcConfig> xjcSchemas;
 
-    public XjcSourceSetConvention(XjcSchemaContainer xjcSchemas) {
+    public XjcSourceSetConvention(NamedDomainObjectContainer<XjcConfig> xjcSchemas) {
         this.xjcSchemas = xjcSchemas;
     }
 
-    public XjcSchemaContainer getXjc() {
+    public NamedDomainObjectContainer<XjcConfig> getXjc() {
         return xjcSchemas;
     }
 

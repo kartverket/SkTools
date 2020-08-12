@@ -1,8 +1,11 @@
 package no.statkart.sktools.gradle.plugins.xjc
 
+import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
+import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.SourceSet
 import org.gradle.util.ConfigureUtil
@@ -29,8 +32,8 @@ class XjcConfig {
 
     public final String name;
 
-    public String genOutputPath //SKTOOLS-10: mulighet for konfigurering av path
-    public transient String genTaskName  //SKTOOLS-10: mulighet for konfigurering av navn
+    public Property<File> genOutputPath;
+    public final String genTaskName;
 
     public final transient ConfigurableFileCollection source;
 
@@ -39,16 +42,25 @@ class XjcConfig {
     @Input
     public Map<String, Map> xjcOptions = [:] as HashMap
 
+    private final Project project
 
-    XjcConfig(SourceSet sourceSet, String name, ConfigurableFileCollection sourceFiles, String buildDir) {
+
+    XjcConfig(String name, SourceSet sourceSet, Project project) {
+        this.project = project;
         this.name = name;
 
-        this.source = sourceFiles
-        this.genOutputPath = Paths.get(buildDir, "xjc", sourceSet.getName(), name)
+        this.source = project.files();
 
-        this.genTaskName = sourceSet.getTaskName("gen", name); //SKTOOLS-10: mulighet for konfigurering av navn
+        this.genOutputPath = project.getObjects().property(File);
+        this.genOutputPath.set(defaultOutputPath(sourceSet));
+
+        this.genTaskName = sourceSet.getTaskName("gen", name);
     }
 
+    Provider<File> defaultOutputPath(SourceSet sourceSet) {
+        def callable = { project.file(Paths.get(project.getBuildDir() as String, "xjc", sourceSet.getName(), name)) }
+        return project.provider(callable)
+    }
 
 
     //todo: endre default fqn i en versjon etter 1.0?
@@ -139,4 +151,7 @@ class XjcConfig {
         return source.from(src);
     }
 
+    void setGenOutputPath(String genOutputPath) {
+        this.genOutputPath.set(project.file(genOutputPath))
+    }
 }

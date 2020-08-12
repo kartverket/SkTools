@@ -64,9 +64,9 @@ class XjcPluginTest extends TestKitBase {
         BuildResult buildResult = testGradleBuild("compileJava")
         assertThat(buildResult.getTasks())
             .extracting("path", "outcome")
-            .contains(tuple(":genMain0Schema", TaskOutcome.SUCCESS))
+            .contains(tuple(":genMainSchema", TaskOutcome.SUCCESS))
 
-        assertThat(file("build/xjc/main/main0Schema/no/statkart/sktools/test/SimpleType.java"))
+        assertThat(file("build/xjc/main/mainSchema/no/statkart/sktools/test/SimpleType.java"))
             .exists()
     }
 
@@ -100,9 +100,9 @@ class XjcPluginTest extends TestKitBase {
             }
         """)
 
-        testGradleBuild("genMain0Schema")
+        testGradleBuild("genMainSchema")
 
-        assertThat(contentOf(file("build/xjc/main/main0Schema/no/statkart/sktools/test/DocumentedSimpleType.java")))
+        assertThat(contentOf(file("build/xjc/main/mainSchema/no/statkart/sktools/test/DocumentedSimpleType.java")))
             .contains("Ekstra dokumentasjon for typen.")
     }
 
@@ -144,9 +144,9 @@ class XjcPluginTest extends TestKitBase {
         //executes builds the main source
         BuildResult buildResult = testGradleBuild("classes")
         //asserts the results
-        assertThat(buildResult.task(':genMain0Schema').getOutcome()).isEqualTo(TaskOutcome.SUCCESS)
+        assertThat(buildResult.task(':genMainSchema').getOutcome()).isEqualTo(TaskOutcome.SUCCESS)
 
-        assertThat(contentOf(file("build/xjc/main/main0Schema/no/statkart/sktools/test/StringList.java")))
+        assertThat(contentOf(file("build/xjc/main/mainSchema/no/statkart/sktools/test/StringList.java")))
             .contains(
                 'import some_adapter.Fqn;'
                 , 'extends Fqn'
@@ -178,30 +178,9 @@ class XjcPluginTest extends TestKitBase {
 
         testGradleBuild("ideaModule")
         assertThat(contentOf(file(rootProjectName() + ".iml")))
-            .contains('"file://$MODULE_DIR$/build/xjc/main/main0Schema"')
+            .contains('"file://$MODULE_DIR$/build/xjc/main/mainSchema"')
     }
 
-
-    @Test
-    void canSpecifyTaskNameForGen() {
-        writeFileUTF8("build.gradle", '''\
-            plugins {
-              id 'sktools.xjc'
-            }
-
-            sourceSets {
-                main.xjc {
-                    schema {
-                        genTaskName = 'genCustom'
-                    }
-                }
-            }
-        ''')
-
-        BuildResult result = testGradleBuild("genCustom")
-        assertThat(result.task(":genCustom"))
-            .isNotNull();
-    }
 
 
     @Test
@@ -258,7 +237,7 @@ class XjcPluginTest extends TestKitBase {
 
             task echoSourceFiles() {
               doLast {
-                project.tasks[project.sourceSets.main.xjc[0].genTaskName].getSource().files.each {
+                project.tasks["genMainSchema"].getSource().files.each {
                   println it.name
                 }
               }
