@@ -31,7 +31,7 @@ Configuration
 ------------
     sourceSets {
         main {
-            wsdoc.group {
+            wsdoc {
                 targetPath 'build/main/docs/wsdoc' //default
                 include '**/*WSBean.java'          //default
                 lookupPath '../../domain/javadoc'  //optional

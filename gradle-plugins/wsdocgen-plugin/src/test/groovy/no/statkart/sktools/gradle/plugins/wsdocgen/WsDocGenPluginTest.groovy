@@ -45,6 +45,29 @@ class WsDocGenPluginTest extends TestKitBase {
         assertThat(project.getPlugins().getPlugin(WsDocGenPlugin.class)).isNotNull()
     }
 
+    /**
+     * Tester syntax før SKTOOLS-213
+     */
+    @Test
+    void legacySyntax() {
+        final Project project = projectBuilder().build().tap {
+            apply plugin: 'java'
+            apply plugin: 'sktools-wsdocgen-plugin'
+
+            sourceSets {
+                main.wsdoc.group { targetPath 'gen/doc' }
+                other {
+                    wsdoc {
+                        group { targetPath 'gen/doc2' }
+                    }
+                }
+
+            }
+        }
+        assertEquals project.sourceSets.main.wsdoc.group.targetPath.get(), project.file('gen/doc')
+        assertEquals project.sourceSets.other.wsdoc.group.targetPath.get(), project.file('gen/doc2')
+    }
+
 
     @Test
     void genWsDocGeneratesDocumentationForAllSourceSets() {
@@ -55,10 +78,10 @@ class WsDocGenPluginTest extends TestKitBase {
             }
 
             sourceSets {
-                main.wsdoc.group {
+                main.wsdoc {
                     serviceXslt 'transform.xsl'
                 }
-                other.wsdoc.group {
+                other.wsdoc {
                     serviceXslt 'transform.xsl'
                 }
             }
@@ -80,8 +103,8 @@ class WsDocGenPluginTest extends TestKitBase {
 
         assertNoFailures(testGradleBuild(WsDocGenPlugin.GEN_TASK_NAME))
 
-        assertThat(file('build/main/wsdoc/Group1/TestService.html')).exists()
-        assertThat(file('build/other/wsdoc/Group1/TestService.html')).exists()
+        assertThat(file('build/main/wsdoc/TestService.html')).exists()
+        assertThat(file('build/other/wsdoc/TestService.html')).exists()
     }
 
 
@@ -92,16 +115,14 @@ class WsDocGenPluginTest extends TestKitBase {
             apply plugin: 'sktools-wsdocgen-plugin'
 
             sourceSets {
-                main.wsdoc.group {}
+                main.wsdoc {}
             }
         }
 
         assertNotNull project.tasks.findByName('genWsdoc'), "gen task"
         assertNotNull project.tasks.findByName('genMainWsdoc'), "gen task for source set"
-        assertNotNull project.tasks.findByName('genMainWsdocGroup1'), "gen task for group1"
 
-        assertTrue project.tasks['genWsdoc'].dependsOn.contains('genMainWsdoc')
-        assertTrue project.tasks['genMainWsdoc'].dependsOn.contains(project.tasks['genMainWsdocGroup1'])
+        assertTrue project.tasks['genWsdoc'].dependsOn.collect{it.name}.contains('genMainWsdoc')
     }
 
     /**
@@ -115,7 +136,7 @@ class WsDocGenPluginTest extends TestKitBase {
 
             sourceSets {
                 main {}
-                other.wsdoc.group {}
+                other.wsdoc {}
             }
         }
 
@@ -123,11 +144,9 @@ class WsDocGenPluginTest extends TestKitBase {
 
         //negative test
         assertNull project.tasks.findByName('genMainWsdoc'), "gen task for source set"
-        assertNull project.tasks.findByName('genMainWsdocGroup1'), "gen task for group1"
 
         //positive test
         assertNotNull project.tasks.findByName('genOtherWsdoc'), "gen task for source set"
-        assertNotNull project.tasks.findByName('genOtherWsdocGroup1'), "gen task for group1"
     }
 
     @Test
@@ -137,18 +156,15 @@ class WsDocGenPluginTest extends TestKitBase {
             apply plugin: 'sktools-wsdocgen-plugin'
 
             sourceSets {
-                main.wsdoc.group {}
+                main.wsdoc {}
                 other
             }
         }
 
-        assertNotNull project.sourceSets.main.wsdoc
-        assertNotNull project.sourceSets.other.wsdoc
+        assertNotNull project.sourceSets.main.wsdoc.group
+        assertNull project.sourceSets.other.wsdoc.group
 
-        assertEquals project.sourceSets.main.wsdoc.size(), 1
-        assertEquals project.sourceSets.other.wsdoc.size(), 0
-
-        assertEquals project.sourceSets.main.wsdoc[0].targetPath.get(), project.file('build/main/wsdoc/Group1')
+        assertEquals project.sourceSets.main.wsdoc.group.targetPath.get(), project.file('build/main/wsdoc')
     }
 
 
@@ -160,29 +176,22 @@ class WsDocGenPluginTest extends TestKitBase {
             sourceSets {
                 multi {
                     wsdoc {
-                        group { targetPath 'gen/doc' }
-                        group { targetPath 'gen/doc2' }
+                        targetPath 'gen/doc'
+                        targetPath 'gen/doc2'
                     }
                 }
-                main.wsdoc.group { /*default*/ }
-                other.wsdoc.group { targetPath 'gen/doc' }
+                main.wsdoc { /*default*/ }
+                other.wsdoc { targetPath 'gen/doc' }
             }
         }
 
-
-        //tests vanilla configuration
-        assertEquals project.sourceSets.main.wsdoc[0].targetPath.get(), project.file('build/main/wsdoc/Group1')
-        assertEquals project.tasks.genMainWsdocGroup1.destinationDir, project.file('build/main/wsdoc/Group1')
-
         //test override
-        assertEquals project.sourceSets.other.wsdoc[0].targetPath.get(), project.file('gen/doc')
-        assertEquals project.tasks.genOtherWsdocGroup1.destinationDir, project.file('gen/doc')
+        assertEquals project.sourceSets.other.wsdoc.group.targetPath.get(), project.file('gen/doc')
+        assertEquals project.tasks.genOtherWsdoc.destinationDir, project.file('gen/doc')
 
         //test multiple groups
-        assertEquals project.sourceSets.multi.wsdoc[0].targetPath.get(), project.file('gen/doc')
-        assertEquals project.sourceSets.multi.wsdoc[1].targetPath.get(), project.file('gen/doc2')
-        assertEquals project.tasks.genMultiWsdocGroup1.destinationDir, project.file('gen/doc')
-        assertEquals project.tasks.genMultiWsdocGroup2.destinationDir, project.file('gen/doc2')
+        assertEquals project.sourceSets.multi.wsdoc.group.targetPath.get(), project.file('gen/doc2')
+        assertEquals project.tasks.genMultiWsdoc.destinationDir, project.file('gen/doc2')
     }
 
 
@@ -195,7 +204,7 @@ class WsDocGenPluginTest extends TestKitBase {
             }
 
             sourceSets {
-                main.wsdoc.group {
+                main.wsdoc {
                     targetPath 'build/mydocs'
                     lookupPath '../wacky/path'
                     serviceXslt 'transform.xsl'
@@ -225,7 +234,7 @@ class WsDocGenPluginTest extends TestKitBase {
 
 
     /**
-     * Demonstrerer hvordan en kan spre kilekode over flere mapper
+     * Demonstrerer hvordan en kan spre kildekode over flere mapper
      */
     @Test
     void multipleSourceFoldersForSingleSourceSet() {
@@ -240,7 +249,7 @@ class WsDocGenPluginTest extends TestKitBase {
 
             sourceSets.main {
                 java.srcDir 'src/main/morejava'
-                wsdoc.group {
+                wsdoc {
                     targetPath 'build'
                     serviceXslt 'transform.xsl'
                 }
@@ -277,7 +286,7 @@ class WsDocGenPluginTest extends TestKitBase {
             }
 
             sourceSets.main {
-                wsdoc.group {
+                wsdoc {
                     serviceXslt 'transform.xsl'
                 }
             }
@@ -298,11 +307,11 @@ class WsDocGenPluginTest extends TestKitBase {
         BuildResult buildResult1 = testGradleBuild(':genWsdoc')
 
         assertThat(buildResult1.task(":genWsdoc").getOutcome()).isEqualTo(TaskOutcome.SUCCESS)
-        assertThat(file('build/main/wsdoc/Group1/InterfaceService.html')).exists()
+        assertThat(file('build/main/wsdoc/InterfaceService.html')).exists()
 
         BuildResult buildResult2 = testGradleBuild(':genWsdoc')
         assertThat(buildResult2.task(":genWsdoc").getOutcome())
             .as("Task up to date ved andre gangs kjøring").isEqualTo(TaskOutcome.UP_TO_DATE)
-        assertThat(file('build/main/wsdoc/Group1/InterfaceService.html')).exists()
+        assertThat(file('build/main/wsdoc/InterfaceService.html')).exists()
     }
 }

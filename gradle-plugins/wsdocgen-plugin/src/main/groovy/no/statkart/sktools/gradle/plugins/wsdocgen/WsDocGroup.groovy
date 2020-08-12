@@ -3,7 +3,7 @@ package no.statkart.sktools.gradle.plugins.wsdocgen
 import org.gradle.api.Project
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.SourceSet
-import org.gradle.util.GUtil
+import org.gradle.util.ConfigureUtil
 
 /**
  * Dokumentasjon av en logisk samling webservices.
@@ -76,7 +76,6 @@ class WsDocGroup {
     }
 
     /**
-     * SKTOOLS-105
      * @see #xslt(Object)
      * @since 1.3
      */
@@ -85,7 +84,6 @@ class WsDocGroup {
     }
 
     /**
-     * SKTOOLS-105
      * @since 1.3
      */
     WsDocGroup indexXslt(Object path) {
@@ -98,8 +96,12 @@ class WsDocGroup {
         return this
     }
 
-    String getWsdocTaskName() {
-        return "gen" + GUtil.toCamelCase(sourceSet.getName() + " Wsdoc " + name)
+    /**
+     * Compatibility with syntax pre SKTOOLS-213
+     */
+    @Deprecated //kan fjernes i sktools 8
+    WsDocGroup group(Closure<?> closure) {
+        project.getLogger().warn("Deprecated syntax: wsdoc.group - see SKTOOLS-213 for details");
+        ConfigureUtil.configure(closure, this)
     }
-
 }

@@ -1,7 +1,6 @@
 package no.statkart.sktools.gradle.plugins.wsdocgen;
 
-import no.statkart.sktools.gradle.plugins.wsdocgen.internal.WsDocGroupContainer;
-import org.gradle.api.Action;
+import groovy.lang.Closure;
 import org.gradle.api.NonNullApi;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -12,9 +11,12 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.initialization.dsl.ScriptHandler;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.SourceSet;
-import org.gradle.api.tasks.bundling.AbstractArchiveTask;
+import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.bundling.Zip;
+import org.gradle.util.Configurable;
+import org.gradle.util.ConfigureUtil;
 import org.gradle.util.GUtil;
 
 import javax.annotation.Nullable;
@@ -28,7 +30,7 @@ import java.util.concurrent.Callable;
 /**
  * Dokumentasjonsgenerering av {@code *WSBean.java} - JAX-WS implementasjon på server.
  * <p>
- * Til hvert registrert {@link SourceSet} utvider pluginet med vedhengsfunksjonalitet; se {@link WsDocGroupContainer}
+ * Til hvert registrerte {@link SourceSet} utvider pluginet med vedhengsfunksjonalitet (exstension).
  *
  * @author Leif Lislegård
  * @since 1.0
@@ -49,6 +51,9 @@ public class WsDocGenPlugin implements Plugin<Project> {
         }
     }
 
+    TaskProvider<Zip> archiveTaskProvider;
+    TaskProvider<Task> genTaskProvider;
+
     @Override
     public void apply(Project project) {
         project.getPluginManager().apply(JavaBasePlugin.class);
@@ -62,80 +67,93 @@ public class WsDocGenPlugin implements Plugin<Project> {
         configureDocgenDependencies(project);
     }
 
-    private static void configureSourceSetDefaults(final Project project) {
-        final AbstractArchiveTask archiveTask = (AbstractArchiveTask) project.getTasks().getByName(ARCHIVE_TASK_NAME);
+    private void configureSourceSetDefaults(final Project project) {
 
         //for hvert source sett som finnes/blir lagt til
         project.getConvention().getPlugin(JavaPluginConvention.class).getSourceSets().all(sourceSet -> {
-            final WsDocGroupContainer container = new WsDocGroupContainer(project, sourceSet);
-
             //hekter inn utvidelser på source settet
-            sourceSet.getExtensions().add(CONVENTION_NAME, container);
-
-            container.all(new Action<WsDocGroup>() {
-                //samletask for alle grupper for dette source settet
-                final String commonSourceSetTaskName = "gen" + GUtil.toCamelCase(sourceSet.getName()) + "Wsdoc";
-
-                @Override
-                public void execute(final WsDocGroup group) {
-
-                    if (!group.getTargetPath().isPresent()) {
-                        group.getTargetPath().set(
-                            project.getLayout().getBuildDirectory()
-                                .dir(sourceSet.getName() + "/wsdoc/" + group.name)
-                                .map(Directory::getAsFile)
-                        );
-                    }
-
-                    Task task = createWsDocGenForGroupTask(project, sourceSet, group);
-
-                    maybeCreateSourceSetSuperTask().dependsOn(task);
-                    archiveTask.from(task);
-
-                }
-
-                private Task sourceSetSuperTask = null;
-
-                Task maybeCreateSourceSetSuperTask() {
-                    if (sourceSetSuperTask == null) {
-                        sourceSetSuperTask = project.task(commonSourceSetTaskName);
-                        project.getTasks().getByName(GEN_TASK_NAME).dependsOn(commonSourceSetTaskName);
-                    }
-                    return sourceSetSuperTask;
-                }
-            });
+            sourceSet.getExtensions().add(CONVENTION_NAME, new WsDocExtension(project, sourceSet));
         });
     }
 
+    class WsDocExtension implements Callable<WsDocGroup>, Configurable<WsDocGroup> {
+        final Project project;
+        final SourceSet sourceSet;
 
-    static void configureGenTask(Project project) {
-        project.task(GEN_TASK_NAME);
+        WsDocGroup group = null;
+
+        WsDocExtension(Project project, SourceSet sourceSet) {
+            this.project = project;
+            this.sourceSet = sourceSet;
+        }
+
+        @Override
+        public WsDocGroup configure(Closure closure) {
+            if (group == null) {
+                attachNewWsDocGroup();
+            }
+            return ConfigureUtil.configureSelf(closure, group);
+        }
+
+        private void attachNewWsDocGroup() {
+            group = new WsDocGroup(project, "group", sourceSet);
+            group.getTargetPath().set(defaultTargetPath());
+
+            //samletask for alle grupper for dette source settet
+            TaskProvider<WsDocCompileTask> commonSourceSetTask = createWsDocGenForGroupTask(project, sourceSet, group);
+
+            WsDocGenPlugin.this.genTaskProvider.configure(task -> task.dependsOn(commonSourceSetTask));
+            WsDocGenPlugin.this.archiveTaskProvider.configure(zip -> zip.from(commonSourceSetTask));
+        }
+
+        @Override
+        public WsDocGroup call() {
+            return group;
+        }
+
+        protected Provider<File> defaultTargetPath() {
+            return project.getLayout().getBuildDirectory()
+                .dir(sourceSet.getName() + "/wsdoc")
+                .map(Directory::getAsFile);
+        }
+
+
+        /**
+         * Compatibility with pre SKTOOLS-213 syntax
+         */
+        @Deprecated //kan fjernes i sktools 8
+        WsDocGroup group(Closure<?> closure) {
+            project.getLogger().warn("Deprecated syntax: wsdoc.group - see SKTOOLS-213 for details");
+            return configure(closure);
+        }
     }
 
-    static void configureArchives(Project project) {
-        Zip zip = project.getTasks().create(ARCHIVE_TASK_NAME, Zip.class);
-        zip.getArchiveClassifier().set(CONVENTION_NAME);
+    void configureGenTask(Project project) {
+        genTaskProvider = project.getTasks().register(GEN_TASK_NAME);
+    }
 
-        project.getArtifacts().add(Dependency.ARCHIVES_CONFIGURATION, zip);
+    void configureArchives(Project project) {
+        archiveTaskProvider = project.getTasks().register(ARCHIVE_TASK_NAME, Zip.class, zip ->
+            zip.getArchiveClassifier().set(CONVENTION_NAME));
+
+        project.getArtifacts().add(Dependency.ARCHIVES_CONFIGURATION, archiveTaskProvider);
     }
 
 
-    private static WsDocCompileTask createWsDocGenForGroupTask(Project project, SourceSet sourceSet, WsDocGroup group) {
-        final String taskName = group.getWsdocTaskName();
-        WsDocCompileTask task = project.getTasks().create(taskName, WsDocCompileTask.class);
-
-        //setting conventional properties
-        task.setSource(sourceSet.getAllJava());
-        task.setClasspath(project.files(
-            (Callable<FileCollection>) sourceSet::getCompileClasspath
-        ));
-        task.setDestinationDir(group.getTargetPath());
-        task.getLookupPath().set(group.getLookupPath());
-        task.getEncoding().set(group.getEncoding());
-        task.getServiceXsltFile().set(group.getServiceXsltPath());
-        task.getIndexXsltFile().set(group.getIndexXsltPath());
-
-        return task;
+    private static TaskProvider<WsDocCompileTask> createWsDocGenForGroupTask(Project project, SourceSet sourceSet, WsDocGroup group) {
+        final String taskName = "gen" + GUtil.toCamelCase(sourceSet.getName()) + "Wsdoc";
+        return project.getTasks().register(taskName, WsDocCompileTask.class, task -> {
+            //setting conventional properties
+            task.setSource(sourceSet.getAllJava());
+            task.setClasspath(project.files(
+                (Callable<FileCollection>) sourceSet::getCompileClasspath
+            ));
+            task.setDestinationDir(group.getTargetPath());
+            task.getLookupPath().set(group.getLookupPath());
+            task.getEncoding().set(group.getEncoding());
+            task.getServiceXsltFile().set(group.getServiceXsltPath());
+            task.getIndexXsltFile().set(group.getIndexXsltPath());
+        });
     }
 
     /**
