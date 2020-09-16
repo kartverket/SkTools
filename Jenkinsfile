@@ -16,9 +16,11 @@ pipeline {
     }
 
     environment {
-        //legger gradle til byggenodens workspace - dette forhindrer kollisjoner i tilfeller der man har ibruk flyktige snapshot versjoner slik at to jobber kan komme i konflikt.
-        //PS: erstatter '\' med '/' via char verdier da jenkins parser og kompilerer regex uttrykk på en håpløs måte...
-        GRADLE_USER_HOME = "${WORKSPACE.replace(0x5c as char, 0x2f as char)}/gradle"
+        GRADLE_LATEST = '6.6.1' //latest og greatest (kan også være neste major versjon)
+
+        // Forhindre samtidighetsproblemer
+        // Tilsvarer "Force GRADLE_USER_HOME to use workspace" i "Gradle plugin"
+        GRADLE_USER_HOME = "${WORKSPACE}/gradle"
 
         //for publisering til sentralt maven repo bindes opp via jenkins credential (secret text)
         MAVEN_PUBLISH = credentials('MAVEN_DEPLOY_RELEASES')
@@ -54,15 +56,15 @@ pipeline {
                 }
                 stage('Test gradle latest') {
                     tools {
-                        gradle 'Gradle 6.5' //latest og greatest (kan også være neste major versjon)
+                        gradle "Gradle $GRADLE_LATEST"
                     }
                     steps {
                         sh "gradle --version"
-                        sh "gradle testGradle6.5 -DignoreFailures=true ${gradleOptions(this)} -DbuildDirName=build/gradle6.5" //buildDirName for å kjøre flere bygg med forskjellige gradle versjoner
+                        sh "gradle testGradle$GRADLE_LATEST -DignoreFailures=true ${gradleOptions(this)} -DbuildDirName=build/gradle$GRADLE_LATEST" //buildDirName for å kjøre flere bygg med forskjellige gradle versjoner
                     }
                     post {
                         always {
-                            junit '**/test-results/testGradle6.5/*.xml'
+                            junit "**/test-results/testGradle$GRADLE_LATEST/*.xml"
                         }
                     }
                 }
