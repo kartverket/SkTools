@@ -4,6 +4,8 @@ import org.gradle.api.internal.ConventionTask
 import org.gradle.api.logging.Logger
 import org.gradle.api.tasks.Input
 
+import java.util.function.BiConsumer
+
 /**
  * Task for executing av statements over JDBC.
  *
@@ -16,9 +18,9 @@ abstract class AbstractSQLTask extends ConventionTask {
     boolean failOnError = !project.gradle.startParameter.isContinueOnFailure()
 
     /**
-     * Disse credentials blir benyttet dersom {@code useTaskCredentials == true}
+     * Disse credentials blir benyttet dersom {@code useDefaultCredentials == true}
      *
-     * Dersom {@code useDefaultCredentials == true}, så blir konversjonelle verdier benyttet. Dvs credentials ifra koblet dbTool-set
+     * Dersom {@code useDefaultCredentials == true}, så blir konvensjonelle verdier benyttet. Dvs credentials ifra koblet dbTool-set
      */
     final Credentials credentials = new Credentials("task:${name}", project.properties)
     Credentials defaultCredentials = null
@@ -32,6 +34,7 @@ abstract class AbstractSQLTask extends ConventionTask {
 
     @Input
     String getUsername() {
+        //todo: bruk konfigurerbar provider her
         if (useDefaultCredentials && credentials.isEmpty()) {  //dersom en ikke skal benytte alternative credentials for task
             return defaultCredentials.getUsername()
         }
@@ -77,7 +80,6 @@ abstract class AbstractSQLTask extends ConventionTask {
     public abstract Logger getLogger();
 
     protected void validateAbstractSQLTask() {
-
         if (getDriver() == null) {
             throw new Exception("Value for attribute 'driver' not set!")
         }
@@ -90,7 +92,20 @@ abstract class AbstractSQLTask extends ConventionTask {
         if (getPassword() == null) {
             throw new Exception("Value for attribute 'password' not set!")
         }
+    }
 
+    protected void eachProperty(BiConsumer<String, Object> consumer) {
+        for (Map.Entry<String, Object> entry : getExtensions().getExtraProperties().getProperties().entrySet()) {
+            consumer.accept(entry.getKey(), entry.getValue());
+        }
+
+        //noinspection GroovyAssignabilityCheck
+        Map<String, Object> toolsetProperties = getExtensions().findByName(AbstractDatabaseConvention.TOOLSET_PROPERTIES)
+        if (toolsetProperties) {
+            for (Map.Entry<String, Object> entry : toolsetProperties.entrySet()) {
+                consumer.accept(entry.getKey(), entry.getValue());
+            }
+        }
     }
 
 }

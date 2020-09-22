@@ -1,11 +1,14 @@
 package no.statkart.sktools.gradle.plugins.dbtools.database.util
 
+import groovy.transform.PackageScope
 import no.statkart.sktools.utils.parsers.sql.SQLStatementParser
-import org.gradle.api.logging.Logger;
-import org.gradle.api.logging.Logging;
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Optional
+import org.gradle.api.logging.Logger
+import org.gradle.api.logging.Logging
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
+
+import java.nio.charset.Charset
+import java.nio.file.Files
 
 /**
  * Task for executing av statements over JDBC.
@@ -18,12 +21,9 @@ public class SQLTask extends AbstractSQLTask {
 
     protected final SQLExecutor executor = new SQLExecutor()
 
-    @Optional
-    @Input
+    @Internal
     File sqlFile
 
-    @Optional
-    @Input
     String sqlString
 
 
@@ -43,47 +43,48 @@ public class SQLTask extends AbstractSQLTask {
         executor.executeStatements(specs)
     }
 
-    protected void parseStatements() {
-        if (getSqlFile()) {
-            logger.info('parsing statements from file: {}', getSqlFile());
-            executor.statements = SQLStatementParser.parseStatements(getSqlFile(), getEncoding());
-        } else {
-            executor.statements = SQLStatementParser.parseStatements(getSqlString());
-        }
+    @PackageScope
+    void parseStatements() {
+        String sql = fillInnProperties(getSqlString())
+
+        executor.statements = SQLStatementParser.parseStatements(sql);
+    }
+
+    /**
+     * Substitutes tokens with property value. Token syntax: {@code @property@}.
+     */
+    @PackageScope
+    String fillInnProperties(String sql) {
+        eachProperty({ key, value ->
+            sql = sql.replace("@${key}@", value.toString())
+        });
+
+        return sql
     }
 
 
     void validate() {
         validateAbstractSQLTask()
-
-        if (getSqlFile() == null && getSqlString() == null) {
-            throw new Exception("sqlFile eller sqlString må angis!")
-        }
-
-        if (getSqlFile() != null) {
-            if (!getSqlFile().exists()) {
-                throw new Exception("File does not exist! sqlFile=${project.relativePath(getSqlFile())}")
-            }
-
-            if (getSqlString() != null) {
-                throw new Exception("Enten sqlFile eller sqlString kan angis!")
-            }
-        }
-
-        if (getSqlString() != null) {
-            if (getSqlString().trim().isEmpty()) {
-                throw new Exception("sqlString kan ikke være tom! sqlString='${getSqlString()}'")
-            }
-
-            if (getSqlFile() != null) {
-                throw new Exception("Enten sqlFile eller sqlString kan angis!")
-            }
-        }
-
     }
 
 
+    @Internal //no up-to-date check
+    String getSqlString() {
+        if (sqlString != null && getSqlFile() != null) {
+            throw new Exception("Enten sqlFile eller sqlString kan angis!")
+        }
 
+        if (sqlString != null) return sqlString
+
+        File file = getSqlFile()
+        Objects.requireNonNull(file, "Enten sqlFile eller sqlString må angis!")
+
+        logger.info('parsing statements from file: {}', file);
+        Charset charset = Charset.forName(getEncoding())
+        return String.join('\n', Files.readAllLines(file.toPath(), charset))
+    }
+
+    @Internal
     public Logger getLogger() {
         return logger;
     }

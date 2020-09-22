@@ -4,6 +4,7 @@ import no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractSQLTask
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.process.JavaExecSpec
 
@@ -15,10 +16,9 @@ import org.gradle.process.JavaExecSpec
  */
 abstract class DatabasePatchTask extends AbstractSQLTask {
 
-    //SKTOOLS-84
+    @Internal
     boolean failOnWarning = failOnError
 
-    //SKTOOLS-77
     @Input
     @Optional
     String schema

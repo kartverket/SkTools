@@ -1,11 +1,17 @@
 package no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch
 
+import groovy.transform.PackageScope
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.JavaExecSpec
+
+import java.nio.charset.Charset
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
 
 /**
  * Task for patching av schema over JDBC.
@@ -41,6 +47,7 @@ class PatchTask extends DatabasePatchTask {
 
     @TaskAction
     def exec() {
+        File sqlFile = mappedSqlFile(getSqlFile())
 
         project.javaexec { JavaExecSpec spec ->
 
@@ -56,6 +63,43 @@ class PatchTask extends DatabasePatchTask {
             }
 
         }
+    }
+
+    /**
+     * Transforming file content by substituting tokens with properties.
+     *
+     * @see #fillInnProperties(java.lang.Iterable) for substitution rules.
+     * @return a unique temp file with filtered content
+     */
+    @PackageScope
+    File mappedSqlFile(File file) {
+        if (file == null) return null;
+
+        Charset charset = Charset.forName(getEncoding())
+        logger.info('parsing statements from file: {}', file);
+        List<String> transformedLines = fillInnProperties(Files.readAllLines(file.toPath(), charset))
+
+        Path dir = Paths.get(getProject().buildDir.toString(), 'dbtools')
+        Files.createDirectories(dir)
+        Path tempFile = Files.createTempFile(dir, 'patch', '.sql')
+        Files.write(tempFile, transformedLines, charset)
+
+        return tempFile.toFile()
+    }
+
+    /**
+     * Substitutes tokens with syntax {@code @property@} with property value.
+     */
+    @PackageScope
+    List<String> fillInnProperties(Iterable<String> lines) {
+        List<String> transformedLines = new ArrayList<>()
+        for (String line : lines) {
+            eachProperty({ key, value ->
+                line = line.replace("@${key}@", value.toString())
+            });
+            transformedLines.add(line)
+        }
+        return transformedLines;
     }
 
     @Override
