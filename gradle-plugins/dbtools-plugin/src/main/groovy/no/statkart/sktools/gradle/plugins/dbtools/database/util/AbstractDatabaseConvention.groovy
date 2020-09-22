@@ -11,6 +11,7 @@ import org.gradle.util.GUtil
  * Felles funksjonalitet for toolsets
  */
 abstract class AbstractDatabaseConvention {
+    public static final String TOOLSET_PROPERTIES = "toolsetProperties"
 
     protected final DbtoolsConvention dbtoolsConvention
 
@@ -83,8 +84,8 @@ abstract class AbstractDatabaseConvention {
     }
 
     protected void addPropertyIfNotExist(String key, Object value) {
-        if (!this.properties.containsKey(key.toString())) {
-            this.properties.put(key.toString(), value);
+        if (!this.properties.containsKey(key)) {
+            this.properties.put(key, value);
             if (project.logger.isInfoEnabled()) {
                 project.logger.info("setting dbToolSets[${name != '' ? name : "''"}] property ${key} to ${value}")
             }
@@ -154,8 +155,6 @@ abstract class AbstractDatabaseConvention {
     }
 
 
-
-
     public SQLTask sqlTask(Map params, String name, Closure closure = null) {
         SQLTask task = configureAbstractSQLTask(params, name, SQLTask.class, closure)
         return task
@@ -170,7 +169,8 @@ abstract class AbstractDatabaseConvention {
 
         String taskName = getTaskName(name);
         AbstractSQLTask task = project.getTasks().create(taskName, type)
-        task.doFirst(filterClosure)
+
+        task.getExtensions().add(TOOLSET_PROPERTIES, Collections.unmodifiableMap(this.properties))
 
         task.conventionMapping.with {
             map 'url', { this.url }
@@ -189,70 +189,6 @@ abstract class AbstractDatabaseConvention {
         return task;
     }
 
-
-    public void printInfo() {
-        80.times {project.print '*'}; project.println ''
-
-        println "${this.class.simpleName} for \"${prefix}\":"
-        println "  url -> ${url}"
-        println "  driver -> ${driver}"
-        if (credentials.hasUsername())
-            println "  credentials.username -> ${credentials.username}"
-        if (credentials.hasPassword())
-            println "  credentials.password -> ${credentials.password}"
-
-        println ''
-
-        this.properties.sort().each { key, value ->
-            println "  ${key} -> ${value}"
-        }
-
-        80.times {project.print '*'}; project.println ''
-    }
-
-
-
-    /**
-     * Action for filtrering av sqlFile satt på task
-     */
-    private Closure filterClosure = { AbstractSQLTask task ->
-
-        if (task.sqlFile) {
-            def buildDir = "${project.buildDir}/dbtools/${prefix}/${task.name}"
-
-
-            //work around until GRADLE-1267
-            task.ant.copy(file: task.getSqlFile(), tofile: "${buildDir}/${task.getSqlFile().name}", encoding: task.getEncoding(), overwrite: true)
-            {
-                filterchain {
-                    replaceTokens {
-                        this.properties.each { key, value ->
-                            token(key: key, value: value)
-                        }
-                    }
-                }
-            }
-
-//            project.delete(buildDir)
-//            project.copy {
-//                from task.getSqlFile()
-//                into buildDir
-//                filter([tokens: this.properties, beginToken: '@', endToken: '@'], org.apache.tools.ant.filters.ReplaceTokens)
-//            }
-
-
-            task.sqlFile = project.file("${buildDir}/${task.sqlFile.name}")
-        }
-
-        if (task instanceof SQLTask && task.getSqlString()) {
-            String sqlString = task.getSqlString()
-            this.properties.each { key, value ->
-                sqlString = sqlString.replaceAll("@${key}@", value.toString())
-            }
-            task.setSqlString(sqlString)
-        }
-
-    }
 
 
     //registrerer opprettelse av sequence-task til dette toolset

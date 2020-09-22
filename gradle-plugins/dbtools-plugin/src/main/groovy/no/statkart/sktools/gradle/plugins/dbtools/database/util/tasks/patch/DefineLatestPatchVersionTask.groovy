@@ -1,6 +1,5 @@
 package no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch
 
-import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.JavaExecSpec
 
@@ -12,9 +11,6 @@ import org.gradle.process.JavaExecSpec
  */
 @SuppressWarnings("UnnecessaryQualifiedReference")
 class DefineLatestPatchVersionTask extends PatchTask {
-
-    @Input
-    File sqlFile
 
 
     @TaskAction
