@@ -1,6 +1,7 @@
 package no.statkart.sktools.gradle.plugins.dbtools.database.util
 
-import org.gradle.api.Project
+
+import org.gradle.api.provider.Provider
 
 /**
  * Setter username og password dersom ikke allerede angitt som parametere.
@@ -14,67 +15,28 @@ class Credentials {
     String username = null
     String password = null
 
-    Closure defaultUsername
-    Closure defaultPassword
+    private Provider<String> defaultUsername
+    private Provider<String> defaultPassword
 
-    Credentials(String context, final Map<java.lang.String, ?> properties) {
-        defaultUsername = {
-            properties['username']
-        }
-        defaultPassword = {
-            properties['password']
-        }
+    Credentials(String context, Provider<String> defaultUsername, Provider<String> defaultPassword) {
         this.context = context
-    }
-
-    public boolean hasUsername() {
-        if (username == null) {
-            username = defaultUsername.call()
-        }
-        return username != null
+        this.defaultUsername = defaultUsername
+        this.defaultPassword = defaultPassword
     }
 
     public String getUsername() {
-        if (!hasUsername()) {
-            username = System.console()?.readLine('<%s>Please enter username: ', context)
-        }
-        return username
-    }
-
-    public boolean hasPassword() {
-        if (password == null) {
-            password = defaultPassword.call()
-        }
-        return password != null
+        return username ?: defaultUsername.getOrNull()
     }
 
     public String getPassword() {
-        if (!hasPassword()) {
-            char[] pwd = System.console()?.readPassword('<%s>Please enter password for %s (empty defaults to %s): ', context, username, username)
-            if (pwd != null) {
-                password = new String(pwd)
-                if (password.isEmpty()) {
-                    password = username
-                }
-            }
-        }
-        return password
+        return password != null ? password : defaultPassword.getOrNull()
     }
 
-    /**
-     * @since 1.2
-     */
-    public void clear() {
-        username = null
-        password = null
+    public void addFallbackUsername(Provider fallback) {
+        defaultUsername = defaultUsername.orElse(fallback)
     }
 
-    /**
-     * @since 1.2
-     */
-    public boolean isEmpty() {
-        return !(hasUsername() || hasPassword())
+    public void addFallbackPassword(Provider fallback) {
+        defaultPassword = defaultPassword.orElse(fallback)
     }
-
-
 }

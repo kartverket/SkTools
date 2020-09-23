@@ -111,11 +111,12 @@ class DbToolsPluginTest extends TestKitBase {
         Assert.assertEquals(convention.dbToolSets.coolDb.credentials.username, 'brukernavn2', "Forventet samme brukernavn")
         Assert.assertEquals(convention.dbToolSets.coolDb.credentials.password, 'passord2', "Forventet samme passord")
         //sjekker at credentials blir bruk som en anatomisk enhet
-        Assert.assertEquals(convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].username, null /*fungerer kun når Console ikke finnes*/)
+        Assert.assertEquals(convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].username, 'brukernavn2')
         Assert.assertEquals(convention.dbToolSets.coolDb.tasks['PleaseAuthenticateMe'].password, 'passord3')
 
         //clearer credentials på task
-        project.tasks.'coolDbPleaseAuthenticateMe'.credentials.clear()
+        project.tasks.'coolDbPleaseAuthenticateMe'.credentials.username = null
+        project.tasks.'coolDbPleaseAuthenticateMe'.credentials.password = null
 
         Assert.assertEquals(convention.dbToolSets.coolDb.credentials.username, 'brukernavn2', "Forventet samme brukernavn")
         Assert.assertEquals(convention.dbToolSets.coolDb.credentials.password, 'passord2', "Forventet samme passord")

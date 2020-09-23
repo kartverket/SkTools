@@ -4,6 +4,7 @@ import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsConvention
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.provider.Provider
 import org.gradle.util.ConfigureUtil
 import org.gradle.util.GUtil
 
@@ -36,10 +37,18 @@ abstract class AbstractDatabaseConvention {
         this.name = name
         this.prefix = propertyPrefix
 
-        this.credentials = new Credentials("toolset:${prefix}", properties)
+        Provider<String> defaultUsername = getProject().getProviders().provider {
+            this.properties.get('username') as String }
+
+        Provider<String> defaultPassword = getProject().getProviders().provider {
+            this.properties.get('password') as String }
+
+        credentials = new Credentials("toolset:${prefix}"
+            , defaultUsername
+            , defaultPassword
+        )
 
         this.driver = driver
-
     }
 
     public def config(Closure closure) {
@@ -167,17 +176,18 @@ abstract class AbstractDatabaseConvention {
             throw new GradleException('name parameter not supplied for task!')
         }
 
+        def providers = getProject().getProviders()
+
         String taskName = getTaskName(name);
         AbstractSQLTask task = project.getTasks().create(taskName, type)
 
         task.getExtensions().add(TOOLSET_PROPERTIES, Collections.unmodifiableMap(this.properties))
 
-        task.conventionMapping.with {
-            map 'url', { this.url }
-            map 'driver', { this.driver }
-        }
-        task.defaultCredentials = this.credentials
-        task.useDefaultCredentials = true
+        task.urlProvider.set(providers.provider {this.url})
+        task.driverProvider.set(providers.provider {this.driver})
+
+        task.credentials.addFallbackUsername(providers.provider({credentials.getUsername()}))
+        task.credentials.addFallbackPassword(providers.provider({credentials.getPassword()}))
 
         if (params.containsKey('sqlFile')) {
             params['sqlFile'] = project.file(params['sqlFile'])
