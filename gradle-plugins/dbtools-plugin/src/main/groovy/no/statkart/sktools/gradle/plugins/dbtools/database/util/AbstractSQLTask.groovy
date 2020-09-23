@@ -2,7 +2,9 @@ package no.statkart.sktools.gradle.plugins.dbtools.database.util
 
 import org.gradle.api.internal.ConventionTask
 import org.gradle.api.logging.Logger
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
 
 import java.util.function.BiConsumer
 
@@ -14,30 +16,37 @@ import java.util.function.BiConsumer
  */
 abstract class AbstractSQLTask extends ConventionTask {
 
-    //SKTOOLS-27, SKTOOLS-84
+    @Input
     boolean failOnError = !project.gradle.startParameter.isContinueOnFailure()
 
-    /**
-     * Disse credentials blir benyttet dersom {@code useDefaultCredentials == true}
-     *
-     * Dersom {@code useDefaultCredentials == true}, så blir konvensjonelle verdier benyttet. Dvs credentials ifra koblet dbTool-set
-     */
-    final Credentials credentials = new Credentials("task:${name}", project.properties)
-    Credentials defaultCredentials = null
-    boolean useDefaultCredentials = false
+    @Internal
+    final Credentials credentials = new Credentials("task:${name}"
+        , getProject().getProviders().provider { hasProperty('username') ? property('username') as String : null }
+        , getProject().getProviders().provider { hasProperty('password') ? property('password') as String : null }
+    )
+
+
+    final Property<String> urlProvider = project.getObjects().property(String)
+    @Input
+    String getUrl() {
+        return urlProvider.getOrNull();
+    }
+    void setUrl(String url) {
+        urlProvider.set(url)
+    }
+
+    final Property<String> driverProvider = project.getObjects().property(String)
+    @Input
+    String getDriver() {
+        return driverProvider.getOrNull()
+    }
+    void setDriver(String driver) {
+        driverProvider.set(driver)
+    }
 
     @Input
-    String url
-
-    @Input
-    String driver
-
-    @Input
+    @Internal
     String getUsername() {
-        //todo: bruk konfigurerbar provider her
-        if (useDefaultCredentials && credentials.isEmpty()) {  //dersom en ikke skal benytte alternative credentials for task
-            return defaultCredentials.getUsername()
-        }
         return credentials.getUsername()
     }
     void setUsername(String username) {
@@ -46,10 +55,8 @@ abstract class AbstractSQLTask extends ConventionTask {
 
 
     @Input
+    @Internal
     String getPassword() {
-        if (useDefaultCredentials && credentials.isEmpty()) {  //dersom en ikke skal benytte alternative credentials for task
-            return defaultCredentials.getPassword()
-        }
         return credentials.getPassword()
     }
     void setPassword(String password) {
