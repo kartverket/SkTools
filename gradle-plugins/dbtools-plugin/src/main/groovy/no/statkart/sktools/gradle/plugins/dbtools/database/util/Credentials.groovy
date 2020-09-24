@@ -15,28 +15,38 @@ class Credentials {
     String username = null
     String password = null
 
-    private Provider<String> defaultUsername
-    private Provider<String> defaultPassword
+    private List<Provider<String>> defaultUsername = new ArrayList<>()
+    private List<Provider<String>> defaultPassword = new ArrayList<>()
 
     Credentials(String context, Provider<String> defaultUsername, Provider<String> defaultPassword) {
         this.context = context
-        this.defaultUsername = defaultUsername
-        this.defaultPassword = defaultPassword
+        addFallbackUsername(defaultUsername)
+        addFallbackPassword(defaultPassword)
     }
 
     public String getUsername() {
-        return username ?: defaultUsername.getOrNull()
+        if (username != null) return username;
+        for (Provider<String> fallbackProvider : defaultUsername) {
+            def fallback = fallbackProvider.getOrNull()
+            if (fallback != null) return fallback
+        }
+        return null
     }
 
     public String getPassword() {
-        return password != null ? password : defaultPassword.getOrNull()
+        if (password != null) return password
+        for (Provider<String> fallbackProvider : defaultPassword) {
+            def fallback = fallbackProvider.getOrNull()
+            if (fallback != null) return fallback
+        }
+        return null
     }
 
     public void addFallbackUsername(Provider fallback) {
-        defaultUsername = defaultUsername.orElse(fallback)
+        defaultUsername.add(fallback)
     }
 
     public void addFallbackPassword(Provider fallback) {
-        defaultPassword = defaultPassword.orElse(fallback)
+        defaultPassword.add(fallback)
     }
 }
