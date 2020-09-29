@@ -16,7 +16,7 @@ class WsdlGenPluginTest extends TestKitBase {
     @Test
     void applyPlugin() {
         Project project = projectBuilder().build().tap {
-            apply plugin: 'sktools-wsdlgen-plugin'
+            apply plugin: 'sktools.wsdlgen'
         }
 
         assertThat(project.getPlugins().getPlugin(WsdlGenPlugin.class)).isNotNull()
