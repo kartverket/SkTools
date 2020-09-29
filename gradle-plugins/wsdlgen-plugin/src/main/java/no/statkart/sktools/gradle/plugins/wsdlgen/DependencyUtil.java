@@ -12,7 +12,7 @@ import java.io.InputStream;
 import java.util.Objects;
 import java.util.Properties;
 
-public class DependencyUtil {
+class DependencyUtil {
 
     private static final Properties pluginProperties = new Properties();
 
@@ -27,7 +27,7 @@ public class DependencyUtil {
     /**
      * Gir deg dependencies avhengig av om det kjøres som test eller ikke.
      */
-    public static FileCollection getWsdlGenClasspath(Project project) {
+    static FileCollection getWsdlGenClasspath(Project project) {
         Properties testProperties = injectedTestProperties();
         if (testProperties == null) {
             final ScriptHandler buildscript = project.getBuildscript().getRepositories().isEmpty() ? project.getRootProject().getBuildscript() : project.getBuildscript();

@@ -5,7 +5,6 @@ import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
-import org.gradle.api.tasks.JavaExec;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 
@@ -27,15 +26,8 @@ public class WsdlGenPlugin implements Plugin<Project> {
 
         File outputDir = new File(project.getBuildDir(), WSDLGEN_TASK_NAME);
 
-        JavaExec wsdlGenTask = project.getTasks().create(WSDLGEN_TASK_NAME, JavaExec.class);
-
-        wsdlGenTask.getInputs().files(wsClasspath);
-        wsdlGenTask.getOutputs().dir(outputDir);
-
-        wsdlGenTask.setClasspath(DependencyUtil.getWsdlGenClasspath(project));
-        wsdlGenTask.setMain("no.statkart.sktools.utils.wsdlgen.SKGenWSDL");
-        wsdlGenTask.args("-d", outputDir);
-
-        wsdlGenTask.doFirst(task -> wsdlGenTask.args("-cp", wsClasspath.getAsPath()));
+        WsdlGenTask wsdlGenTask = project.getTasks().create(WSDLGEN_TASK_NAME, WsdlGenTask.class);
+        wsdlGenTask.getCompileClasspath().setFrom(wsClasspath);
+        wsdlGenTask.getDestinationDirectory().set(outputDir);
     }
 }
