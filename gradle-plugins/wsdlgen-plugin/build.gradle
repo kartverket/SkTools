@@ -1,0 +1,74 @@
+plugins {
+    id 'groovy'
+    id 'maven-publish'
+    id 'java-gradle-plugin'
+}
+
+group = 'no.statkart.sktools.gradle'
+
+gradlePlugin {
+    plugins {
+        wsdlgen {
+            id = 'sktools.wsdlgen'
+            implementationClass = 'no.statkart.sktools.gradle.plugins.wsdlgen.WsdlGenPlugin'
+        }
+    }
+}
+
+dependencies {
+    testImplementation project(':build-utils:test-utils')
+}
+
+def pluginPropertiesDir = "$buildDir/plugin-properties"
+
+sourceSets {
+    main {
+        output.dir(pluginPropertiesDir, builtBy: 'createPluginProperties')
+    }
+}
+
+def pluginProperties = [
+    sktools_wsdlgen : "no.statkart.sktools:wsdlgen:${version}" as String,
+] as Properties
+
+// inject av verktøy i testkjøring
+task testProperties {
+    def outputDir = file("$buildDir/$name")
+
+    inputs.files project(':build-utils:wsdlgen').sourceSets.main.runtimeClasspath
+    outputs.dir outputDir
+
+    doLast {
+        def properties = [
+            sktools_wsdlgen_classpath: project(':build-utils:wsdlgen').sourceSets.main.runtimeClasspath.asPath,
+        ]
+        outputDir.mkdirs()
+        org.gradle.util.GUtil.saveProperties(properties as Properties, file("$outputDir/WsdlGenPluginTest.properties"))
+    }
+}
+pluginUnderTestMetadata.pluginClasspath.from files(testProperties)
+pluginUnderTestMetadata.pluginClasspath.from sourceSets.main.output
+
+
+task createPluginProperties() {
+    outputs.dir pluginPropertiesDir
+    inputs.properties pluginProperties
+    doLast {
+        def file = project.file("$pluginPropertiesDir/no/statkart/sktools/wsdlgen-gradle-plugin.properties")
+        file.parentFile.mkdirs()
+        org.gradle.util.GUtil.saveProperties(pluginProperties, file)
+        logger.info "Created plugin info file: ${file.getAbsolutePath()}"
+    }
+}
+tasks.processResources.dependsOn createPluginProperties
+
+task sourceJar(type: Jar) {
+    from sourceSets.main.allSource
+    classifier 'sources'
+}
+
+publishing {
+    publications.all {
+        if (it.name == 'pluginMaven') artifact sourceJar
+    }
+}
