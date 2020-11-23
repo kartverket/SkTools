@@ -73,6 +73,7 @@ abstract class AbstractWeblogicDeployTask extends ConventionTask {
             classpath = cp
 
             systemProperty('weblogic.security.SSL.hostnameVerifier', 'weblogic.security.utils.SSLWLSWildcardHostnameVerifier')
+            systemProperty('weblogic.security.SSL.ignoreHostnameVerification', 'true')
 
             args('-adminurl', getUrl())
             args('-username', getUsername())
