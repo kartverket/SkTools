@@ -12,11 +12,11 @@ import org.gradle.process.JavaExecSpec
 @SuppressWarnings("UnnecessaryQualifiedReference")
 class SyncPatchTask extends PatchTask {
 
-
     Collection<String> patchTypes
 
     @TaskAction
     def exec() {
+        File sqlFile = mappedSqlFile()
 
         project.javaexec { JavaExecSpec spec ->
 
