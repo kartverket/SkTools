@@ -18,4 +18,17 @@ class SyncPatchTaskTest extends TestKitBase {
             .containsExactly("'foo'", "'foo bar'")
     }
 
+    @Test
+    void getMappedFile() {
+        Project project = projectBuilder().build()
+        SyncPatchTask task = project.tasks.create('task', SyncPatchTask)
+
+        File file = writeFileUTF8("a.sql", "foo")
+        task.setSqlFile(file)
+
+        assertThat(task.mappedSqlFile())
+            .isNotNull()
+            .hasContent("foo");
+    }
+
 }
