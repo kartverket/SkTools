@@ -72,7 +72,7 @@ class PatchTask extends DatabasePatchTask {
      * @return a unique temp file with filtered content
      */
     @PackageScope
-    File mappedSqlFile(File file) {
+    File mappedSqlFile(File file = getSqlFile()) {
         if (file == null) return null;
 
         Charset charset = Charset.forName(getEncoding())
