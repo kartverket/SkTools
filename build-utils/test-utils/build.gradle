@@ -41,7 +41,7 @@ tasks.processResources.dependsOn createTestProperties
 
 
 task createSampleJar(type: Jar) {
-    archiveName = 'sample.jar.bin'
+    archiveFileName = 'sample.jar.bin'
     from(project.sourceSets.sample.output)
     manifest.attributes([
         'Specification-Title': "Sample 1",
@@ -51,7 +51,7 @@ task createSampleJar(type: Jar) {
 sourceSets.main.output.dir(createSampleJar, builtBy: createSampleJar)
 
 task createSample2Jar(type: Jar) {
-    archiveName = 'sample2.jar.bin'
+    archiveFileName = 'sample2.jar.bin'
     from(project.sourceSets.sample.output)
     manifest.attributes([
         'Specification-Title': "Sample 2",
