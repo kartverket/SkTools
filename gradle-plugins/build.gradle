@@ -1,5 +1,5 @@
 plugins {
-    id 'java'
+    id 'java-library'
     id 'maven-publish'
 }
 
@@ -9,7 +9,7 @@ group = 'no.statkart.sktools.gradle'
 
 dependencies {
     //'samlepom' av samtlige plugins [SKTOOLS-13]
-    apiElements project.childProjects.values()
+    api project.childProjects.values()
 }
 
 

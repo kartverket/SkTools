@@ -90,8 +90,8 @@ subprojects { Project project ->
 
         // appropriately inject common dependencies into each sub-project
         dependencies {
-            testCompile libraries.assertj
-            testCompile libraries.testng
+            testImplementation libraries.assertj
+            testImplementation libraries.testng
         }
 
 
@@ -197,7 +197,7 @@ subprojects { Project project ->
             'Build-Repo'            : MAVEN_REPO,
             'Build-Gradle'          : gradle.gradleVersion,
 
-            'Implementation-Title'  : "${project.name} bygget for ${(version == null || version.contains('-SNAPSHOT')) ? 'TEST' : 'Produksjon'}",
+            'Implementation-Title'  : "${project.name} bygget for ${(project.version == null || project.version.contains('-SNAPSHOT')) ? 'TEST' : 'Produksjon'}",
             'Implementation-Vendor' : 'Statens kartverk',
             'Implementation-Version': project.version,
         ])
