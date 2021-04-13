@@ -2,6 +2,10 @@ package no.statkart.sktools.gradle.plugins.wsimport
 
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileVisitDetails
+import org.gradle.api.tasks.Classpath
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.SourceTask
 import org.gradle.api.tasks.TaskAction
@@ -11,35 +15,40 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
-public class WsImportTask extends SourceTask {
-    FileCollection jaxwsClasspath;
+class WsImportTask extends SourceTask {
+    @Classpath
+    FileCollection jaxwsClasspath
 
     @OutputDirectory
-    File destinationDir;
+    File destinationDir
 
-    String packageOrPathString
+    private String packageOrPathString
 
     private PatternSet exceptionFilePatternSet = new PatternSet(includes: ['**/*Exception.java'])
 
-    boolean verbose = false;
+    @Internal
+    boolean verbose = false
 
+    @Input
     // Bruker UTF-8 som standard fordi: 1) UTF-8 er gyldig windows-1252, men windows-1252 er ikke gyldig UTF-8; 2) Den faktiske koden skal ikke innholde ikke-ASCII-tegn, kun eventuelt kommentarer
-    String encoding = StandardCharsets.UTF_8.name();
+    String encoding = StandardCharsets.UTF_8.name()
 
-    String lastWsdl = null;
+    @Input
+    @Optional
+    String lastWsdl = null
 
     /**
      * Angir hvilken WSDL som skal prosesseres sist. Dette må være den som trekker inn mest.
      */
-    public void lastWsdl(String lastWsdl) {
+    void lastWsdl(String lastWsdl) {
         setLastWsdl(lastWsdl)
     }
 
     /**
      * Angir at exceptions skal samles i denne pakken fremfor å ligge i hver service-pakke.
      */
-    public void exceptionReusePackage(String packageOrPathString) {
-        setPackageOrPathString(packageOrPathString)
+    void exceptionReusePackage(String packageOrPathString) {
+        this.packageOrPathString  = packageOrPathString
     }
 
     @TaskAction
@@ -75,12 +84,10 @@ public class WsImportTask extends SourceTask {
         ant.wsimport(wsdl: details.file, extension: 'true', destdir: getTemporaryDir(), sourcedestdir: getDestinationDir(), keep: 'true', xnocompile: 'true', wsdllocation: '/' + details.relativePath, verbose: verbose, encoding: encoding)
     }
 
+    @Input
+    @Optional
     String getPackageString() {
         return packageOrPathString?.replace('/', '.')?.replace('\\', '.')
-    }
-
-    PatternSet getExceptionFilePatternSet() {
-        return exceptionFilePatternSet
     }
 
     /**
@@ -97,7 +104,7 @@ public class WsImportTask extends SourceTask {
         exceptionPackageDir.mkdirs()
 
         //flytter alle exceptions til felles katalog
-        javaFiles.matching(getExceptionFilePatternSet()).files.each { File file ->
+        javaFiles.matching(exceptionFilePatternSet).files.each { File file ->
             File relocatedFile = new File(exceptionPackageDir, file.getName())
             logger.info('merging exception {} <- {}', relocatedFile, file)
 
