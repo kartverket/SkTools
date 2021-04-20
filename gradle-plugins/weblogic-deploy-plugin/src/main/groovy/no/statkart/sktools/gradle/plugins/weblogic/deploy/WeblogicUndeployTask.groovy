@@ -3,8 +3,8 @@ package no.statkart.sktools.gradle.plugins.weblogic.deploy
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.TaskAction
 import org.gradle.process.JavaExecSpec
 
 /**
@@ -14,7 +14,7 @@ import org.gradle.process.JavaExecSpec
  * @author Leif Lislegård
  */
 class WeblogicUndeployTask extends AbstractWeblogicDeployTask {
-    protected static final Logger logger = Logging.getLogger(WeblogicUndeployTask.class);
+    protected static final Logger logger = Logging.getLogger(WeblogicUndeployTask.class)
 
     @Input
     @Optional
@@ -40,7 +40,9 @@ class WeblogicUndeployTask extends AbstractWeblogicDeployTask {
         }
     }
 
-    public Logger getLogger() {
-        return logger;
+    @Internal
+    @Override
+    Logger getLogger() {
+        return logger
     }
 }

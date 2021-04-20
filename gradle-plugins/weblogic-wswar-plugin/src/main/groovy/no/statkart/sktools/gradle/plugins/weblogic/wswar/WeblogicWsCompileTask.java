@@ -175,6 +175,7 @@ public class WeblogicWsCompileTask extends AbstractCompile implements WeblogicTa
         return weblogicClasspath;
     }
 
+    @Internal
     public Logger getLogger() {
         return logger;
     }
