@@ -5,6 +5,7 @@ import org.gradle.api.internal.ConventionTask
 import org.gradle.api.logging.Logger
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.JavaExecSpec
@@ -99,6 +100,7 @@ abstract class AbstractWeblogicDeployTask extends ConventionTask {
     protected abstract void buildCommandLine(JavaExecSpec spec)
 
 
-    public abstract Logger getLogger();
+    @Internal
+    abstract Logger getLogger();
 
 }
