@@ -48,8 +48,6 @@ public class XMLServiceBuilder {
         final org.w3c.dom.Element serviceElement = document.createElement("service");
         JavaDocUtils javaDocUtils = findComment(element, wsiElement);
 
-        System.out.println(String.format("Beskrivelse : %s %s", javaDocUtils.getText(), javaDocUtils.getAllTags()));
-
         serviceElement.setAttribute("name", WSUtils.findWebServiceName(element));
         serviceElement.setAttribute("portName", WSUtils.findWebServicePortTypeName(element));
         serviceElement.setAttribute("namespace", WSUtils.findTargetNamespace(element));
@@ -97,12 +95,11 @@ public class XMLServiceBuilder {
 
                 if (isUsingWebMethodAnnotation) {
                     WebMethod webMethod = enclosedElement.getAnnotation(WebMethod.class);
-                    if (webMethod != null && webMethod.exclude() == false) {
-                        method = buildMethod(document, enclosedElement, isUsingWebMethodAnnotation, wsiEnclosedElements.get(enclosedElement.getSimpleName().toString()));
+                    if (webMethod != null && webMethod.exclude()) {
+                        continue; //hopper over metoder som er markert med exclude=true
                     }
-                } else {
-                    method = buildMethod(document, enclosedElement, isUsingWebMethodAnnotation, wsiEnclosedElements.get(enclosedElement.getSimpleName().toString()));
                 }
+                method = buildMethod(document, enclosedElement, isUsingWebMethodAnnotation, wsiEnclosedElements.get(enclosedElement.getSimpleName().toString()));
 
                 if (method != null) {
                     methods.appendChild(method);
@@ -119,9 +116,6 @@ public class XMLServiceBuilder {
         if (methodElement instanceof ExecutableElement) {
             ExecutableElement executableElement = (ExecutableElement) methodElement;
             method = document.createElement("method");
-
-            System.out.println(String.format("Found method: %s", methodElement));
-            //processingEnv.getMessager().printMessage(Diagnostic.Kind.OTHER, String.format("Found method: %s", methodElement));
 
             JavaDocUtils javaDocUtils = findComment(executableElement, wsiElement);
 

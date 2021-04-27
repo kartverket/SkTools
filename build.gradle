@@ -28,7 +28,7 @@ project.ext.libraries = [
         slf4j_api: "org.slf4j:slf4j-api:${libVersion('slf4j', '1.7.29')}",
         slf4j_simple: "org.slf4j:slf4j-simple:${libVersion('slf4j', '1.7.29')}",
 
-        saxon : 'net.sf.saxon:Saxon-HE:9.9.1-5', //xslt 2.0
+        saxon : 'net.sf.saxon:Saxon-HE:9.9.1-8', //xslt 2.0
 
         guava: 'com.google.guava:guava:28.1-jre',
 

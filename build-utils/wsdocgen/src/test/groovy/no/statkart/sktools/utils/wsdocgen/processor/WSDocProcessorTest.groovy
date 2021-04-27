@@ -72,10 +72,10 @@ class WSDocProcessorTest extends TestKitBase {
         GPathResult html = parseXML(file)
 
         //sjekker innhold
-        assertStringContains(html.head.title.text(), 'TestService', "service name")
-        assertStringContains(html.body.span[0].text(), 'TestService', "service name")
-        assertStringContains(html.body.span[1].text(), 'beskrivelse av service', "service description")
-        Assert.assertEquals(html.body.span[2].text(), 'http://test.statkart.no/test1', "service namespace")
+        assertThat(html.head.title.text() as String).isEqualTo('TestServiceWS')
+        assertThat(html.body.h1[0].text() as String).isEqualTo('name=TestServiceWS')
+        assertThat(html.body.h1[1].text() as String).isEqualTo('description=Bla bla bla beskrivelse av service.')
+        assertThat(html.body.h1[2].text() as String).isEqualTo('namespace=http://test.statkart.no/test1')
 
         //sjekker dokumenterte metoder
         Assert.assertEquals html.body.div[0].ul.li.size(), 3, "forventet antall metoder"
@@ -272,10 +272,15 @@ class WSDocProcessorTest extends TestKitBase {
   media-type="text/html"
   omit-xml-declaration="no" />
 
-<xsl:template match="/services/service">
-<html><body>
-   description=<span><xsl:value-of select="description"/></span>
+<xsl:template match="/">
+<html><head><title></title></head>
+<body>
+    <xsl:apply-templates select="services/service"/>
+</body>
+</html>
+</xsl:template>
 
+<xsl:template match="/services/service">
     <div>
         <xsl:for-each select="methods/method">
           <div>
@@ -299,8 +304,6 @@ class WSDocProcessorTest extends TestKitBase {
           </div>
         </xsl:for-each>
     </div>
-
-</body></html>
 </xsl:template>
 </xsl:stylesheet>
                 """)
@@ -329,9 +332,6 @@ class WSDocProcessorTest extends TestKitBase {
 
         //leser inn html dokumentasjon som xml - dette steget validerer derfor html-koden
         GPathResult html = parseXML(file)
-
-        //sjekker innhold
-        Assert.assertEquals html.body.span[0].text(), 'Service Æøå description.\nSecond sentence.', "service description"
 
         //sjekker dokumenterte metoder
         Assert.assertEquals html.body.div[0].div[0].h4[0].text().trim(), 'intToLong', "overskrift"
@@ -399,10 +399,16 @@ class WSDocProcessorTest extends TestKitBase {
   media-type="text/html"
   omit-xml-declaration="no" />
 
-<xsl:template match="/services/service">
-<html><body>
-   description=<span><xsl:value-of select="description"/></span>
+<xsl:template match="/">
+<html><head><title></title></head>
+<body>
+    <xsl:apply-templates select="services/service"/>
+</body>
+</html>
+</xsl:template>
 
+
+<xsl:template match="/services/service">
     <div>
         <xsl:for-each select="methods/method">
           <div>
@@ -436,8 +442,6 @@ class WSDocProcessorTest extends TestKitBase {
           </div>
         </xsl:for-each>
     </div>
-
-</body></html>
 </xsl:template>
 </xsl:stylesheet>
                 """)
@@ -466,9 +470,6 @@ class WSDocProcessorTest extends TestKitBase {
 
         //leser inn html dokumentasjon som xml - dette steget validerer derfor html-koden
         GPathResult html = parseXML(file)
-
-        //sjekker innhold
-        Assert.assertEquals html.body.span[0].text(), 'Service description.\nSecond sentence.', "service description"
 
         //sjekker dokumenterte metoder
         Assert.assertEquals html.body.div[0].div[0].h4[0].text().trim(), 'intToLong', "overskrift"
@@ -534,10 +535,15 @@ class WSDocProcessorTest extends TestKitBase {
   media-type="text/html"
   omit-xml-declaration="no" />
 
-<xsl:template match="/services/service">
-<html><body>
-   description=<span><xsl:value-of select="description"/></span>
+<xsl:template match="/">
+<html><head><title></title></head>
+<body>
+    <xsl:apply-templates select="services/service"/>
+</body>
+</html>
+</xsl:template>
 
+<xsl:template match="/services/service">
     <div>
         <xsl:for-each select="methods/method">
           <div>
@@ -561,8 +567,6 @@ class WSDocProcessorTest extends TestKitBase {
           </div>
         </xsl:for-each>
     </div>
-
-</body></html>
 </xsl:template>
 </xsl:stylesheet>
                 """)
@@ -591,9 +595,6 @@ class WSDocProcessorTest extends TestKitBase {
 
         //leser inn html dokumentasjon som xml - dette steget validerer derfor html-koden
         GPathResult html = parseXML(file)
-
-        //sjekker innhold
-        Assert.assertEquals html.body.span[0].text(), 'Service description.\nSecond sentence.', "service description"
 
         //sjekker dokumenterte metoder
         Assert.assertEquals html.body.div[0].div[0].p[0].text().trim(), 'Intended for asserting a conversion.', "forventet dokumentasjon"
@@ -676,15 +677,17 @@ class WSDocProcessorTest extends TestKitBase {
   omit-xml-declaration="no" />
 
 <xsl:template match="/">
-  <html><body>
+<html>
+<head><title></title></head>
+<body>
   <xsl:apply-templates/>
   </body></html>
 </xsl:template>
 
 <xsl:template match="services/service">
-   name=<span><xsl:value-of select="@name"/></span>
-   href=<span><xsl:value-of select="@href"/></span>
-   description=<p><xsl:value-of select="description"/></p>
+   <div>name=<xsl:value-of select="@name"/></div>
+   <div>href=<xsl:value-of select="@href"/></div>
+   <div>description=<xsl:value-of select="description"/></div>
 </xsl:template>
 
 </xsl:stylesheet>
@@ -702,18 +705,21 @@ class WSDocProcessorTest extends TestKitBase {
   omit-xml-declaration="no" />
 
 <xsl:template match="/">
-  <html><body>
-  <xsl:apply-templates/>
-  </body></html>
+<html><head><title></title></head>
+<body>
+    <h1>Services:</h1>
+    <xsl:apply-templates select="services/service"/>
+</body>
+</html>
 </xsl:template>
 
 <xsl:template match="services/service">
-   Services: <br/>
+ <div>
    <a href="{@href}">
-        name=<span><xsl:value-of select="@name"/></span>
-        href=<span><xsl:value-of select="@href"/></span>
-        description=<p><xsl:value-of select="description"/></p>
+        <span>name=<xsl:value-of select="@name"/></span>
+        <span>description=<xsl:value-of select="description"/></span>
    </a>
+ </div>
 </xsl:template>
 
 </xsl:stylesheet>
@@ -748,16 +754,14 @@ class WSDocProcessorTest extends TestKitBase {
             GPathResult html = parseXML(file)
 
             //sjekker innhold
-            Assert.assertEquals html.body.a[0].@href.text(), "TestService1.html", "href service"
-            Assert.assertEquals html.body.a[0].span[0].text(), "TestServiceWS", "service name"
-            Assert.assertEquals html.body.a[0].span[1].text(), "TestService1.html", "service url"
-            Assert.assertEquals html.body.a[0].p[0].text(), "Ping test service.", "service description"
+            assertThat(html.body.div[0].a[0].@href.text() as String).isEqualTo("TestService1.html")
+            assertThat(html.body.div[0].a[0].span[0].text() as String).isEqualTo("name=TestServiceWS")
+            assertThat(html.body.div[0].a[0].span[1].text() as String).isEqualTo("description=Ping test service.")
 
 
-            Assert.assertEquals html.body.a[1].@href.text(), "TestService2.html", "href service"
-            Assert.assertEquals html.body.a[1].span[0].text(), "TestServiceWS", "service name"
-            Assert.assertEquals html.body.a[1].span[1].text(), "TestService2.html", "service url"
-            Assert.assertEquals html.body.a[1].p[0].text(), "Inception service.", "service description"
+            assertThat(html.body.div[1].a[0].@href.text() as String).isEqualTo("TestService2.html")
+            assertThat(html.body.div[1].a[0].span[0].text() as String).isEqualTo("name=TestServiceWS")
+            assertThat(html.body.div[1].a[0].span[1].text() as String).isEqualTo("description=Inception service.")
         }
 
 
@@ -770,8 +774,8 @@ class WSDocProcessorTest extends TestKitBase {
                 GPathResult html = parseXML(file)
 
                 //sjekker innhold
-                Assert.assertEquals html.body.span[0].text(), "TestServiceWS", "service name"
-                Assert.assertEquals html.body.span[1].text(), "TestService${idx}.html", "service url"
+                assertThat(html.body.div[0].text() as String).isEqualTo("name=TestServiceWS")
+                assertThat(html.body.div[1].text() as String).isEqualTo("href=TestService${idx}.html")
             }
         }
     }
@@ -815,11 +819,19 @@ class WSDocProcessorTest extends TestKitBase {
   media-type="text/html"
   omit-xml-declaration="no" />
 
+<xsl:template match="/">
+<html><head><title></title></head>
+<body>
+    <xsl:apply-templates select="services/service"/>
+</body>
+</html>
+</xsl:template>
+
 <xsl:template match="/services/service">
-<html><body>
-   description=<p><xsl:value-of select="description"/></p>
-   formatted description=<p><xsl:apply-templates select="description"/></p>
-</body></html>
+ <div>
+   <p>description=<xsl:value-of select="description"/></p>
+   <p>formatted description=<xsl:apply-templates select="description"/></p>
+ </div>
 </xsl:template>
 
 <xsl:template match="description">
@@ -846,12 +858,12 @@ class WSDocProcessorTest extends TestKitBase {
 
     <xsl:choose>
       <xsl:when test="@class='javadoc_tag_code'">
-        <xsl:attribute name="debug">span with escaped contents!</xsl:attribute>
+        <xsl:attribute name="title">DEBUG: span with escaped contents!</xsl:attribute>
         <xsl:apply-templates mode="escapedText" />
       </xsl:when>
 
       <xsl:otherwise>
-        <xsl:attribute name="debug">normal span element</xsl:attribute>
+        <xsl:attribute name="title">DEBUG: normal span element</xsl:attribute>
         <xsl:apply-templates mode="noEscapedText"/>
       </xsl:otherwise>
     </xsl:choose>
@@ -893,8 +905,9 @@ class WSDocProcessorTest extends TestKitBase {
         GPathResult html = parseXML(file)
 
         //sjekker innhold
-        Assert.assertEquals html.body.p[0].text().trim(), 'Service taglet description.', "service description"
-        Assert.assertEquals html.body.p[1].span[0].text().trim(), 'taglet', "code enclosed taglet"
+        assertThat(html.body.div[0].p[0].text().trim() as String).isEqualTo('description=Service taglet description.')
+        assertThat(html.body.div[0].p[1].span[0].text().trim() as String).isEqualTo('taglet')
+        assertThat(html.body.div[0].p[1].text() as String).isEqualToIgnoringWhitespace('formatted description=Service taglet description.')
     }
 
 
@@ -955,10 +968,15 @@ class WSDocProcessorTest extends TestKitBase {
   media-type="text/html"
   omit-xml-declaration="no" />
 
-<xsl:template match="/services/service">
-<html><body>
-   description=<p><xsl:value-of select="description"/></p>
+<xsl:template match="/">
+<html><head><title></title></head>
+<body>
+    <xsl:apply-templates select="services/service"/>
+</body>
+</html>
+</xsl:template>
 
+<xsl:template match="/services/service">
     <div>
         <xsl:for-each select="methods/method">
           <div>
@@ -982,8 +1000,6 @@ class WSDocProcessorTest extends TestKitBase {
           </div>
         </xsl:for-each>
     </div>
-
-</body></html>
 </xsl:template>
 </xsl:stylesheet>
                 """)
@@ -1082,14 +1098,20 @@ class WSDocProcessorTest extends TestKitBase {
   media-type="text/html"
   omit-xml-declaration="no" />
 
-<xsl:template match="/services/service">
-<html><body>
+<xsl:template match="/">
+<html><head><title></title></head>
+<body>
+    <xsl:apply-templates select="services/service"/>
+</body>
+</html>
+</xsl:template>
 
+<xsl:template match="/services/service">
    <xsl:comment>description with no escaped javadoc: </xsl:comment>
-   description=<div><xsl:apply-templates select="description"/></div>
+   <div>formatted-description=<xsl:apply-templates select="description"/></div>
 
    <xsl:comment>description without formatting: </xsl:comment>
-   description=<div><xsl:value-of select="description"/></div>
+   <div>unformatted-description=<xsl:value-of select="description"/></div>
 
     <div>
     <xsl:comment>methods...</xsl:comment>
@@ -1098,26 +1120,21 @@ class WSDocProcessorTest extends TestKitBase {
         </xsl:for-each>
     <xsl:comment>end methods...</xsl:comment>
     </div>
-
-</body></html>
 </xsl:template>
 
 <xsl:template match="method">
-      <div>
         <h4><xsl:value-of select="@name"/></h4>
-        <p><xsl:apply-templates select="description"/></p>
+        <div><xsl:apply-templates select="description"/></div>
 
         <h5>Output</h5>
         <ul>
           <xsl:for-each select="returns/parameter">
             <li>
                <span><xsl:value-of select="@name"/></span>
-               <p><xsl:apply-templates select="description"/></p>
+               <div><xsl:apply-templates select="description"/></div>
             </li>
           </xsl:for-each>
         </ul>
-
-      </div>
 </xsl:template>
 
 <xsl:template match="description">
@@ -1143,12 +1160,12 @@ class WSDocProcessorTest extends TestKitBase {
 
     <xsl:choose>
       <xsl:when test="@class='javadoc_tag_code'">
-        <xsl:attribute name="debug">span with escaped contents!</xsl:attribute>
+        <xsl:attribute name="title">DEBUG: span with escaped contents!</xsl:attribute>
         <xsl:apply-templates mode="#default" />
       </xsl:when>
 
       <xsl:otherwise>
-        <xsl:attribute name="debug">normal span element</xsl:attribute>
+        <xsl:attribute name="title">DEBUG: normal span element</xsl:attribute>
         <xsl:apply-templates mode="noEscapedText"/>
       </xsl:otherwise>
     </xsl:choose>
@@ -1189,29 +1206,29 @@ class WSDocProcessorTest extends TestKitBase {
         GPathResult html = parseXML(file)
 
         //sjekker innhold - example with no escaped text
-        Assert.assertEquals html.body.div[0].text(), 'Service description. Bold sentence.wrapped text test of GBOK-4872', "plaintext service description"
+        Assert.assertEquals html.body.div[0].text(), 'formatted-description=Service description. Bold sentence.wrapped text test of GBOK-4872', "plaintext service description"
         Assert.assertEquals html.body.div[0].span[0].text(), 'Bold sentence.', "{@bold ...} turns into <div>"
         Assert.assertEquals html.body.div[0].p.text(), 'wrapped text test of GBOK-4872', "nested <p>"
         Assert.assertEquals html.body.div[0].p.span[0].text(), 'GBOK-4872', "{@code GBOK-4872} turns into <div>"
 
         //sjekker innhold - example of escaped text
-        Assert.assertEquals html.body.div[1].text().replaceAll('\n', ''), 'Service description. Bold sentence.<p>wrapped text test of GBOK-4872</p>', "escaped service description"
+        assertThat(html.body.div[1].text() as String).isEqualToIgnoringWhitespace('unformatted-description=Service description. Bold sentence.<p>wrapped text test of GBOK-4872</p>')
 
         //sjekker dokumenterte metoder
-        Assert.assertEquals html.body.div[2].div.size(), 1, "forventet antall metoder for service"
+        Assert.assertEquals html.body.div[2].h4.size(), 1, "forventet antall metoder for service"
 
-        Assert.assertEquals html.body.div[2].div[0].h4[0].text().trim(), 'intToLong', "forventet overskrift"
-        Assert.assertEquals html.body.div[2].div[0].p[0].text().trim().replaceAll("\\s+"," "), 'Bold sentence. Intended for asserting a conversion. testlist', "forventet dokumentasjon"
+        Assert.assertEquals html.body.div[2].h4[0].text().trim(), 'intToLong', "forventet overskrift"
+        Assert.assertEquals html.body.div[2].div[0].text().trim().replaceAll("\\s+"," "), 'Bold sentence. Intended for asserting a conversion. testlist', "forventet dokumentasjon"
 
-        Assert.assertEquals html.body.div[2].div[0].p[0].span[0].@class.text(), 'javadoc_tag_bold', "forventet CSS.class"
-        Assert.assertEquals html.body.div[2].div[0].p[0].span[0].text().trim(), 'Bold sentence.', "forventet tekst for span"
+        Assert.assertEquals html.body.div[2].div[0].span[0].@class.text(), 'javadoc_tag_bold', "forventet CSS.class"
+        Assert.assertEquals html.body.div[2].div[0].span[0].text().trim(), 'Bold sentence.', "forventet tekst for span"
 
-        Assert.assertEquals html.body.div[2].div[0].p[0].ul[0].li[0].text().trim(), 'testlist', "forventet tekst for li"
+        Assert.assertEquals html.body.div[2].div[0].ul[0].li[0].text().trim(), 'testlist', "forventet tekst for li"
 
-        Assert.assertEquals html.body.div[2].div[0].ul[0].li[0].span[0].text(), 'return', "forventet tekst for retur"
-        Assert.assertEquals html.body.div[2].div[0].ul[0].li[0].p[0].text().trim().replaceAll("\\s+"," "), 'value typed as long<encoded>', "forventet dokumentasjon av retur" //groovy substituerer &gt; og andre entiteter...
-        Assert.assertEquals html.body.div[2].div[0].ul[0].li[0].p[0].span[0].text().trim(), 'long', "forventet formatert dokumentasjon av retur"
-        Assert.assertEquals html.body.div[2].div[0].ul[0].li[0].p[0].span[1].text().trim(), '<encoded>', "forventet formatert dokumentasjon av retur" //groovy substituerer &gt; og andre entiteter...
+        Assert.assertEquals html.body.div[2].ul[0].li[0].span[0].text(), 'return', "forventet tekst for retur"
+        Assert.assertEquals html.body.div[2].ul[0].li[0].div[0].text().trim().replaceAll("\\s+"," "), 'value typed as long<encoded>', "forventet dokumentasjon av retur" //groovy substituerer &gt; og andre entiteter...
+        Assert.assertEquals html.body.div[2].ul[0].li[0].div[0].span[0].text().trim(), 'long', "forventet formatert dokumentasjon av retur"
+        Assert.assertEquals html.body.div[2].ul[0].li[0].div[0].span[1].text().trim(), '<encoded>', "forventet formatert dokumentasjon av retur" //groovy substituerer &gt; og andre entiteter...
     }
 
     /**
@@ -1254,13 +1271,19 @@ class WSDocProcessorTest extends TestKitBase {
   media-type="text/html"
   omit-xml-declaration="no" />
 
+<xsl:template match="/">
+<html><head><title></title></head>
+<body>
+    <xsl:apply-templates select="services/service"/>
+</body>
+</html>
+</xsl:template>
+
 <xsl:template match="/services/service">
-<html><body>
     <div>
         <xsl:for-each select="methods/method">
         <div>
             <h4><xsl:value-of select="@name"/></h4>
-            <p><xsl:apply-templates select="description"/></p>
 
             <h5>Input</h5>
             <ul>
@@ -1275,7 +1298,6 @@ class WSDocProcessorTest extends TestKitBase {
         </div>
         </xsl:for-each>
     </div>
-</body></html>
 </xsl:template>
 
 <xsl:template match="description">
@@ -1301,12 +1323,12 @@ class WSDocProcessorTest extends TestKitBase {
 
     <xsl:choose>
       <xsl:when test="@class='javadoc_tag_code'">
-        <xsl:attribute name="debug">span with escaped contents!</xsl:attribute>
+        <xsl:attribute name="title">DEBUG: span with escaped contents!</xsl:attribute>
         <xsl:apply-templates mode="#default" />
       </xsl:when>
 
       <xsl:otherwise>
-        <xsl:attribute name="debug">normal span element</xsl:attribute>
+        <xsl:attribute name="title">DEBUG: normal span element</xsl:attribute>
         <xsl:apply-templates mode="noEscapedText"/>
       </xsl:otherwise>
     </xsl:choose>
@@ -1358,9 +1380,4 @@ class WSDocProcessorTest extends TestKitBase {
         return slurper.parse(file)
     }
 
-    public static void assertStringContains(CharSequence actual, String expected, String message) {
-        if (!actual.contains(expected)) {
-            Assert.fail("Expected that \"${actual}\" contains \"${expected}\": ${message}");
-        }
-    }
 }

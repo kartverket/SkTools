@@ -14,19 +14,17 @@ public class JavaDocUtils {
 
     /**
      * <pre>
-     *
      * Group 0: whole -unfiltered- sentence
      * Group 1: tag-type
-     * Group 2: not empty doc when {@code group(1) != null}
-     * Group 3: name or comment
-     * Group 4: has comment when {@code group(3) != null}
-     * Group 5: comment
-     *
      * </pre>
      */
-    private static final Pattern tagletPattern = Pattern.compile("^\\s*@(\\S*)(\\s+(\\S*)(\\s+(.*))?)?");
-    private static final Pattern inlineTagletPattern = Pattern.compile("\\{@(\\w+) ([^\\}]*)\\}");
+    private static final Pattern tagletPattern = Pattern.compile("^\\s*@(\\S+)");
+    private static final Pattern inlineTagletPattern = Pattern.compile("\\{@(\\w+) ([^}]*)}");
 
+    static final String DESCRIPTION = "";
+    static final String TAG_RETURN = "return";
+    static final String TAG_PARAM = "param";
+    static final String TAG_THROWS = "throws";
     private final Map<String, Map<String, String>> tags;
 
 
@@ -46,19 +44,19 @@ public class JavaDocUtils {
      * @return text without any tagglet-{@code @tags}
      */
     public String getText() {
-        return getTagsForType("").get("");
+        return getTagsForType(DESCRIPTION).get("");
     }
 
     public String getReturn() {
-        return getTagsForType("return").get("");
+        return getTagsForType(TAG_RETURN).get("");
     }
 
     public Map<String, String> getParams() {
-        return getTagsForType("param");
+        return getTagsForType(TAG_PARAM);
     }
 
     public Map<String, String> getThrows() {
-        return getTagsForType("throws");
+        return getTagsForType(TAG_THROWS);
     }
 
 
@@ -75,61 +73,61 @@ public class JavaDocUtils {
     public static Map<String, Map<String, String>> parseJavaDocTags(String docComment) {
         Map<String, Map<String, String>> tags = new HashMap<>();
         if (docComment != null) {
-            StringTokenizer st = new StringTokenizer(docComment, "\n", true);
-            StringBuilder sb = new StringBuilder();
-            while (st.hasMoreTokens()) {
-                String token = st.nextToken();
-
-                final Matcher tagMatcher = tagletPattern.matcher(token);
-                if (tagMatcher.find()) {
-
-                    String type = tagMatcher.group(1);
-                    Map<String, String> typeMap = tags.get(type);
-                    if (typeMap == null) {
-                        typeMap = new LinkedHashMap<>();
-                        tags.put(type, typeMap);
-                    }
-
-                    if (tagMatcher.group(2) != null && ("param".equals(type) || "throws".equals(type))) {
-                        String name = tagMatcher.group(3);
-                        String value = tagMatcher.group(4) != null ? tagMatcher.group(5) : null;
-                        typeMap.put(name, createDocString(value));
-                    } else {
-                        String name = "";
-                        String value = tagMatcher.group(2);
-                        String duplicate = typeMap.put(name, createDocString(value));
-                        if (duplicate != null) {
-                            System.out.println(String.format("Warning: Duplicate tag found; type: %s",type)); //todo: logge dette til warning?
-                        }
-                    }
-
-                } else if (!token.trim().isEmpty()) {
-                    sb.append(token.trim()).append('\n');
-                }
+            String[] parts = docComment.split("\\n\\s*@");
+            String description = null;
+            if (parts[0].trim().startsWith("@")) {
+                parseTag(tags, parts[0]);
+            } else {
+                description = createDocString(parts[0]);
             }
-            tags.put("", Collections.singletonMap("", createDocString(sb.toString())));
+            for (int i = 1; i < parts.length; i++) {
+                parseTag(tags, "@" + parts[i]);
+            }
+            tags.put(DESCRIPTION, Collections.singletonMap("", description));
         }
         return tags;
     }
 
+    private static void parseTag(Map<String, Map<String, String>> tags, String tagText) {
+        final Matcher tagMatcher = tagletPattern.matcher(tagText);
+        if (tagMatcher.find()) {
+
+            String tagName = tagMatcher.group(1);
+            Map<String, String> variables = tags.get(tagName);
+            if (variables == null) {
+                variables = new LinkedHashMap<>();
+                tags.put(tagName, variables);
+            }
+
+            boolean hasParameter = TAG_PARAM.equals(tagName) || TAG_THROWS.equals(tagName);
+            String remainingText = tagText.substring(tagMatcher.group(0).length()).trim();
+
+            String firstToken = hasParameter && !remainingText.isEmpty() ? remainingText.split("\\s+")[0] : "";
+            if (!firstToken.isEmpty()) {
+                remainingText = remainingText.substring(firstToken.length());
+            }
+
+            variables.put(firstToken, createDocString(remainingText));
+        }
+    }
+
     private static String createDocString(String doc) {
-        String value = doc;
-        if (value != null) {
+        if (doc != null && !doc.isEmpty()) {
             final StringBuffer sb = new StringBuffer();
-            Matcher matcher = inlineTagletPattern.matcher(value.trim());
+            Matcher matcher = inlineTagletPattern.matcher(doc.trim());
             while (matcher.find()) {
-                final String tagletValue = matcher.group(2); //SKTOOLS-108
+                final String tagletValue = matcher.group(2);
                 if (tagletValue != null) {
-                    matcher.appendReplacement(sb, "<span class=\"javadoc_tag_$1\">" + tagletValue + "</span>");   //SKTOOLS-108
+                    matcher.appendReplacement(sb, "<span class=\"javadoc_tag_$1\">" + tagletValue + "</span>");
                 } else {
                     sb.append(matcher.group());
                 }
             }
             matcher.appendTail(sb);
-            value = sb.toString();
+            return sb.toString();
 
         }
-        return value;
+        return null;
     }
 
 }

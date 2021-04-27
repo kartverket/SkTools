@@ -1,8 +1,6 @@
 package no.statkart.sktools.utils.wsdocgen.processor.xml;
 
 
-import javax.annotation.processing.ProcessingEnvironment;
-
 /**
  *
  * @author Leif Lislegård
@@ -10,8 +8,6 @@ import javax.annotation.processing.ProcessingEnvironment;
  */
 public class XMLServicesBuilder {
 
-    private final XMLBuilderFactory factory;
-    private final ProcessingEnvironment processingEnv;
     private final org.w3c.dom.Document document;
 
     private org.w3c.dom.Element services;
@@ -19,8 +15,6 @@ public class XMLServicesBuilder {
 
 
     XMLServicesBuilder(XMLBuilderFactory factory) {
-        this.factory = factory;
-        this.processingEnv = factory.getProcessingEnv();
         this.document = factory.getDocument();
     }
 
