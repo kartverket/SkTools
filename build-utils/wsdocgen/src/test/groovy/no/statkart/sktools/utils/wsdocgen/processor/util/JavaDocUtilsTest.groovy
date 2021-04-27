@@ -1,7 +1,11 @@
 package no.statkart.sktools.utils.wsdocgen.processor.util
 
+
 import org.testng.Assert
 import org.testng.annotations.Test
+
+import static org.assertj.core.api.Assertions.assertThat
+import static org.assertj.core.api.Assertions.entry
 
 /**
  * Tester {@link JavaDocUtils}
@@ -12,21 +16,21 @@ import org.testng.annotations.Test
 class JavaDocUtilsTest {
 
     @Test
-    public void parseText() {
+    void parseText() {
         final JavaDocUtils parser = JavaDocUtils.parse('Dokumentasjon' + '\n' +
                 'linje 2' + '\n' +
                 '@secret tag' + '\n' +
                 'linje 4' + '\n' +
                 '')
 
-        Assert.assertEquals(parser.text, 'Dokumentasjon\nlinje 2\nlinje 4', "forventet tekst");
+        assertThat(parser.text).isEqualTo("Dokumentasjon\nlinje 2");
     }
 
     /**
      * @since 1.3 - SKTOOLS-108
      */
     @Test
-    public void parseInlineDocletTag() {
+    void parseInlineDocletTag() {
         final JavaDocUtils parser = JavaDocUtils.parse('Dokumentasjon' + '\n' +
                 'linje 2' + '\n' +
                 '{@secret tag}' + '\n' +
@@ -40,7 +44,7 @@ class JavaDocUtilsTest {
      * @since 1.3 - SKTOOLS-108
      */
     @Test
-    public void parseInlineDocletTagMultiples() {
+    void parseInlineDocletTagMultiples() {
         final JavaDocUtils parser = JavaDocUtils.parse('Dokumentasjon' + '\n' +
                 'linje 2' + '\n' +
                 '{@secret tag}' + '\n' +
@@ -54,7 +58,7 @@ class JavaDocUtilsTest {
 
 
     @Test
-    public void parseReturnUndocumented() {
+    void parseReturnUndocumented() {
         final JavaDocUtils parser = JavaDocUtils.parse('''Dokumentasjon
             linje 2
             @return
@@ -66,7 +70,7 @@ class JavaDocUtilsTest {
 
 
     @Test
-    public void parseReturnDocumented() {
+    void parseReturnDocumented() {
         final JavaDocUtils parser = JavaDocUtils.parse('''@unknown tag
             @return un dos tres
             @unknown tag
@@ -78,7 +82,7 @@ class JavaDocUtilsTest {
 
 
     @Test
-    public void parseOtherTags() {
+    void parseOtherTags() {
         final JavaDocUtils parser = JavaDocUtils.parse('''@unknown unknown-tag
             beskrivelse
             @return un dos tres
@@ -95,7 +99,7 @@ class JavaDocUtilsTest {
 
 
     @Test
-    public void parseParamTags() {
+    void parseParamTags() {
         final JavaDocUtils parser = JavaDocUtils.parse('''
             beskrivelse
             @param uno first param in list
@@ -112,7 +116,7 @@ class JavaDocUtilsTest {
     }
 
     @Test
-    public void parseThrowsTags() {
+    void parseThrowsTags() {
         final JavaDocUtils parser = JavaDocUtils.parse('''
             beskrivelse
             @throws java.lang.Throwable first ex in list
@@ -126,6 +130,59 @@ class JavaDocUtilsTest {
         Assert.assertEquals(parser.throws['java.lang.Throwable'], 'first ex in list', "dokumentasjon av exception");
         Assert.assertEquals(parser.throws['Exception'], 'second ex in list', "dokumentasjon av exception");
         Assert.assertEquals(parser.throws['MyImplementationException'], 'last ex...', "dokumentasjon av exception");
+    }
+
+    /**
+     * SKTOOLS-224
+     *
+     * Fra javadoc guiden:
+     *  > The first line that begins with an "@" character ends the description. There is only one description block per doc comment; you cannot continue the description following block tags.
+     */
+    @Test
+    void multilinesInTagBlock() {
+        final JavaDocUtils parser = JavaDocUtils.parse('''
+            Beskrivelse
+            end of beskrivelse!
+            @throws ex1
+                    end of tag1!
+            @throws ex2 start of tag2
+                    end of tag2!
+            @param tag3 start of tag3
+                    end of tag3!
+            @return start of tag4
+                    end of tag4!
+            ''')
+
+        assertThat(parser.getThrows()).containsOnly(
+            entry("ex1", "end of tag1!"),
+            entry("ex2", "start of tag2\n                    end of tag2!"));
+
+        assertThat(parser.getParams()).containsOnly(
+            entry("tag3", "start of tag3\n                    end of tag3!"));
+
+        assertThat(parser.getReturn()).isEqualTo("start of tag4\n                    end of tag4!")
+    }
+
+    @Test
+    void emptyDescriptionParsesTags() {
+        ['@return Return tag description!',
+         ' @return Return tag description!',
+         '\n@return Return tag description!',
+        ].each {
+            JavaDocUtils javaDocUtils = JavaDocUtils.parse(it)
+            assertThat(javaDocUtils.getText() as String).describedAs("Forventer ingen description for '%s'", it).isNullOrEmpty()
+            assertThat(javaDocUtils.getReturn()).isEqualTo("Return tag description!")
+        }
+    }
+
+    @Test
+    void inlineTagletOnTags() {
+        final JavaDocUtils parser = JavaDocUtils.parse('''
+        Description
+        @return Return {@code true} description!''')
+
+        assertThat(parser.getText() as String).isEqualTo("Description")
+        assertThat(parser.getReturn()).isEqualTo("Return <span class=\"javadoc_tag_code\">true</span> description!")
     }
 
 }

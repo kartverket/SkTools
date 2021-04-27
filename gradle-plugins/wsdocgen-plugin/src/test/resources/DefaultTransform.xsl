@@ -210,12 +210,10 @@
 
             <xsl:choose>
                 <xsl:when test="@class='javadoc_tag_code'">
-                    <xsl:attribute name="debug">span with escaped contents!</xsl:attribute>
                     <xsl:apply-templates mode="#default" />
                 </xsl:when>
 
                 <xsl:otherwise>
-                    <xsl:attribute name="debug">normal span element</xsl:attribute>
                     <xsl:apply-templates mode="noEscapedText"/>
                 </xsl:otherwise>
             </xsl:choose>

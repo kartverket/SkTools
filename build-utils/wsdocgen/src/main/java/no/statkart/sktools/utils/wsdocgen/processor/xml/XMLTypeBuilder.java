@@ -49,22 +49,6 @@ class XMLTypeBuilder {
     }
 
 
-    public org.w3c.dom.Element buildType(Element element) {
-        if (ERROR.equals(element.getKind())) {
-            return null;
-        }
-        if (element instanceof VariableElement || element instanceof TypeElement) {
-            final String name = WSUtils.nameForException(element);
-            final String ns = findObjectNamespace(element);
-            String docComment = processingEnv.getElementUtils().getDocComment(element);
-            final JavaDocUtils javaDocUtils = JavaDocUtils.parse(docComment);
-            return buildTypeImpl(document, name, ns, javaDocUtils);
-        } else {
-            throw new RuntimeException(String.format("Unhandled element type: %s", element.getSimpleName()));
-        }
-    }
-
-
     public org.w3c.dom.Element buildType(TypeMirror typeMirror) {
         for (Map.Entry<TypeMirror, QName> entry : typeCache.entrySet()) {
             if (entry.getKey().equals(typeMirror)) {
@@ -154,15 +138,6 @@ class XMLTypeBuilder {
         }
     }
 
-
-    /**
-     * Forsøker å finne namespace til objekt ved å se i package-info
-     * <p/>
-     * For kjente typer returneres namespace for disse.
-     */
-    private String findObjectNamespace(Element element) {
-        return findObjectNamespace(element.asType());
-    }
 
     /**
      * Forsøker å finne namespace til objekt ved å se i package-info

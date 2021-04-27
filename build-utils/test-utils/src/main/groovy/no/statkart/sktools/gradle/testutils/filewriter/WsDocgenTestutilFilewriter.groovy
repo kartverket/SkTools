@@ -217,9 +217,9 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
 <body>
 
-   name=<span><xsl:value-of select="@name"/></span>
-   description=<span><xsl:value-of select="description"/></span>
-   namespace=<span><xsl:value-of select="@namespace"/></span>
+   <h1>name=<xsl:value-of select="@name"/></h1>
+   <h1>description=<xsl:value-of select="description"/></h1>
+   <h1>namespace=<xsl:value-of select="@namespace"/></h1>
 
     <div>
         <ul>

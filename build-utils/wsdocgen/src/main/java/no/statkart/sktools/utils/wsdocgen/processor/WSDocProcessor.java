@@ -4,7 +4,11 @@ import no.statkart.sktools.utils.wsdocgen.processor.util.WSUtils;
 import no.statkart.sktools.utils.wsdocgen.processor.xml.XMLBuilderFactory;
 import org.w3c.dom.Document;
 
-import javax.annotation.processing.*;
+import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.annotation.processing.RoundEnvironment;
+import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.annotation.processing.SupportedOptions;
 import javax.jws.WebService;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
@@ -15,7 +19,13 @@ import javax.tools.StandardLocation;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.*;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Result;
+import javax.xml.transform.Source;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
@@ -82,19 +92,18 @@ import java.util.Set;
 })
 public class WSDocProcessor extends AbstractProcessor {
 
+    // slår på debug til System.out
+    private static boolean debug = false;
+
     private DocumentBuilder docBuilder;
 
 
     private boolean generateIndex; //SKTOOLS-105
     private String indexXsltFilePath; //SKTOOLS-105
-    private final static String indexFileNamePattern = "index.html"; //SKTOOLS-105
+    private static final String indexFileNamePattern = "index.html"; //SKTOOLS-105
     private XMLBuilderFactory indexXmlBuilderFactory; //SKTOOLS-105
     private org.w3c.dom.Element indexServices;
 
-    public WSDocProcessor() {
-        int debug = 0;
- //       System.out.println(String.format("Constructing class %s", this.getClass().getSimpleName()));
-    }
 
     @Override
     public SourceVersion getSupportedSourceVersion() {
@@ -131,8 +140,9 @@ public class WSDocProcessor extends AbstractProcessor {
             if (webServicePortTypeName != null) {
 
                 final String fileName = String.format("%s.html", webServicePortTypeName);
-                System.out.println(String.format("Processing class: %s ", element));
-                //processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, String.format("Processing class: %s ", element));
+                if (debug) {
+                    System.out.printf("Processing class: %s %n", element);
+                }
 
                 final XMLBuilderFactory xmlBuilder = new XMLBuilderFactory(docBuilder.newDocument(), processingEnv);
                 final org.w3c.dom.Element services = xmlBuilder.getServicesBuilder().createServices();
@@ -164,7 +174,7 @@ public class WSDocProcessor extends AbstractProcessor {
 
             } else {
                 //skipping some WebService elements in input...
-                System.out.println(String.format("Unable to resolve portType - skipping class %s", element));
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, String.format("Unable to resolve portType - skipping class %s", element));
             }
         }
 
@@ -198,7 +208,7 @@ public class WSDocProcessor extends AbstractProcessor {
     }
 
     /**
-     * index fil: SKTOOLS-105
+     * Legger tjeneste til index fil
      */
     void addToIndex(Element element, String fileName, Element wsiElement) {
         if (indexServices != null) {
@@ -232,15 +242,13 @@ public class WSDocProcessor extends AbstractProcessor {
 
 
     void transform(Source in, Result out, Source transform) {
-//        TransformerFactory factory = TransformerFactory.newInstance();
-
         /* {@link http://stackoverflow.com/questions/11314604/how-to-set-saxon-as-the-xslt-processor-in-java one of several ways of declaring wich impl to use}  */
         TransformerFactory factory = TransformerFactory.newInstance("net.sf.saxon.TransformerFactoryImpl", this.getClass().getClassLoader());
 
         Transformer transformer;
         try {
             transformer = factory.newTransformer(transform);
-//spesifiseres heller i xsl tempaten..
+//spesifiseres heller i xsl templaten..
 //            transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
 //            transformer.setOutputProperty(OutputKeys.METHOD, "xml");
 //            transformer.setOutputProperty(OutputKeys.VERSION, "1.0");
@@ -251,7 +259,6 @@ public class WSDocProcessor extends AbstractProcessor {
 
             transformer.transform(in, out);
         } catch (TransformerConfigurationException e) {
-//            e.printStackTrace();
             throw new RuntimeException(String.format("Exception in xslt configuration! Message: %s", e.getMessage()), e);
         } catch (TransformerException e) {
             throw new RuntimeException(String.format("Exception in xslt! Message: %s", e.getMessage()), e);
@@ -279,15 +286,5 @@ public class WSDocProcessor extends AbstractProcessor {
         transformer.transform(new DOMSource(doc),
                 new StreamResult(new OutputStreamWriter(out, StandardCharsets.UTF_8)));
     }
-
-
-    static void printDocumentTilSystemOut(Document document) {
-        try {
-            printDocument(document, System.out);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
 
 }
