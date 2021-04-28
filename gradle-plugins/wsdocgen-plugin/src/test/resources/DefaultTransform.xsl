@@ -133,37 +133,42 @@
                     <xsl:apply-templates select="description"/>
                 </p>
 
-                <h5>Input</h5>
-                <ul>
-                    <xsl:for-each select="parameters/parameter">
-                        <li>
-                            <xsl:value-of select="@name"/> - <xsl:apply-templates select="description"/>
-                            <div>
-                                <xsl:apply-templates select="type"/>
-                            </div>
-                        </li>
-                    </xsl:for-each>
-                </ul>
+                <xsl:if test="count(parameters/parameter) gt 0">
+                    <h5>Input</h5>
+                    <ul>
+                        <xsl:for-each select="parameters/parameter">
+                            <li>
+                                <xsl:value-of select="@name"/> - <xsl:apply-templates select="description"/>
+                                <div>
+                                    <xsl:apply-templates select="type"/>
+                                </div>
+                            </li>
+                        </xsl:for-each>
+                    </ul>
+                </xsl:if>
 
-                <h5>Response</h5>
-                <ul>
-                    <xsl:for-each select="returns/parameter">
-                        <li>
-                            <xsl:value-of select="@name"/> - <xsl:apply-templates select="description"/>
-                            <div>
-                                <xsl:apply-templates select="type"/>
-                            </div>
-                        </li>
-                    </xsl:for-each>
-                    <xsl:for-each select="exceptions/exception">
-                        <li>
-                            <xsl:value-of select="@name"/> - <xsl:apply-templates select="description"/>
-                            <div>
-                                <xsl:apply-templates select="type"/>
-                            </div>
-                        </li>
-                    </xsl:for-each>
-                </ul>
+                <xsl:if test="(count(returns/parameter) + count(exceptions/exception)) gt 0">
+                    <h5>Response</h5>
+                    <ul>
+                        <xsl:for-each select="returns/parameter">
+                            <li>
+                                <xsl:value-of select="@name"/> - <xsl:apply-templates select="description"/>
+                                <div>
+                                    <xsl:apply-templates select="type"/>
+                                </div>
+                            </li>
+                        </xsl:for-each>
+                        <xsl:for-each select="exceptions/exception">
+                            <li>
+                                <xsl:value-of select="@name"/> - <xsl:apply-templates select="description"/>
+                                <div>
+                                    <xsl:apply-templates select="type"/>
+                                </div>
+                            </li>
+                        </xsl:for-each>
+                    </ul>
+                </xsl:if>
+
             </div>
         </xsl:for-each>
     </xsl:template>

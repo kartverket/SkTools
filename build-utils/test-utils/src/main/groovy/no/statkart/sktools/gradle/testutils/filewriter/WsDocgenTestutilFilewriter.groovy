@@ -235,46 +235,51 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
             <h4><xsl:value-of select="@name"/></h4>
             <p><xsl:value-of select="description"/></p>
 
-            <h5>Input</h5>
-            <ul>
-              <xsl:for-each select="parameters/parameter">
-                <li>
-                   <span><xsl:value-of select="@name"/></span>
-                   <p><xsl:value-of select="description"/></p>
-                   <div>
-                     <span><xsl:value-of select="type/@name"/></span>
-                     <span><xsl:value-of select="type/@namespace"/></span>
-                     <span><xsl:value-of select="type/@javadocPath"/></span>
-                   </div>
-                </li>
-              </xsl:for-each>
-            </ul>
+            <xsl:if test="count(parameters/parameter) gt 0">
+                <h5>Input</h5>
+                <ul>
+                  <xsl:for-each select="parameters/parameter">
+                    <li>
+                       <span><xsl:value-of select="@name"/></span>
+                       <p><xsl:value-of select="description"/></p>
+                       <div>
+                         <span><xsl:value-of select="type/@name"/></span>
+                         <span><xsl:value-of select="type/@namespace"/></span>
+                         <span><xsl:value-of select="type/@javadocPath"/></span>
+                       </div>
+                    </li>
+                  </xsl:for-each>
+                </ul>
+            </xsl:if>
 
-            <h5>Response</h5>
-            <ul>
-              <xsl:for-each select="returns/parameter">
-                <li>
-                   <span><xsl:value-of select="@name"/></span>
-                   <p><xsl:value-of select="description"/></p>
-                   <div>
-                     <span><xsl:value-of select="type/@name"/></span>
-                     <span><xsl:value-of select="type/@namespace"/></span>
-                     <span><xsl:value-of select="type/@javadocPath"/></span>
-                   </div>
-                </li>
-              </xsl:for-each>
-              <xsl:for-each select="exceptions/exception">
-                <li>
-                   <span><xsl:value-of select="@name"/></span>
-                   <p><xsl:value-of select="description"/></p>
-                   <div>
-                     <span><xsl:value-of select="type/@name"/></span>
-                     <span><xsl:value-of select="type/@namespace"/></span>
-                     <span><xsl:value-of select="type/@javadocPath"/></span>
-                   </div>
-                </li>
-              </xsl:for-each>
-            </ul>
+            <xsl:if test="(count(returns/parameter) + count(exceptions/exception)) gt 0">
+                <h5>Response</h5>
+                <ul>
+                  <xsl:for-each select="returns/parameter">
+                    <li>
+                       <span><xsl:value-of select="@name"/></span>
+                       <p><xsl:value-of select="description"/></p>
+                       <div>
+                         <span><xsl:value-of select="type/@name"/></span>
+                         <span><xsl:value-of select="type/@namespace"/></span>
+                         <span><xsl:value-of select="type/@javadocPath"/></span>
+                       </div>
+                    </li>
+                  </xsl:for-each>
+                  <xsl:for-each select="exceptions/exception">
+                    <li>
+                       <span><xsl:value-of select="@name"/></span>
+                       <p><xsl:value-of select="description"/></p>
+                       <div>
+                         <span><xsl:value-of select="type/@name"/></span>
+                         <span><xsl:value-of select="type/@namespace"/></span>
+                         <span><xsl:value-of select="type/@javadocPath"/></span>
+                       </div>
+                    </li>
+                  </xsl:for-each>
+                </ul>
+            </xsl:if>
+
           </div>
         </xsl:for-each>
     </div>
