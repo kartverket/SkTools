@@ -52,6 +52,7 @@ import java.util.Set;
         <description>...</description>
 
         <parameters>
+          <!-- might be empty -->
           <parameter name="">
             <description>...</description>
             <type name="" namespace="" javadocPath="">description of type</type>
