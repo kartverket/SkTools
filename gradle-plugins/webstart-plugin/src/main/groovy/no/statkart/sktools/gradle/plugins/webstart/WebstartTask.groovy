@@ -23,6 +23,7 @@ class WebstartTask extends ConventionTask {
 
     private File destinationDir;
 
+    @Input
     String libDir = "lib";
 
     private String digest = null;
@@ -71,6 +72,7 @@ class WebstartTask extends ConventionTask {
         return digest
     }
 
+    @Internal
     File getDestinationDir() {
         return destinationDir != null ? destinationDir : new File(project.buildDir, 'webstart')
     }
@@ -180,7 +182,9 @@ class WebstartTask extends ConventionTask {
         return transformerClass.getConstructor(new Class[0]).newInstance()
     }
 
-    public Logger getLogger() {
+    @Internal
+    @Override
+    Logger getLogger() {
         return logger;
     }
 }

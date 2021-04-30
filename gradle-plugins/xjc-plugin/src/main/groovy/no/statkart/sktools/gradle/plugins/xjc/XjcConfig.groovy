@@ -7,6 +7,7 @@ import org.gradle.api.file.FileTree
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.SourceSet
 import org.gradle.util.ConfigureUtil
 
@@ -40,7 +41,7 @@ class XjcConfig {
 
     //SKTOOLS-128: annoterer properties som er input felter
     @Input
-    public Map<String, Map> xjcOptions = [:] as HashMap
+    Map<String, Map> xjcOptions = [:] as HashMap
 
     private final Project project
 
@@ -65,6 +66,7 @@ class XjcConfig {
 
     //todo: endre default fqn i en versjon etter 1.0?
     //metode for deklarativ konfigurasjon
+    @Internal
     def getWithListAdapter() {
         listAdapter([baseClass:'no.statkart.grunnbok.skif.util.ListIterable']);
     }
@@ -89,6 +91,7 @@ class XjcConfig {
     }
 
     //metode for deklarativ konfigurasjon
+    @Internal
     def getWithGrunnbokDoc() {
         grunnbokDoc([:]);
     }
@@ -105,6 +108,7 @@ class XjcConfig {
     }
 
 
+    @Internal
     def getWithSkDoc() {
         skDoc([:]);
     }

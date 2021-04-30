@@ -40,7 +40,7 @@ class XmlTestUtils {
         XmlSlurper slurper;
         if (GroovySystem.version.startsWith('1.8.')) {
             slurper = XmlSlurper.class.newInstance(true, true) //validation, allowDocTypeDeclaration=true for html documents
-        } else if (GroovySystem.version.startsWith('2.')) {
+        } else if (GroovySystem.version.startsWith('2.') || GroovySystem.version.startsWith('3.')) {
             slurper = XmlSlurper.class.newInstance(true, true, true) //validation, allowDocTypeDeclaration=true for html documents
         } else {
             throw new RuntimeException("Legg til opprettelse av XmlSlurper for Groovy ${GroovySystem.version}")

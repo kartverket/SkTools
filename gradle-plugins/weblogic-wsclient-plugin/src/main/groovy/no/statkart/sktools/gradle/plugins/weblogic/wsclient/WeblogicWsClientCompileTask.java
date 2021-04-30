@@ -34,8 +34,8 @@ import org.gradle.api.tasks.compile.JavaCompile;
 public class WeblogicWsClientCompileTask extends JavaCompile {
     protected static final Logger logger = Logging.getLogger(WeblogicWsClientCompileTask.class);
 
-    @Internal
     @Override
+    @Internal
     public Logger getLogger() {
         return logger;
     }
