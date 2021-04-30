@@ -12,7 +12,6 @@ import org.testng.annotations.Test
 /**
  * @see PropertiesPlugin
  */
-@Test
 class PropertiesPluginTest extends TestKitBase {
 
     /**

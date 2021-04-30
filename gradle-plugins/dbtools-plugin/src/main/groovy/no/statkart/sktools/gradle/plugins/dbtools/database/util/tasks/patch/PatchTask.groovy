@@ -3,8 +3,8 @@ package no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch
 import groovy.transform.PackageScope
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.JavaExecSpec
 
@@ -23,7 +23,7 @@ import java.nio.file.Paths
 class PatchTask extends DatabasePatchTask {
     protected static final Logger logger = Logging.getLogger(PatchTask.class);
 
-    @Input
+    @InputFile
     File sqlFile
 
     Boolean singlestep
@@ -35,8 +35,7 @@ class PatchTask extends DatabasePatchTask {
         }
     }
 
-    @Optional
-    @Input
+    @Internal
     boolean getSinglestep() {
         if (singlestep != null) {
             singlestep

@@ -1,5 +1,6 @@
 package no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch
 
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.JavaExecSpec
 
@@ -12,6 +13,7 @@ import org.gradle.process.JavaExecSpec
 @SuppressWarnings("UnnecessaryQualifiedReference")
 class SyncPatchTask extends PatchTask {
 
+    @Internal
     Collection<String> patchTypes
 
     @TaskAction

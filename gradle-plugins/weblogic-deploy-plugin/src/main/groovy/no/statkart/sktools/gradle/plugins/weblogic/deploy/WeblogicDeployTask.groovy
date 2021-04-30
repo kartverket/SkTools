@@ -20,10 +20,10 @@ class WeblogicDeployTask extends AbstractWeblogicDeployTask {
     @InputFiles
     Object file
 
-    @Input
+    @Internal
     boolean upload = true
 
-    @Input
+    @Internal
     boolean library = false
 
     @Override

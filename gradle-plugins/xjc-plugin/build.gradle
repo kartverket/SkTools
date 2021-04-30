@@ -37,12 +37,13 @@ dependencies {
 task testProperties {
     def outputDir = file("$buildDir/$name")
 
-    inputs.files project(':build-utils:xjc-plugins').sourceSets.main.runtimeClasspath
+    def configuration = project.configurations.detachedConfiguration(project.dependencies.project(path: ':build-utils:xjc-plugins'))
+    inputs.files configuration
     outputs.dir outputDir
 
     doLast {
         def properties = [
-            sktools_xjc_classpath: project(':build-utils:xjc-plugins').sourceSets.main.runtimeClasspath.asPath,
+            sktools_xjc_classpath: configuration.asPath
         ]
         outputDir.mkdirs()
         org.gradle.util.GUtil.saveProperties(properties as Properties, file("$outputDir/XjcPluginTest.properties"))

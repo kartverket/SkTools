@@ -69,6 +69,7 @@ public class JarSigner extends ConventionTask {
 
     transient boolean didSignJarFile = false;
 
+    @Internal
     public Map<FileHashIdent, Map<String, FileHashIdent>> getSignedArtifactsForCertificates() {
         if (signedArtifactsForCertificates == null) {
             try {
@@ -247,7 +248,6 @@ public class JarSigner extends ConventionTask {
         return new FileHashIdent(getCertificateFile(), FileHashIdent.createChecksum(getCertificateFile(), getAlias()));
     }
 
-    @Internal
     public File getCertificateCacheDir(FileHashIdent certificateFileIdent) throws Exception {
         return new File(getCacheDir(), certificateFileIdent.hash());
     }

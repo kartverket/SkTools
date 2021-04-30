@@ -92,7 +92,14 @@ public abstract class TestKitBase {
     protected void deleteTempDir(ITestResult testResult) throws IOException {
         if (projectPath != null) {
             if (testResult.isSuccess()) {
-                deleteRecursively(projectPath);
+                try {
+                    deleteRecursively(projectPath);
+                } catch (IOException e) {
+                    System.out.printf(
+                        "Unable to delete generated files, requesting deletion on process exit: %s%n",
+                        projectPath.toAbsolutePath());
+                    projectPath.toFile().deleteOnExit();
+                }
             } else {
                 System.err.println("Test failed! Leaving generated files in directory " + file(""));
             }

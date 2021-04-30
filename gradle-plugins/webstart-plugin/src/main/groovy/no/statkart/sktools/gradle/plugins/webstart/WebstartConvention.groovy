@@ -9,6 +9,7 @@ import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.util.ConfigureUtil
@@ -249,6 +250,7 @@ class JnlpConfiguration implements Named {
         jnlpFilename = project.name + '.jnlp'
     }
 
+    @Internal
     Project getProject() {
         return project
     }
@@ -333,6 +335,7 @@ class JnlpConfiguration implements Named {
     }
 
     //denne kan ikke være @Input da gradle vil eksekvere closure ved å sende inn null som parameter
+    @Internal
     protected Closure getWithXml() {
         return withXml
     }
@@ -348,6 +351,7 @@ class JnlpConfiguration implements Named {
     }
 
     @Override
+    @Internal
     String getName() {
         return "\"" + jnlpFilename + "\"";
     }
@@ -356,18 +360,27 @@ class JnlpConfiguration implements Named {
 class ApplicationConfiguration {
     protected final transient JnlpConfiguration jnlp;
 
-    @Input
     protected String mainClass;
 
     /**
      * Man kan legge til server url som argument via streng verdi '$$site'. Denne vil ekspanderes av jnlpservlet.
      */
-    @Input
     protected List<String> args = new ArrayList<>();
 
 
     ApplicationConfiguration(JnlpConfiguration jnlp) {
         this.jnlp = jnlp;
+    }
+
+    @Input
+    List<String> getArgs() {
+        return args
+    }
+
+    @Input
+    @Optional
+    String getMainClass() {
+        return mainClass
     }
 
     public ApplicationConfiguration mainClass(String fqn) {

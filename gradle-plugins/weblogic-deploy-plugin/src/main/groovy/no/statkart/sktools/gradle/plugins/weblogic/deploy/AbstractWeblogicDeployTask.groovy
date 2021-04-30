@@ -4,9 +4,7 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.internal.ConventionTask
 import org.gradle.api.logging.Logger
 import org.gradle.api.tasks.Classpath
-import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.JavaExecSpec
 
@@ -30,33 +28,31 @@ abstract class AbstractWeblogicDeployTask extends ConventionTask {
     FileCollection classpath
 
 
-    @Input
+    @Internal
     String deploymentName
 
-    @Optional
-    @Input
+    @Internal
     String getTargets() {
         targets == null || targets.isAllWhitespace() ? null : targets
     }
     String targets
 
-    @Input
+    @Internal
     String url
-    @Input
+    @Internal
     String username
-    @Input
+    @Internal
     String password
 
     /**
      * Timeout for WebLogic-verktøyet, til forskjell fra Gradles egen {@code timeout}.
      */
-    @Input
-    @Optional
+    @Internal
     String deployerTimeout
 
-    @Input
+    @Internal
     boolean failOnError = false
-    @Input
+    @Internal
     boolean verbose = true
 
 
@@ -101,6 +97,7 @@ abstract class AbstractWeblogicDeployTask extends ConventionTask {
 
 
     @Internal
+    @Override
     abstract Logger getLogger();
 
 }

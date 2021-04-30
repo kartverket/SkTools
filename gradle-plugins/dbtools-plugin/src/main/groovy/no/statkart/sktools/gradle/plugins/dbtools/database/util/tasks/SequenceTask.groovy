@@ -5,6 +5,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.Task
 import org.gradle.api.internal.TaskInternal
 import org.gradle.api.specs.Spec
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskDependency
 
 /**
@@ -21,6 +22,7 @@ import org.gradle.api.tasks.TaskDependency
  */
 class SequenceTask extends DefaultTask {
 
+    @Internal
     List<Object> dependsOnList = new ArrayList<>()
 
     public boolean propagateOnlyIf = true

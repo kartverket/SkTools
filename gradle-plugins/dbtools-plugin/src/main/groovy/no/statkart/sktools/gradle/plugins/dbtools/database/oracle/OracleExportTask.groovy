@@ -3,7 +3,7 @@ package no.statkart.sktools.gradle.plugins.dbtools.database.oracle
 import org.gradle.api.internal.ConventionTask
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
-import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 
@@ -18,44 +18,37 @@ import org.gradle.api.tasks.TaskAction
 class OracleExportTask extends ConventionTask {
     protected static final Logger logger = Logging.getLogger(OracleExportTask.class);
 
-    @Input
+    @Internal
     String directory
 
-    @Input
+    @Internal
     String dumpfile
 
-    @Input
+    @Internal
     Collection<String> schemas
 
-    @Input
+    @Internal
     String logfile
 
-    @Input
-    @Optional
+    @Internal
     Collection<String> exclude
 
-    //SKTOOLS-30
-    @Optional
-    @Input
+    @Internal
     Collection<String> include
 
-    //SKTOOLS-40
-    @Optional
-    @Input
+    @Internal
     Integer parallel
 
-    @Input
+    @Internal
     String compression
 
-
-
-    @Input
+    @Internal
     String username
 
-    @Input
+    @Internal
     String password
 
-    @Input
+    @Internal
     String tns
 
 
@@ -132,6 +125,8 @@ class OracleExportTask extends ConventionTask {
     }
 
 
+    @Internal
+    @Override
     public Logger getLogger() {
         return logger;
     }

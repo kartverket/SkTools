@@ -3,7 +3,6 @@ package no.statkart.sktools.gradle.plugins.dbtools.database.util
 import org.gradle.api.internal.ConventionTask
 import org.gradle.api.logging.Logger
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 
 import java.util.function.BiConsumer
@@ -16,7 +15,7 @@ import java.util.function.BiConsumer
  */
 abstract class AbstractSQLTask extends ConventionTask {
 
-    @Input
+    @Internal
     boolean failOnError = !project.gradle.startParameter.isContinueOnFailure()
 
     @Internal
@@ -25,9 +24,10 @@ abstract class AbstractSQLTask extends ConventionTask {
         , getProject().getProviders().provider { hasProperty('password') ? property('password') as String : null }
     )
 
-
+    @Internal
     final Property<String> urlProvider = project.getObjects().property(String)
-    @Input
+
+    @Internal
     String getUrl() {
         return urlProvider.getOrNull();
     }
@@ -35,8 +35,9 @@ abstract class AbstractSQLTask extends ConventionTask {
         urlProvider.set(url)
     }
 
+    @Internal
     final Property<String> driverProvider = project.getObjects().property(String)
-    @Input
+    @Internal
     String getDriver() {
         return driverProvider.getOrNull()
     }
@@ -44,7 +45,6 @@ abstract class AbstractSQLTask extends ConventionTask {
         driverProvider.set(driver)
     }
 
-    @Input
     @Internal
     String getUsername() {
         return credentials.getUsername()
@@ -54,7 +54,6 @@ abstract class AbstractSQLTask extends ConventionTask {
     }
 
 
-    @Input
     @Internal
     String getPassword() {
         return credentials.getPassword()
@@ -66,7 +65,7 @@ abstract class AbstractSQLTask extends ConventionTask {
     //SKTOOLS-21
     String encoding
 
-    @Input
+    @Internal
     String getEncoding() {
         if (encoding != null) {
             return encoding;
@@ -79,11 +78,12 @@ abstract class AbstractSQLTask extends ConventionTask {
         }
     }
 
-
+    @Internal
     abstract File getSqlFile();
 
     abstract void validate(); //SKTOOLS-81
 
+    @Internal
     public abstract Logger getLogger();
 
     protected void validateAbstractSQLTask() {
@@ -114,5 +114,7 @@ abstract class AbstractSQLTask extends ConventionTask {
             }
         }
     }
+
+
 
 }

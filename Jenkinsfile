@@ -13,7 +13,7 @@ pipeline {
     environment {
         GRADLE_BASELINE = '5.0' //for binærkompatibilitet
 
-        GRADLE_LATEST = '6.8.3' //latest og greatest (kan også være neste major versjon)
+        GRADLE_LATEST = '7.0' //latest og greatest (kan også være neste major versjon)
 
         // Forhindre samtidighetsproblemer
         // Tilsvarer "Force GRADLE_USER_HOME to use workspace" i "Gradle plugin"

@@ -2,9 +2,7 @@ package no.statkart.sktools.gradle.plugins.weblogic.deploy
 
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
-import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.Optional
 import org.gradle.process.JavaExecSpec
 
 /**
@@ -17,12 +15,10 @@ import org.gradle.process.JavaExecSpec
 class WeblogicStopTask extends AbstractWeblogicDeployTask {
     protected static final Logger logger = Logging.getLogger(WeblogicStopTask.class);
 
-    @Input
-    @Optional
+    @Internal
     Boolean graceful = null
 
-    @Input
-    @Optional
+    @Internal
     String appversion = null
 
 

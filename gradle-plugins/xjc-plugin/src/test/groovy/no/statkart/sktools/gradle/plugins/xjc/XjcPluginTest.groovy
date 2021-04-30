@@ -277,25 +277,4 @@ class XjcPluginTest extends TestKitBase {
             )
     }
 
-
-    /**
-     * jaxb-xjc har ANT som optional avhengighet.
-     * Denne skal en ikke trenge å laste ned.
-     */
-    @Test
-    void doesNotHaveAntOnClasspath() {
-        final Project project = projectBuilder().build().tap {
-            apply plugin: 'sktools-xjc-plugin'
-
-            repositories {
-                maven { url = testProperties.MAVEN_REPO }
-            }
-
-        }
-
-        assertThat(project.configurations.jaxb.resolvedConfiguration.getResolvedArtifacts()).
-            extracting("artifact.name").
-            contains("jaxb-xjc").doesNotContain("ant")
-    }
-
 }
