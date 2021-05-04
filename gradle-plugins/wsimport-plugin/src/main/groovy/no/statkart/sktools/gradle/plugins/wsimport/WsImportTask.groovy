@@ -29,10 +29,21 @@ class WsImportTask extends SourceTask {
     @Internal
     boolean verbose = false
 
+    /**
+     * Angir hvilken encoding som skal brukes for generert kildekode.
+     * <p>
+     * Bruker UTF-8 som standard fordi:
+     * <ol>
+     *     <li>UTF-8 er gyldig windows-1252, men windows-1252 er ikke gyldig UTF-8</li>
+     *     <li>Den faktiske koden skal ikke innholde ikke-ASCII-tegn siden vi ungår det i API-ene</li>
+     * </ol>
+     */
     @Input
-    // Bruker UTF-8 som standard fordi: 1) UTF-8 er gyldig windows-1252, men windows-1252 er ikke gyldig UTF-8; 2) Den faktiske koden skal ikke innholde ikke-ASCII-tegn, kun eventuelt kommentarer
     String encoding = StandardCharsets.UTF_8.name()
 
+    /**
+     * Angir hvilken WSDL som skal prosesseres sist. Dette må være den som trekker inn mest.
+     */
     @Input
     @Optional
     String lastWsdl = null
@@ -84,6 +95,10 @@ class WsImportTask extends SourceTask {
         ant.wsimport(wsdl: details.file, extension: 'true', destdir: getTemporaryDir(), sourcedestdir: getDestinationDir(), keep: 'true', xnocompile: 'true', wsdllocation: '/' + details.relativePath, verbose: verbose, encoding: encoding)
     }
 
+    /**
+     * Pakke exceptions skal flyttes til. Kan være {@code null} dersom de ikke skal flyttes.
+     * @see #exceptionReusePackage(java.lang.String)
+     */
     @Input
     @Optional
     String getPackageString() {
