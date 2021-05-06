@@ -28,13 +28,13 @@ import org.gradle.plugins.ide.idea.IdeaPlugin
  * Pluginen konfigurerer opp source set med kjente konfigurasjoner. Se {@link SourceSet} for dokumentasjon.
  *
  * <p>
- * Følgende kofigurasjoner defineres:
+ * Følgende konfigurasjoner kan benyttes:
  * <ul>
- *   <li><code>weblogicCompile</code> - evt exstra jar libs
- *   <li><code>weblogicRuntime</code> - evt exstra jar libs
+ *   <li><code>weblogicImplementation</code> - evt ekstra jar libs
+ *   <li><code>weblogicRuntimeOnly</code> - evt ekstra jar libs
  *
- *   <li><code>weblogic</code> - configuration for war artifakt (weblogicRuntime og weblogicCompile arver ifra denne).
- *   <li><code>weblogicProvided</code> - legg alle weblogic jar avhengingheter for bygging/debug her.
+ *   <li><code>weblogic</code> - configuration for war artifakt (weblogicRuntime og weblogicCompile inkluderes i denne).
+ *   <li><code>weblogicProvided</code> - legg alle weblogic jar avhengigheter for bygging/debug her.
  *
  * </ul>
  *
@@ -63,7 +63,6 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
         project.getDependencies().add(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME, WeblogicBasePlugin.toolsJar(project));
         project.getDependencies().add(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME, conventionalWeblogicDependencies(project));
 
-        project.getConfigurations().maybeCreate(WEBLOGIC_CONFIGURATION_NAME);
         final SourceSet weblogicSourceSet = createSourceSet(project);
 
         configureConfigurations(project, weblogicSourceSet);
@@ -127,18 +126,37 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
                 project.idea.module {
                     sourceDirs += weblogicSourceSet.allSource.srcDirs
 
-                    def weblogicConfiguration = project.getConfigurations().getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME)
+                    def weblogicProvided = project.getConfigurations().getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME)
+                    def weblogicCompileClasspath = project.getConfigurations().getByName(weblogicSourceSet.compileClasspathConfigurationName)
+                    def weblogicRuntimeClasspath = project.getConfigurations().getByName(weblogicSourceSet.runtimeClasspathConfigurationName)
 
 
                     ['COMPILE', 'RUNTIME', 'TEST', 'PROVIDED'].each { scopeName ->
-                        scopes[scopeName] = scopes[scopeName] ?: [plus: [], minus: []] //SKTOOLS-133: oppretter scopes selv dersom ikke JavaPlugin er aktivert...
+                        //oppretter scopes selv dersom ikke JavaPlugin er aktivert...
+                        scopes[scopeName] = scopes[scopeName] ?: [plus: [], minus: []]
                     }
 
-                    scopes.COMPILE.plus += [project.configurations[weblogicSourceSet.compileConfigurationName], weblogicConfiguration]
-                    scopes.RUNTIME.plus += [project.configurations[weblogicSourceSet.runtimeConfigurationName]]
-                    scopes.RUNTIME.minus += [project.configurations[weblogicSourceSet.compileConfigurationName]]
-                    scopes.TEST.plus += [project.configurations[weblogicSourceSet.runtimeConfigurationName]]
+                    /* IntelliJ scopes:
+                        The following table summarizes the classpath information for the possible dependency scopes.
 
+                             	  │  Sources,      │  Sources, │  Tests,        │   Tests,   │
+                        Scope     │  when compiled │  when run │  when compiled │	when run │
+                        ──────────┼────────────────┼───────────┼────────────────┼────────────┤
+                        Compile	  │      +	       │     +	   │     +	        │     +      │
+                        Test	  │      -         │  	 -	   │     +	        │     +      │
+                        Runtime	  │      -         │  	 +	   │     -	        │     +      │
+                        Provided  │      +         │  	 -	   │     +	        │     +      │
+                        ──────────┴────────────────┴───────────┴────────────────┴────────────┘
+                        Default scope is the compile scope.
+                     */
+
+                    //PS: Dersom samme dependency havner feks i både compile og runtime scope for IntelliJ så hender det at den ikke markeres som "compile"
+
+                    scopes.COMPILE.plus += [weblogicCompileClasspath, weblogicProvided]
+                    scopes.RUNTIME.plus += [weblogicRuntimeClasspath]
+                    scopes.RUNTIME.minus += [weblogicCompileClasspath, weblogicProvided]
+                    scopes.TEST.plus += [weblogicRuntimeClasspath]
+                    scopes.TEST.minus += [weblogicCompileClasspath, weblogicProvided]
                 }
             }
         }
@@ -147,7 +165,7 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
     private static War configureArchives(final Project project, final SourceSet weblogicSourceSet) {
         final WeblogicWsCompileTask genTask = (WeblogicWsCompileTask) project.getTasks().getByName(WEBLOGIC_GEN_TASK_NAME);
 
-        //late evaluate if java plugin is applied anytome after...
+        //late evaluate if java plugin is applied anytime after...
         project.afterEvaluate {
             if (project.getTasks().findByName(JavaPlugin.TEST_TASK_NAME) != null) {
                 project.getTasks().getByName(JavaBasePlugin.CHECK_TASK_NAME).dependsOn(JavaPlugin.TEST_TASK_NAME);
@@ -222,8 +240,6 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
         final SourceSet weblogicSourceSet = javaConvention.getSourceSets().create(WEBLOGIC_SOURCE_SET_NAME);
 
         final Configuration weblogicProvidedConfiguration = project.getConfigurations().getByName(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME);
-        final Configuration weblogicCompileConfiguration = project.getConfigurations().getByName(weblogicSourceSet.getCompileConfigurationName());
-        final Configuration weblogicRuntimeConfiguration = project.getConfigurations().getByName(weblogicSourceSet.getRuntimeConfigurationName());
 
         final SourceSet mainSourceSet = javaConvention.getSourceSets().findByName(SourceSet.MAIN_SOURCE_SET_NAME);
 
@@ -231,13 +247,13 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
         //legger til main sourceset til compile og runtime classpath
         weblogicSourceSet.setCompileClasspath(project.files(
                 { mainSourceSet?.getOutput() },
-                weblogicCompileConfiguration,
+                weblogicSourceSet.getCompileClasspath(),
                 weblogicProvidedConfiguration
         ));
         weblogicSourceSet.setRuntimeClasspath(project.files(
                 { mainSourceSet?.getOutput() },
                 weblogicSourceSet.getOutput(),
-                weblogicRuntimeConfiguration,
+                weblogicSourceSet.getRuntimeClasspath(),
                 weblogicProvidedConfiguration
         ));
 
@@ -248,33 +264,36 @@ class WeblogicWsWarPlugin implements Plugin<Project> {
      * Konfigurerer avhengigheter slik at <br/>
      * <ul>
      *  <li><code>weblogic</code> arver ifra <code>weblogicRuntime</code>
-     *  <li><code>weblogicRuntime</code> arver ifra <code>weblogicCompile</code> (default behaviour)
-     *  <li><code>weblogicCompile</code> arver ifra <code>compile</code> (dersom definert)
-     *  <li><code>weblogicRuntime</code> arver ifra <code>runtime</code> (dersom definert)
+     *  <li><code>weblogicImplementation</code> arver ifra <code>implementation og compileOnly</code> (dersom definert)
+     *  <li><code>weblogicRuntimeOnly</code> arver ifra <code>implementation og runtimeOnly</code> (dersom definert)
      * </ul>
+     *
+     * Se også <a href="https://docs.gradle.org/current/userguide/java_plugin.html#tab:configurations">Java Plugin</a> for konvensjonelt oppsett.
      */
     private static void configureConfigurations(Project project, final SourceSet weblogicSourceSet) {
         final JavaPluginConvention javaConvention = (JavaPluginConvention) project.getConvention().getPlugins().get("java");
 
-        final Configuration weblogicConfiguration = project.getConfigurations().getByName(WEBLOGIC_CONFIGURATION_NAME);
-        final Configuration weblogicCompileConfiguration = project.getConfigurations().getByName(weblogicSourceSet.getCompileConfigurationName());
-        final Configuration weblogicRuntimeConfiguration = project.getConfigurations().getByName(weblogicSourceSet.getRuntimeConfigurationName());
+        final Configuration weblogicImplementation = project.getConfigurations().getByName(weblogicSourceSet.getImplementationConfigurationName());
+        final Configuration weblogicRuntimeOnly = project.getConfigurations().getByName(weblogicSourceSet.getRuntimeOnlyConfigurationName());
 
-        weblogicConfiguration.extendsFrom(weblogicRuntimeConfiguration);
-        weblogicRuntimeConfiguration.extendsFrom(weblogicCompileConfiguration);
+        final Configuration weblogic = project.getConfigurations().maybeCreate(WEBLOGIC_CONFIGURATION_NAME);
+        weblogic.extendsFrom(weblogicImplementation, weblogicRuntimeOnly);
+
+        //fjernes i Gradle 7.0
+        final Configuration weblogicRuntime = project.getConfigurations().findByName(weblogicSourceSet.getName() + "Runtime");
+        if (weblogicRuntime != null) {
+            weblogic.extendsFrom(weblogicRuntime);
+        }
+
 
         //dersom javaplugin er aktivert..
         SourceSet mainSourceSet = javaConvention.getSourceSets().findByName(SourceSet.MAIN_SOURCE_SET_NAME);
         if (mainSourceSet != null) {
-            Configuration compileConfiguration = project.getConfigurations().findByName(mainSourceSet.getCompileClasspathConfigurationName())
-            Configuration runtimeConfiguration = project.getConfigurations().findByName(mainSourceSet.getRuntimeClasspathConfigurationName())
+            weblogicImplementation.extendsFrom(   //arver fra main sin implementation og compileOnly
+                project.getConfigurations().findByName(mainSourceSet.getCompileClasspathConfigurationName()));
 
-            if (compileConfiguration != null) {
-                weblogicCompileConfiguration.extendsFrom(compileConfiguration);     //compile configuration arver fra main sin compile
-            }
-            if (runtimeConfiguration != null) {
-                weblogicRuntimeConfiguration.extendsFrom(runtimeConfiguration);     //runtime configuration arver fra main sin runtime
-            }
+            weblogicRuntimeOnly.extendsFrom(    //arver fra main sin implementation og runtimeOnly
+                project.getConfigurations().findByName(mainSourceSet.getRuntimeClasspathConfigurationName()));
         }
 
     }

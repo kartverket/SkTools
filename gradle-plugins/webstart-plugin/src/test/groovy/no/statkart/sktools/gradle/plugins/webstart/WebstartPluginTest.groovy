@@ -85,7 +85,7 @@ class WebstartPluginTest extends TestKitBase {
             version = '1.0'
 
             dependencies {
-                runtime project(':projectB')    //dependency on projectB
+                implementation project(':projectB')    //dependency on projectB
             }
 
         """)
@@ -100,7 +100,7 @@ class WebstartPluginTest extends TestKitBase {
             version = '1.2'
 
             dependencies {
-                runtime files('../wsClientRuntime-1.0.jar')
+                runtimeOnly files('../wsClientRuntime-1.0.jar')
             }
         """)
 
@@ -273,7 +273,7 @@ class WebstartPluginTest extends TestKitBase {
 
             webstart {
                 client1 {
-                    jarDependencies configurations.runtime
+                    jarDependencies configurations.runtimeClasspath
                     manifestAttributes codebase: 'https://*', dummy: 'testValue'
                     jnlp {
                         description 'Client1 description'
