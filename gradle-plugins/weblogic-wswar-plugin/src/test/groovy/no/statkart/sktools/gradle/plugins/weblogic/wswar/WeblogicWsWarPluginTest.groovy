@@ -257,7 +257,7 @@ class WeblogicWsWarPluginTest extends TestKitBase {
      * Tester oppsett av {@code SourceSet} i et tenkt multi build prosjekt.
      *
      * Tenker at main har paralell kompilering av plattform spesifik kode. Dette kan feks være for Weblogic, JBoss, mm.
-     * Tanken er da at {@source main} inneholder felles kildekode, mens man legger plattfor spsifikk kildekode inn i forskjellige source sets, eks {@source weblogic}.
+     * Tanken er da at {@source main} inneholder felles kildekode, mens man legger plattform spesifikk kildekode inn i forskjellige source sets, eks {@source weblogic}.
      *
      *
      * Testen setter opp enn felles resource katalog.
@@ -277,10 +277,10 @@ class WeblogicWsWarPluginTest extends TestKitBase {
 
             dependencies {
                 //dette er muligens en knotete måte å deklarere det på..
-                weblogicCompile project(path: ':', configuration: 'runtime')   // rootProject.path == ':'
+                weblogicImplementation project(path: ':', configuration: 'runtimeElements')   // rootProject.path == ':'
 
                 //felles bibliotek
-                compile files('lib/common.jar')
+                implementation files('lib/common.jar')
             }
         }
 
@@ -308,14 +308,12 @@ class WeblogicWsWarPluginTest extends TestKitBase {
         assert project.tasks['processWeblogicResources'].source.contains(commonResource)    //forventer tilgang til ressurser for processWeblogicResources
         assert project.tasks['processResources'].source.contains(commonResource)    //forventer tilgang til ressurser for processResources
 
-        //henter ut filer for configurations
-        Iterable<File> weblogicArtifacts = project.getConfigurations().getByName('weblogicRuntime').getFiles()
-        Iterable<File> mainArtifacts = project.getConfigurations().getByName('runtime').getFiles()
-
         //tester kjente artifakter
         File mainJarFile = file('lib/common.jar')
-        assert weblogicArtifacts.contains(mainJarFile)
-        assert mainArtifacts.contains(mainJarFile)
+        assertThat(project.getConfigurations().getByName('weblogicCompileClasspath')).contains(mainJarFile)
+        assertThat(project.getConfigurations().getByName('weblogicRuntimeClasspath')).contains(mainJarFile)
+        assertThat(project.getConfigurations().getByName('compileClasspath')).contains(mainJarFile)
+        assertThat(project.getConfigurations().getByName('runtimeClasspath')).contains(mainJarFile)
 
         //sjekker at artifakt ifra 'main' blir med på classpath
         assert project.tasks['compileWeblogicJava'].classpath.contains(mainJarFile)

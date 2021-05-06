@@ -27,9 +27,8 @@ class WeblogicTaskTest extends TestKitBase {
             apply plugin: WeblogicBasePlugin
             apply plugin: JavaPlugin
 
-
             dependencies {
-                compile files('some.jar')
+                implementation files('some.jar')
             }
         }
 
