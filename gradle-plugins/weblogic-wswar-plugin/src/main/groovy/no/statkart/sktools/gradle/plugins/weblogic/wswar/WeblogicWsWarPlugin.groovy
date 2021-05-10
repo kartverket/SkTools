@@ -33,9 +33,8 @@ import org.gradle.plugins.ide.idea.IdeaPlugin
  *   <li><code>weblogicImplementation</code> - evt ekstra jar libs
  *   <li><code>weblogicRuntimeOnly</code> - evt ekstra jar libs
  *
- *   <li><code>weblogic</code> - configuration for war artifakt (weblogicRuntime og weblogicCompile inkluderes i denne).
+ *   <li><code>weblogic</code> - configuration for war artifakt (weblogicImplementation og weblogicRuntimeOnly inkluderes i denne).
  *   <li><code>weblogicProvided</code> - legg alle weblogic jar avhengigheter for bygging/debug her.
- *
  * </ul>
  *
  *
