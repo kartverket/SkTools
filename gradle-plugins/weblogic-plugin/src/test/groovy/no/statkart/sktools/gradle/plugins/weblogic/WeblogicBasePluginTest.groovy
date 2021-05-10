@@ -47,7 +47,7 @@ class WeblogicBasePluginTest extends TestKitBase {
     /**
      * Illustrerer integrasjon med JavaPlugin.
      *
-     * Illustrert er at weblogic-configurasjonen arver ifra (java) compile konfigurasjonen.
+     * Illustrerer at weblogic-configurasjonen arver fra en konfigurasjon.
      * Dependencies som legges til 'compile' skal da komme med i 'weblogic'
      */
     @Test
@@ -61,12 +61,14 @@ class WeblogicBasePluginTest extends TestKitBase {
             apply plugin: JavaPlugin
 
             configurations {
+                libs { description = "Application container provided libs" }
+
                 //tenker oss at weblogic classpath configurasjon også skal inneholde alle compile time dependencies..
-                weblogicProvided.extendsFrom compile
+                weblogicProvided.extendsFrom libs
             }
 
             dependencies {
-                compile files('some.jar')
+                libs files('some.jar')
             }
 
         }
