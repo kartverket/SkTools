@@ -10,12 +10,9 @@ pipeline {
         string(name: 'sktools_versjon', defaultValue: '', description: 'Versjon for publisert artefakt.')
     }
 
-    tools {
-        gradle 'Gradle 5.0' //kompilerer artefakter til denne versjonen
-        jdk 'Java 12 Latest' //spesifisert java versjon for bygging av release
-    }
-
     environment {
+        GRADLE_BASELINE = '5.0' //for binærkompatibilitet
+
         GRADLE_LATEST = '6.8.3' //latest og greatest (kan også være neste major versjon)
 
         // Forhindre samtidighetsproblemer
@@ -24,6 +21,11 @@ pipeline {
 
         //for publisering til sentralt maven repo bindes opp via jenkins credential (secret text)
         MAVEN_PUBLISH = credentials('MAVEN_DEPLOY_RELEASES')
+    }
+
+    tools {
+        gradle "Gradle $GRADLE_BASELINE" //kompilerer artefakter mot denne API-versjonen
+        jdk 'Java 12 Latest' //spesifisert java versjon for bygging av release
     }
 
     stages {
@@ -46,11 +48,11 @@ pipeline {
                     }
                     steps {
                         sh "gradle --version"
-                        sh "gradle testGradle5.0 -DignoreFailures=true ${gradleOptions(this)}"
+                        sh "gradle test -DignoreFailures=true ${gradleOptions(this)}"
                     }
                     post {
                         always {
-                            junit '**/test-results/testGradle5.0/*.xml'
+                            junit "**/buildGradle$GRADLE_BASELINE/test-results/test/*.xml"
                         }
                     }
                 }
@@ -60,11 +62,11 @@ pipeline {
                     }
                     steps {
                         sh "gradle --version"
-                        sh "gradle testGradle$GRADLE_LATEST -DignoreFailures=true ${gradleOptions(this)} -DbuildDirName=build/gradle$GRADLE_LATEST" //buildDirName for å kjøre flere bygg med forskjellige gradle versjoner
+                        sh "gradle test -DignoreFailures=true ${gradleOptions(this)}"
                     }
                     post {
                         always {
-                            junit "**/test-results/testGradle$GRADLE_LATEST/*.xml"
+                            junit "**/buildGradle$GRADLE_LATEST/test-results/test/*.xml"
                         }
                     }
                 }
