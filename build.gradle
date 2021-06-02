@@ -8,8 +8,8 @@ allprojects {
     // version kan settes via properties (feks kommandolinje -Psktools_versjon=xxx )
     project.version = sktools_versjon
 
-    // valgfri build katalog - kan benyttes for kompilering for flere samtidige Gradle versjoner..
-    buildDir = gradle.startParameter.systemPropertiesArgs.getOrDefault('buildDirName', DEFAULT_BUILD_DIR_NAME)
+    // build katalog avledes av Gradle versjon - brukes bla ved parallelle bygg
+    buildDir = 'buildGradle' + GradleVersion.current().baseVersion.version
 }
 
 // Optional configuration of library versions to use. (not production)
@@ -131,11 +131,6 @@ subprojects { Project project ->
             }
         }
 
-
-        // Test resultater og rapporter havner i egne mapper for paralleliserbarhet i Jenkins.
-        // - feks build/reports/tests/<task name>
-        // - feks build/test-results/<task name>
-        tasks.create("testGradle${GradleVersion.current().baseVersion.version}", Test)
     }
 
     /**
