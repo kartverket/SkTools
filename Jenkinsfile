@@ -6,10 +6,6 @@ pipeline {
         label 'sktools||matrikkel'
     }
 
-    parameters {
-        string(name: 'sktools_versjon', defaultValue: '', description: 'Versjon for publisert artefakt.')
-    }
-
     environment {
         GRADLE_BASELINE = '5.0' //for binærkompatibilitet
 
@@ -38,6 +34,11 @@ pipeline {
         }
 
         stage('Unit tests') {
+            when {
+                not {
+                    buildingTag() //ikke ved publish
+                }
+            }
             parallel {
                 stage('Test gradle baseline') {
                     tools {
@@ -71,12 +72,31 @@ pipeline {
         }
 
         stage('Publish rc') {
+            when {
+                not {
+                    buildingTag() //ikke ved publish
+                }
+            }
             steps {
                 withCredentials([
                     //for publisering til sentralt maven repo bindes opp via jenkins credential (secret text)
                     string(variable: 'MAVEN_PUBLISH', credentialsId: 'MAVEN_DEPLOY_RELEASE_CANDIDATE'),
                 ]) {
                     sh "gradle publish ${gradleOptions(this)} --init-script config/gradle/scripts/mavenPublish.gradle"
+                }
+            }
+        }
+
+        stage('Publish') {
+            when {
+                buildingTag()
+            }
+            steps {
+                withCredentials([
+                    //for publisering til sentralt maven repo bindes opp via jenkins credential (secret text)
+                    string(variable: 'MAVEN_PUBLISH', credentialsId: TAG_NAME.contains('-') ? 'MAVEN_DEPLOY_RELEASE_CANDIDATE': 'MAVEN_DEPLOY_RELEASES'),
+                ]) {
+                    sh "gradle publish -Psktools_versjon=${TAG_NAME} --init-script config/gradle/scripts/mavenPublish.gradle"
                 }
             }
         }
@@ -149,7 +169,7 @@ Build : $BUILD_URL <br>
 
 static def gradleOptions(script) {
     return [
-            '-Psktools_versjon=' + (script.params.sktools_versjon ?: "${script.BRANCH_NAME}-build${script.BUILD_NUMBER}"),
+            "-Psktools_versjon=${script.BRANCH_NAME}-build${script.BUILD_NUMBER}",
             '-Dorg.gradle.daemon=false',
             "-Djava.io.tmpdir=${script.pwd(tmp: true)}", //temp dir settes til samme mappe som jenkins (<workspace name>@tmp)
             '--stacktrace'
