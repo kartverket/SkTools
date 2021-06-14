@@ -11,6 +11,11 @@ allprojects {
     // valgfri build katalog - kan benyttes for kompilering for flere samtidige Gradle versjoner..
     buildDir = gradle.startParameter.systemPropertiesArgs.get('buildDirName') ?: Project.DEFAULT_BUILD_DIR_NAME
 
+    tasks.withType(AbstractPublishToMaven).each {
+        doFirst {
+            logger.lifecycle "Publishing ${publication.groupId}:${publication.artifactId}:${publication.version}"
+        }
+    }
 }
 
 // Optional configuration of library versions to use. (not production)

@@ -25,11 +25,6 @@ pipeline { //declarative pipeline syntax
         label 'sktools||matrikkel'
     }
 
-    parameters {
-        string(name: 'sktools_versjon', defaultValue: "${env.BRANCH_NAME ?: 'trunk'}-build${env.BUILD_NUMBER}", description: 'Versjon for publisert artefakt.')
-        string(name: 'BRANCH_NAME', defaultValue: "${env.BRANCH_NAME ?: 'trunk'}", description: 'Branch for kildekode.')
-    }
-
     tools {
         gradle 'Gradle 4.2' //kompilerer artefakter til denne versjonen
         jdk 'Java 7 Latest' //spesifisert java versjon for bygging av release
@@ -41,7 +36,6 @@ pipeline { //declarative pipeline syntax
         GRADLE_USER_HOME = "${WORKSPACE.replace(0x5c as char, 0x2f as char)}/gradle"
         ORG_GRADLE_PROJECT_sktools_versjon = "${params.sktools_versjon}"
         GRADLE_OPTS = "-XX:MaxPermSize=512m" //java 7 trenger litt mere permGen space
-        BRANCH_NAME = "${params.BRANCH_NAME}"
 
     }
 
@@ -58,6 +52,11 @@ pipeline { //declarative pipeline syntax
         }
 
         stage('Unit tests') {
+            when {
+                not {
+                    buildingTag() //ikke ved publish
+                }
+            }
             parallel {
                 stage('Test gradle baseline') {
                     steps {
@@ -88,12 +87,31 @@ pipeline { //declarative pipeline syntax
         }
 
         stage('Publish rc') {
+            when {
+                not {
+                    buildingTag() //ikke ved publish
+                }
+            }
             steps {
                 withCredentials([
                     //for publisering til sentralt maven repo bindes opp via jenkins credential (secret text)
                     string(variable: 'MAVEN_PUBLISH', credentialsId: 'MAVEN_DEPLOY_RELEASE_CANDIDATE'),
                 ]) {
                     sh "gradle publish ${gradleOptions(this)} --init-script config/gradle/scripts/mavenPublish.gradle"
+                }
+            }
+        }
+
+        stage('Publish') {
+            when {
+                buildingTag()
+            }
+            steps {
+                withCredentials([
+                    //for publisering til sentralt maven repo bindes opp via jenkins credential (secret text)
+                    string(variable: 'MAVEN_PUBLISH', credentialsId: TAG_NAME.contains('-') ? 'MAVEN_DEPLOY_RELEASE_CANDIDATE': 'MAVEN_DEPLOY_RELEASES'),
+                ]) {
+                    sh "gradle publish -Psktools_versjon=${TAG_NAME} --init-script config/gradle/scripts/mavenPublish.gradle"
                 }
             }
         }
@@ -166,6 +184,7 @@ Build : $BUILD_URL <br>
 
 static def gradleOptions(script) {
     return [
+            "-Psktools_versjon=${script.BRANCH_NAME}-build${script.BUILD_NUMBER}",
             '-Dorg.gradle.daemon=false',
             "-Djava.io.tmpdir=${script.pwd(tmp: true)}", //temp dir settes til samme mappe som jenkins (<workspace name>@tmp)
             '--stacktrace'
