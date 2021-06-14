@@ -131,9 +131,7 @@ subprojects { Project project ->
                         ant.touch() { fileset(dir: filteredResourcesDir)}
                     }
                 }
-                project.sourceSets."$scope".resources.srcDir filteredResourcesDir
-                project.processResources.dependsOn filterTask
-
+                project.sourceSets."$scope".resources.srcDir filterTask
             }
         }
 

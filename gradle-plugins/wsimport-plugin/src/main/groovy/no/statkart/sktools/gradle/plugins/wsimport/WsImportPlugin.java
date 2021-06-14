@@ -5,7 +5,6 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.DependencySet;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.SourceSet;
@@ -52,9 +51,7 @@ public class WsImportPlugin implements Plugin<Project> {
         wsImportTask.source(mainSourceSet.getResources());
         wsImportTask.dependsOn(resourcesTask);
 
-        Task compileJavaTask = project.getTasks().getByName(mainSourceSet.getCompileJavaTaskName());
-        compileJavaTask.dependsOn(wsImportTask);
-        mainSourceSet.getJava().srcDir(genSrcDir);
+        mainSourceSet.getJava().srcDir(wsImportTask);
 
         project.getPlugins().withType(IdeaPlugin.class, new Action<IdeaPlugin>() {
             @Override

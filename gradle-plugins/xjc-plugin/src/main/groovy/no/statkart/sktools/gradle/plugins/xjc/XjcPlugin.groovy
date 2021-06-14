@@ -103,10 +103,7 @@ class XjcPlugin implements Plugin<Project> {
 
                         TaskProvider<XjcTask> xjcTask = createXjcTaskForSourceSet(xjcConfig);
 
-                        sourceSet.getJava().srcDir(xjcConfig.genOutputPath);
-                        project.tasks.named(sourceSet.getCompileJavaTaskName()) {compileJava ->
-                            compileJava.dependsOn(xjcTask)
-                        }
+                        sourceSet.getJava().srcDir(xjcTask);
 
                     }
 

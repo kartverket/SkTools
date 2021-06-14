@@ -49,8 +49,7 @@ Configuration
         into "$buildDir/wsdls/"
     }
 
-    processResources.dependsOn importWsdls
-    sourceSets.main.resources.srcDir importWsdls.destinationDir
+    sourceSets.main.resources.srcDir importWsdls
 
     wsimport {
         exceptionReusePackage 'no.statkart.example.wsapi.v1.exception'
