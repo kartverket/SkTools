@@ -16,12 +16,6 @@ gradlePlugin {
 }
 
 def pluginPropertiesDir = "$buildDir/plugin-properties"
-sourceSets {
-    main {
-        output.dir(pluginPropertiesDir, builtBy: 'createPluginProperties')
-    }
-}
-
 def pluginProperties = [
     sktools_wsdocgen : "no.statkart.sktools:wsdocgen:${version}" as String,
 ] as Properties
@@ -59,7 +53,7 @@ task createPluginProperties() {
         logger.info "Created plugin info file: ${file.getAbsolutePath()}"
     }
 }
-tasks.processResources.dependsOn createPluginProperties
+sourceSets.main.resources.srcDir createPluginProperties
 
 
 task sourceJar(type: Jar) {

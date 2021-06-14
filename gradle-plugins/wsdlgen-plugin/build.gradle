@@ -21,12 +21,6 @@ dependencies {
 
 def pluginPropertiesDir = "$buildDir/plugin-properties"
 
-sourceSets {
-    main {
-        output.dir(pluginPropertiesDir, builtBy: 'createPluginProperties')
-    }
-}
-
 def pluginProperties = [
     sktools_wsdlgen : "no.statkart.sktools:wsdlgen:${version}" as String,
 ] as Properties
@@ -60,7 +54,7 @@ task createPluginProperties() {
         logger.info "Created plugin info file: ${file.getAbsolutePath()}"
     }
 }
-tasks.processResources.dependsOn createPluginProperties
+sourceSets.main.resources.srcDir createPluginProperties
 
 task sourceJar(type: Jar) {
     from sourceSets.main.allSource
