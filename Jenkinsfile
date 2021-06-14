@@ -18,9 +18,6 @@ pipeline {
         // Forhindre samtidighetsproblemer
         // Tilsvarer "Force GRADLE_USER_HOME to use workspace" i "Gradle plugin"
         GRADLE_USER_HOME = "${WORKSPACE}/gradle"
-
-        //for publisering til sentralt maven repo bindes opp via jenkins credential (secret text)
-        MAVEN_PUBLISH = credentials('MAVEN_DEPLOY_RELEASES')
     }
 
     tools {
@@ -73,9 +70,14 @@ pipeline {
             }
         }
 
-        stage('Publish') {
+        stage('Publish rc') {
             steps {
-                sh "gradle publish ${gradleOptions(this)} --init-script config/gradle/scripts/mavenPublish.gradle"
+                withCredentials([
+                    //for publisering til sentralt maven repo bindes opp via jenkins credential (secret text)
+                    string(variable: 'MAVEN_PUBLISH', credentialsId: 'MAVEN_DEPLOY_RELEASE_CANDIDATE'),
+                ]) {
+                    sh "gradle publish ${gradleOptions(this)} --init-script config/gradle/scripts/mavenPublish.gradle"
+                }
             }
         }
     }
