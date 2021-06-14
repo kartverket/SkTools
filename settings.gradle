@@ -39,6 +39,6 @@ gradle.rootProject { project -> //nested projects fallback to properties of root
     project.ext.MAVEN_REPO = rootProject.properties.get('MAVEN_REPO', System.getenv('MAVEN_REPO'))
     if (project.ext.MAVEN_REPO == null) {
         project.ext.set('MAVEN_REPO', 'https://nexus.statkart.no/repository/public/')
-        logger.warn "warning: MAVEN_REPO not defined. Defaulting to ${project.MAVEN_REPO}"
+        logger.info "MAVEN_REPO not defined. Defaulting to ${project.MAVEN_REPO}"
     }
 }
