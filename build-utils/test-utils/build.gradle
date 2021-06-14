@@ -5,10 +5,8 @@ apply plugin: 'groovy'
 description = "Intern modul for felles test-logikk."
 
 def testPropertiesDir = "$buildDir/test-properties"
+
 sourceSets {
-    main {
-        output.dir(testPropertiesDir, builtBy: 'createTestProperties')
-    }
     sample // ressurser for sample.jar til bruk i tester
 }
 
@@ -39,7 +37,7 @@ task createTestProperties() {
         logger.info "Created info file: ${file.getAbsolutePath()}"
     }
 }
-tasks.processResources.dependsOn createTestProperties
+sourceSets.main.resources.srcDir createTestProperties
 
 
 task createSampleJar(type: Jar) {
@@ -54,7 +52,7 @@ task createSampleJar(type: Jar) {
         'Implementation-Version': "0.1",
     ])
 }
-sourceSets.main.output.dir(createSampleJar, builtBy: createSampleJar)
+sourceSets.main.output.dir createSampleJar
 
 task createSample2Jar(type: Jar) {
     if (GradleVersion.current() > GradleVersion.version('5.1')) {
@@ -67,4 +65,4 @@ task createSample2Jar(type: Jar) {
         'Specification-Title': "Sample 2",
     ])
 }
-sourceSets.main.output.dir(createSample2Jar, builtBy: createSample2Jar)
+sourceSets.main.output.dir createSample2Jar

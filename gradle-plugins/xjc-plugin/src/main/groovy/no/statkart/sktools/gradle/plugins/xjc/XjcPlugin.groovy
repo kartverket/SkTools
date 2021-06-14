@@ -100,8 +100,7 @@ class XjcPlugin implements Plugin<Project> {
                         XjcTask xjcTask = createXjcTaskForSourceSet(xjcConfig, genOutputDir);
                         xjcTask.dependsOn(configuration);
 
-                        sourceSet.getJava().srcDir(genOutputDir);
-                        project.tasks.getByName(sourceSet.getCompileJavaTaskName()).dependsOn(xjcTask)
+                        sourceSet.getJava().srcDir(xjcTask);
 
                         project.plugins.withId('idea') {
                             project.idea.module.generatedSourceDirs += genOutputDir
@@ -134,8 +133,6 @@ class XjcPlugin implements Plugin<Project> {
                         }
                         return task
                     }
-
-
                 });
             }
         });

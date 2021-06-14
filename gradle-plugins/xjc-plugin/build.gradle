@@ -16,13 +16,6 @@ gradlePlugin {
 }
 
 def pluginPropertiesDir = "$buildDir/plugin-properties"
-
-sourceSets {
-    main {
-        output.dir(pluginPropertiesDir, builtBy: 'createPluginProperties')
-    }
-}
-
 def pluginProperties = [
         sktools_xjc_extensions : "no.statkart.sktools:xjc-plugins:${version}" as String,
         default_xjc_implementation : libraries.jaxb_xjc as String,
@@ -63,7 +56,7 @@ task createPluginProperties() {
         logger.info "Created plugin info file: ${file.getAbsolutePath()}"
     }
 }
-tasks.processResources.dependsOn createPluginProperties
+sourceSets.main.resources.srcDir createPluginProperties
 
 
 task sourceJar(type: Jar) {
