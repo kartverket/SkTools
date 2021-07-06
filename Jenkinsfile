@@ -81,8 +81,11 @@ pipeline {
                 withCredentials([
                     //for publisering til sentralt maven repo bindes opp via jenkins credential (secret text)
                     string(variable: 'MAVEN_PUBLISH', credentialsId: 'MAVEN_DEPLOY_RELEASE_CANDIDATE'),
+                    usernamePassword( credentialsId: 'nexusdeploy',
+                        usernameVariable: 'ORG_GRADLE_PROJECT_uploadRepoUsername',
+                        passwordVariable: 'ORG_GRADLE_PROJECT_uploadRepoPassword'),
                 ]) {
-                    sh "gradle publish ${gradleOptions(this)} --init-script config/gradle/scripts/mavenPublish.gradle"
+                    sh "gradle publish ${gradleOptions(this)} -PuploadRepoUrl=${MAVEN_PUBLISH.split('@|//')[0]}"
                 }
             }
         }
@@ -95,8 +98,11 @@ pipeline {
                 withCredentials([
                     //for publisering til sentralt maven repo bindes opp via jenkins credential (secret text)
                     string(variable: 'MAVEN_PUBLISH', credentialsId: TAG_NAME.contains('-') ? 'MAVEN_DEPLOY_RELEASE_CANDIDATE': 'MAVEN_DEPLOY_RELEASES'),
+                    usernamePassword( credentialsId: 'nexusdeploy',
+                        usernameVariable: 'ORG_GRADLE_PROJECT_uploadRepoUsername',
+                        passwordVariable: 'ORG_GRADLE_PROJECT_uploadRepoPassword'),
                 ]) {
-                    sh "gradle publish -Psktools_versjon=${TAG_NAME} --init-script config/gradle/scripts/mavenPublish.gradle"
+                    sh "gradle publish ${gradleOptions(this)} -PuploadRepoUrl=${MAVEN_PUBLISH.split('@|//')[0]}"
                 }
             }
         }
