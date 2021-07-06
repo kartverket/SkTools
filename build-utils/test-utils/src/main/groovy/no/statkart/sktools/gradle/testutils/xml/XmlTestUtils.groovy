@@ -6,9 +6,6 @@ import org.xml.sax.SAXParseException
 
 /**
  * Resolver DTD filer uten å laste ned disse ifra internett ({@code systemId})
- *
- * @since 1.3 - ny grunnbok sprint 30
- * @author Leif Lislegård
  */
 class XmlTestUtils {
 
@@ -37,14 +34,7 @@ class XmlTestUtils {
     }
 
     public static XmlSlurper buildXmlSlurper(Map entityFiles) {
-        XmlSlurper slurper;
-        if (GroovySystem.version.startsWith('1.8.')) {
-            slurper = XmlSlurper.class.newInstance(true, true) //validation, allowDocTypeDeclaration=true for html documents
-        } else if (GroovySystem.version.startsWith('2.') || GroovySystem.version.startsWith('3.')) {
-            slurper = XmlSlurper.class.newInstance(true, true, true) //validation, allowDocTypeDeclaration=true for html documents
-        } else {
-            throw new RuntimeException("Legg til opprettelse av XmlSlurper for Groovy ${GroovySystem.version}")
-        }
+        XmlSlurper slurper = new XmlSlurper(true, true, true);
         slurper.setEntityResolver(new TestEntityResolver(entityFiles))
         slurper.setErrorHandler(new TestValidationReporter()); //removes warnings in output when validate=true
 
