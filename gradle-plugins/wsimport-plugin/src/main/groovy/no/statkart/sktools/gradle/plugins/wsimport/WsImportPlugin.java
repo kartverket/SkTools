@@ -19,8 +19,8 @@ import java.io.File;
  *   apply plugin: 'sktools-wsimport-plugin'
  *
  *   dependencies {
- *      jaxws 'com.sun.xml.ws:jaxws-tools:2.3.2'
- *      jaxws 'com.sun.xml.ws:wscompile:2.3.2' //gammelt koordinat
+ *      jaxws 'com.sun.xml.ws:jaxws-tools:2.3.5'
+ *      jaxws 'com.sun.xml.ws:wscompile:2.3.5' //gammelt koordinat
  *   }
  * </pre>
  *
@@ -33,11 +33,11 @@ public class WsImportPlugin implements Plugin<Project> {
 
         Configuration jaxwsConfiguration = project.getConfigurations().create("jaxws")
             .setDescription("JAX-WS tools")
-            .defaultDependencies(dependencies -> dependencies.add(project.getDependencies().create("com.sun.xml.ws:jaxws-tools:2.3.2")));
+            .defaultDependencies(dependencies -> dependencies.add(project.getDependencies().create("com.sun.xml.ws:jaxws-tools:2.3.5")));
 
         //default verdi for enkelt å komme igang / testing ...
         project.getConfigurations().getByName(JavaPlugin.COMPILE_ONLY_CONFIGURATION_NAME)
-            .defaultDependencies(dependencies -> dependencies.add(project.getDependencies().create("com.sun.xml.ws:jaxws-rt:2.3.2")));
+            .defaultDependencies(dependencies -> dependencies.add(project.getDependencies().create("com.sun.xml.ws:jaxws-rt:2.3.5")));
 
 
         final File genSrcDir = new File(project.getBuildDir(), "wsimport");

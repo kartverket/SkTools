@@ -4,8 +4,8 @@ plugins {
 }
 
 dependencies {
-    implementation group: 'com.sun.xml.ws', name: 'jaxws-tools', version: '2.3.3'
-    implementation group: 'io.github.classgraph', name: 'classgraph', version: '4.8.90'
+    implementation group: 'com.sun.xml.ws', name: 'jaxws-tools', version: '2.3.5'
+    implementation group: 'io.github.classgraph', name: 'classgraph', version: '4.8.114'
     implementation group: 'commons-cli', name: 'commons-cli', version: '1.4'
 }
 
