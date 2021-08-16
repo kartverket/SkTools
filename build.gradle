@@ -38,8 +38,8 @@ project.ext.libraries = [
 
         guava: 'com.google.guava:guava:28.1-jre',
 
-        jaxb_xjc : 'org.glassfish.jaxb:jaxb-xjc:2.3.2',
-        jaxb_rt : 'org.glassfish.jaxb:jaxb-runtime:2.3.2',
+        jaxb_xjc : 'org.glassfish.jaxb:jaxb-xjc:2.3.5',
+        jaxb_rt : 'org.glassfish.jaxb:jaxb-runtime:2.3.5',
 
         // Testing
         assertj: 'org.assertj:assertj-core:3.14.0',

@@ -34,7 +34,7 @@ import org.gradle.util.GUtil
  * </p>
  *
  * <br>
- * <p> Gammel sun koordinater er utgått og skal ikke brukes. Tidligere la man disse inn på classpath:
+ * <p> Tidligere Sun-koordinater er utgått og skal ikke benyttes. Før versjon 2.3.3 la man disse inn på classpath:
  * <pre>
  com.sun.xml.bind:jaxb-impl - Runtime
  com.sun.xml.bind:jaxb-core - Runtime

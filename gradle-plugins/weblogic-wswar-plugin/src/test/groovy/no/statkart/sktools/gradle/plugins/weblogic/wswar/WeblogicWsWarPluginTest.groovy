@@ -340,7 +340,7 @@ class WeblogicWsWarPluginTest extends TestKitBase {
             }
 
             dependencies {
-                compileOnly 'jakarta.xml.ws:jakarta.xml.ws-api:2.3.2'
+                compileOnly 'jakarta.xml.ws:jakarta.xml.ws-api:2.3.3'
                 weblogicProvided $WLS12_2_1_TOOLS
             }
         """)

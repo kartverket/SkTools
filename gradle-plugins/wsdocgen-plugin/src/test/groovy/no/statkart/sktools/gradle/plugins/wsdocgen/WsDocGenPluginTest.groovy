@@ -91,8 +91,8 @@ class WsDocGenPluginTest extends TestKitBase {
             }
 
             dependencies {
-                compileOnly 'com.sun.xml.ws:jaxws-rt:2.3.2'
-                otherCompileOnly 'com.sun.xml.ws:jaxws-rt:2.3.2'
+                compileOnly 'com.sun.xml.ws:jaxws-rt:2.3.5'
+                otherCompileOnly 'com.sun.xml.ws:jaxws-rt:2.3.5'
             }
 
         """)
@@ -216,7 +216,7 @@ class WsDocGenPluginTest extends TestKitBase {
             }
 
             dependencies {
-                compileOnly 'com.sun.xml.ws:jaxws-rt:2.3.2'
+                compileOnly 'com.sun.xml.ws:jaxws-rt:2.3.5'
             }
         """)
 
@@ -260,7 +260,7 @@ class WsDocGenPluginTest extends TestKitBase {
             }
 
             dependencies {
-                compileOnly 'com.sun.xml.ws:jaxws-rt:2.3.2'
+                compileOnly 'com.sun.xml.ws:jaxws-rt:2.3.5'
             }
         """)
 
@@ -295,7 +295,7 @@ class WsDocGenPluginTest extends TestKitBase {
                 maven { url = '${testProperties.MAVEN_REPO}' }
             }
             dependencies {
-                compileOnly 'com.sun.xml.ws:jaxws-rt:2.3.2'
+                compileOnly 'com.sun.xml.ws:jaxws-rt:2.3.5'
             }
         """)
 

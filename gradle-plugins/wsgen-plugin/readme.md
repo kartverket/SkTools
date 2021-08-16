@@ -30,8 +30,8 @@ Build script snippet for use in all versions:
 Configuration
 ------------
     dependencies {
-        jaxws 'com.sun.xml.ws:jaxws-tools:2.3.2' //default
-        jaxws 'com.sun.xml.ws:wscompile:2.3.2' //old (not recommended)
+        jaxws 'com.sun.xml.ws:jaxws-tools:2.3.5' //default
+        jaxws 'com.sun.xml.ws:wscompile:2.3.5' //old (not recommended)
     }
 
     war {
