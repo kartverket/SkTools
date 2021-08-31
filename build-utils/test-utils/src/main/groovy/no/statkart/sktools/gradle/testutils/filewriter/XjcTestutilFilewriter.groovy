@@ -15,22 +15,12 @@ class XjcTestutilFilewriter {
         writeSimpleSchemaImpl(targetFilePath, [])
     }
 
-    /**
-     * Skriver enkelt schema til fil der gdoc prefikset er koblet inn slik at gdoc dokumentasjon er aktivert.
-     * targetNamespace="http://sktools.statkart.no/test"
-     */
-    public static void writeSimpleSchemaWithGdoc(File targetFilePath) {
-        writeSimpleSchemaImpl(targetFilePath, [gdoc: true])
-    }
-
-
     private static void writeSimpleSchemaImpl(File file, def args) {
         def extensionBindingPrefixes = []
-        if (args['gdoc']) { extensionBindingPrefixes += 'gdoc' }
 
         file.parentFile.mkdirs()
-        file.withPrintWriter('ISO-8859-1') { writer ->
-            writer.print """<?xml version="1.0" encoding="ISO-8859-1"?>
+        file.withPrintWriter('UTF-8') { writer ->
+            writer.print """<?xml version="1.0" encoding="UTF-8"?>
                 <xs:schema
                         version="1.0"
                         elementFormDefault="qualified"
@@ -39,8 +29,6 @@ class XjcTestutilFilewriter {
                         xmlns:xs="http://www.w3.org/2001/XMLSchema"
                         xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
                         jaxb:version="2.1"
-
-                        xmlns:gdoc="http://grunnbok.statkart.no/tools/gdoc"
                         """
             if (!extensionBindingPrefixes.empty) {
                 writer.print('jaxb:extensionBindingPrefixes="' + extensionBindingPrefixes.join(',') + '"')
@@ -57,17 +45,25 @@ class XjcTestutilFilewriter {
                     <xs:complexType name="DocumentedSimpleType">
                         <xs:annotation>
                             <xs:appinfo>
-                                <gdoc:doc><![CDATA[ Ekstra dokumentasjon for typen.
-Merk at denne er multiline og definert som CDATA element.
-                                    ]]>
-                                </gdoc:doc>
+                                <jaxb:class>
+                                    <jaxb:javadoc><![CDATA[Dokumentasjon for type.
+Multiline.]]></jaxb:javadoc>
+                                </jaxb:class>
                             </xs:appinfo>
                         </xs:annotation>
 
                         <xs:complexContent>
                             <xs:extension base="SimpleType">
                                 <xs:sequence>
-                                    <xs:element name="documentedVar" type="xs:string"/>
+                                    <xs:element name="documentedVar" type="xs:string">
+                                        <xs:annotation>
+                                            <xs:appinfo>
+                                                <jaxb:property>
+                                                    <jaxb:javadoc><![CDATA[Dokumentasjon for felt.]]></jaxb:javadoc>
+                                                </jaxb:property>
+                                            </xs:appinfo>
+                                        </xs:annotation>
+                                    </xs:element>
                                 </xs:sequence>
                             </xs:extension>
                         </xs:complexContent>
@@ -78,6 +74,16 @@ Merk at denne er multiline og definert som CDATA element.
                             <xs:element name="item" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
                         </xs:sequence>
                     </xs:complexType>
+
+                    <xs:annotation>
+                        <xs:appinfo>
+                            <jaxb:schemaBindings>
+                                <jaxb:package>
+                                    <jaxb:javadoc><![CDATA[<body>Dokumentasjon av pakke.</body>]]></jaxb:javadoc>
+                                </jaxb:package>
+                            </jaxb:schemaBindings>
+                        </xs:appinfo>
+                    </xs:annotation>
 
                 </xs:schema>
             """

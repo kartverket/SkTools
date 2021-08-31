@@ -5,9 +5,7 @@
         targetNamespace="http://statkart.no/sktools/wsapi/v1/exception"
         xmlns="http://statkart.no/sktools/wsapi/v1/exception"
         xmlns:xs="http://www.w3.org/2001/XMLSchema"
-        xmlns:gdoc="http://grunnbok.statkart.no/tools/gdoc"
         xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
-        jaxb:extensionBindingPrefixes="gdoc"
         jaxb:version="2.1"
         >
 
@@ -37,14 +35,16 @@
     <xs:complexType name="ServiceFaultInfo">
         <xs:annotation>
             <xs:appinfo>
-                <gdoc:doc><![CDATA[
+                <jaxb:class>
+                    <jaxb:javadoc><![CDATA[
                         Generell feilmelding for alle hånterte feil ifra systemet.
 
                         Alle feil har en utfyllt feilkode og feilkodebeskrivelse.
 
-                        For klassifisering av feil, se {@link #category} feltet.
+                        For klassifisering av feil, se {@link #getCategory()}.
                     ]]>
-                </gdoc:doc>
+                    </jaxb:javadoc>
+                </jaxb:class>
             </xs:appinfo>
         </xs:annotation>
         <xs:sequence>
@@ -153,10 +153,10 @@
     <xs:complexType name="ExceptionDetail">
         <xs:annotation>
             <xs:appinfo>
-                <gdoc:doc><![CDATA[
-                        Informasjon om exception oppstått på server med hirarki, stacktrace mm.
-                    ]]>
-                </gdoc:doc>
+                <jaxb:class>
+                    <jaxb:javadoc><![CDATA[Maskinlesbar informasjon om exception.]]>
+                    </jaxb:javadoc>
+                </jaxb:class>
             </xs:appinfo>
         </xs:annotation>
         <xs:sequence>
@@ -200,22 +200,12 @@
     </xs:complexType>
 
     <xs:complexType name="StackTraceElementList">
-        <xs:annotation>
-            <xs:appinfo>
-                <gdoc:doc><![CDATA[  ]]></gdoc:doc>
-            </xs:appinfo>
-        </xs:annotation>
         <xs:sequence>
             <xs:element name="item" type="StackTraceElement" minOccurs="0" maxOccurs="unbounded"/>
         </xs:sequence>
     </xs:complexType>
 
     <xs:complexType name="StackTraceElement">
-        <xs:annotation>
-            <xs:appinfo>
-                <gdoc:doc><![CDATA[  ]]></gdoc:doc>
-            </xs:appinfo>
-        </xs:annotation>
         <xs:sequence>
             <xs:element name="declaringClass" type="xs:string"/>
             <xs:element name="methodName" type="xs:string"/>
@@ -227,7 +217,6 @@
     <xs:complexType name="ExceptionProperties">
         <xs:annotation>
             <xs:appinfo>
-                <gdoc:doc><![CDATA[  ]]></gdoc:doc>
                 <IsDictionary
                         xmlns="http://schemas.microsoft.com/2003/10/Serialization/">
                     true

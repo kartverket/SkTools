@@ -9,7 +9,6 @@ import org.gradle.testkit.runner.TaskOutcome
 import org.testng.annotations.Test
 
 import static no.statkart.sktools.gradle.testutils.filewriter.XjcTestutilFilewriter.writeSimpleSchema
-import static no.statkart.sktools.gradle.testutils.filewriter.XjcTestutilFilewriter.writeSimpleSchemaWithGdoc
 import static org.assertj.core.api.Assertions.*
 
 /**
@@ -70,18 +69,16 @@ class XjcPluginTest extends TestKitBase {
             .exists()
     }
 
-    /**
-     * Tester innkobling av gdoc
-     */
+
     @Test
-    void testGrunnbokDoc() {
-        //generates a simple source file with gdoc annotations
-        writeSimpleSchemaWithGdoc(file("src/main/xsd/simple.xsd"))
+    void testJavadoc() {
+        //generates a simple source file
+        writeSimpleSchema(file("src/main/xsd/simple.xsd"))
 
         //config
         writeFileUTF8("build.gradle", """\
             plugins {
-              id 'sktools.xjc'
+                id 'sktools.xjc'
             }
 
             repositories {
@@ -92,19 +89,25 @@ class XjcPluginTest extends TestKitBase {
                 main.xjc {
                     schema {
                         srcDir 'src/main/xsd'
-                        config {
-                            withGrunnbokDoc
-                        }
                     }
                 }
             }
         """)
 
-        testGradleBuild("genMainSchema")
+        //executes the gen task
+        testGradleBuild("compileJava")
 
-        assertThat(contentOf(file("build/xjc/main/mainSchema/no/statkart/sktools/test/DocumentedSimpleType.java")))
-            .contains("Ekstra dokumentasjon for typen.")
+        assertThat(file("build/xjc/main/mainSchema/no/statkart/sktools/test/package.html").text)
+            .contains("<body>Dokumentasjon av pakke.</body>")
+
+        assertThat(file("build/xjc/main/mainSchema/no/statkart/sktools/test/DocumentedSimpleType.java").text)
+            .contains("Dokumentasjon for type.")
+            .contains("Multiline")
+
+        assertThat(file("build/xjc/main/mainSchema/no/statkart/sktools/test/DocumentedSimpleType.java").text)
+            .contains("Dokumentasjon for felt.")
     }
+
 
     /**
      * Tester innkobling av listAdapter
@@ -181,8 +184,6 @@ class XjcPluginTest extends TestKitBase {
             .contains('"file://$MODULE_DIR$/build/xjc/main/mainSchema"')
     }
 
-
-
     @Test
     void canSpecifyGenOutputPath() {
         writeFileUTF8("build.gradle", '''\
@@ -208,6 +209,7 @@ class XjcPluginTest extends TestKitBase {
         assertThat(contentOf(file(rootProjectName() + ".iml")))
             .contains('"file://$MODULE_DIR$/generated/custom"') //customized placement
     }
+
 
     /**
      * Verifiserer at {@link org.gradle.api.file.SourceDirectorySet#srcDirs srcDirs} kan konfigureres.

@@ -22,7 +22,6 @@ import java.io.File;
  * <p>
  * Følgende plugin funksjonalitet er implementert:
  * <ul>
- *     <li>com.sun.tools.xjc.addon.statkart.GrunnbokDocPlugin
  *     <li>com.sun.tools.xjc.addon.statkart.ListGenPluginTest
  * </ul>
  *

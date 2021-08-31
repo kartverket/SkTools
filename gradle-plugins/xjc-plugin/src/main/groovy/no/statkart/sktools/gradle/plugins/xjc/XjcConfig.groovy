@@ -26,10 +26,6 @@ class XjcConfig {
      * For lovlige parametere se {@link com.sun.tools.xjc.addon.statkart.ListGenPlugin#parseArgument(com.sun.tools.xjc.Options, String[], int)
      */
     static final String LIST_ADAPTER = 'list_adapter';
-    /**
-     * For lovlige parametere se {@link com.sun.tools.xjc.addon.statkart.GrunnbokDocPlugin#parseArgument(com.sun.tools.xjc.Options, String[], int)
-     */
-    static final String GRUNNBOK_DOC = 'grunnbok_doc';
 
     public final String name;
 
@@ -90,46 +86,6 @@ class XjcConfig {
         return map;
     }
 
-    //metode for deklarativ konfigurasjon
-    @Internal
-    def getWithGrunnbokDoc() {
-        grunnbokDoc([:]);
-    }
-
-    //ikke eksponert
-    private Map grunnbokDoc(Map params) {
-        Map map = xjcOptions.get(GRUNNBOK_DOC);
-        if (map == null) {
-            xjcOptions.put(GRUNNBOK_DOC, map = new LinkedHashMap(params))
-        } else {
-            map.putAll(params);
-        }
-        return map;
-    }
-
-
-    @Internal
-    def getWithSkDoc() {
-        skDoc([:]);
-    }
-
-    def getWithSkDoc(Map params) {
-        skDoc(params);
-    }
-
-    //ikke eksponert
-    private Map skDoc(Map params) {
-
-        // Gjennbruker grunnbokDoc-implementasjon her inntill annen dokumentasjonsgenerering er på plass
-        // see {@link #GRUNNBOK_DOC}
-
-        HashMap grunnbokDocParams = new LinkedHashMap();
-        if (params.containsKey('from')) {
-            grunnbokDocParams.put('from', params.get('from'));
-            grunnbokDocParams.put('to', params.get('to'));
-        }
-        grunnbokDoc(grunnbokDocParams);
-    }
 
     XjcConfig configure(Closure closure) {
         return ConfigureUtil.configure(closure, this);

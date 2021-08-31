@@ -47,7 +47,6 @@ import org.gradle.util.GUtil
  *
  * Se dokumentasjon for <i>xjc-plugins</i> modul for bruk av utvidelser.
  * <ul>
- *  <li>{@code com.sun.tools.xjc.addon.statkart.GrunnbokDocPlugin}
  *  <li>{@code com.sun.tools.xjc.addon.statkart.ListGenPlugin}
  * </ul>
  *

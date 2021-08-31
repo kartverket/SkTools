@@ -32,11 +32,6 @@ class XjcGenerator {
             arg(line: "-no-header") //SKTOOLS-172: fjerner timestamp og JAXB versjon brukt fra generert kildekode
             s.xjcOptions.each { k, v ->
                switch (k) {
-                  case GRUNNBOK_DOC:
-                     Map params = s.xjcOptions.get(GRUNNBOK_DOC)
-                     def args = params.values().join(' ')
-                     arg(line: "-grunnbokDoc ${args}")
-                     break
                   case LIST_ADAPTER:
                      Map params = s.xjcOptions.get(LIST_ADAPTER)
                      def args = params.entrySet().collect { "${it.key}=${it.value}" }.join(' ')

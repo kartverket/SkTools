@@ -49,10 +49,3 @@ Schema can be augmented with list adapter of choice:
             ...
             withListAdapter 'custom.implemented.ListAdapter'
         }
-
-### Grunnbok Doc
-
-        schema {
-            ...
-            withGrunnbokDoc
-        }
