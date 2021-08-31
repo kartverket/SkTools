@@ -5,7 +5,6 @@ include ':build-utils:sql-parser'
 include ':build-utils:db-tools'
 include ':build-utils:wsdlgen'
 include ':build-utils:wsdocgen'
-include ':build-utils:xjc-plugins'
 
 include ':gradle-plugins'
 include ':gradle-plugins:dbtools-plugin'

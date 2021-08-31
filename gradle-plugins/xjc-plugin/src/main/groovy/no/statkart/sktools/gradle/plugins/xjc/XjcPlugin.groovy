@@ -7,10 +7,7 @@ import org.gradle.api.NamedDomainObjectFactory
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.DependencySet
-import org.gradle.api.artifacts.ModuleDependency
-import org.gradle.api.file.FileCollection
 import org.gradle.api.internal.HasConvention
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.plugins.JavaPluginConvention
@@ -45,10 +42,6 @@ import org.gradle.util.GUtil
  *
  * For hvert {@code SourceSet} plugges det inn mulighet for ekstra konfigurasjon. Se {@link XjcSourceSetConvention }
  *
- * Se dokumentasjon for <i>xjc-plugins</i> modul for bruk av utvidelser.
- * <ul>
- *  <li>{@code com.sun.tools.xjc.addon.statkart.ListGenPlugin}
- * </ul>
  *
  * @since 1.0
  * @author Thor Åge Eldby
@@ -72,7 +65,12 @@ class XjcPlugin implements Plugin<Project> {
         final Configuration configuration = createConfiguration(project);
         configureSourceSets(project, configuration)
 
-        configureJaxbXjcDependencies(project, configuration);
+        project.getTasks().withType(XjcTask.class).configureEach(new Action<XjcTask>() {
+            @Override
+            void execute(XjcTask task) {
+                task.setClasspath(configuration)
+            }
+        });
     }
 
     /**
@@ -163,49 +161,6 @@ class XjcPlugin implements Plugin<Project> {
         })
         configuration.extendsFrom(compileOnly)
         return configuration;
-    }
-
-    /**
-     * xjc-plugin and jaxb configuration
-     */
-    private static def configureJaxbXjcDependencies(final Project project, final Configuration jaxbConfiguration) {
-        final FileCollection processorConfiguration = processorClasspathForXjcExtension(project);
-
-        project.getTasks().withType(XjcTask.class, new Action<XjcTask>() {
-            @Override
-            void execute(XjcTask task) {
-                task.setClasspath(jaxbConfiguration.plus(processorConfiguration))
-            }
-        })
-    }
-
-    private static FileCollection processorClasspathForXjcExtension(Project project) {
-        Properties testProperties = injectedTestProperties()
-        if (testProperties != null) {
-            def classpath = testProperties.getProperty("sktools_xjc_classpath")
-            // En trenger classpath til egen-utvidelser av xjc (xjc plugins)
-            // disse ligger i prosjektet no.statkart.sktools:xjc-plugins
-            // avhengighet til jaxb og jaxb-xjc legges på fra annen konfigurasjon
-            return project.files(classpath.split(File.pathSeparator)) //NB: for GradleRunner i debug mode
-        }
-        final def buildscript = project.getBuildscript().getRepositories().isEmpty() ? project.getRootProject().getBuildscript() : project.getBuildscript()
-        return buildscript.getConfigurations().detachedConfiguration(wsDocGenDependency(project))
-    }
-
-
-    private static Dependency wsDocGenDependency(Project project) {
-        ModuleDependency moduleDependency = (ModuleDependency) project.getDependencies().create(pluginProperties.getProperty("sktools_xjc_extensions"))
-        moduleDependency.setTransitive(false) //ikke transitiv da en ønsker at configuration JAXB_CONFIGURATION_NAME skal diktere xjb/jaxb versjon
-        return moduleDependency;
-    }
-
-    /**
-     * Test properties når man kjører tester, ellers null.
-     */
-    static Properties injectedTestProperties() {
-        InputStream stream = XjcPlugin.getResourceAsStream('/XjcPluginTest.properties')
-        //dersom denne finnes på classpath kjører man tester
-        return stream == null ? null : GUtil.loadProperties(stream);
     }
 
 }

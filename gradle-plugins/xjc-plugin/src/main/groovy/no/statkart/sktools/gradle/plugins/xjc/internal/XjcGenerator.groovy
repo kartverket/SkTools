@@ -31,19 +31,10 @@ class XjcGenerator {
          def antTask = ant.xjc(destDir: getOutputDirectory(), extension: !s.xjcOptions.isEmpty()) {
             arg(line: "-no-header") //SKTOOLS-172: fjerner timestamp og JAXB versjon brukt fra generert kildekode
             s.xjcOptions.each { k, v ->
-               switch (k) {
-                  case LIST_ADAPTER:
-                     Map params = s.xjcOptions.get(LIST_ADAPTER)
-                     def args = params.entrySet().collect { "${it.key}=${it.value}" }.join(' ')
-                     arg(line: "-listgen ${args}")
-                     break
-                  default:
-                     arg(line: "-${k}")
-                     if (!v.isEmpty()) {
-                        arg(line: v)
-                     }
-                     break
-               }
+                arg(line: "-${k}")
+                if (!v.isEmpty()) {
+                    arg(line: v)
+                }
             }
             getSource().addToAntBuilder(ant, "schema", FileCollection.AntType.FileSet)
          }

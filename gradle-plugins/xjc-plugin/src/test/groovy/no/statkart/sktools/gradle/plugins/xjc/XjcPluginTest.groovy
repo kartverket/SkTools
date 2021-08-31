@@ -110,53 +110,6 @@ class XjcPluginTest extends TestKitBase {
 
 
     /**
-     * Tester innkobling av listAdapter
-     */
-    @Test
-    void testListAdapter() {
-        //generates a simple source file
-        writeSimpleSchema(file("src/main/xsd/simple.xsd"))
-
-        writeFileUTF8("src/adaper/java/some_adapter/Fqn.java",
-            "package some_adapter;\n public class Fqn { }")
-
-
-        writeFileUTF8("build.gradle", """\
-            plugins {
-              id 'sktools.xjc'
-            }
-
-            repositories {
-                maven { url = '${testProperties.MAVEN_REPO}' }
-            }
-
-            sourceSets {
-                main.java.srcDir "src/adaper/java"
-                main.xjc {
-                    schema {
-                        srcDir 'src/main/xsd'
-                        config {
-                            withListAdapter 'some_adapter.Fqn'
-                        }
-                    }
-                }
-            }
-        """)
-
-
-        //executes builds the main source
-        BuildResult buildResult = testGradleBuild("classes")
-        //asserts the results
-        assertThat(buildResult.task(':genMainSchema').getOutcome()).isEqualTo(TaskOutcome.SUCCESS)
-
-        assertThat(contentOf(file("build/xjc/main/mainSchema/no/statkart/sktools/test/StringList.java")))
-            .contains(
-                'import some_adapter.Fqn;'
-                , 'extends Fqn'
-            )
-    }
-
-    /**
      * Verifiserer at {@link org.gradle.api.file.SourceDirectorySet#srcDir srcDir} kan konfigureres.
      * Regresjonsstester feil funnet i MAT-9900 der ideaModule task feiler pga feil oppsett av {@link SourceSet}
      */

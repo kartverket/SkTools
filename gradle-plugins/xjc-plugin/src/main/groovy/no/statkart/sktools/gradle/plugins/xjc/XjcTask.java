@@ -19,16 +19,6 @@ import java.io.File;
  * Eksekverer XJC task via ant.
  * Kobler inn evt plugin funksjonalitet i hht konfigurasjon av sourceSet. Se {@link XjcConfig } for detaljer.
  *
- * <p>
- * Følgende plugin funksjonalitet er implementert:
- * <ul>
- *     <li>com.sun.tools.xjc.addon.statkart.ListGenPluginTest
- * </ul>
- *
- *
- * Funksjonalitet implementeres i :build-utils:xjc-plugins modul
- *
- *
  * @since 1.0
  * @author Thor Åge Eldby
  * @author Leif Lislegård

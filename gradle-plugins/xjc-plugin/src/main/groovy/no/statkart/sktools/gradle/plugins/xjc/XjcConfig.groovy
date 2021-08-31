@@ -7,7 +7,6 @@ import org.gradle.api.file.FileTree
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.SourceSet
 import org.gradle.util.ConfigureUtil
 
@@ -22,10 +21,6 @@ import java.nio.file.Paths
  * @author Leif Lislegård
  */
 class XjcConfig {
-    /**
-     * For lovlige parametere se {@link com.sun.tools.xjc.addon.statkart.ListGenPlugin#parseArgument(com.sun.tools.xjc.Options, String[], int)
-     */
-    static final String LIST_ADAPTER = 'list_adapter';
 
     public final String name;
 
@@ -57,33 +52,6 @@ class XjcConfig {
     Provider<File> defaultOutputPath(SourceSet sourceSet) {
         def callable = { project.file(Paths.get(project.getBuildDir() as String, "xjc", sourceSet.getName(), name)) }
         return project.provider(callable)
-    }
-
-
-    //todo: endre default fqn i en versjon etter 1.0?
-    //metode for deklarativ konfigurasjon
-    @Internal
-    def getWithListAdapter() {
-        listAdapter([baseClass:'no.statkart.grunnbok.skif.util.ListIterable']);
-    }
-
-
-    void withListAdapter(String fqn, String getterMethodName=null) {
-        listAdapter([baseClass:fqn])
-        if (getterMethodName != null) {
-            listAdapter([method:getterMethodName])
-        }
-    }
-
-    //ikke eksponert
-    private Map listAdapter(Map params) {
-        Map map = xjcOptions.get(LIST_ADAPTER);
-        if (map == null) {
-            xjcOptions.put(LIST_ADAPTER, map = new HashMap(params))
-        } else {
-            map.putAll(params);
-        }
-        return map;
     }
 
 

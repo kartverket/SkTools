@@ -17,7 +17,6 @@ gradlePlugin {
 
 def pluginPropertiesDir = "$buildDir/plugin-properties"
 def pluginProperties = [
-        sktools_xjc_extensions : "no.statkart.sktools:xjc-plugins:${version}" as String,
         default_xjc_implementation : libraries.jaxb_xjc as String,
         default_jaxb_ri_implementation : libraries.jaxb_rt as String,
 ] as Properties
@@ -26,23 +25,6 @@ dependencies {
     testImplementation project(':build-utils:test-utils')
 }
 
-// inject av verktøy i testkjøring
-task testProperties {
-    def outputDir = file("$buildDir/$name")
-
-    def configuration = project.configurations.detachedConfiguration(project.dependencies.project(path: ':build-utils:xjc-plugins'))
-    inputs.files configuration
-    outputs.dir outputDir
-
-    doLast {
-        def properties = [
-            sktools_xjc_classpath: configuration.asPath
-        ]
-        outputDir.mkdirs()
-        org.gradle.util.GUtil.saveProperties(properties as Properties, file("$outputDir/XjcPluginTest.properties"))
-    }
-}
-pluginUnderTestMetadata.pluginClasspath.from files(testProperties)
 pluginUnderTestMetadata.pluginClasspath.from sourceSets.main.output
 
 

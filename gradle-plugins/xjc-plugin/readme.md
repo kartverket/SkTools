@@ -42,10 +42,3 @@ Configuration
         compileOnly 'org.glassfish.jaxb:jaxb-runtime:2.3.5' //default
     }
 
-### List adapter
-Schema can be augmented with list adapter of choice:
-
-        schema {
-            ...
-            withListAdapter 'custom.implemented.ListAdapter'
-        }
