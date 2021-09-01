@@ -7,12 +7,15 @@ indent_size = 4
 indent_style = space
 trim_trailing_whitespace = true
 
-[*.{java,groovy}]
+[*.java]
 ij_java_use_single_class_imports = true
 ij_java_class_count_to_use_import_on_demand = 9999
 ij_java_names_count_to_use_import_on_demand = 999
 ij_java_layout_static_imports_separately = true
 
+[{*.gradle,*.groovy,Jenkinsfile}]
+ij_groovy_use_single_class_imports = true
+ij_groovy_class_count_to_use_import_on_demand = 9999
 
 [*.properties]
 #latin1 alias for ISO-8859-1
