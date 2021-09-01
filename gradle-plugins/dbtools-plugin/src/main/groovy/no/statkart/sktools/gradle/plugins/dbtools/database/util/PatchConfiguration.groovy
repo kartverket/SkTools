@@ -2,12 +2,19 @@ package no.statkart.sktools.gradle.plugins.dbtools.database.util
 
 import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsConvention
 import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsPlugin
+import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.AssertPatchversionTask
+import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.DatabasePatchTask
+import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.DefineLatestPatchVersionTask
+import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.DefinePatchversionTask
+import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.IndexesInSyncWithPatchTask
+import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.PatchTask
+import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.PrintPatchversionTask
+import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.SyncPatchTask
 import no.statkart.sktools.utils.databasepatcher.exception.ConfigurationException
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.file.FileCollection
-import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.*
 import org.gradle.util.GUtil
 
 import static no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractDatabaseConvention.capitalize
