@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <xs:schema
         version="1.0"
         targetNamespace="http://statkart.no/sktools/wsapi/v1/domain/basistyper"
@@ -8,7 +8,7 @@
 
     <!-- ========================================================= -->
     <!-- Basisklasser:                                             -->
-    <!-- Frittstående klasser og klasser på tvers av subdomains    -->
+    <!-- FrittstÃ¥ende klasser og klasser pÃ¥ tvers av subdomains    -->
     <!-- ========================================================= -->
 
     <xs:complexType name="Timestamp">
@@ -160,7 +160,7 @@
         <xs:complexContent>
             <xs:extension base="basistyperns:SkToolsBubbleObject">
                 <xs:sequence>
-                    <!-- TODO oppdateringsdato skal egentlig ikke være nillable, men løser et problem jf. GBOK-2406 -->
+                    <!-- TODO oppdateringsdato skal egentlig ikke vÃ¦re nillable, men lÃ¸ser et problem jf. GBOK-2406 -->
                     <xs:element name="oppdateringsdato" type="basistyperns:Timestamp" nillable="true"/>
                 </xs:sequence>
             </xs:extension>
@@ -180,7 +180,7 @@
         <xs:complexContent>
             <xs:extension base="basistyperns:SkToolsObjectWithVersion">
                 <xs:sequence>
-                    <!-- TODO sluttdato skal egentlig ikke være nillable, men løser et problem jf. GBOK-2406 -->
+                    <!-- TODO sluttdato skal egentlig ikke vÃ¦re nillable, men lÃ¸ser et problem jf. GBOK-2406 -->
                     <xs:element name="sluttdato" type="basistyperns:Timestamp" nillable="true"/>
                     <xs:element name="oppdateringsBruker" type="xs:string" nillable="true"/>
                     <xs:element name="incrementalVersion" type="xs:long" nillable="false"/>
@@ -201,7 +201,6 @@
         <xs:complexContent>
             <xs:extension base="basistyperns:EntityComponent">
                 <xs:sequence>
-                    <!-- TODO oppdateringsdato og sluttdato skal egentlig ikke være nillable, men løser et problem jf. GBOK-2406 -->
                     <xs:element name="oppdateringsdato" type="basistyperns:Timestamp" nillable="true"/>
                     <xs:element name="sluttdato" type="basistyperns:Timestamp" nillable="true"/>
                 </xs:sequence>
