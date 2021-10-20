@@ -26,16 +26,22 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class SKGenWSDL {
-    public static void main(String[] args) throws IOException, ParseException {
+    /**
+     * Environment variabel for lang classpath.
+     */
+    public static final String WEB_SERVICE_CLASSPATH = "WEB_SERVICE_CLASSPATH";
+
+    public static void main(String... args) throws IOException, ParseException {
         Options options = new Options()
             .addOption(
                 Option.builder("cp")
                     .longOpt("classpath")
                     .hasArg()
                     .desc("Classpath for web services")
-                    .required()
+                    .required(false)
                     .build()
             )
             .addOption(
@@ -50,7 +56,10 @@ public class SKGenWSDL {
         CommandLine commandLine = new DefaultParser()
             .parse(options, args);
 
-        String classpath = commandLine.getOptionValue("cp");
+        String classpath = Objects.toString(System.getenv(WEB_SERVICE_CLASSPATH), commandLine.getOptionValue("cp"));
+        if (classpath == null) {
+            throw new IllegalArgumentException(String.format("Classpath not set. Use parameter -%s <value> or environment variable %s.", "cp", WEB_SERVICE_CLASSPATH));
+        }
         Path destination = Paths.get(commandLine.getOptionValue("d"));
 
         DatabindingFactory databindingFactory = DatabindingFactory.newInstance();

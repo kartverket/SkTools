@@ -6,7 +6,6 @@ import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.Provider;
-import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.CompileClasspath;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
@@ -48,12 +47,11 @@ public class WsdlGenTask extends DefaultTask {
     public void exec() {
         Project project = getProject();
         project.javaexec(spec -> {
-            spec.setClasspath(DependencyUtil.getWsdlGenClasspath(project));
+            spec.classpath(DependencyUtil.getWsdlGenClasspath(project));
             spec.setMain("no.statkart.sktools.utils.wsdlgen.SKGenWSDL");
-            spec.args(
-                    "-d", destinationDirectory.get().getAsFile().toString(),
-                    "-cp", compileClasspath.getAsPath()
-            );
+            spec.args("-d", destinationDirectory.get().getAsFile());
+            getLogger().debug("Using WEB_SERVICE_CLASSPATH=\n" + compileClasspath.getAsPath());
+            spec.environment("WEB_SERVICE_CLASSPATH", compileClasspath.getAsPath());
         });
     }
 }
