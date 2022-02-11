@@ -18,7 +18,7 @@ pipeline {
 
     tools {
         gradle "Gradle $GRADLE_BASELINE" //kompilerer artefakter mot denne API-versjonen
-        jdk 'Java 12 Latest' //spesifisert java versjon for bygging av release
+        jdk 'Java 11 Latest' //spesifisert java versjon for bygging av release
     }
 
     stages {

@@ -16,7 +16,7 @@ Se [jenkinsfile for detaljert oversikt over testede versjoner](Jenkinsfile)
 
 UTF-8 for all kildekode
 
-JDK 13 / JDK 1.8
+JDK 11+ / JDK 1.8
 
 
 
