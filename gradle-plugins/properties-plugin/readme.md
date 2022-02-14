@@ -1,7 +1,17 @@
-Properties Gradle Plugin
+[Properties Gradle Plugin](src/main/java/no/statkart/sktools/gradle/plugins/properties/PropertiesPlugin.java)
 ------------------
 
 Tool for convenient handling of properties. 
+
+Activating this plugin adds an [`propertyUtils` project extension](src/main/java/no/statkart/sktools/gradle/plugins/properties/extension/PropertyUtils.java).
+
+Changelog
+------------
+## Unreleased Changes
+
+## 1.3.0 Release Notes
+ * [SKTOOLS-44] Nytt forenklet plugin (splittet ut fra tidligere 'filterproperties-plugin')
+
 
 Installation
 ------------
