@@ -15,6 +15,10 @@ import java.util.function.BiConsumer
  */
 abstract class AbstractSQLTask extends ConventionTask {
 
+    /**
+     * Bestemmer om gradle skal feile ved feil eller ikke.
+     * <p>Defaultverdi: true
+     */
     @Internal
     boolean failOnError = !project.gradle.startParameter.isContinueOnFailure()
 

@@ -23,6 +23,9 @@ import java.nio.file.Paths
 class PatchTask extends DatabasePatchTask {
     protected static final Logger logger = Logging.getLogger(PatchTask.class);
 
+    /**
+     * Bestemmer at en og èn patchblokk blir påført per eksekvering.
+     */
     @InputFile
     File sqlFile
 
