@@ -17,14 +17,36 @@ import java.nio.charset.StandardCharsets
 class WebstartTask extends ConventionTask {
     protected static final Logger logger = Logging.getLogger(WebstartTask.class);
 
+    /**
+     * Disse konfigureres opp med jnlp(Closure) metoden med samme syntaks som i på plugin-nivå.
+     */
     private List<JnlpConfiguration> jnlpConfigurations = new ArrayList<JnlpConfiguration>();
+    /**
+     * Jar-filene som utgjør applikasjonen.
+     * Merk at det er omskrevne varianter av filnavnene som puttes i jnlp-filene.
+     */
     private final ConfigurableFileCollection jarResources;
+    /**
+     * Den jar-fil som skal få main="true" på seg i jnlp.fil.
+     * Dette skal bare være 0 eller 1 fil, men er en FileCollection for å kunne resolves med avhengighetsforhold under kjøring.
+     */
     private final ConfigurableFileCollection mainJar;
 
+    /**
+     * 	Der hvor de genererte jnlp-filene skal ligge inntil de kopieres et annet sted.
+     * 	Standardverdi er "${buildDir}/webstart".
+     */
     private File destinationDir;
 
+    /**
+     * Katalogen jar-filene skal ligge i relativt til jnlp-fil. Standardverdien er "lib".
+     */
     String libDir = "lib";
 
+    /**
+     * Unikt vedheng som skal legges på versjonsnummeret slik at det blir opprinneligVersjon + "-" + digest.
+     * Dersom ikke satt gjøres det ikke noe med versjonsnummeret til jar-ene.
+     */
     private String digest = null;
 
     WebstartTask() {

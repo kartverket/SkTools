@@ -44,9 +44,21 @@ public class JarSigner extends ConventionTask {
      */
     private Map<FileHashIdent, Map<String, FileHashIdent>> signedArtifactsForCertificates;
 
+    /**
+     * Angir keystore-fil som inneholder sertifikatet. Dersom ikke oppgitt, signeres ikke filene, men sendes tvert igjennom uendret.
+     */
     private File certificateFile;
+    /**
+     * Passord til keystore-fil. Ignoreres dersom certificateFile ikke er angitt, ellers påkrevd.
+     */
     private String password;
+    /**
+     * Aliaset som identifiserer sertifikatet. Ignoreres dersom certificateFile ikke er angitt, ellers påkrevd.
+     */
     private String alias;
+    /**
+     * Algoritme for hash-kode. Standard algoritme for jarsigner er "SHA-256"; denne blir brukt dersom null.
+     */
     private String digestAlgorithm;
     /**
      * Keystore type. Standard verdi avhenger av JDK og security properties.
@@ -61,8 +73,14 @@ public class JarSigner extends ConventionTask {
      */
     private String storetype;
 
+    /**
+     * 	Attributter som skal legges på manifestene før signering.
+     */
     private final Map<String, String> manifestAttributes = new LinkedHashMap<>();
 
+    /**
+     * Angir jar-filene som skal signeres. Evalueres på samme måte som project.files(...), og evalueres lazy.
+     */
     private final ConfigurableFileCollection jarFilesToSign = getProject().files();
     private final FileTree signedJarFiles;
     private final File signedJarFilesDir;
