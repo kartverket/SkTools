@@ -57,11 +57,26 @@ public class CustomWsdlTask extends DefaultTask {
     protected static final Logger logger = Logging.getLogger(CustomWsdlTask.class);
     protected static final String xsdNamespace = "http://www.w3.org/2001/XMLSchema";
 
+    /**
+     * 	Legger til håndskrevne enkeltfiler eller kataloger med håndskrevne filer
+     */
     private final List<Object> originalSchemaFiles = new ArrayList<>();
+    /**
+     * Legger til håndskrevne enkeltfiler eller kataloger med genererte filer
+     */
     private final List<Object> generatedWsdlAndSchemaFiles = new ArrayList<>();
+    /**
+     * Angir namespaces som skal med (ingen betyr alle)
+     */
     private final Set<String> includedNamespaces = new HashSet<>();
+    /**
+     * 	Angir namespaces som ikke skal med (av de som er included)
+     */
     private final Set<String> excludedNamespaces = new HashSet<>();
 
+    /**
+     * Hvor output skal plasseres
+     */
     private File destinationDir;
 
     @InputFiles
