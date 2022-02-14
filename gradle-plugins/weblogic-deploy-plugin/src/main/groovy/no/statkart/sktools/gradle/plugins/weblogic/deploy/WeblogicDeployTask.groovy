@@ -16,12 +16,21 @@ import org.gradle.process.JavaExecSpec
 class WeblogicDeployTask extends AbstractWeblogicDeployTask {
     protected static final Logger logger = Logging.getLogger(WeblogicDeployTask.class)
 
+    /**
+     * 	Artefaktet som skal lastes opp. Evalueres lazy per project.files(...), men kan bare være én fil.
+     */
     @InputFiles
     Object file
 
+    /**
+     * Om artefaktet skal lastes opp til tjeneren. Standardverdi er true
+     */
     @Input
     boolean upload = true
 
+    /**
+     * Om deploymenten skal tolkes som et JEE-bibliotek. Standardverdien er false.
+     */
     @Input
     boolean library = false
 

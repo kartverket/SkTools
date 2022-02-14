@@ -25,13 +25,22 @@ import org.gradle.process.JavaExecSpec
  */
 abstract class AbstractWeblogicDeployTask extends ConventionTask {
 
+    /**
+     * Classpath for WebLogic
+     */
     @InputFiles
     FileCollection classpath
 
 
+    /**
+     * Navn på deployment
+     */
     @Input
     String deploymentName
 
+    /**
+     * Targets det skal deployes til (navn på servere eller clustere)
+     */
     @Optional
     @Input
     String getTargets() {
@@ -39,18 +48,34 @@ abstract class AbstractWeblogicDeployTask extends ConventionTask {
     }
     String targets
 
+    /**
+     * URL til AdminServer
+     */
     @Input
     String url
+    /**
+     * Administratorbrukernavn for WebLogic
+     */
     @Input
     String username
+    /**
+     * Administratorpassord for WebLogic
+     */
     @Input
     String password
 
-
+    /**
+     * Timeout for WebLogic-verktøyet.
+     * PS: En har en navnekonflikt her med nyere versjoner av Gradle.
+     *
+     */
     @Input
     @Optional
     String timeout
 
+    /**
+     * Om tasken skal feile bygget om den feiler. Standardverdi er false.
+     */
     @Input
     boolean failOnError = false
     @Input
