@@ -15,13 +15,22 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
+/**
+ * Genererer java-kildekode for JAXWS stubber fra WSDL filer.
+ */
 class WsImportTask extends SourceTask {
+    /**
+     * Classpath som inneholder wsimport Ant-task
+     */
     @Classpath
     FileCollection jaxwsClasspath
 
     @OutputDirectory
     File destinationDir
 
+    /**
+     * Angir hvilken pakke alle exceptions skal samles i. Gjør ingenting hvis ingenting er angitt.
+     */
     private String packageOrPathString
 
     private PatternSet exceptionFilePatternSet = new PatternSet(includes: ['**/*Exception.java'])
@@ -35,7 +44,7 @@ class WsImportTask extends SourceTask {
      * Bruker UTF-8 som standard fordi:
      * <ol>
      *     <li>UTF-8 er gyldig windows-1252, men windows-1252 er ikke gyldig UTF-8</li>
-     *     <li>Den faktiske koden skal ikke innholde ikke-ASCII-tegn siden vi ungår det i API-ene</li>
+     *     <li>Den faktiske koden skal ikke inneholde ikke-ASCII-tegn siden vi unngår det i API-ene</li>
      * </ol>
      */
     @Input
