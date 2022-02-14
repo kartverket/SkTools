@@ -1,4 +1,4 @@
-WsGen Gradle Plugin
+[WsGen Gradle Plugin](src/main/groovy/no/statkart/sktools/gradle/plugins/wsgen/WsdlGenPlugin.java)
 ------------------
 
 This plugin generates WSDL files from java sources implementing JAX-WS web services.
@@ -20,11 +20,39 @@ Build script snippet for use in all versions:
         }
         dependencies {
             classpath 'no.statkart.sktools.gradle:wsgen-plugin:1.5'
-            // or 
+            // or
             classpath 'no.statkart.sktools.gradle:gradle-plugins:1.5'
         }
     }
     apply plugin: 'sktools-wsgen-plugin'
+
+
+Changelog
+------------
+## Unreleased Changes
+
+## 1.4.0 Release Notes
+* [SKTOOLS-156, SKTOOLS-159] Etablert plugin
+
+
+Bruk
+----
+Pluginet krever ingen konfigurasjon i seg selv utover at en JAX-WS tools-implementasjon må ligge i `jaxws`-configuration,
+men gjør heller ikke noen nytte av seg selv heller.
+Det krever dog at alle tjenestene den skal prosessere har navn som ender med WSBean.
+Dersom noen klasser med slik navn ikke skal prosesseres, så kan man legge på exclude på genWsdl-tasken.
+
+War-pluginet blir trukket inn av dette pluginet, og det er den som gjør mesteparten av jobben.
+I likhet med andre tilfeller hvor vi lager war-filer direkte, så må vi, dersom war-filen skal inn i en ear-fil,
+huske å gjøre de krumspringene som skal til for at war-filen ikke inneholder alle avhengigheter som vi senere legger i ear-fil.
+I tillegg må war-fil eksponeres gjennom en konfigurasjon ear-prosjektet kan trekke inn.
+
+Man må selv gjøre det som trengs for sende WSDL-ene fra `genWsdls` dit man har bruk for dem.
+
+## Dependency håndtering
+Pluginen legger til en konfigurasjon med navn `jaxws`.
+Her må det ligge noe som inneholder implementasjon av Ant-tasken wsgen. Dersom ikke noe deklareres så legges det
+ved en nyere versjon av `jaxws-tools`.
 
 
 Configuration
@@ -33,7 +61,7 @@ Configuration
         jaxws 'com.sun.xml.ws:jaxws-tools:2.2.10' //default
         jaxws 'com.sun.xml.ws:wscompile:2.2.10' //old (not recommended)
     }
-     
+
     war {
         into ('WEB-INF') {
             from tasks.genWsdls
