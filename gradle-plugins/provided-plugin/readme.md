@@ -1,7 +1,21 @@
-Provided Gradle Plugin
+[Provided Gradle Plugin](src/main/java/no/statkart/sktools/gradle/plugins/provided/ProvidedPlugin.java)
 ------------------
 
-Managing dependencies like mavens "provided" scope.
+Managing dependencies analogue to "provided" scope in Maven.
+
+Adds a `configurations.provided` that extends `compileOnly` and `testImplementation`.
+
+
+Changelog
+------------
+## Unreleased Changes
+
+## 1.3.1 Release Notes
+ * SKTOOLS-137 Configuration for single-vm
+
+## 1.2.0 Release Notes
+* [SKTOOLS-54] Etablert plugin
+
 
 Installation
 ------------
