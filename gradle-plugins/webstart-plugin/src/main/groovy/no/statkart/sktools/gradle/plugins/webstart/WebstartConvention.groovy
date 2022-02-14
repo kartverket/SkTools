@@ -224,25 +224,49 @@ class SigningConfiguration {
 class JnlpConfiguration implements Named {
     protected final transient Project project
 
+    /**
+     * Navn på denne jnlp-filen.
+     */
     @Input
     String jnlpFilename;
+    /**
+     * Kort navn på klienten.
+     */
     @Input
     @Optional
     String title;
+    /**
+     * Navn på utgiver.
+     */
     @Input
     @Optional
     String vendor;
+    /**
+     * Litt lengre beskrivelse av hva klienten er/gjør.
+     */
     @Input
     @Optional
     String description;
+    /**
+     * Hjemmesiden til klienten/utgiveren.
+     */
     @Input
     @Optional
     String homepage = null; //optional
+    /**
+     * 	Versjonsnummeret til klienten. (Valgfri, men anbefalt.)
+     */
     @Input
     @Optional
     String version = null; //optional
     protected ApplicationConfiguration application = null;  //might be null
+    /**
+     * 	Konfigurerer øvrige ressurser.
+     */
     protected final List<ResourcesConfiguration> resourcesList = new ArrayList<ResourcesConfiguration>();
+    /**
+     * Definerer en Closure for tukling med jnlp-xml til slutt.
+     */
     private transient Closure withXml;
 
     JnlpConfiguration(Project project) {
@@ -360,6 +384,9 @@ class JnlpConfiguration implements Named {
 class ApplicationConfiguration {
     protected final transient JnlpConfiguration jnlp;
 
+    /**
+     * Navn på klassen som skal kjøres.
+     */
     protected String mainClass;
 
     /**
@@ -407,7 +434,16 @@ class ApplicationConfiguration {
 class ResourcesConfiguration {
     protected final transient JnlpConfiguration jnlp;
 
+    /**
+     * Legger til system properties i jnlp-fil.
+     * (Frarådes, da dette gjør at jnlp-filen ikke anses som sikker, med mindre den er signert, noe dette plugin-et ikke støtter.)
+     */
     protected final Map<String, Object> systemProperties = new LinkedHashMap();
+    /**
+     * Deklarerer gyldige runtimes.
+     * @see #javaRuntime
+     * @see #javaFxRuntime
+     */
     protected final List<RuntimeConfiguration> runtimes = new ArrayList<JavaRuntimeConfiguration>();
 
     ResourcesConfiguration(JnlpConfiguration jnlp) {

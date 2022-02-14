@@ -37,7 +37,7 @@ Changelog
 ## 5.6 Release Notes
 * [SKTOOLS-226] Fjerne bruk av deprecated `compile` og `runtime` konfigurasjoner
 
-## 2.0.0 Release Notes
+## 1.4.0 Release Notes
 * [SKTOOLS-121] Fjernet overflødig WeblogicWarTask
 
 ## 1.2.0 Release Notes
