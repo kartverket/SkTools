@@ -12,7 +12,9 @@ import org.gradle.process.JavaExecSpec
 @SuppressWarnings("UnnecessaryQualifiedReference")
 class SyncPatchTask extends PatchTask {
 
-
+    /**
+     * Hvilke patch-typer som skal kjøres inn.
+     */
     Collection<String> patchTypes
 
     @TaskAction

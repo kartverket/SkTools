@@ -17,6 +17,9 @@ import org.gradle.process.JavaExecSpec
 class PatchTask extends DatabasePatchTask {
     protected static final Logger logger = Logging.getLogger(PatchTask.class);
 
+    /**
+     * Bestemmer at en og èn patchblokk blir påført per eksekvering.
+     */
     @Input
     File sqlFile
 

@@ -12,7 +12,10 @@ import org.gradle.api.tasks.Input
  */
 abstract class AbstractSQLTask extends ConventionTask {
 
-    //SKTOOLS-27, SKTOOLS-84
+    /**
+     * Bestemmer om gradle skal feile ved feil eller ikke.
+     * <p>Defaultverdi: true
+     */
     boolean failOnError = !project.gradle.startParameter.isContinueOnFailure()
 
     /**

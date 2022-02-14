@@ -14,7 +14,10 @@ import org.gradle.process.JavaExecSpec
  */
 abstract class DatabasePatchTask extends AbstractSQLTask {
 
-    //SKTOOLS-84
+    /**
+     * Bestemmer om tasken skal feile ved enkelte feiltyper eller ikke.
+     * Se dokumentasjon av {@link no.statkart.sktools.utils.databasepatcher.DatabasePatcher}
+     */
     boolean failOnWarning = failOnError
 
     //SKTOOLS-77
