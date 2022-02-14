@@ -15,6 +15,9 @@ import org.gradle.process.JavaExecSpec
 class WeblogicStartTask extends AbstractWeblogicDeployTask {
     protected static final Logger logger = Logging.getLogger(WeblogicStartTask.class);
 
+    /**
+     * Versjon som skal startes. Brukes kun for versjonerte deployments.
+     */
     @Internal
     String appversion = null
 

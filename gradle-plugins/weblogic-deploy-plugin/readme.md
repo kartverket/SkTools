@@ -1,4 +1,4 @@
-Weblogic-deploy Gradle Plugin
+[Weblogic-deploy Gradle Plugin](src/main/groovy/no/statkart/sktools/gradle/plugins/weblogic/deploy/WeblogicDeployPlugin.java)
 ------------------
 
 Deploying artifacts and applications to Weblogic application containers.
@@ -9,7 +9,7 @@ Installation
 Build script snippet for new plugin DSL syntax:
 
     plugins {
-        id 'sktools.weblogic-deploy' version '5.0'
+        id 'sktools.weblogic-deploy' version '5.7'
     }
 
 Build script snippet for use in all versions:
@@ -19,14 +19,49 @@ Build script snippet for use in all versions:
             maven { url 'https://nexus.statkart.no/repository/public/' }
         }
         dependencies {
-            classpath 'no.statkart.sktools.gradle:weblogic-deploy-plugin:5.0'
+            classpath 'no.statkart.sktools.gradle:weblogic-deploy-plugin:5.7'
             // or
-            classpath 'no.statkart.sktools.gradle:gradle-plugins:5.0'
+            classpath 'no.statkart.sktools.gradle:gradle-plugins:5.7'
         }
 
     }
     apply plugin: 'sktools-weblogic-deploy-plugin'
 
+
+Changelog
+------------
+## Unreleased Changes
+
+## 1.5.0 Release Notes
+ * [SKTOOLS-169] Sikker forbindelse for administrasjon av Weblogic
+ * [SKTOOLS-189] `weblogic-deploy-plugin` har timeout som kommer i konflikt med Gradle 5.x
+
+## 1.4.0 Release Notes
+ * SKTOOLS-147 - Timeout verdi for Deploy til WebLogic 12.1.3
+
+## 1.3.0 Release Notes
+ * Nye tasker for start og stopp
+ * Støtte for versjonering
+ * Støtte for biblioteker
+
+## 1.2.0 Release Notes
+* Plugin opprettet
+
+
+Use
+---
+
+Either use the tasks by conventional [extention](src/main/groovy/no/statkart/sktools/gradle/plugins/weblogic/deploy/WeblogicDeployConfiguration.groovy)
+or standalone setup up the following tasks:
+
+* [WeblogicDeployTask](src/main/groovy/no/statkart/sktools/gradle/plugins/weblogic/deploy/WeblogicDeployTask.groovy)
+    - Deployer en applikasjon eller et bibliotek til WebLogic.
+* [WeblogicUndeployTask](src/main/groovy/no/statkart/sktools/gradle/plugins/weblogic/deploy/WeblogicUndeployTask.groovy)
+    - Undeployer en applikasjon eller et bibliotek fra WebLogic.
+* [WeblogicStartTask](src/main/groovy/no/statkart/sktools/gradle/plugins/weblogic/deploy/WeblogicStartTask.groovy)
+    - Starter en stoppet deployet applikasjon i WebLogic.
+* [WeblogicStopTask](src/main/groovy/no/statkart/sktools/gradle/plugins/weblogic/deploy/WeblogicStopTask.groovy)
+    - Stopper en kjørende applikasjon i WebLogic.
 
 Configuration
 ------------

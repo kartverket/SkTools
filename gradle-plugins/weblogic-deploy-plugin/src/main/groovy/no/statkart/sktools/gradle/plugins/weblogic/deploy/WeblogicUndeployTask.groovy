@@ -14,9 +14,16 @@ import org.gradle.process.JavaExecSpec
 class WeblogicUndeployTask extends AbstractWeblogicDeployTask {
     protected static final Logger logger = Logging.getLogger(WeblogicUndeployTask.class)
 
+    /**
+     * Om WebLogic skal vente på at applikasjonen har et ledig øyeblikk.
+     * Standardverdien er null, som betyr at WebLogic gjør som den vil.
+     */
     @Internal
     Boolean graceful = null
 
+    /**
+     * Versjon som skal undeployes. Brukes kun for versjonerte deployments. Standardverdien er null.
+     */
     @Internal
     String appversion = null
 

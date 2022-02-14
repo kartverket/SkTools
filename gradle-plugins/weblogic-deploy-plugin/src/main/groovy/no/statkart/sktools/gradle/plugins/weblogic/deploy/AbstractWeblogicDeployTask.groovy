@@ -24,23 +24,41 @@ import org.gradle.process.JavaExecSpec
  */
 abstract class AbstractWeblogicDeployTask extends ConventionTask {
 
+    /**
+     * Classpath for WebLogic
+     */
     @Classpath
     FileCollection classpath
 
 
+    /**
+     * Navn på deployment
+     */
     @Internal
     String deploymentName
 
+    /**
+     * Targets det skal deployes til (navn på servere eller clustere)
+     */
     @Internal
     String getTargets() {
         targets == null || targets.isAllWhitespace() ? null : targets
     }
     String targets
 
+    /**
+     * URL til AdminServer
+     */
     @Internal
     String url
+    /**
+     * Administratorbrukernavn for WebLogic
+     */
     @Internal
     String username
+    /**
+     * Administratorpassord for WebLogic
+     */
     @Internal
     String password
 
@@ -50,6 +68,9 @@ abstract class AbstractWeblogicDeployTask extends ConventionTask {
     @Internal
     String deployerTimeout
 
+    /**
+     * Om tasken skal feile bygget om den feiler. Standardverdi er false.
+     */
     @Internal
     boolean failOnError = false
     @Internal
