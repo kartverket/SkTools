@@ -80,4 +80,12 @@ Flyten illustreres slik:
 2. Publisering til felles repo (nexus)
 
 
+## Versjonering
+En benytter "trunk based" versjonering. Det vil si at man cherry-picker over endringer mellom levende kodegrener.
+Det beste er at nye features først utvikles på trunk slik at man holder den fremtidige koden ren og uten legacy kode.
+
+Publisering av nye versjoner gjøres via jenkins jobb.
+
+Før versjon 5.6 og overgang til git så benyttet "late branching" som strategi for merging av kildekode.
+Disse taggene har da versjon som starter med `sktools-` - f.eks. "sktools-5.5.1" og ble bygget manuelt.
 
