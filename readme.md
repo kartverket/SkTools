@@ -30,7 +30,7 @@ Java verktøy
 
 Baseline
 --------
-Gradle 6.0 og nyere.
+Gradle 6.4 og nyere.
 
 Java 8.
 
