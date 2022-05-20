@@ -1385,6 +1385,78 @@ class WSDocProcessorTest extends TestKitBase {
         Assert.assertEquals html.body.div[0].div[0].ul[0].li[0].p[0].span[0].text().trim(), 'base', "{@code base} wraps to <span>"
     }
 
+    /**
+     * Sjekker at vi får portType fra SEI-interface, serviceName fra
+     * implementasjonsklasse og javadoc i generert dokumentasjon ved bruk av
+     * {@linkplain javax.jws.WebService#endpointInterface()}
+     */
+    @Test
+    void testEndpointInterfaceBasicCase() {
+        File outputPath = file('gen/source')
+        File resourcePath = file('src/main/resources')
+
+        File interfaceSource = writeFileUTF8('src/main/java/TestWSI.java', """\
+                 /** Interface javadoc */ 
+                 @javax.jws.WebService(
+                     name = "TestService",
+                     targetNamespace = "http://test.no/unit")
+                 public interface TestWSI {
+
+                     /** Returnerer PONG **/
+                     @javax.jws.WebMethod
+                     public long intToLong(int value) {
+                         return 0;
+                     }
+                 }
+                """)
+
+        File implSource = writeFileUTF8('src/main/java/TestWSBean.java', """\
+                 @javax.jws.WebService(
+                     endpointInterface = "TestWSI",
+                     serviceName = "TestServiceWS",
+                     targetNamespace = "http://test.no/unit")
+                 /** Implementasjonsdokumentasjon blir ignorert */
+                 public class TestWSBean {
+                     public long intToLong(int value) {
+                         return 0;
+                     }
+                 }
+                """)
+
+        File xslt = WsDocgenTestutilFilewriter.writeSimpleXSLT(resourcePath)
+
+        //utfører annotasjonsprosessering
+        outputPath.mkdirs()
+        test(
+                "javac",
+                "-encoding", "UTF-8",
+                "-proc:only",
+                "-processor", WSDocProcessor.class.getName(),
+                "-processorpath", processorPath,
+                "-classpath", classpath,
+                "-sourcepath", resourcePath.toString(),
+                "-d", outputPath.toString(), //d = generated class files
+                "-Axslt=${xslt}", //xslt file
+                interfaceSource.path,
+                implSource.path
+        )
+
+        //tester resultat
+        File file = new File(outputPath, 'TestService.html')
+        log.debug("Generert html: \n{}", contentOf(file))
+
+        //leser inn html dokumentasjon som xml - dette steget validerer derfor html-koden
+        GPathResult html = parseXML(file)
+
+        assertThat(html.head.title.text() as String).isEqualTo('TestServiceWS')
+        assertThat(html.body.h1[0].text() as String).isEqualTo('name=TestServiceWS')
+        assertThat(html.body.h1[1].text() as String).isEqualTo('description=Interface javadoc')
+        assertThat(html.body.h1[2].text() as String).isEqualTo('namespace=http://test.no/unit')
+
+        assertThat(html.body.div[1].div[0].h4[0] as String).isEqualTo("intToLong")
+        assertThat(html.body.div[1].div[0].p[0] as String).isEqualTo("Returnerer PONG")
+    }
+
     public static GPathResult parseXML(File file) {
         XmlSlurper slurper = XmlTestUtils.defaultXmlSlurper()
         return slurper.parse(file)
