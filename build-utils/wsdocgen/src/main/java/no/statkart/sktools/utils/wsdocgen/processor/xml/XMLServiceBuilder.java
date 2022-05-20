@@ -38,23 +38,23 @@ public class XMLServiceBuilder {
     }
 
 
-    public org.w3c.dom.Element appendServiceTo(Node servicesNode, Element element, String relativeUrl, Element wsiElement) {
-        org.w3c.dom.Element service = buildService(document, element, relativeUrl, wsiElement);
+    public org.w3c.dom.Element appendServiceTo(Node servicesNode, Element implElement, Element seiElement, String relativeUrl, Element wsiElement) {
+        org.w3c.dom.Element service = buildService(document, implElement, seiElement, relativeUrl, wsiElement);
         servicesNode.appendChild(service);
         return service;
     }
 
-    org.w3c.dom.Element buildService(Document document, Element element, String relativeUrl, Element wsiElement) {
+    org.w3c.dom.Element buildService(Document document, Element implElement, Element seiElement, String relativeUrl, Element wsiElement) {
         final org.w3c.dom.Element serviceElement = document.createElement("service");
-        JavaDocUtils javaDocUtils = findComment(element, wsiElement);
+        JavaDocUtils javaDocUtils = findComment(seiElement, wsiElement);
 
-        serviceElement.setAttribute("name", WSUtils.findWebServiceName(element));
-        serviceElement.setAttribute("portName", WSUtils.findWebServicePortTypeName(element));
-        serviceElement.setAttribute("namespace", WSUtils.findTargetNamespace(element));
+        serviceElement.setAttribute("name", WSUtils.findWebServiceName(implElement));
+        serviceElement.setAttribute("portName", WSUtils.findWebServicePortTypeName(seiElement));
+        serviceElement.setAttribute("namespace", WSUtils.findTargetNamespace(seiElement));
         serviceElement.setAttribute("href", relativeUrl);
 
         serviceElement.appendChild(factory.getDescriptionBuilder().buildDescription(javaDocUtils));
-        serviceElement.appendChild(buildMethods(document, element, wsiElement));
+        serviceElement.appendChild(buildMethods(document, seiElement, wsiElement));
 
         return serviceElement;
     }

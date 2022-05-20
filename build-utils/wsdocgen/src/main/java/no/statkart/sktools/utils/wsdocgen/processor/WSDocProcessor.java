@@ -11,8 +11,14 @@ import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedOptions;
 import javax.jws.WebService;
 import javax.lang.model.SourceVersion;
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.ElementFilter;
+import javax.lang.model.util.Elements;
 import javax.tools.Diagnostic;
 import javax.tools.FileObject;
 import javax.tools.StandardLocation;
@@ -134,49 +140,76 @@ public class WSDocProcessor extends AbstractProcessor {
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-        final Map<String, Element> wsiByWSBeanName = findWsiNames(roundEnv);
-
-        for (Element element : roundEnv.getElementsAnnotatedWith(WebService.class)) {
-            String webServicePortTypeName = WSUtils.findWebServicePortTypeName(element);
-            if (webServicePortTypeName != null) {
-
-                final String fileName = String.format("%s.html", webServicePortTypeName);
-                if (debug) {
-                    System.out.printf("Processing class: %s %n", element);
-                }
-
-                final XMLBuilderFactory xmlBuilder = new XMLBuilderFactory(docBuilder.newDocument(), processingEnv);
-                final org.w3c.dom.Element services = xmlBuilder.getServicesBuilder().createServices();
-                final Element wsiElement = wsiByWSBeanName.get(element.getSimpleName().toString()); //korresponderende element for WSI deklarasjon
-
-                try {
-                    xmlBuilder.getServiceBuilder().appendServiceTo(services, element, fileName, wsiElement);
-                } catch (RuntimeException e) {
-                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, String.format("%s", e.getMessage()), element);
-                }
-
-                FileObject outputFile = null;
-
-                try {
-                    outputFile = processingEnv.getFiler().createResource(StandardLocation.CLASS_OUTPUT, "", fileName);
-                } catch (IOException e) {
-                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, String.format("Error creating target-file %s", fileName));
+        for (TypeElement implElement : ElementFilter.typesIn(roundEnv.getElementsAnnotatedWith(WebService.class))) {
+            if (implElement.getKind() != ElementKind.CLASS || implElement.getModifiers().contains(Modifier.ABSTRACT)) {
+                continue;
+            }
+            WebService implWebServiceAnnotation = implElement.getAnnotation(WebService.class);
+            TypeElement seiElement;
+            if (implWebServiceAnnotation.endpointInterface().isEmpty()) {
+                seiElement = implElement;
+            } else {
+                seiElement = processingEnv.getElementUtils().getTypeElement(implWebServiceAnnotation.endpointInterface());
+                if (seiElement == null) {
+                    processingEnv
+                            .getMessager()
+                            .printMessage(Diagnostic.Kind.ERROR, "Fant ikke klassen for endpointInterface", implElement);
                     continue;
                 }
-
-                String xsltFilePath = processingEnv.getOptions().get("xslt");
-                if (xsltFilePath == null) {
-                    throw new RuntimeException("No xslt file defined! Configure javac with argument -Axslt=<file>");
-                }
-
-                writeToFile(xmlBuilder.getDocument(), outputFile, xsltFilePath);
-
-                addToIndex(element, fileName, wsiElement);
-
-            } else {
-                //skipping some WebService elements in input...
-                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, String.format("Unable to resolve portType - skipping class %s", element));
             }
+
+            String webServicePortTypeName = WSUtils.findWebServicePortTypeName(seiElement);
+            if (webServicePortTypeName == null) {
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "SEI er ikke annotert med @WebService", seiElement);
+                continue;
+            }
+            if (webServicePortTypeName.trim().isEmpty()) {
+                webServicePortTypeName = seiElement.getSimpleName().toString();
+            }
+
+            final String fileName = String.format("%s.html", webServicePortTypeName);
+            if (debug) {
+                System.out.printf("Processing class: %s %n", implElement);
+            }
+
+            final XMLBuilderFactory xmlBuilder = new XMLBuilderFactory(docBuilder.newDocument(), processingEnv);
+            final org.w3c.dom.Element services = xmlBuilder.getServicesBuilder().createServices();
+            final TypeElement wsiElement;
+            if (seiElement.getKind().isInterface()) {
+                wsiElement = seiElement;
+            } else {
+                String implName = implElement.getQualifiedName().toString();
+                String wsiName = implName.replaceFirst("WSBean$", "WSI");
+                if (wsiName.endsWith("WSI")) {
+                    wsiElement = processingEnv.getElementUtils().getTypeElement(wsiName);
+                } else {
+                    wsiElement = seiElement;
+                }
+            }
+
+            try {
+                xmlBuilder.getServiceBuilder().appendServiceTo(services, implElement, seiElement, fileName, wsiElement);
+            } catch (RuntimeException e) {
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, String.format("%s", e.getMessage()), implElement);
+            }
+
+            FileObject outputFile;
+
+            try {
+                outputFile = processingEnv.getFiler().createResource(StandardLocation.CLASS_OUTPUT, "", fileName);
+            } catch (IOException e) {
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, String.format("Error creating target-file %s", fileName));
+                continue;
+            }
+
+            String xsltFilePath = processingEnv.getOptions().get("xslt");
+            if (xsltFilePath == null) {
+                throw new RuntimeException("No xslt file defined! Configure javac with argument -Axslt=<file>");
+            }
+
+            writeToFile(xmlBuilder.getDocument(), outputFile, xsltFilePath);
+
+            addToIndex(implElement, seiElement, fileName, wsiElement);
         }
 
         //index fil: SKTOOLS-105
@@ -196,24 +229,12 @@ public class WSDocProcessor extends AbstractProcessor {
         return false;
     }
 
-    static Map<String, Element> findWsiNames(RoundEnvironment roundEnv) {
-        Map<String, Element> wsiByWSBeanName = new HashMap<>();
-        for (Element element : roundEnv.getRootElements()) {
-            String simpleName = element.getSimpleName().toString();
-            if(simpleName.endsWith("WSI")) {
-                String wsBeanName = simpleName.replaceAll("WSI\\z", "WSBean");
-                wsiByWSBeanName.put(wsBeanName, element);
-            }
-        }
-        return wsiByWSBeanName;
-    }
-
     /**
      * Legger tjeneste til index fil
      */
-    void addToIndex(Element element, String fileName, Element wsiElement) {
+    void addToIndex(Element implElement, Element seiElement, String fileName, Element wsiElement) {
         if (indexServices != null) {
-            indexXmlBuilderFactory.getServiceBuilder().appendServiceTo(indexServices, element, fileName, wsiElement);
+            indexXmlBuilderFactory.getServiceBuilder().appendServiceTo(indexServices, implElement, seiElement, fileName, wsiElement);
         }
     }
 
