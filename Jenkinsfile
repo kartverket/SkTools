@@ -3,7 +3,7 @@
 //declarative pipeline syntax
 pipeline {
     agent {
-        label 'sktools||matrikkel'
+        label 'sktools'
     }
 
     environment {
