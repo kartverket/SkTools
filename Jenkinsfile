@@ -22,7 +22,7 @@ pipeline { //declarative pipeline syntax
     // agent defines where the pipeline will run.
     agent {
         // This also could have been 'agent any' - that has the same meaning as: label "".
-        label 'sktools||matrikkel'
+        label 'sktools'
     }
 
     tools {
