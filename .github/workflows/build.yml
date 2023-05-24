@@ -19,7 +19,8 @@ jobs:
 
             - uses: gradle/gradle-build-action@v2
               with:
-                  arguments: clean |
+                  arguments: |
+                      clean
                       --refresh-dependencies
                       --profile
                       -Dorg.gradle.daemon=false
@@ -29,7 +30,8 @@ jobs:
 
             - uses: gradle/gradle-build-action@v2
               with:
-                  arguments: assemble |
+                  arguments: |
+                      assemble
                       --profile
                       -Dorg.gradle.daemon=false
                       -Djava.io.tmpdir=tmp
@@ -43,7 +45,8 @@ jobs:
                   distribution: 'temurin'
             - uses: gradle/gradle-build-action@v2
               with:
-                  arguments: test |
+                  arguments: |
+                      test
                       -DignoreFailures=true
                       --profile
                       -Dorg.gradle.daemon=false
@@ -58,7 +61,8 @@ jobs:
                   distribution: 'temurin'
             - uses: gradle/gradle-build-action@v2
               with:
-                  arguments: test |
+                  arguments: |
+                      test
                       -DignoreFailures=true
                       --profile
                       -Dorg.gradle.daemon=false
