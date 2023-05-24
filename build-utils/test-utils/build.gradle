@@ -9,7 +9,7 @@ sourceSets {
 }
 
 def pluginProperties = [
-        MAVEN_REPO : MAVEN_REPO as String,
+//        MAVEN_REPO : MAVEN_REPO as String,
         libraries_hsqldb : libraries.hsqldb,
 ] as Properties
 

@@ -194,7 +194,7 @@ subprojects { Project project ->
             //misc build info
             'Build-By'              : System.getProperty('user.name'),
             'Build-Machine'         : java.net.InetAddress.localHost.hostName,
-            'Build-Repo'            : MAVEN_REPO,
+//            'Build-Repo'            : MAVEN_REPO,
             'Build-Gradle'          : gradle.gradleVersion,
 
             'Implementation-Title'  : "${project.name} bygget for ${(project.version == null || project.version.contains('-SNAPSHOT')) ? 'TEST' : 'Produksjon'}",
