@@ -71,32 +71,43 @@ pipeline {
             }
         }
 
-        stage('Publish rc') {
-            when {
-                not {
-                    buildingTag() //ikke ved publish
-                }
-            }
-            steps {
-                withCredentials([
-                    //for publisering til sentralt maven repo bindes opp via jenkins credential (secret text)
-                    string(variable: 'MAVEN_PUBLISH', credentialsId: 'MAVEN_DEPLOY_RELEASE_CANDIDATE'),
-                ]) {
-                    sh "gradle publish ${gradleOptions(this)} --init-script config/gradle/scripts/mavenPublish.gradle"
-                }
-            }
-        }
+//        stage('Publish rc') {
+//            when {
+//                not {
+//                    buildingTag() //ikke ved publish
+//                }
+//            }
+//            steps {
+//                withCredentials([
+//                    //for publisering til sentralt maven repo bindes opp via jenkins credential (secret text)
+//                    string(variable: 'MAVEN_PUBLISH', credentialsId: 'MAVEN_DEPLOY_RELEASE_CANDIDATE'),
+//                ]) {
+//                    sh "gradle publish ${gradleOptions(this)} --init-script config/gradle/scripts/mavenPublish.gradle"
+//                }
+//            }
+//        }
 
+//        stage('Publish') {
+//            when {
+//                buildingTag()
+//            }
+//            steps {
+//                withCredentials([
+//                    //for publisering til sentralt maven repo bindes opp via jenkins credential (secret text)
+//                    string(variable: 'MAVEN_PUBLISH', credentialsId: TAG_NAME.contains('-') ? 'MAVEN_DEPLOY_RELEASE_CANDIDATE': 'MAVEN_DEPLOY_RELEASES'),
+//                ]) {
+//                    sh "gradle publish -Psktools_versjon=${TAG_NAME} --init-script config/gradle/scripts/mavenPublish.gradle"
+//                }
+//            }
+//        }
         stage('Publish') {
-            when {
-                buildingTag()
-            }
             steps {
-                withCredentials([
-                    //for publisering til sentralt maven repo bindes opp via jenkins credential (secret text)
-                    string(variable: 'MAVEN_PUBLISH', credentialsId: TAG_NAME.contains('-') ? 'MAVEN_DEPLOY_RELEASE_CANDIDATE': 'MAVEN_DEPLOY_RELEASES'),
+                withCredentials([usernamePassword(
+                    credentialsId: 'matrikkel-pat-github',
+                    usernameVariable: 'GITHUB_USER',
+                    passwordVariable: 'GITHUB_TOKEN')
                 ]) {
-                    sh "gradle publish -Psktools_versjon=${TAG_NAME} --init-script config/gradle/scripts/mavenPublish.gradle"
+                    sh "gradle publish -Psktools_versjon=testingtesting --init-script config/gradle/scripts/mavenPublishGitHub.gradle"
                 }
             }
         }

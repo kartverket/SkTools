@@ -1,0 +1,30 @@
+// Gradle init.script for publisering til nexus
+// Eksempel-bruk:
+//      https://maven.pkg.github.com/kartverket/sktools
+//    set MAVEN_PUBLISH=https://username:password@nexus.statkart.no/repository/releases
+//    gradle publish --init-script config/gradle/scripts/mavenPublish.gradle
+
+rootProject {
+    if (name != 'buildSrc') {
+        allprojects { Project project ->
+            plugins.withType(MavenPublishPlugin) {
+                project.publishing {
+                    repositories {
+                        String mavenUsr = System.getenv('usernameVariable')
+                        String mavenPwd = System.getenv('passwordVariable')
+                        String mavenUpload = "https://maven.pkg.github.com/kartverket/sktools\""
+
+                        maven {
+                                name "GitHubPackages"
+                                url mavenUpload
+                                credentials {
+                                    username mavenUsr
+                                    password mavenPwd
+                                }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
