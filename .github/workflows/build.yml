@@ -47,7 +47,6 @@ jobs:
               with:
                   arguments: |
                       test
-#                      -DignoreFailures=true
                       --profile
                       -Dorg.gradle.daemon=false
                       -Djava.io.tmpdir=tmp
@@ -63,7 +62,6 @@ jobs:
               with:
                   arguments: |
                       test
-#                      -DignoreFailures=true
                       --profile
                       -Dorg.gradle.daemon=false
                       -Djava.io.tmpdir=tmp
