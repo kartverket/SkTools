@@ -12,7 +12,7 @@ rootProject {
                     repositories {
                         String mavenUsr = System.getenv('usernameVariable')
                         String mavenPwd = System.getenv('passwordVariable')
-                        String mavenUpload = "https://maven.pkg.github.com/kartverket/sktools\""
+                        String mavenUpload = "https://maven.pkg.github.com/kartverket/sktools"
 
                         maven {
                                 name "GitHubPackages"
