@@ -10,8 +10,8 @@ rootProject {
             plugins.withType(MavenPublishPlugin) {
                 project.publishing {
                     repositories {
-                        String mavenUsr = System.getenv('usernameVariable')
-                        String mavenPwd = System.getenv('passwordVariable')
+                        String mavenUsr = System.getenv('GITHUB_USER')
+                        String mavenPwd = System.getenv('GITHUB_TOKEN')
                         String mavenUpload = "https://maven.pkg.github.com/kartverket/sktools"
 
                         maven {
