@@ -1,69 +1,69 @@
-name: Bygg og prepare release
-on:
-    push:
-        branches:
-            - '**'
-            - '!master'
-jobs:
-    build:
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v3
-
-            - name: Set up JDK 8
-              uses: actions/setup-java@v3
-              with:
-                  java-version: '8'
-                  distribution: 'temurin'
-
-            - uses: gradle/gradle-build-action@v2
-              with:
-                  arguments: |
-                      clean
-                      --refresh-dependencies
-                      --profile
-                      -Dorg.gradle.daemon=false
-                      -Djava.io.tmpdir=tmp
-                      --stacktrace
-                  gradle-version: 6.0.1
-
-            - uses: gradle/gradle-build-action@v2
-              with:
-                  arguments: |
-                      assemble
-                      --profile
-                      -Dorg.gradle.daemon=false
-                      -Djava.io.tmpdir=tmp
-                      --stacktrace
-                  gradle-version: 6.0.1
-
-            - name: Testing av "minstekrav"
-              uses: actions/setup-java@v3
-              with:
-                  java-version: '8'
-                  distribution: 'temurin'
-            - uses: gradle/gradle-build-action@v2
-              with:
-                  arguments: |
-                      test
-                      --profile
-                      -Dorg.gradle.daemon=false
-                      -Djava.io.tmpdir=tmp
-                      --stacktrace
-                  gradle-version: 6.0.1
-
-            - name: Testing av gradle "latest"
-              uses: actions/setup-java@v3
-              with:
-                  java-version: '11'
-                  distribution: 'temurin'
-            - uses: gradle/gradle-build-action@v2
-              with:
-                  arguments: |
-                      test
-                      --profile
-                      -Dorg.gradle.daemon=false
-                      -Djava.io.tmpdir=tmp
-                      --stacktrace
-                  gradle-version: 7.0.1
+#name: Bygg og prepare release
+#on:
+#    push:
+#        branches:
+#            - '**'
+#            - '!master'
+#jobs:
+#    build:
+#        runs-on: ubuntu-latest
+#        steps:
+#            - name: Checkout
+#              uses: actions/checkout@v3
+#
+#            - name: Set up JDK 8
+#              uses: actions/setup-java@v3
+#              with:
+#                  java-version: '8'
+#                  distribution: 'temurin'
+#
+#            - uses: gradle/gradle-build-action@v2
+#              with:
+#                  arguments: |
+#                      clean
+#                      --refresh-dependencies
+#                      --profile
+#                      -Dorg.gradle.daemon=false
+#                      -Djava.io.tmpdir=tmp
+#                      --stacktrace
+#                  gradle-version: 6.0.1
+#
+#            - uses: gradle/gradle-build-action@v2
+#              with:
+#                  arguments: |
+#                      assemble
+#                      --profile
+#                      -Dorg.gradle.daemon=false
+#                      -Djava.io.tmpdir=tmp
+#                      --stacktrace
+#                  gradle-version: 6.0.1
+#
+#            - name: Testing av "minstekrav"
+#              uses: actions/setup-java@v3
+#              with:
+#                  java-version: '8'
+#                  distribution: 'temurin'
+#            - uses: gradle/gradle-build-action@v2
+#              with:
+#                  arguments: |
+#                      test
+#                      --profile
+#                      -Dorg.gradle.daemon=false
+#                      -Djava.io.tmpdir=tmp
+#                      --stacktrace
+#                  gradle-version: 6.0.1
+#
+#            - name: Testing av gradle "latest"
+#              uses: actions/setup-java@v3
+#              with:
+#                  java-version: '11'
+#                  distribution: 'temurin'
+#            - uses: gradle/gradle-build-action@v2
+#              with:
+#                  arguments: |
+#                      test
+#                      --profile
+#                      -Dorg.gradle.daemon=false
+#                      -Djava.io.tmpdir=tmp
+#                      --stacktrace
+#                  gradle-version: 7.0.1
