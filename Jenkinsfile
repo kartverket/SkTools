@@ -100,17 +100,17 @@ pipeline {
 //                }
 //            }
 //        }
-        stage('Publish') {
-            steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'matrikkel-pat-github',
-                    usernameVariable: 'GITHUB_USER',
-                    passwordVariable: 'GITHUB_TOKEN')
-                ]) {
-                    sh "gradle publish -Psktools_versjon=testingtesting --init-script config/gradle/scripts/mavenPublishGitHub.gradle"
-                }
-            }
-        }
+//        stage('Publish') {
+//            steps {
+//                withCredentials([usernamePassword(
+//                    credentialsId: 'matrikkel-pat-github',
+//                    usernameVariable: 'GITHUB_USER',
+//                    passwordVariable: 'GITHUB_TOKEN')
+//                ]) {
+//                    sh "gradle publish -Psktools_versjon=testingtesting --init-script config/gradle/scripts/mavenPublishGitHub.gradle"
+//                }
+//            }
+//        }
     }
 
     post {
