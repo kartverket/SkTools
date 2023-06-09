@@ -17,6 +17,7 @@ ij_java_layout_static_imports_separately = true
 [{*.gradle,*.groovy,Jenkinsfile}]
 ij_groovy_use_single_class_imports = true
 ij_groovy_class_count_to_use_import_on_demand = 9999
+ij_groovy_names_count_to_use_import_on_demand = 999
 
 [*.properties]
 #latin1 alias for ISO-8859-1
