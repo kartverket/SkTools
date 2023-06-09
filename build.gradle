@@ -35,8 +35,6 @@ project.ext.libraries = [
 
         saxon : 'net.sf.saxon:Saxon-HE:9.9.1-8', //xslt 2.0
 
-        guava: 'com.google.guava:guava:28.1-jre',
-
         jaxb_xjc : 'org.glassfish.jaxb:jaxb-xjc:2.3.5',
         jaxb_rt : 'org.glassfish.jaxb:jaxb-runtime:2.3.5',
 
