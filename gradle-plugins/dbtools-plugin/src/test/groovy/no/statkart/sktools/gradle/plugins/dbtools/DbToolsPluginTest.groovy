@@ -271,13 +271,13 @@ class DbToolsPluginTest extends TestKitBase {
         Assert.assertNotNull(convention.dbToolSets.db1.patch['null'].tasks['TestSchema'], "Forventet patch task")
 
         convention.dbToolSets.db1.patch['null'].tasks['TestSchema'].with { PatchTask task ->
-            Assert.assertEquals(task.sqlFile, project.file("foo.sql"), "Fil for patch task")
-            Assert.assertEquals(task.component, 'null', "component for patch task")
-            Assert.assertEquals(task.failOnError, true, "FailOnError for patch task")
-            Assert.assertEquals(task.failOnWarning, true, "FailOnWarning for patch task")
+            assertThat(task.sqlFile).isEqualTo(project.file("foo.sql"))
+            assertThat(task.component).isEqualTo('null')
+            assertThat(task.failOnError).isTrue()
+            assertThat(task.failOnWarning).isTrue()
 
-            Assert.assertEquals(task.singlestep, false, "singlestep for patch task")
-            Assert.assertNull(task.schema, "schema for patch task")
+            assertThat(task.singlestep).isFalse()
+            assertThat(task.schema).isNull()
         }
 
         final Task independentTask = project.task('IndependentTask', type: PatchTask.class) {
@@ -286,15 +286,14 @@ class DbToolsPluginTest extends TestKitBase {
             singlestep = true
         }
         independentTask.with { PatchTask task ->
-            Assert.assertEquals(task.sqlFile, project.file("patchFoo.sql"), "Fil for patch task")
-            Assert.assertEquals(task.component, 'null', "component for patch task")
-            Assert.assertEquals(task.failOnError, true, "FailOnError for patch task")
-            Assert.assertEquals(task.failOnWarning, true, "FailOnWarning for patch task")
+            assertThat(task.sqlFile).isEqualTo(project.file("patchFoo.sql"))
+            assertThat(task.component).isEqualTo('null')
+            assertThat(task.failOnError).isTrue()
+            assertThat(task.failOnWarning).isTrue()
 
-            Assert.assertEquals(task.singlestep, true, "singlestep for patch task")
-            Assert.assertNull(task.schema, "schema for patch task")
+            assertThat(task.singlestep).isTrue()
+            assertThat(task.schema).isNull()
         }
-
     }
 
     /**
@@ -327,8 +326,7 @@ class DbToolsPluginTest extends TestKitBase {
         Assert.assertNotNull(convention.dbToolSets.db1.patch['null'].tasks['TestSchema'], "Forventet patch task")
 
         convention.dbToolSets.db1.patch['null'].tasks['TestSchema'].with { PatchTask task ->
-            Assert.assertNotNull(task.schema, "schema for patch task")
-            Assert.assertEquals(task.schema, 'schema2', "schema for patch task")
+            assertThat(task.schema).isEqualTo('schema2')
         }
 
         final Task independentTask = project.task('IndependentTask', type: PatchTask.class) {
@@ -338,10 +336,8 @@ class DbToolsPluginTest extends TestKitBase {
             schema = 'schema3'
         }
         independentTask.with { PatchTask task ->
-            Assert.assertNotNull(task.schema, "schema for patch task")
-            Assert.assertEquals(task.schema, 'schema3', "schema for patch task")
+            assertThat(task.schema).isEqualTo('schema3')
         }
-
     }
 
     /**
@@ -376,13 +372,12 @@ class DbToolsPluginTest extends TestKitBase {
         Assert.assertNotNull(convention.dbToolSets.db1.patch['null'].tasks['TestSchema'], "Forventet patch task")
 
         convention.dbToolSets.db1.patch['null'].tasks['TestSchema'].with { SyncPatchTask task ->
-            Assert.assertEquals(task.sqlFile, project.file("foo.sql"), "Fil for patch task")
-            Assert.assertEquals(task.component, 'null', "component for patch task")
-            Assert.assertEquals(task.failOnError, false, "FailOnError for patch task")
-            Assert.assertEquals(task.failOnWarning, false, "FailOnWarning for patch task")
-            Assert.assertEquals(task.patchTypes.size(), 1, "patchTypes for patch task")
-            Assert.assertTrue(task.patchTypes.containsAll(['RERUN']), "patchTypes for patch task")
-            Assert.assertEquals(task.singlestep, false, "singlestep for patch task")
+            assertThat(task.sqlFile).isEqualTo(project.file("foo.sql"))
+            assertThat(task.component).isEqualTo('null')
+            assertThat(task.failOnError).isFalse()
+            assertThat(task.failOnWarning).isFalse()
+            assertThat(task.patchTypes).containsExactly('RERUN')
+            assertThat(task.singlestep).isFalse()
         }
 
         final Task independentTask = project.task('IndependentTask', type: SyncPatchTask.class) {
@@ -391,13 +386,13 @@ class DbToolsPluginTest extends TestKitBase {
             singlestep = true
         }
         independentTask.with { SyncPatchTask task ->
-            Assert.assertEquals(task.sqlFile, project.file("patchFoo.sql"), "Fil for patch task")
-            Assert.assertEquals(task.component, 'null', "component for patch task")
-            Assert.assertEquals(task.failOnError, true, "FailOnError for patch task")
-            Assert.assertEquals(task.failOnWarning, false, "FailOnWarning for patch task")
+            assertThat(task.sqlFile).isEqualTo(project.file("patchFoo.sql"))
+            assertThat(task.component).isEqualTo('null')
+            assertThat(task.failOnError).isTrue()
+            assertThat(task.failOnWarning).isFalse()
 
-            Assert.assertTrue(task.patchTypes.containsAll(['INDEX', 'TYPE', 'PACKAGE', 'FUNCTION']), "patchTypes for patch task - see SKTOOLS-86")
-            Assert.assertEquals(task.singlestep, true, "singlestep for patch task")
+            assertThat(task.patchTypes).containsExactly('INDEX', 'TYPE', 'PACKAGE', 'FUNCTION')
+            assertThat(task.singlestep).isTrue()
         }
 
     }
@@ -427,8 +422,8 @@ class DbToolsPluginTest extends TestKitBase {
         Assert.assertTrue(convention.dbToolSets.db1.patch['null'].tasks['AssignLatestPatchlevel'] instanceof DefineLatestPatchVersionTask, "Forventet type")
 
         convention.dbToolSets.db1.patch['null'].tasks['AssignLatestPatchlevel'].with { DefineLatestPatchVersionTask task ->
-            Assert.assertEquals(task.sqlFile, project.file("foo.sql"), "Fil for patch task")
-            Assert.assertEquals(task.component, 'null', "component for patch task")
+            assertThat(task.sqlFile).isEqualTo(project.file("foo.sql"))
+            assertThat(task.component).isEqualTo('null')
         }
 
         final Task independentTask = project.task('IndependentTask', type: DefineLatestPatchVersionTask.class) {
@@ -436,8 +431,8 @@ class DbToolsPluginTest extends TestKitBase {
             sqlFile = project.file("patchFoo.sql")
         }
         independentTask.with { DefineLatestPatchVersionTask task ->
-            Assert.assertEquals(task.sqlFile, project.file("patchFoo.sql"), "Fil for patch task")
-            Assert.assertEquals(task.component, 'null', "component for patch task")
+            assertThat(task.sqlFile).isEqualTo(project.file("patchFoo.sql"))
+            assertThat(task.component).isEqualTo('null')
         }
 
     }

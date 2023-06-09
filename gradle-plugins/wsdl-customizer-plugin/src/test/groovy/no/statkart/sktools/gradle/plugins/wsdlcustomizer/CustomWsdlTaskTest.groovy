@@ -4,8 +4,10 @@ import groovy.util.slurpersupport.GPathResult
 import org.gradle.api.Project
 import org.gradle.api.file.FileTree
 import org.gradle.testfixtures.ProjectBuilder
-import org.testng.Assert
 import org.testng.annotations.Test
+
+import static org.assertj.core.api.Assertions.assertThat
+import static org.assertj.core.api.Assertions.fail
 
 /**
  * Tester selve prosesseringen.
@@ -37,8 +39,8 @@ class CustomWsdlTaskTest {
             excludeNamespaces 'http://statkart.no/sktools/wsapi/v1/domain/register/person'
         }
 
-        Assert.assertEquals(customWsdl.originalSchemaFiles.files.size(), 4, 'Antall skjemafiler')
-        Assert.assertEquals(customWsdl.generatedWsdlAndSchemaFiles.files.size(), 12, 'Antall genererte file')
+        assertThat(customWsdl.originalSchemaFiles.files).as('skjemafiler').hasSize(4)
+        assertThat(customWsdl.generatedWsdlAndSchemaFiles.files).as('genererte file').hasSize(12)
 
         customWsdl.generate()
 
@@ -60,30 +62,31 @@ class CustomWsdlTaskTest {
                 checkServiceSchema(f)
                 antallFunnet++
             } else if (name != 'exception.xsd' && name != 'kommune.xsd' && name != 'basistyper.xsd') {
-                Assert.fail('Forventet ikke fil: ' + f)
+                fail('Forventet ikke fil: ' + f)
             }
         }
 
-        Assert.assertEquals(antallFunnet, 4, "Forventet wsdl og xsd for hver tjeneste!");
+        assertThat(antallFunnet).isEqualTo(4)
     }
 
     private void checkWsdl(File f) {
         GPathResult wsdl = xmlSlurper.parse(f)
         wsdl.types[0].schema.each {
-            Assert.assertEquals(it.import.size(), 1, 'Antall imports')
+            assertThat(it.import.size() as int).as("Antall imports").isEqualTo(1)
             def imp = it.import[0]
             def name = imp.@schemaLocation as String
             if (imp.@namespace == 'http://statkart.no/sktools/wsapi/v1/service/store') {
-                Assert.assertTrue(name.contains('StoreService'))
-                Assert.assertTrue(name.contains('WS_schema1.xsd'))
+                assertThat(name)
+                    .contains('StoreService')
+                    .contains('WS_schema1.xsd')
             } else if (imp.@namespace == 'http://statkart.no/sktools/wsapi/v1/exception') {
-                Assert.assertEquals(name, 'exception.xsd')
+                assertThat(name).contains('exception.xsd')
             } else if (imp.@namespace == 'http://statkart.no/sktools/wsapi/v1/domain/basistyper') {
-                Assert.assertEquals(name, 'basistyper.xsd')
+                assertThat(name).contains('basistyper.xsd')
             } else if (imp.@namespace == 'http://statkart.no/sktools/wsapi/v1/domain/register') {
-                Assert.assertEquals(name, 'kommune.xsd')
+                assertThat(name).contains('kommune.xsd')
             } else {
-                Assert.fail('Uventet namespace: ' + imp.@namespace)
+                fail('Uventet namespace: ' + imp.@namespace)
             }
         }
     }
@@ -92,7 +95,7 @@ class CustomWsdlTaskTest {
         GPathResult schema = xmlSlurper.parse(f)
         schema.import.each {
             if (it.@namespace == 'http://statkart.no/sktools/wsapi/v1/domain/basistyper') {
-                Assert.assertEquals(it.@schemaLocation as String, 'basistyper.xsd')
+                assertThat(it.@schemaLocation as String).isEqualTo('basistyper.xsd')
             }
         }
     }

@@ -7,6 +7,10 @@ import org.gradle.util.GFileUtils
 import org.testng.Assert
 import org.testng.annotations.Test
 
+import static org.assertj.core.api.Assertions.assertThat
+import static org.assertj.core.api.Assertions.entry
+
+
 /**
  * Unittest of {@link PropertyUtils}
  *
@@ -30,8 +34,9 @@ class PropertyUtilsTest {
         [['custom.properties'], ['custom.properties', 'noneExistant.properties']].each {
             Map<String, ?> properties = propertyUtils.fromFile(it as String[])
 
-            Assert.assertEquals(properties.size(), 2, "Antall properties")
-            Assert.assertEquals(properties.get('hei'), 'hopp', "Forventet value")
+            assertThat(properties)
+                .hasSize(2)
+                .contains(entry('hei', 'hopp'))
         }
 
     }
@@ -47,8 +52,7 @@ class PropertyUtilsTest {
 
         Map<String, ?> properties = propertyUtils.fromFile('noneExistant.properties')
 
-        Assert.assertNotNull(properties, 'properties')
-        Assert.assertEquals(properties.size(), 0, "Antall properties")
+        assertThat(properties).isEmpty()
     }
 
     /**
