@@ -76,7 +76,7 @@ class JarSignerTest extends TestKitBase {
 
 
         Assert.assertEquals(jarSigner2.outputs.files.collect {it.name}, jarSigner1.outputs.files.collect {it.name}, 'forventet samme sett av filer')
-        Assert.assertEquals(modified2, modified1, 'forventer at cached fil er urørt')
+        assertThat(modified1).as('forventer at cached fil er urørt').isEqualTo(modified2)
 
         assertThat(jarSigner1.didSignJarFile).isTrue()
         assertThat(jarSigner2.didSignJarFile)

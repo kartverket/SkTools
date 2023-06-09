@@ -6,12 +6,11 @@ import no.statkart.sktools.gradle.testutils.filewriter.WsDocgenTestutilFilewrite
 import no.statkart.sktools.gradle.testutils.xml.XmlTestUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.testng.Assert
 import org.testng.annotations.Test
 
 import static org.assertj.core.api.Assertions.assertThat
 import static org.assertj.core.api.Assertions.contentOf
-import static org.testng.Assert.fail
+import static org.assertj.core.api.Assertions.fail
 
 /**
  * Tester {@link WSDocProcessor}
@@ -72,28 +71,27 @@ class WSDocProcessorTest extends TestKitBase {
         GPathResult html = parseXML(file)
 
         //sjekker innhold
-        assertThat(html.head.title.text() as String).isEqualTo('TestServiceWS')
-        assertThat(html.body.h1[0].text() as String).isEqualTo('name=TestServiceWS')
-        assertThat(html.body.h1[1].text() as String).isEqualTo('description=Bla bla bla beskrivelse av service.')
-        assertThat(html.body.h1[2].text() as String).isEqualTo('namespace=http://test.statkart.no/test1')
+        assertThat(html.head.title.text()).asString().isEqualTo('TestServiceWS')
+        assertThat(html.body.h1[0].text()).asString().isEqualTo('name=TestServiceWS')
+        assertThat(html.body.h1[1].text()).asString().isEqualTo('description=Bla bla bla beskrivelse av service.')
+        assertThat(html.body.h1[2].text()).asString().isEqualTo('namespace=http://test.statkart.no/test1')
 
         //sjekker dokumenterte metoder
-        Assert.assertEquals html.body.div[0].ul.li.size(), 3, "forventet antall metoder"
-        Assert.assertEquals html.body.div[0].ul.li[0].a.text(), 'binary', "forventet metodenavn"
-        Assert.assertEquals html.body.div[0].ul.li[1].a.text(), 'noPing', "forventet metodenavn"
-        Assert.assertEquals html.body.div[0].ul.li[2].a.text(), 'ping', "forventet metodenavn"
+        assertThat(html.body.div[0].ul.li.list()).asList().as("metoder").hasSize(3);
+        assertThat(html.body.div[0].ul.li[0].a.text()).asString().as("metodenavn").isEqualTo('binary')
+        assertThat(html.body.div[0].ul.li[1].a.text()).asString().as("metodenavn").isEqualTo('noPing')
+        assertThat(html.body.div[0].ul.li[2].a.text()).asString().as("metodenavn").isEqualTo('ping')
 
+        assertThat(html.body.div[1].div[0].p[0].text()).asString().as("dokumentasjon").isEqualTo('Returnerer PONG');
+        assertThat(html.body.div[1].div[0].h4[0].text()).asString().as("overskrift").isEqualTo('ping');
 
-        Assert.assertEquals html.body.div[1].div[0].p[0].text().trim(), 'Returnerer PONG', "forventet dokumentasjon"
-        Assert.assertEquals html.body.div[1].div[0].h4[0].text().trim(), 'ping', "forventet overskrift"
+        assertThat(html.body.div[1].div[1].p[0].text()).asString().as("dokumentasjon").isEqualTo('Returnerer ikke noe');
+        assertThat(html.body.div[1].div[1].h4[0].text()).asString().as("overskrift").isEqualTo('noPing');
 
-        Assert.assertEquals html.body.div[1].div[1].p[0].text().trim(), 'Returnerer ikke noe', "forventet dokumentasjon"
-        Assert.assertEquals html.body.div[1].div[1].h4[0].text().trim(), 'noPing', "forventet overskrift"
+        assertThat(html.body.div[1].div[2].p[0].text()).asString().as("dokumentasjon").isEqualTo('Returnerer noen bytes');
+        assertThat(html.body.div[1].div[2].h4[0].text()).asString().as("overskrift").isEqualTo('binary');
 
-        Assert.assertEquals html.body.div[1].div[2].p[0].text().trim(), 'Returnerer noen bytes', "forventet dokumentasjon"
-        Assert.assertEquals html.body.div[1].div[2].h4[0].text().trim(), 'binary', "forventet overskrift"
-
-        Assert.assertEquals html.body.div[1].div.size(), 3, "forventet antall metoder for service"
+        assertThat(html.body.div[1].div.list()).asList().as("metoder").hasSize(3);
     }
 
     /**
@@ -336,10 +334,10 @@ class WSDocProcessorTest extends TestKitBase {
         GPathResult html = parseXML(file)
 
         //sjekker dokumenterte metoder
-        Assert.assertEquals html.body.div[0].div[0].h4[0].text().trim(), 'intToLong', "overskrift"
-        Assert.assertEquals html.body.div[0].div[0].ul[0].li[0].p[0].text().trim(), 'the converted value', "dokumentasjon av retur"
+        assertThat(html.body.div[0].div[0].h4[0].text()).asString().as("overskrift").isEqualTo('intToLong')
+        assertThat(html.body.div[0].div[0].ul[0].li[0].p[0].text()).asString().as("dokumentasjon av retur").isEqualTo('the converted value')
 
-        Assert.assertEquals html.body.div[0].div.size(), 1, "forventet antall metoder for service"
+        assertThat(html.body.div[0].div.list()).asList().as("metoder for service").hasSize(1)
     }
 
 
@@ -476,19 +474,30 @@ class WSDocProcessorTest extends TestKitBase {
         GPathResult html = parseXML(file)
 
         //sjekker dokumenterte metoder
-        Assert.assertEquals html.body.div[0].div[0].h4[0].text().trim(), 'intToLong', "overskrift"
-        Assert.assertEquals html.body.div[0].div[0].ul[0].li[0].p[0].text().trim(), 'the converted value', "dokumentasjon av retur"
-        Assert.assertEquals html.body.div[0].div[0].ul[0].li[1].span[0].text().trim(), 'Exception', "navn for exception"
-        Assert.assertEquals html.body.div[0].div[0].ul[0].li[1].p[0].text().trim(), 'ved feil i konvertering', "dokumentasjon for exception"
+        assertThat(html.body.div[0].div[0].h4[0].text()).asString().as("overskrift")
+            .isEqualTo('intToLong')
+        assertThat(html.body.div[0].div[0].ul[0].li[0].p[0].text()).asString().as("dokumentasjon av retur")
+            .isEqualTo('the converted value')
 
-        Assert.assertEquals html.body.div[0].div[1].h4[0].text().trim(), 'longToInt', "overskrift"
-        Assert.assertEquals html.body.div[0].div[1].ul[0].li[0].p[0].text().trim(), 'the converted value as int', "dokumentasjon av retur"
-        Assert.assertEquals html.body.div[0].div[1].ul[0].li[2].span[0].text().trim(), 'Exception', "navn for exception"
-        Assert.assertEquals html.body.div[0].div[1].ul[0].li[2].p[0].text().trim(), 'ved feil i konvertering', "dokumentasjon for exception"
-        Assert.assertEquals html.body.div[0].div[1].ul[0].li[1].span[0].text().trim(), 'RuntimeException', "navn for exception"
-        Assert.assertEquals html.body.div[0].div[1].ul[0].li[1].p[0].text().trim(), 'dersom base-verdi ikke validerer', "dokumentasjon for exception"
+        assertThat(html.body.div[0].div[0].ul[0].li[1].span[0].text()).asString().as("navn for exception")
+            .isEqualTo('Exception')
+        assertThat(html.body.div[0].div[0].ul[0].li[1].p[0].text()).asString().as("dokumentasjon for exception")
+            .isEqualTo('ved feil i konvertering')
 
-        Assert.assertEquals html.body.div[0].div.size(), 2, "forventet antall metoder for service"
+        assertThat(html.body.div[0].div[1].h4[0].text()).asString().as("overskrift")
+            .isEqualTo('longToInt')
+        assertThat(html.body.div[0].div[1].ul[0].li[0].p[0].text()).asString().as("dokumentasjon av retur")
+            .isEqualTo('the converted value as int')
+        assertThat(html.body.div[0].div[1].ul[0].li[2].span[0].text()).asString().as("navn for exception")
+            .isEqualTo('Exception')
+        assertThat(html.body.div[0].div[1].ul[0].li[2].p[0].text()).asString().as("dokumentasjon for exception")
+            .isEqualTo('ved feil i konvertering')
+        assertThat(html.body.div[0].div[1].ul[0].li[1].span[0].text()).asString().as("navn for exception")
+            .isEqualTo('RuntimeException')
+        assertThat(html.body.div[0].div[1].ul[0].li[1].p[0].text()).asString().as("dokumentasjon for exception")
+            .isEqualTo('dersom base-verdi ikke validerer')
+
+        assertThat(html.body.div[0].div.list()).asList().as("metoder for service").hasSize(2);
     }
 
     /**
@@ -603,10 +612,12 @@ class WSDocProcessorTest extends TestKitBase {
         GPathResult html = parseXML(file)
 
         //sjekker dokumenterte metoder
-        Assert.assertEquals html.body.div[0].div[0].p[0].text().trim(), 'Intended for asserting a conversion.', "forventet dokumentasjon"
-        Assert.assertEquals html.body.div[0].div[0].h4[0].text().trim(), 'intToLong', "forventet overskrift"
+        assertThat(html.body.div[0].div[0].p[0].text()).asString().as("dokumentasjon")
+            .isEqualTo('Intended for asserting a conversion.')
+        assertThat(html.body.div[0].div[0].h4[0].text()).asString().as("forventet")
+            .isEqualTo('intToLong')
 
-        Assert.assertEquals html.body.div[0].div.size(), 1, "forventet antall metoder for service"
+        assertThat(html.body.div[0].div.list()).asList().as("metoder for service").hasSize(1)
     }
 
 
@@ -760,14 +771,14 @@ class WSDocProcessorTest extends TestKitBase {
             GPathResult html = parseXML(file)
 
             //sjekker innhold
-            assertThat(html.body.div[0].a[0].@href.text() as String).isEqualTo("TestService1.html")
-            assertThat(html.body.div[0].a[0].span[0].text() as String).isEqualTo("name=TestServiceWS")
-            assertThat(html.body.div[0].a[0].span[1].text() as String).isEqualTo("description=Ping test service.")
+            assertThat(html.body.div[0].a[0].@href.text()).asString().isEqualTo("TestService1.html")
+            assertThat(html.body.div[0].a[0].span[0].text()).asString().isEqualTo("name=TestServiceWS")
+            assertThat(html.body.div[0].a[0].span[1].text()).asString().isEqualTo("description=Ping test service.")
 
 
-            assertThat(html.body.div[1].a[0].@href.text() as String).isEqualTo("TestService2.html")
-            assertThat(html.body.div[1].a[0].span[0].text() as String).isEqualTo("name=TestServiceWS")
-            assertThat(html.body.div[1].a[0].span[1].text() as String).isEqualTo("description=Inception service.")
+            assertThat(html.body.div[1].a[0].@href.text()).asString().isEqualTo("TestService2.html")
+            assertThat(html.body.div[1].a[0].span[0].text()).asString().isEqualTo("name=TestServiceWS")
+            assertThat(html.body.div[1].a[0].span[1].text()).asString().isEqualTo("description=Inception service.")
         }
 
 
@@ -780,8 +791,8 @@ class WSDocProcessorTest extends TestKitBase {
                 GPathResult html = parseXML(file)
 
                 //sjekker innhold
-                assertThat(html.body.div[0].text() as String).isEqualTo("name=TestServiceWS")
-                assertThat(html.body.div[1].text() as String).isEqualTo("href=TestService${idx}.html")
+                assertThat(html.body.div[0].text()).asString().isEqualTo("name=TestServiceWS")
+                assertThat(html.body.div[1].text()).asString().isEqualTo("href=TestService${idx}.html")
             }
         }
     }
@@ -911,9 +922,10 @@ class WSDocProcessorTest extends TestKitBase {
         GPathResult html = parseXML(file)
 
         //sjekker innhold
-        assertThat(html.body.div[0].p[0].text().trim() as String).isEqualTo('description=Service taglet description.')
-        assertThat(html.body.div[0].p[1].span[0].text().trim() as String).isEqualTo('taglet')
-        assertThat(html.body.div[0].p[1].text() as String).isEqualToIgnoringWhitespace('formatted description=Service taglet description.')
+        assertThat(html.body.div[0].p[0].text()).asString().isEqualTo('description=Service taglet description.')
+        assertThat(html.body.div[0].p[1].span[0].text()).asString().isEqualTo('taglet')
+        assertThat(html.body.div[0].p[1].text()).asString()
+            .isEqualToIgnoringWhitespace('formatted description=Service taglet description.')
     }
 
 
@@ -1039,21 +1051,33 @@ class WSDocProcessorTest extends TestKitBase {
         GPathResult html = parseXML(file)
 
         //sjekker innhold
-        Assert.assertEquals html.body.div[0].div[0].h4[0].text(), 'noReturn', "method name"
-        Assert.assertEquals html.body.div[0].div[0].ul[0].li[0].span[0].text(), '', "return tag element"
-        Assert.assertEquals html.body.div[0].div[0].ul[0].li[0].p[0].text(), '', "return description"
+        assertThat(html.body.div[0].div[0].h4[0].text()).asString().as("method name")
+            .isEqualTo('noReturn')
+        assertThat(html.body.div[0].div[0].ul[0].li[0].span[0].text()).asString().as("return tag element")
+            .isEqualTo('')
+        assertThat(html.body.div[0].div[0].ul[0].li[0].p[0].text()).asString().as("return description")
+            .isEqualTo('')
 
-        Assert.assertEquals html.body.div[0].div[1].h4[0].text(), 'ping1', "method name"
-        Assert.assertEquals html.body.div[0].div[1].ul[0].li[0].span[0].text(), 'return', "return tag element"
-        Assert.assertEquals html.body.div[0].div[1].ul[0].li[0].p[0].text(), 'withouth annotation', "return description"
+        assertThat(html.body.div[0].div[1].h4[0].text()).asString().as("method name")
+            .isEqualTo('ping1')
+        assertThat(html.body.div[0].div[1].ul[0].li[0].span[0].text()).asString().as("return tag element")
+            .isEqualTo('return')
+        assertThat(html.body.div[0].div[1].ul[0].li[0].p[0].text()).asString().as("return description")
+            .isEqualTo('withouth annotation')
 
-        Assert.assertEquals html.body.div[0].div[2].h4[0].text(), 'ping2', "method name"
-        Assert.assertEquals html.body.div[0].div[2].ul[0].li[0].span[0].text(), 'return', "return tag element"
-        Assert.assertEquals html.body.div[0].div[2].ul[0].li[0].p[0].text(), 'with empty annotation', "return description"
+        assertThat(html.body.div[0].div[2].h4[0].text()).asString().as("method name")
+            .isEqualTo('ping2')
+        assertThat(html.body.div[0].div[2].ul[0].li[0].span[0].text()).asString().as("return tag element")
+            .isEqualTo('return')
+        assertThat(html.body.div[0].div[2].ul[0].li[0].p[0].text()).asString().as("return description")
+            .isEqualTo('with empty annotation')
 
-        Assert.assertEquals html.body.div[0].div[3].h4[0].text(), 'ping3', "method name"
-        Assert.assertEquals html.body.div[0].div[3].ul[0].li[0].span[0].text(), 'youPingResult', "return tag element"
-        Assert.assertEquals html.body.div[0].div[3].ul[0].li[0].p[0].text(), 'with annotation', "return description"
+        assertThat(html.body.div[0].div[3].h4[0].text()).asString().as("method name")
+            .isEqualTo('ping3')
+        assertThat(html.body.div[0].div[3].ul[0].li[0].span[0].text()).asString().as("return tag element")
+            .isEqualTo('youPingResult')
+        assertThat(html.body.div[0].div[3].ul[0].li[0].p[0].text()).asString().as("return description")
+            .isEqualTo('with annotation')
     }
 
 
@@ -1214,29 +1238,43 @@ class WSDocProcessorTest extends TestKitBase {
         GPathResult html = parseXML(file)
 
         //sjekker innhold - example with no escaped text
-        Assert.assertEquals html.body.div[0].text(), 'formatted-description=Service description. Bold sentence.wrapped text test of GBOK-4872', "plaintext service description"
-        Assert.assertEquals html.body.div[0].span[0].text(), 'Bold sentence.', "{@bold ...} turns into <div>"
-        Assert.assertEquals html.body.div[0].p.text(), 'wrapped text test of GBOK-4872', "nested <p>"
-        Assert.assertEquals html.body.div[0].p.span[0].text(), 'GBOK-4872', "{@code GBOK-4872} turns into <div>"
+        assertThat(html.body.div[0].text()).asString().as("plaintext service description")
+            .isEqualTo('formatted-description=Service description. Bold sentence.wrapped text test of GBOK-4872')
+        assertThat(html.body.div[0].span[0].text()).asString().as("{@bold ...} turns into <div>")
+            .isEqualTo('Bold sentence.')
+        assertThat(html.body.div[0].p).asString().as("nested <p>")
+            .isEqualTo('wrapped text test of GBOK-4872')
+        assertThat(html.body.div[0].p.span[0].text()).asString().as("{@code GBOK-4872} turns into <div>")
+            .isEqualTo('GBOK-4872')
 
         //sjekker innhold - example of escaped text
-        assertThat(html.body.div[1].text() as String).isEqualToIgnoringWhitespace('unformatted-description=Service description. Bold sentence.<p>wrapped text test of GBOK-4872</p>')
+        assertThat(html.body.div[1].text()).asString()
+            .isEqualToIgnoringWhitespace('unformatted-description=Service description. Bold sentence.<p>wrapped text test of GBOK-4872</p>')
 
         //sjekker dokumenterte metoder
-        Assert.assertEquals html.body.div[2].h4.size(), 1, "forventet antall metoder for service"
+        assertThat(html.body.div[2].h4.list()).asList().as("metoder for service").hasSize(1);
 
-        Assert.assertEquals html.body.div[2].h4[0].text().trim(), 'intToLong', "forventet overskrift"
-        Assert.assertEquals html.body.div[2].div[0].text().trim().replaceAll("\\s+"," "), 'Bold sentence. Intended for asserting a conversion. testlist', "forventet dokumentasjon"
+        assertThat(html.body.div[2].h4[0].text()).asString().as("overskrift")
+            .isEqualTo('intToLong')
+        assertThat(html.body.div[2].div[0].text()).asString().as("dokumentasjon")
+            .isEqualToIgnoringWhitespace('Bold sentence. Intended for asserting a conversion. testlist')
 
-        Assert.assertEquals html.body.div[2].div[0].span[0].@class.text(), 'javadoc_tag_bold', "forventet CSS.class"
-        Assert.assertEquals html.body.div[2].div[0].span[0].text().trim(), 'Bold sentence.', "forventet tekst for span"
+        assertThat(html.body.div[2].div[0].span[0].@class).asString().as("CSS-class")
+            .isEqualTo('javadoc_tag_bold')
+        assertThat(html.body.div[2].div[0].span[0].text()).asString().as("tekst for span")
+            .isEqualTo('Bold sentence.')
 
-        Assert.assertEquals html.body.div[2].div[0].ul[0].li[0].text().trim(), 'testlist', "forventet tekst for li"
+        assertThat(html.body.div[2].div[0].ul[0].li[0].text()).asString().as("tekst for li")
+            .isEqualTo('testlist')
 
-        Assert.assertEquals html.body.div[2].ul[0].li[0].span[0].text(), 'return', "forventet tekst for retur"
-        Assert.assertEquals html.body.div[2].ul[0].li[0].div[0].text().trim().replaceAll("\\s+"," "), 'value typed as long<encoded>', "forventet dokumentasjon av retur" //groovy substituerer &gt; og andre entiteter...
-        Assert.assertEquals html.body.div[2].ul[0].li[0].div[0].span[0].text().trim(), 'long', "forventet formatert dokumentasjon av retur"
-        Assert.assertEquals html.body.div[2].ul[0].li[0].div[0].span[1].text().trim(), '<encoded>', "forventet formatert dokumentasjon av retur" //groovy substituerer &gt; og andre entiteter...
+        assertThat(html.body.div[2].ul[0].li[0].span[0].text()).asString().as("tekst for retur")
+            .isEqualTo('return')
+        assertThat(html.body.div[2].ul[0].li[0].div[0].text()).asString().as("dokumentasjon av retur")
+            .isEqualTo('value typed as long<encoded>') //groovy substituerer &gt; og andre entiteter...
+        assertThat(html.body.div[2].ul[0].li[0].div[0].span[0].text()).asString().as("formatert dokumentasjon av retur")
+            .isEqualTo('long')
+        assertThat(html.body.div[2].ul[0].li[0].div[0].span[1].text()).asString().as("formatert dokumentasjon av retur")
+            .isEqualTo('<encoded>') //groovy substituerer &gt; og andre entiteter...
     }
 
     /**
@@ -1377,12 +1415,17 @@ class WSDocProcessorTest extends TestKitBase {
         //leser inn html dokumentasjon som xml - dette steget validerer derfor html-koden
         GPathResult html = parseXML(file)
 
-        Assert.assertEquals html.body.div[0].div[0].h4[0].text().trim(), 'intToLong', "forventet overskrift"
-        Assert.assertEquals html.body.div[0].div[0].h5[0].text().trim(), 'Input', "forventet overskrift"
+        assertThat(html.body.div[0].div[0].h4[0].text()).asString().as("overskrift")
+            .isEqualTo('intToLong')
+        assertThat(html.body.div[0].div[0].h5[0].text()).asString().as("overskrift")
+            .isEqualTo('Input')
 
-        Assert.assertEquals html.body.div[0].div[0].ul[0].li[0].span[0].text(), 'value', "forventet parameternavn"
-        Assert.assertEquals html.body.div[0].div[0].ul[0].li[0].p[0].text().trim(), 'value in base system', "forventet tekstlig dokumentasjon"
-        Assert.assertEquals html.body.div[0].div[0].ul[0].li[0].p[0].span[0].text().trim(), 'base', "{@code base} wraps to <span>"
+        assertThat(html.body.div[0].div[0].ul[0].li[0].span[0].text()).asString().as("parameternavn")
+            .isEqualTo('value')
+        assertThat(html.body.div[0].div[0].ul[0].li[0].p[0].text()).asString().as("tekstlig dokumentasjon")
+            .isEqualTo('value in base system')
+        assertThat(html.body.div[0].div[0].ul[0].li[0].p[0].span[0].text()).asString().as("{@code base} wraps to <span>")
+            .isEqualTo('base')
     }
 
     /**
@@ -1396,7 +1439,7 @@ class WSDocProcessorTest extends TestKitBase {
         File resourcePath = file('src/main/resources')
 
         File interfaceSource = writeFileUTF8('src/main/java/TestWSI.java', """\
-                 /** Interface javadoc */ 
+                 /** Interface javadoc */
                  @javax.jws.WebService(
                      name = "TestService",
                      targetNamespace = "http://test.no/unit")
@@ -1448,13 +1491,13 @@ class WSDocProcessorTest extends TestKitBase {
         //leser inn html dokumentasjon som xml - dette steget validerer derfor html-koden
         GPathResult html = parseXML(file)
 
-        assertThat(html.head.title.text() as String).isEqualTo('TestServiceWS')
-        assertThat(html.body.h1[0].text() as String).isEqualTo('name=TestServiceWS')
-        assertThat(html.body.h1[1].text() as String).isEqualTo('description=Interface javadoc')
-        assertThat(html.body.h1[2].text() as String).isEqualTo('namespace=http://test.no/unit')
+        assertThat(html.head.title.text()).asString().isEqualTo('TestServiceWS')
+        assertThat(html.body.h1[0].text()).asString().isEqualTo('name=TestServiceWS')
+        assertThat(html.body.h1[1].text()).asString().isEqualTo('description=Interface javadoc')
+        assertThat(html.body.h1[2].text()).asString().isEqualTo('namespace=http://test.no/unit')
 
-        assertThat(html.body.div[1].div[0].h4[0] as String).isEqualTo("intToLong")
-        assertThat(html.body.div[1].div[0].p[0] as String).isEqualTo("Returnerer PONG")
+        assertThat(html.body.div[1].div[0].h4).asString().isEqualTo('intToLong')
+        assertThat(html.body.div[1].div[0].p[0]).asString().isEqualTo('Returnerer PONG')
     }
 
     public static GPathResult parseXML(File file) {

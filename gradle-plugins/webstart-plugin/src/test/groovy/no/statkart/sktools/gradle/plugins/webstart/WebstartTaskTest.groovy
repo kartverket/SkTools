@@ -1,10 +1,10 @@
 package no.statkart.sktools.gradle.plugins.webstart
 
 import no.statkart.sktools.gradle.testutils.TestKitBase
+import org.gradle.api.Project
 import org.gradle.api.XmlProvider
 import org.testng.Assert
 import org.testng.annotations.Test
-import org.gradle.api.Project
 
 import static org.assertj.core.api.Assertions.assertThat
 import static org.assertj.core.api.Assertions.contentOf
@@ -90,7 +90,7 @@ class WebstartTaskTest extends TestKitBase {
         Assert.assertEquals(configurations[1].application.args[0], 'argument1')
 
         configurations[0].resources.runtimes.flatten().with { ArrayList<JavaRuntimeConfiguration> runtimesConfiguration0 ->
-            Assert.assertEquals(runtimesConfiguration0.size(), 1)
+            assertThat(runtimesConfiguration0).hasSize(1)
             runtimesConfiguration0.each {
                 Assert.assertEquals(it.version, '1.5+')
                 Assert.assertEquals(it.href, "http://java.sun.com/products/autodl/j2se")
@@ -101,7 +101,7 @@ class WebstartTaskTest extends TestKitBase {
         }
 
         configurations[1].resources.runtimes.flatten().with { ArrayList<JavaRuntimeConfiguration> runtimesConfiguration1 ->
-            Assert.assertEquals(runtimesConfiguration1.size(), 2)
+            assertThat(runtimesConfiguration1).hasSize(2)
             runtimesConfiguration1.each {
                 Assert.assertEquals(it.version, '1.6+')
                 Assert.assertEquals(it.href, "http://some.download/location")

@@ -1,15 +1,15 @@
 package no.statkart.sktools.utils.databasepatcher
 
 import groovy.sql.GroovyRowResult
-import no.statkart.sktools.utils.databasepatcher.testutils.DatabasePatcherTestContext
-import org.testng.annotations.Test
-import org.testng.Assert
 import no.statkart.sktools.gradle.plugins.dbtools.HSQLDBTest
+import no.statkart.sktools.utils.databasepatcher.testutils.DatabasePatcherTestContext
 import no.statkart.sktools.utils.parsers.sql.SQLStatementParser
 import no.statkart.sktools.utils.parsers.sql.model.Expression
+import no.statkart.sktools.utils.parsers.sql.model.Statement
+import org.testng.Assert
+import org.testng.annotations.Test
 
 import static no.statkart.sktools.gradle.plugins.dbtools.testutils.DbToolsTestContext.FILE_TYPE.SQL
-import no.statkart.sktools.utils.parsers.sql.model.Statement
 
 /**
  * Tester funksjonaliteten til {@link no.statkart.sktools.utils.databasepatcher.DatabasePatcher}
@@ -34,7 +34,7 @@ class DatabasePatcherTest extends HSQLDBTest {
         def row = sql.firstRow('select ID, NAVN from TEST_TABLE where ID = 1')
 
         Assert.assertNotNull(row, 'Forventer en rad')
-        Assert.assertEquals(row.ID, 1, 'forventet ID')
+        Assert.assertEquals(row.ID as int, 1, 'forventet ID')
         Assert.assertEquals(row.NAVN, 'CHUCK NORRIS', 'forventet NAVN')
 
     }
@@ -60,7 +60,7 @@ class DatabasePatcherTest extends HSQLDBTest {
         def row = sql.firstRow('select ID, NAVN from TEST_TABLE where ID = 1')
 
         Assert.assertNotNull(row, 'Forventer en rad')
-        Assert.assertEquals(row.ID, 1, 'forventet ID')
+        Assert.assertEquals(row.ID as int, 1, 'forventet ID')
         Assert.assertEquals(row.NAVN, 'CHUCK NORRIS', 'forventet NAVN')
 
     }
@@ -190,7 +190,7 @@ INSERT INTO B_TABLE (ID, NAVN) VALUES (2, 'valueB');
 
         Assert.assertEquals(databasePatcher.getVersion().component, 'modulB', "forventet modul")
         Assert.assertEquals(databasePatcher.getVersion().patchVersion.dbVersion, '0.2', "forventet patchversjon/dbVersion")
-        Assert.assertEquals(databasePatcher.getVersion().patchVersion.patchNo, 4, "forventet patchnummer")
+        Assert.assertEquals(databasePatcher.getVersion().patchVersion.patchNo as int, 4, "forventet patchnummer")
 
     }
 
@@ -225,17 +225,17 @@ INSERT INTO B_TABLE (ID, NAVN) VALUES (2, 'valueB');
             expressionNo++
             Assert.assertEquals(entries[expressionNo].key.patchtype.name, 'DATA', "Forventer at element er data patch")
             Assert.assertEquals(entries[expressionNo].key.dbVersion, '1.0', "Forventet dbVersion")
-            Assert.assertEquals(entries[expressionNo].key.patchNo, 1, "Forventet patchNo")
+            Assert.assertEquals(entries[expressionNo].key.patchNo as int, 1, "Forventet patchNo")
             Assert.assertEquals(entries[expressionNo].key.kommentar, '"Create test table"', "Kommentar")
-            Assert.assertEquals(entries[expressionNo].value.findAll {it instanceof Statement}.size(), 1, "Forventet antall statements")
+            Assert.assertEquals(entries[expressionNo].value.findAll {it instanceof Statement}.size() as int, 1, "Forventet antall statements")
 
             expressionNo++
             Assert.assertEquals(entries[expressionNo].key.patchtype.name, 'DATA', "Forventer at element er data patch")
             Assert.assertEquals(entries[expressionNo].key.dbVersion, '1.0', "Forventet dbVersion")
-            Assert.assertEquals(entries[expressionNo].key.patchNo, 3, "Forventet patchNo")
-            Assert.assertEquals(entries[expressionNo].value.findAll {it instanceof Statement}.size(), 1, "Forventet antall statements")
+            Assert.assertEquals(entries[expressionNo].key.patchNo as int, 3, "Forventet patchNo")
+            Assert.assertEquals(entries[expressionNo].value.findAll {it instanceof Statement}.size() as int, 1, "Forventet antall statements")
 
-            Assert.assertEquals(entries.size(), 3, "Forventet antall patcher + minversion")
+            Assert.assertEquals(entries.size() as int, 3, "Forventet antall patcher + minversion")
         }
 
     }
@@ -277,23 +277,23 @@ CREATE TABLE TEST_TABLE2;
             expressionNo++
             Assert.assertEquals(entries[expressionNo].key.patchtype.name, 'ALWAYS', "Forventer at element er data patch")
             Assert.assertEquals(entries[expressionNo].key.dbVersion, '0', "Forventet dbVersion")
-            Assert.assertEquals(entries[expressionNo].key.patchNo, -1, "Forventet patchNo")
+            Assert.assertEquals(entries[expressionNo].key.patchNo as int, -1, "Forventet patchNo")
             Assert.assertEquals(entries[expressionNo].key.kommentar, '"Definerer skjema for påfølgende patcher"', "Kommentar")
-            Assert.assertEquals(entries[expressionNo].value.findAll {it instanceof Statement}.size(), 1, "Forventet antall statements")
+            Assert.assertEquals(entries[expressionNo].value.findAll {it instanceof Statement}.size() as int, 1, "Forventet antall statements")
 
             expressionNo++
             Assert.assertEquals(entries[expressionNo].key.patchtype.name, 'SCHEMA', "Forventer at element er data patch")
             Assert.assertEquals(entries[expressionNo].key.dbVersion, '1.1', "Forventet dbVersion")
-            Assert.assertEquals(entries[expressionNo].key.patchNo, 1, "Forventet patchNo")
-            Assert.assertEquals(entries[expressionNo].value.findAll {it instanceof Statement}.size(), 1, "Forventet antall statements")
+            Assert.assertEquals(entries[expressionNo].key.patchNo as int, 1, "Forventet patchNo")
+            Assert.assertEquals(entries[expressionNo].value.findAll {it instanceof Statement}.size() as int, 1, "Forventet antall statements")
 
             expressionNo++
             Assert.assertEquals(entries[expressionNo].key.patchtype.name, 'DATA', "Forventer at element er data patch")
             Assert.assertEquals(entries[expressionNo].key.dbVersion, '1.1', "Forventet dbVersion")
-            Assert.assertEquals(entries[expressionNo].key.patchNo, 2, "Forventet patchNo")
-            Assert.assertEquals(entries[expressionNo].value.findAll {it instanceof Statement}.size(), 2, "Forventet antall statements")
+            Assert.assertEquals(entries[expressionNo].key.patchNo as int, 2, "Forventet patchNo")
+            Assert.assertEquals(entries[expressionNo].value.findAll {it instanceof Statement}.size() as int, 2, "Forventet antall statements")
 
-            Assert.assertEquals(entries.size(), 4, "Forventet antall patcher + minversion")
+            Assert.assertEquals(entries.size() as int, 4, "Forventet antall patcher + minversion")
         }
 
     }
@@ -355,11 +355,11 @@ ${testContext.PATCH_03}
         //STEG: repatch med indexesInSyncWithPatch = false
         // - Forventer ny rad ved syncPatch
         databasePatcher.setIndexesInSyncWithPatch(false);
-        Assert.assertEquals(sql.firstRow('select * from PATCHINFO').indexesInSyncWithPatch, 0, "indexesInSyncWithPatch")
+        Assert.assertEquals(sql.firstRow('select * from PATCHINFO').indexesInSyncWithPatch as int, 0, "indexesInSyncWithPatch")
 
         databasePatcher.syncPatch(updatedPatchFileWithIndex.toString(), Collections.singleton(PatchtypeKode.INDEX));
 
-        Assert.assertEquals(sql.firstRow('select * from PATCHINFO').indexesInSyncWithPatch, 1, "indexesInSyncWithPatch")
+        Assert.assertEquals(sql.firstRow('select * from PATCHINFO').indexesInSyncWithPatch as int, 1, "indexesInSyncWithPatch")
         Assert.assertEquals(sql.firstRow('''select count(*) from TEST_TABLE''')[0], 3, 'Forventet #rader')
 
     }
@@ -467,9 +467,9 @@ ${PATCH3}
     static void assertPatchInfoRow(GroovyRowResult row, String dbVersion, int patchNo, Boolean indexesInSyncWithPatch = null, String message) {
         Assert.assertNotNull(row, "${message}: Forventet en rad")
         Assert.assertEquals(row.dbVersion, dbVersion, "${message}: Patchversjon/dbVersion")
-        Assert.assertEquals(row.patchNo, patchNo, "${message}: patchNo")
+        Assert.assertEquals(row.patchNo as int, patchNo, "${message}: patchNo")
         if (indexesInSyncWithPatch != null) {
-            Assert.assertEquals(row.indexesInSyncWithPatch, indexesInSyncWithPatch ? 1 : 0, "${message}: indexesInSyncWithPatch")
+            Assert.assertEquals(row.indexesInSyncWithPatch as int, indexesInSyncWithPatch ? 1 : 0, "${message}: indexesInSyncWithPatch")
         }
     }
 
