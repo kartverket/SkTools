@@ -83,3 +83,12 @@ Publisering av nye versjoner gjøres via jenkins jobb.
 
 Før versjon 5.6 og overgang til git så benyttet "late branching" som strategi for merging av kildekode.
 Disse taggene har da versjon som starter med `sktools-` - f.eks. "sktools-5.5.1" og ble bygget manuelt.
+
+
+## Historikk til kodebasen
+Denne kodebasen lå først i VCS systemet Perforce der det ble opprettet.
+
+I 2020 så ble dette konvertert til Git og lagt på BitBucket tjener.
+Script for konvertering og loggfiler finnes i teg [perforce-migrering](https://github.com/kartverket/SkTools/tree/perforce-migrering).
+
+I 2023 ble repoet flyttet til GitHub under [kartverket/SkTools](https://github.com/kartverket/SkTools)
