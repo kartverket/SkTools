@@ -46,7 +46,9 @@ pipeline {
                     }
                     steps {
                         sh "gradle --version"
-                        sh "gradle test -DignoreFailures=true ${gradleOptions(this)}"
+                        catchError(stageResult: 'UNSTABLE') {
+                            sh "gradle test ${gradleOptions(this)} --continue"
+                        }
                     }
                     post {
                         always {
@@ -60,7 +62,9 @@ pipeline {
                     }
                     steps {
                         sh "gradle --version"
-                        sh "gradle test -DignoreFailures=true ${gradleOptions(this)}"
+                        catchError(stageResult: 'UNSTABLE') {
+                            sh "gradle test ${gradleOptions(this)} --continue"
+                        }
                     }
                     post {
                         always {
