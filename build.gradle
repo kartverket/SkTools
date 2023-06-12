@@ -33,7 +33,7 @@ project.ext.libraries = [
         slf4j_api: "org.slf4j:slf4j-api:${libVersion('slf4j', '1.7.36')}",
         slf4j_simple: "org.slf4j:slf4j-simple:${libVersion('slf4j', '1.7.36')}",
 
-        saxon : 'net.sf.saxon:Saxon-HE:9.9.1-8', //xslt 2.0
+        saxon : 'net.sf.saxon:Saxon-HE:12.2', //xslt 2.0
 
         jaxb_xjc : 'org.glassfish.jaxb:jaxb-xjc:2.3.5',
         jaxb_rt : 'org.glassfish.jaxb:jaxb-runtime:2.3.5',
