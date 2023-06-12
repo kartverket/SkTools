@@ -26,4 +26,13 @@ public class FilterResourcesTask extends ProcessResources {
         }
     }
 
+    /**
+     * Configures the path for filtered resources output.
+     *
+     * @since 1.2 - SKIF-173
+     */
+    public void setDestinationDir(Object filteredResourcesDir) {
+        into(filteredResourcesDir);
+    }
+
 }

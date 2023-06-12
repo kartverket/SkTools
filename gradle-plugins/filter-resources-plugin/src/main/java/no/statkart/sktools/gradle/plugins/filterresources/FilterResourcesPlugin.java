@@ -4,7 +4,6 @@ import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileTreeElement;
-import org.gradle.api.internal.HasConvention;
 import org.gradle.api.plugins.BasePlugin;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
@@ -18,7 +17,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import static no.statkart.sktools.gradle.plugins.filterresources.FilterResourcesSourceSetConvention.FILTER_RESOURCES_TASK_NAME_PATTERN;
 
 /**
  * SKTOOLS-44: Plugin kun for filtrering av resourceSets
@@ -29,16 +27,6 @@ import static no.statkart.sktools.gradle.plugins.filterresources.FilterResources
 public class FilterResourcesPlugin implements Plugin<Project> {
 
     public final static String CONVENTION_NAME = "filterProperties";
-
-    /**
-     * Ihht {@link FilterResourcesSourceSetConvention}
-     */
-    public final static String FILTER_MAIN_RESOURCES_TASK_NAME = "filterResources";
-
-    /**
-     * Ihht {@link FilterResourcesSourceSetConvention}
-     */
-    public final static String FILTER_TEST_RESOURCES_TASK_NAME = String.format(FILTER_RESOURCES_TASK_NAME_PATTERN, "Test");
 
 
     @Override
@@ -76,22 +64,16 @@ public class FilterResourcesPlugin implements Plugin<Project> {
         project.getConvention().getPlugin(JavaPluginConvention.class).getSourceSets().all(new Action<SourceSet>() {
             public void execute(final SourceSet sourceSet) {
 
-
                 //oppretter copy task for filtrering...
-                final FilterResourcesTask filterResourcesTask;
-                filterResourcesTask = project.getTasks().create(FilterResourcesSourceSetConvention.getFilterResourcesTaskName(sourceSet), FilterResourcesTask.class);
+                final FilterResourcesTask filterResourcesTask =
+                    project.getTasks().create(sourceSet.getTaskName("filter", "Resources"), FilterResourcesTask.class);
                 filterResourcesTask.setDescription(String.format("Filters the %s resources for filtering.", sourceSet.getName()));
 
                 filterResourcesTask.setFileMode(0755);  //SKTOOLS-123 no read only generated files i linux
                 filterResourcesTask.setDirMode(0755); //SKTOOLS-123 no read only generated files i linux
 
-                //oppretter source set-utvidelse for filtrerte ressurser
-                final FilterResourcesSourceSetConvention sourceSetConvention = new FilterResourcesSourceSetConvention(sourceSet, filterResourcesTask);
-                final FilterResourcesSourceSetOutputConvention sourceSetOutputConvention = new FilterResourcesSourceSetOutputConvention(filterResourcesTask, sourceSet, project);
-
                 //hekter inn utvidelser på source settet
-                ((HasConvention) sourceSet).getConvention().getPlugins().put(CONVENTION_NAME, sourceSetConvention); // SKIF-173
-                ((HasConvention) sourceSet.getOutput()).getConvention().getPlugins().put(CONVENTION_NAME, sourceSetOutputConvention); // SKIF-173
+                sourceSet.getExtensions().add("filterResources", filterResourcesTask); // SKIF-173
 
                 filterResourcesTask.srcDir(String.format("src/%s/filterResources", sourceSet.getName()));
 
@@ -103,8 +85,8 @@ public class FilterResourcesPlugin implements Plugin<Project> {
                 });
 
 
-                //hekter inn task for filtering
-                project.getTasks().getByName(sourceSet.getProcessResourcesTaskName()).dependsOn(sourceSetConvention.getFilterResourcesTaskName());
+                //registrerer sourceDir + hekter inn task for filtering
+                sourceSet.getResources().srcDir(filterResourcesTask);
 
                 //clean
                 Delete cleanTask = (Delete) project.getTasks().getByName(BasePlugin.CLEAN_TASK_NAME);
@@ -113,14 +95,10 @@ public class FilterResourcesPlugin implements Plugin<Project> {
                 project.afterEvaluate(new Action<Project>() {
                     public void execute(Project project) {
                         //default verdier for filterResources source set
-                        if (sourceSetOutputConvention.getFilterResourcesOutputDir() == null) {
-                            sourceSetOutputConvention.filterResourcesOutput(
-                                Paths.get(String.valueOf(project.getBuildDir()), "filteredResources", sourceSet.getName()));
+                        if (filterResourcesTask.getDestinationDir() == null) {
+                            filterResourcesTask.into(
+                                Paths.get(project.getBuildDir().toString(), "filteredResources", sourceSet.getName()));
                         }
-
-                        //registrerer sourceDir
-                        sourceSet.getResources().srcDir(filterResourcesTask.getDestinationDir());
-
                         //registrerer properties til task
                         Map<String, Object> filterProperties = convention.getProperties();
                         filterResourcesTask.getInputs().properties(filterProperties);
@@ -136,7 +114,6 @@ public class FilterResourcesPlugin implements Plugin<Project> {
                         });
                     }
                 });
-
             }
         });
 
