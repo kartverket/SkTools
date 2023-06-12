@@ -136,8 +136,6 @@ subprojects { Project project ->
 
     /**
      * Testing via TestNG grupper. Se bruk av @Test(groups = "") i koden.
-     *
-     * -DignoreFailures=true stopper ikke eksekvering etter feilende modul og kjører videre. Kjekt for integrasjonstesting som ønsker å kjøre alle tester alltid.
      */
     project.tasks.withType(Test) { Test test -> //felles for alle test-tasks
 
@@ -146,7 +144,6 @@ subprojects { Project project ->
 //            listeners << 'org.uncommons.reportng.HTMLReporter' // Gradles innebygde rapport viser ikke skipped
         }
 
-        ignoreFailures = System.getProperty('ignoreFailures', 'false') == 'true' //Gradle feiler ikke dersom denne er true. Kan ikke være true dersom en gjør en publish
         systemProperty 'java.io.tmpdir', System.getProperty('java.io.tmpdir')
 
         jvmArgs '-Xmx512m'
