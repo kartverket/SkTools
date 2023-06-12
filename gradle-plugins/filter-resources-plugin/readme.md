@@ -39,6 +39,10 @@ Changelog
 ------------
 ## Unreleased Changes
 
+## 6.0 Release Notes
+ * [SKTOOLS-202] Forenklet konfigurering av output-dir.
+   - `SourceSet.output.filterResourcesOutput` erstattes av `SourceSet.filterResources.into`
+
 ## 1.3.0 Release Notes
  * [SKTOOLS-44] Nytt forenklet plugin (splittet ut fra tidligere 'filterproperties-plugin')
 
@@ -54,8 +58,8 @@ sourceSets {
         filterResources {
             properties = propertyUtils.projectProperties()   //default is propertyUtils.projectProperties()
             properties myproperty:'myvalue'    //adds myproperty to set of filtered properties
+            into 'gen/main/resources' //optional hardcoded placement of output files
         }
-        output.filterResourcesOutput 'gen/main/resources' //optional hardcoded placement of output files
     }
 }
 ```

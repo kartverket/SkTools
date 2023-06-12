@@ -9,8 +9,8 @@ import org.testng.annotations.Test
 
 import static no.statkart.sktools.gradle.plugins.filterresources.FilterPropertiesTestutil.writeTwoSimpleResources
 import static org.assertj.core.api.Assertions.assertThat
-import static org.assertj.core.api.Assertions.linesOf
 import static org.assertj.core.api.Assertions.contentOf
+import static org.assertj.core.api.Assertions.linesOf
 
 class FilterResourcesPluginTest extends TestKitBase {
 
@@ -108,7 +108,7 @@ class FilterResourcesPluginTest extends TestKitBase {
 
             sourceSets {
               main {
-                output.filterResourcesOutput 'gen/filtered' //utenfor mappen "build" som alltid slettes
+                filterResources.into 'gen/filtered' //utenfor mappen "build" som alltid slettes
               }
             }
         ''')
@@ -137,14 +137,14 @@ class FilterResourcesPluginTest extends TestKitBase {
                 main {
                     filterResources {
                         srcDir 'src/special/main'
+                        into 'gen/special/main'
                     }
-                    output.filterResourcesOutput 'gen/special/main'
                 }
                 test {
                     filterResources {
                         srcDir 'src/special/test'
+                        into 'gen/special/test'
                     }
-                    output.filterResourcesOutput 'gen/special/test'
                 }
             }
         ''')
@@ -154,7 +154,7 @@ class FilterResourcesPluginTest extends TestKitBase {
         writeFileUTF8("src/special/test/file2.txt", "file2.version=@version@")
 
 
-        BuildResult buildResult = testGradleBuild(FilterResourcesPlugin.FILTER_MAIN_RESOURCES_TASK_NAME, FilterResourcesPlugin.FILTER_TEST_RESOURCES_TASK_NAME)
+        BuildResult buildResult = testGradleBuild("filterResources", "filterTestResources")
         assertThat(buildResult.tasks(TaskOutcome.SUCCESS)).hasSize(2);
         assertThat(buildResult.tasks(TaskOutcome.SKIPPED)).hasSize(0);
 
@@ -180,7 +180,7 @@ class FilterResourcesPluginTest extends TestKitBase {
             sourceSets {
                 coolCode {
                     filterResources.srcDirs = ['src/code/unfiltered', 'src/easter/eggs']
-                    output.filterResourcesOutput 'build/gen/so/cool'
+                    filterResources.into 'build/gen/so/cool'
                 }
             }
 
@@ -234,7 +234,7 @@ class FilterResourcesPluginTest extends TestKitBase {
 
             sourceSets {
                 main {
-                    output.filterResourcesOutput 'build/gen/so/cool' //custom placement
+                    filterResources.into 'build/gen/so/cool' //custom placement
                 }
             }
         ''')
