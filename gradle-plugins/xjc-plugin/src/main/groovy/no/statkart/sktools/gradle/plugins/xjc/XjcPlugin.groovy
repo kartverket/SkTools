@@ -1,6 +1,6 @@
 package no.statkart.sktools.gradle.plugins.xjc
 
-import no.statkart.sktools.gradle.plugins.xjc.internal.XjcSourceSetConvention
+
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.NamedDomainObjectFactory
@@ -8,7 +8,6 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.DependencySet
-import org.gradle.api.internal.HasConvention
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSet
@@ -40,7 +39,7 @@ import org.gradle.util.GUtil
  *
  * </p>
  *
- * For hvert {@code SourceSet} plugges det inn mulighet for ekstra konfigurasjon. Se {@link XjcSourceSetConvention }
+ * For hvert {@code SourceSet} plugges det inn mulighet for ekstra konfigurasjon. Se {@link XjcConfig }
  *
  *
  * @since 1.0
@@ -92,16 +91,13 @@ class XjcPlugin implements Plugin<Project> {
                 });
 
                 //hekter inn utvidelser på source settet
-                ((HasConvention) sourceSet).getConvention().getPlugins().put(CONVENTION_NAME, new XjcSourceSetConvention(xjcSchemas));
+                sourceSet.getExtensions().add(CONVENTION_NAME, xjcSchemas)
 
                 xjcSchemas.all(new Action<XjcConfig>() {
                     void execute(XjcConfig xjcConfig) {
                         //setter ingen default plassering av kildefiler for sourceSet - dette må eksplisitt deklareres i konfigurasjon
-
                         TaskProvider<XjcTask> xjcTask = createXjcTaskForSourceSet(xjcConfig);
-
                         sourceSet.getJava().srcDir(xjcTask);
-
                     }
 
 
