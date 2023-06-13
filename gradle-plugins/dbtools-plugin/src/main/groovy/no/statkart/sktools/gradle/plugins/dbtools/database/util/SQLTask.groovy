@@ -38,7 +38,7 @@ public class SQLTask extends AbstractSQLTask {
         specs.password = getPassword();
         specs.driver = getDriver();
         specs.url = getUrl();
-        specs.failOnError = getFailOnError()
+        specs.failOnError = failOnError.get()
 
         executor.executeStatements(specs)
     }
@@ -80,7 +80,7 @@ public class SQLTask extends AbstractSQLTask {
         Objects.requireNonNull(file, "Enten sqlFile eller sqlString må angis!")
 
         logger.info('parsing statements from file: {}', file);
-        Charset charset = Charset.forName(getEncoding())
+        Charset charset = Charset.forName(encoding.get())
         return String.join('\n', Files.readAllLines(file.toPath(), charset))
     }
 

@@ -3,6 +3,7 @@ package no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch
 import groovy.transform.PackageScope
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
@@ -19,7 +20,6 @@ import java.nio.file.Paths
  * @author Leif Lislegård
  * @since 1.2
  */
-@SuppressWarnings("UnnecessaryQualifiedReference")
 class PatchTask extends DatabasePatchTask {
     protected static final Logger logger = Logging.getLogger(PatchTask.class);
 
@@ -29,23 +29,9 @@ class PatchTask extends DatabasePatchTask {
     @InputFile
     File sqlFile
 
-    Boolean singlestep
-    void setSinglestep(def value) {
-        if (value != null) {
-            singlestep = Boolean.parseBoolean("${value}")
-        } else {
-            singlestep = null
-        }
-    }
-
     @Internal
-    boolean getSinglestep() {
-        if (singlestep != null) {
-            singlestep
-        } else {
-            project.gradle.startParameter.systemPropertiesArgs['singlestep']
-        }
-    }
+    final Property<Boolean> singlestep = project.getObjects().property(Boolean).convention(
+        Boolean.valueOf(project.gradle.startParameter.systemPropertiesArgs.get('singlestep')))
 
     @TaskAction
     def exec() {
@@ -58,7 +44,7 @@ class PatchTask extends DatabasePatchTask {
 
             configureDefaultSpec(spec)
 
-            spec.systemProperties.put('singlestep', getSinglestep())
+            spec.systemProperties.put('singlestep', singlestep.get())
 
             if (logger.isDebugEnabled()) {
                 logger.debug('Executing databasepatcher with command: ' + (spec.getArgs() + spec.getAllJvmArgs()).join('\n\t'))
@@ -77,7 +63,7 @@ class PatchTask extends DatabasePatchTask {
     File mappedSqlFile(File file = getSqlFile()) {
         if (file == null) return null;
 
-        Charset charset = Charset.forName(getEncoding())
+        Charset charset = Charset.forName(encoding.get())
         logger.info('parsing statements from file: {}', file);
         List<String> transformedLines = fillInnProperties(Files.readAllLines(file.toPath(), charset))
 

@@ -1,11 +1,15 @@
 package no.statkart.sktools.gradle.plugins.dbtools.database.oracle
 
-import org.gradle.api.internal.ConventionTask
+import org.gradle.api.DefaultTask
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
+import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.MapProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
+
+import static no.statkart.sktools.gradle.plugins.dbtools.database.oracle.OracleTasksConvention.parallelArgumentProvider
 
 /**
  * Task for kjøring av import-script for oracle baser
@@ -15,47 +19,47 @@ import org.gradle.api.tasks.TaskAction
  * @author Leif Lislegård
  * @since 1.0
  */
-class OracleImportTask extends ConventionTask {
+class OracleImportTask extends DefaultTask {
     protected static final Logger logger = Logging.getLogger(OracleImportTask.class);
 
     @Internal
-    String directory
+    final Property<String> directory = project.getObjects().property(String)
 
     @Internal
-    String dumpfile
+    final Property<String> dumpfile = project.getObjects().property(String)
 
     @Internal
-    List<String> schemas
+    final ListProperty<String> schemas = project.getObjects().listProperty(String)
 
     @Internal
-    Map<String, String> schemaMapping
+    final MapProperty<String, String> schemaMapping = project.getObjects().mapProperty(String, String)
 
     @Internal
-    String logfile
+    final Property<String> logfile = project.getObjects().property(String)
 
     @Internal
-    String tableExistsAction
+    final Property<String> tableExistsAction = project.getObjects().property(String).convention('REPLACE')
 
     @Internal
-    Collection<String> exclude
+    final ListProperty<String> exclude = project.getObjects().listProperty(String)
 
     @Internal
-    Collection<String> include
+    final ListProperty<String> include = project.getObjects().listProperty(String)
 
     @Internal
-    Integer parallel
+    final Property<Integer> parallel = project.getObjects().property(Integer).convention(parallelArgumentProvider(project))
 
     @Internal
-    String username
+    final Property<String> username = project.getObjects().property(String)
 
     @Internal
-    String password
+    final Property<String> password = project.getObjects().property(String)
 
     @Internal
-    String tns
+    final Property<String> tns = project.getObjects().property(String)
 
     @Internal
-    String transform
+    final Property<String> transform = project.getObjects().property(String).convention('SEGMENT_ATTRIBUTES:n,OID:n:TYPE')
 
 
 
@@ -65,30 +69,30 @@ class OracleImportTask extends ConventionTask {
         def sout = new StringBuffer()
         def serr = new StringBuffer()
         List<String> command = ['impdp',
-                "${getUsername()}/${getPassword()}@${getTns()}",
-                "DIRECTORY=${getDirectory()}",
-                "SCHEMAS=${getSchemas().join(',')}",
-                "REMAP_SCHEMA=${getSchemaMapping().collect {key, value -> key + ':' + value}.join(',')}",
-                "DUMPFILE=${getDumpfile()}",
-                "LOGFILE=${getLogfile()}",
-                "TABLE_EXISTS_ACTION=${getTableExistsAction()}",
-                "TRANSFORM=${getTransform()}"
+                "${username.get()}/${password.get()}@${tns.get()}",
+                "DIRECTORY=${directory.get()}",
+                "SCHEMAS=${schemas.get().join(',')}",
+                "REMAP_SCHEMA=${schemaMapping.get().collect {key, value -> key + ':' + value}.join(',')}",
+                "DUMPFILE=${dumpfile.get()}",
+                "LOGFILE=${logfile.get()}",
+                "TABLE_EXISTS_ACTION=${tableExistsAction.get()}",
+                "TRANSFORM=${transform.get()}"
         ]
 
-        if (getExclude() != null && !getExclude().isEmpty()) {
-            command += "EXCLUDE=${getExclude().collect { Util.filterIncludeOrExcludeValue(it) }.join(',')}"
+        if (!exclude.getOrElse([]).isEmpty()) {
+            command += "EXCLUDE=${exclude.get().collect { Util.filterIncludeOrExcludeValue(it) }.join(',')}"
         }
-        if (getInclude() != null && !getInclude().isEmpty()) {
-            command += "INCLUDE=${getInclude().collect { Util.filterIncludeOrExcludeValue(it) }.join(',')}"
+        if (!include.getOrElse([]).isEmpty()) {
+            command += "INCLUDE=${include.get().collect { Util.filterIncludeOrExcludeValue(it) }.join(',')}"
         }
-        if (getParallel() != null) {
-            command += "PARALLEL=${getParallel()}"
+        if (parallel.isPresent()) {
+            command += "PARALLEL=${parallel.get()}"
         }
 
-        logger.lifecycle('Kaller impdp.exe med bruker ' + getUsername() + ', tns ' + getTns());
+        logger.lifecycle('Calling impdp with user ' + username.get() + ', tns ' + tns.get());
 
         if (logger.isInfoEnabled()) {
-            logger.info('Executing command: \n' + command.join(' ').replace(getPassword(), getPassword().replaceAll(/./, "*")))
+            logger.info('Executing command: \n' + command.join(' ').replace(password.get(), '***'))
         }
         def impdb = Runtime.runtime.exec(command as String[], null, getProject().getProjectDir())
 

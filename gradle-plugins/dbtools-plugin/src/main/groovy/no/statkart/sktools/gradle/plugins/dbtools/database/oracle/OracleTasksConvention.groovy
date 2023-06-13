@@ -4,8 +4,10 @@ import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsConvention
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractDatabaseConvention
 import org.gradle.api.GradleException
 import org.gradle.api.InvalidUserDataException
+import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.plugins.ExtraPropertiesExtension
+import org.gradle.api.provider.Provider
 
 import static org.gradle.api.Task.TASK_TYPE
 
@@ -139,7 +141,7 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
         }
     }
 
-    public Collection<String> getSchemas() {
+    public List<String> getSchemas() {
         if (this.properties.containsKey('schemas')) {
             return property('schemas')
         } else {
@@ -181,18 +183,15 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
         params.put(TASK_TYPE, OracleImportTask.class)
         OracleImportTask task = (OracleImportTask) task(params, 'Import', closure)
 
+        task.directory.convention(project.provider { getDirectory() })
+        task.dumpfile.convention(project.provider { getDumpfile() })
+        task.schemas.convention(project.provider { getSchemas() })
+        task.schemaMapping.convention(project.provider { getSchemaMapping() })
+        task.logfile.convention(project.provider { "${getUsername()}.import.${getDateString()}.LOG" })
 
-        task.conventionMapping('directory', { getDirectory() })
-        task.conventionMapping('dumpfile', { getDumpfile() })
-        task.conventionMapping('schemas', { getSchemas() })
-        task.conventionMapping('schemaMapping', { getSchemaMapping() })
-        task.conventionMapping('logfile', { "${getUsername()}.import.${getDateString()}.LOG" })
-        task.conventionMapping('tableExistsAction', { 'REPLACE' })
-        task.conventionMapping('transform', { 'SEGMENT_ATTRIBUTES:n,OID:n:TYPE' })
-
-        task.conventionMapping('username', { getUsername() })
-        task.conventionMapping('password', { getPassword() })
-        task.conventionMapping('tns', { getTns() })
+        task.username.convention(project.provider { getUsername() })
+        task.password.convention(project.provider { getPassword() })
+        task.tns.convention(project.provider { getTns() })
 
         return task
     }
@@ -206,18 +205,24 @@ class OracleTasksConvention extends AbstractDatabaseConvention {
         params.put(TASK_TYPE, OracleExportTask.class)
         OracleExportTask task = (OracleExportTask) task(params, 'Export', closure)
 
-        task.conventionMapping('directory', { getDirectory() })
-        task.conventionMapping('dumpfile', { getDumpfile() })
-        task.conventionMapping('schemas', { getSchemas() })
-        task.conventionMapping('logfile', { "${getDumpfile()}.export.${getDateString()}.LOG" })
-        task.conventionMapping('exclude', { ['STATISTICS', 'INDEX'] })
-        task.conventionMapping('compression', { 'DATA_ONLY' })
+        task.directory.convention(project.provider { getDirectory() })
+        task.dumpfile.convention(project.provider { getDumpfile() })
+        task.schemas.convention(project.provider { getSchemas() })
+        task.logfile.convention(project.provider { "${getDumpfile()}.export.${getDateString()}.LOG" })
 
-        task.conventionMapping('username', { getUsername() })
-        task.conventionMapping('password', { getPassword() })
-        task.conventionMapping('tns', { getTns() })
+        task.username.convention(project.provider { getUsername() })
+        task.password.convention(project.provider { getPassword() })
+        task.tns.convention(project.provider { getTns() })
 
         return task
+    }
+
+    //SKTOOLS-40: setter parallell dersom -Dparallel=<nr> er angitt, ellers null
+    static Provider<Integer> parallelArgumentProvider(Project project) {
+        project.provider {
+            def parallel = project.getGradle().getStartParameter().getSystemPropertiesArgs().get("parallel");
+            return parallel == null ? null : Integer.valueOf(parallel)
+        }
     }
 
     public Task task(Map params, String name, Closure closure = null) {

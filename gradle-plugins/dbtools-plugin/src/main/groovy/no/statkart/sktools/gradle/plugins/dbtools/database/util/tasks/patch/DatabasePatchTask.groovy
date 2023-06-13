@@ -2,8 +2,8 @@ package no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch
 
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractSQLTask
 import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.Optional
 import org.gradle.process.JavaExecSpec
 
 /**
@@ -19,26 +19,26 @@ abstract class DatabasePatchTask extends AbstractSQLTask {
      * Se dokumentasjon av {@link no.statkart.sktools.utils.databasepatcher.DatabasePatcher}
      */
     @Internal
-    boolean failOnWarning = failOnError
+    final Property<Boolean> failOnWarning = project.getObjects().property(Boolean).convention(failOnError)
 
     @Internal
-    String schema
+    final Property<String> schema = project.getObjects().property(String)
 
     @Internal
-    String component
+    final Property<String> component = project.getObjects().property(String).convention('null')
 
     @Internal
-    FileCollection classpath
+    final Property<FileCollection> classpath = project.getObjects().property(FileCollection)
 
 
     protected JavaExecSpec configureDefaultSpec(JavaExecSpec spec) {
         spec.setMain("no.statkart.sktools.utils.databasepatcher.DatabasePatcher")
 
-        spec.args('-component', getComponent())
+        spec.args('-component', component.get())
 
-        spec.setClasspath(getClasspath())
+        spec.setClasspath(classpath.get())
 
-        spec.systemProperties.put('sql.file.encoding', getEncoding())
+        spec.systemProperties.put('sql.file.encoding', encoding.get())
         spec.setDefaultCharacterEncoding(System.getProperty('file.encoding')) //samme file.encoding unngår forvrengning av loggoutput til konsoll
 
         //see documentation https://www.slf4j.org/api/org/slf4j/impl/SimpleLogger.html
@@ -53,12 +53,12 @@ abstract class DatabasePatchTask extends AbstractSQLTask {
         spec.systemProperties.put('hibernate.connection.username', getUsername())
         spec.systemProperties.put('hibernate.connection.password', getPassword())
 
-        if (getSchema() != null) {
-            spec.systemProperties.put('hibernate.connection.schema', getSchema())
+        if (schema.isPresent()) {
+            spec.systemProperties.put('hibernate.connection.schema', schema.get())
         }
 
-        spec.systemProperties.put('failOnError', getFailOnError())
-        spec.systemProperties.put('failOnWarning', getFailOnWarning())
+        spec.systemProperties.put('failOnError', failOnError.get())
+        spec.systemProperties.put('failOnWarning', failOnWarning.get())
 
         spec.setMaxHeapSize('128m')
 
@@ -67,10 +67,6 @@ abstract class DatabasePatchTask extends AbstractSQLTask {
 
     @Override
     void validate() {
-
-        if (getComponent() == null) {
-            throw new Exception("Value for attribute 'component' not set!")
-        }
 
         validateAbstractSQLTask()
     }

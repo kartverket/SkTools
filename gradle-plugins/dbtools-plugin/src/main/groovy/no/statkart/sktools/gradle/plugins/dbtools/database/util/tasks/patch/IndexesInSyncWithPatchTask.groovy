@@ -2,6 +2,7 @@ package no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch
 
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.JavaExecSpec
@@ -17,7 +18,7 @@ class IndexesInSyncWithPatchTask extends DatabasePatchTask {
     protected static final Logger logger = Logging.getLogger(IndexesInSyncWithPatchTask.class);
 
     @Internal
-    Boolean indexesUpToDate
+    final Property<Boolean> indexesUpToDate = project.getObjects().property(Boolean)
 
     @TaskAction
     def exec() {
@@ -25,7 +26,7 @@ class IndexesInSyncWithPatchTask extends DatabasePatchTask {
         project.javaexec { JavaExecSpec spec ->
 
             /** {@link no.statkart.sktools.utils.databasepatcher.DatabasePatcher#main } */
-            spec.setArgs(['setIndexesInSyncWithPatch', getIndexesUpToDate()])
+            spec.setArgs(['setIndexesInSyncWithPatch', indexesUpToDate.get().toString()])
 
             configureDefaultSpec(spec)
 

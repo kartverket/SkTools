@@ -195,12 +195,11 @@ class DbToolsPluginTest extends TestKitBase {
 
         1..2.each {
             def taskName = "db${it}Import"
-            Assert.assertNotNull(project.tasks.findByName(taskName), "Forventet at task er lagt til")
-            Assert.assertTrue(project.tasks[taskName] instanceof OracleImportTask)
+            assertThat(project.tasks.findByName(taskName)).isInstanceOf(OracleImportTask)
+            assertThat(project.tasks[taskName]).isInstanceOf(OracleImportTask)
             project.tasks[taskName].with { OracleImportTask task ->
-                Assert.assertEquals(task.username, 'brukernavn', "Forventet brukernavn")
-                Assert.assertEquals(task.password, 'passord', "Forventet passord")
-                Assert.assertEquals(task.transform, 'SEGMENT_ATTRIBUTES:n,OID:n:TYPE', "Forventet transform")
+                assertThat(task.username.get()).isEqualTo('brukernavn')
+                assertThat(task.password.get()).isEqualTo('passord')
             }
         }
     }
@@ -233,11 +232,11 @@ class DbToolsPluginTest extends TestKitBase {
 
         1..2.each {
             def taskName = "db${it}Export"
-            Assert.assertNotNull(project.tasks.findByName(taskName), "Forventet at task er lagt til")
-            Assert.assertTrue(project.tasks[taskName] instanceof OracleExportTask)
+            assertThat(project.tasks.findByName(taskName)).isInstanceOf(OracleExportTask)
+            assertThat(project.tasks[taskName]).isInstanceOf(OracleExportTask)
             project.tasks[taskName].with { OracleExportTask task ->
-                Assert.assertEquals(task.username, 'brukernavn', "Forventet brukernavn")
-                Assert.assertEquals(task.password, 'passord', "Forventet passord")
+                assertThat(task.username.get()).isEqualTo('brukernavn')
+                assertThat(task.password.get()).isEqualTo('passord')
             }
         }
     }
@@ -272,12 +271,12 @@ class DbToolsPluginTest extends TestKitBase {
 
         convention.dbToolSets.db1.patch['null'].tasks['TestSchema'].with { PatchTask task ->
             assertThat(task.sqlFile).isEqualTo(project.file("foo.sql"))
-            assertThat(task.component).isEqualTo('null')
-            assertThat(task.failOnError).isTrue()
-            assertThat(task.failOnWarning).isTrue()
+            assertThat(task.component.get()).isEqualTo('null')
+            assertThat(task.failOnError.get()).isTrue()
+            assertThat(task.failOnWarning.get()).isTrue()
 
-            assertThat(task.singlestep).isFalse()
-            assertThat(task.schema).isNull()
+            assertThat(task.singlestep.get()).isFalse()
+            assertThat(task.schema.getOrNull()).isNull()
         }
 
         final Task independentTask = project.task('IndependentTask', type: PatchTask.class) {
@@ -287,12 +286,12 @@ class DbToolsPluginTest extends TestKitBase {
         }
         independentTask.with { PatchTask task ->
             assertThat(task.sqlFile).isEqualTo(project.file("patchFoo.sql"))
-            assertThat(task.component).isEqualTo('null')
-            assertThat(task.failOnError).isTrue()
-            assertThat(task.failOnWarning).isTrue()
+            assertThat(task.component.get()).isEqualTo('null')
+            assertThat(task.failOnError.get()).isTrue()
+            assertThat(task.failOnWarning.get()).isTrue()
 
-            assertThat(task.singlestep).isTrue()
-            assertThat(task.schema).isNull()
+            assertThat(task.singlestep.get()).isTrue()
+            assertThat(task.schema.getOrNull()).isNull()
         }
     }
 
@@ -326,7 +325,7 @@ class DbToolsPluginTest extends TestKitBase {
         Assert.assertNotNull(convention.dbToolSets.db1.patch['null'].tasks['TestSchema'], "Forventet patch task")
 
         convention.dbToolSets.db1.patch['null'].tasks['TestSchema'].with { PatchTask task ->
-            assertThat(task.schema).isEqualTo('schema2')
+            assertThat(task.schema.get()).isEqualTo('schema2')
         }
 
         final Task independentTask = project.task('IndependentTask', type: PatchTask.class) {
@@ -336,7 +335,7 @@ class DbToolsPluginTest extends TestKitBase {
             schema = 'schema3'
         }
         independentTask.with { PatchTask task ->
-            assertThat(task.schema).isEqualTo('schema3')
+            assertThat(task.schema.get()).isEqualTo('schema3')
         }
     }
 
@@ -373,11 +372,11 @@ class DbToolsPluginTest extends TestKitBase {
 
         convention.dbToolSets.db1.patch['null'].tasks['TestSchema'].with { SyncPatchTask task ->
             assertThat(task.sqlFile).isEqualTo(project.file("foo.sql"))
-            assertThat(task.component).isEqualTo('null')
-            assertThat(task.failOnError).isFalse()
-            assertThat(task.failOnWarning).isFalse()
-            assertThat(task.patchTypes).containsExactly('RERUN')
-            assertThat(task.singlestep).isFalse()
+            assertThat(task.component.get()).isEqualTo('null')
+            assertThat(task.failOnError.get()).isFalse()
+            assertThat(task.failOnWarning.get()).isFalse()
+            assertThat(task.patchTypes.get()).containsExactly('RERUN')
+            assertThat(task.singlestep.get()).isFalse()
         }
 
         final Task independentTask = project.task('IndependentTask', type: SyncPatchTask.class) {
@@ -387,14 +386,13 @@ class DbToolsPluginTest extends TestKitBase {
         }
         independentTask.with { SyncPatchTask task ->
             assertThat(task.sqlFile).isEqualTo(project.file("patchFoo.sql"))
-            assertThat(task.component).isEqualTo('null')
-            assertThat(task.failOnError).isTrue()
-            assertThat(task.failOnWarning).isFalse()
+            assertThat(task.component.get()).isEqualTo('null')
+            assertThat(task.failOnError.get()).isTrue()
+            assertThat(task.failOnWarning.get()).isFalse()
 
-            assertThat(task.patchTypes).containsExactly('INDEX', 'TYPE', 'PACKAGE', 'FUNCTION')
-            assertThat(task.singlestep).isTrue()
+            assertThat(task.patchTypes.get()).containsExactly('INDEX', 'TYPE', 'PACKAGE', 'FUNCTION')
+            assertThat(task.singlestep.get()).isTrue()
         }
-
     }
 
     /**
@@ -423,7 +421,7 @@ class DbToolsPluginTest extends TestKitBase {
 
         convention.dbToolSets.db1.patch['null'].tasks['AssignLatestPatchlevel'].with { DefineLatestPatchVersionTask task ->
             assertThat(task.sqlFile).isEqualTo(project.file("foo.sql"))
-            assertThat(task.component).isEqualTo('null')
+            assertThat(task.component.get()).isEqualTo('null')
         }
 
         final Task independentTask = project.task('IndependentTask', type: DefineLatestPatchVersionTask.class) {
@@ -432,7 +430,7 @@ class DbToolsPluginTest extends TestKitBase {
         }
         independentTask.with { DefineLatestPatchVersionTask task ->
             assertThat(task.sqlFile).isEqualTo(project.file("patchFoo.sql"))
-            assertThat(task.component).isEqualTo('null')
+            assertThat(task.component.get()).isEqualTo('null')
         }
 
     }
