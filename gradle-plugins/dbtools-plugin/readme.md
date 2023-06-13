@@ -39,6 +39,10 @@ Changelog
 ------------
 ## Unreleased Changes
 
+## 6.0 Release Notes
+* [SKTOOLS-202] Property for sql-tasker er nå implementert med `Property` og `Provider` for konvensjonelle verdier.
+    - Groovy syntax skal være baokover-kompatibel med tidligere DSL.
+
 ## 1.4.0 Release Notes
  * [SKTOOLS-149] Parameteriserbar angivelse av transform for import.
  * [SKTOOLS-148] Autocommit på connection skal være false. Er nå kompatibel med Oracle 12c jdbc drivere.

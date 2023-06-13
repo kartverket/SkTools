@@ -1,5 +1,6 @@
 package no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch
 
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.JavaExecSpec
@@ -10,14 +11,18 @@ import org.gradle.process.JavaExecSpec
  * @author Leif Lislegård
  * @since 1.3
  */
-@SuppressWarnings("UnnecessaryQualifiedReference")
 class SyncPatchTask extends PatchTask {
 
     /**
      * Hvilke patch-typer som skal kjøres inn.
      */
     @Internal
-    Collection<String> patchTypes
+    final ListProperty<String> patchTypes = project.getObjects().listProperty(String)
+        .convention(['INDEX', 'TYPE', 'PACKAGE', 'FUNCTION']) //SKTOOLS-86
+
+    SyncPatchTask() {
+        failOnWarning.set(false)  //SKTOOLS-86
+    }
 
     @TaskAction
     def exec() {
@@ -26,11 +31,11 @@ class SyncPatchTask extends PatchTask {
         project.javaexec { JavaExecSpec spec ->
 
             /** {@link no.statkart.sktools.utils.databasepatcher.DatabasePatcher#main } */
-            spec.setArgs(['syncPatch', sqlFile.absolutePath, '-types', patchTypes.join(',')])
+            spec.setArgs(['syncPatch', sqlFile.absolutePath, '-types', patchTypes.get().join(',')])
 
             configureDefaultSpec(spec)
 
-            spec.systemProperties.put('singlestep', getSinglestep())
+            spec.systemProperties.put('singlestep', singlestep.get())
 
             if (logger.isDebugEnabled()) {
                 logger.debug('Executing databasepatcher with command: ' + (spec.getArgs() + spec.getAllJvmArgs()).join('\n\t'))
@@ -43,10 +48,9 @@ class SyncPatchTask extends PatchTask {
     void validate() {
         super.validate();
 
-        if (patchTypes == null || patchTypes.isEmpty()) {
+        if (patchTypes.getOrElse([]).isEmpty()) {
             throw new Exception("no patchTypes specified!")
         }
-        !patchTypes.isEmpty()
     }
 
 }

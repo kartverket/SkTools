@@ -1,6 +1,6 @@
 package no.statkart.sktools.gradle.plugins.dbtools.database.util
 
-import org.gradle.api.internal.ConventionTask
+import org.gradle.api.DefaultTask
 import org.gradle.api.logging.Logger
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Internal
@@ -13,14 +13,15 @@ import java.util.function.BiConsumer
  * @author Leif Lislegård
  * @since 1.2
  */
-abstract class AbstractSQLTask extends ConventionTask {
+abstract class AbstractSQLTask extends DefaultTask {
 
     /**
      * Bestemmer om gradle skal feile ved feil eller ikke.
      * <p>Defaultverdi: true
      */
     @Internal
-    boolean failOnError = !project.gradle.startParameter.isContinueOnFailure()
+    final Property<Boolean> failOnError = project.getObjects().property(Boolean).convention(project.provider {
+        Boolean.valueOf(!project.gradle.startParameter.isContinueOnFailure())})
 
     @Internal
     final Credentials credentials = new Credentials("task:${name}"
@@ -67,20 +68,14 @@ abstract class AbstractSQLTask extends ConventionTask {
     }
 
     //SKTOOLS-21
-    String encoding
-
     @Internal
-    String getEncoding() {
-        if (encoding != null) {
-            return encoding;
-        } else {
-            Map<String, String> sysProperties = new HashMap<String, String>();
-            sysProperties.putAll((Map) System.getProperties());
-            sysProperties.putAll(project.gradle.startParameter.getSystemPropertiesArgs());
+    final Property<String> encoding = project.getObjects().property(String).convention(project.provider {
+        Map<String, String> sysProperties = new HashMap<String, String>();
+        sysProperties.putAll((Map) System.getProperties());
+        sysProperties.putAll(project.gradle.startParameter.getSystemPropertiesArgs());
 
-            return sysProperties.get('sql.file.encoding') ?: sysProperties.get('file.encoding')
-        }
-    }
+        return sysProperties.get('sql.file.encoding') ?: sysProperties.get('file.encoding')
+    })
 
     @Internal
     abstract File getSqlFile();

@@ -11,7 +11,6 @@ import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.Patc
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.PrintPatchversionTask
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.SyncPatchTask
 import no.statkart.sktools.utils.databasepatcher.exception.ConfigurationException
-import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.file.FileCollection
@@ -166,9 +165,7 @@ class PatchConfiguration {
             setIndexesInSyncWithPatchTaskName = name
         }
         IndexesInSyncWithPatchTask task = configureDatabasePatchTask(params, setIndexesInSyncWithPatchTaskName, IndexesInSyncWithPatchTask.class, closure)
-        task.conventionMapping.with {
-            map 'indexesUpToDate', { Boolean.TRUE }
-        }
+        task.indexesUpToDate.set(Boolean.TRUE)
         return task
     }
 
@@ -180,9 +177,7 @@ class PatchConfiguration {
             unSetIndexesInSyncWithPatchTaskName = name
         }
         IndexesInSyncWithPatchTask task = configureDatabasePatchTask(params, unSetIndexesInSyncWithPatchTaskName, IndexesInSyncWithPatchTask.class, closure)
-        task.conventionMapping.with {
-            map 'indexesUpToDate', { Boolean.FALSE }
-        }
+        task.indexesUpToDate.set(Boolean.FALSE)
         return task
     }
 
@@ -231,34 +226,17 @@ class PatchConfiguration {
         databaseConvention.project.convention.plugins[DbtoolsPlugin.CONVENTION_NAME]
     }
 
-    static assignConventionMappings(Project project) {
-        project.tasks.withType(DatabasePatchTask.class) {
-            it.conventionMapping.with {
-                map 'component', { 'null' }
-            }
-        }
-
-        project.tasks.withType(SyncPatchTask.class) {
-            it.conventionMapping.with {
-                map 'patchTypes', { ['INDEX', 'TYPE', 'PACKAGE', 'FUNCTION'] } //SKTOOLS-86
-                map 'failOnWarning', { false } //SKTOOLS-86
-            }
-        }
-    }
-
     PatchTask configurePatchTask(Map params, String name, String verb = 'patch', Class type, Closure closure) {
         PatchTask task = configureDatabasePatchTask(params, name, verb, type, closure)
         return task
     }
 
-    DatabasePatchTask configureDatabasePatchTask(Map params, String target, String verb = '', Class type, Closure closure) {
+    DatabasePatchTask configureDatabasePatchTask(Map params, String target, String verb = '', Class<? extends DatabasePatchTask> type, Closure closure) {
         def taskName = getTaskName(verb, target)
-        def task = databaseConvention.configureAbstractSQLTask(params, taskName, type, closure)
-        task.conventionMapping.with {
-            map 'schema', { this.getSchema() }
-            map 'component', { this.getName() }
-            map 'classpath', { findJdbcDependencies() + findDbToolsDependencies() }
-        }
+        DatabasePatchTask task = databaseConvention.configureAbstractSQLTask(params, taskName, type, closure)
+        task.schema.convention(task.project.provider { this.getSchema() })
+        task.component.convention(task.project.provider { this.getName() })
+        task.classpath.convention(task.project.provider { findJdbcDependencies() + findDbToolsDependencies() })
         getTasks().addTask(target, task)
     }
 

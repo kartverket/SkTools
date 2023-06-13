@@ -2,11 +2,8 @@ package no.statkart.sktools.gradle.plugins.dbtools.database;
 
 import groovy.lang.Closure;
 import groovy.lang.GroovyObject;
-import no.statkart.sktools.gradle.plugins.dbtools.database.oracle.OracleExportTask;
-import no.statkart.sktools.gradle.plugins.dbtools.database.oracle.OracleImportTask;
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractDatabaseConvention;
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractSQLTask;
-import no.statkart.sktools.gradle.plugins.dbtools.database.util.PatchConfiguration;
 import org.codehaus.groovy.runtime.MethodClosure;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
@@ -15,7 +12,6 @@ import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.execution.TaskExecutionGraph;
 import org.gradle.api.execution.TaskExecutionGraphListener;
-import org.gradle.api.internal.ConventionTask;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.plugins.BasePlugin;
 import org.gradle.api.plugins.JavaBasePlugin;
@@ -26,7 +22,6 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Callable;
 
 /**
  * Gradle plugin for database-moduler.
@@ -71,7 +66,6 @@ public class DbtoolsPlugin implements Plugin<Project> {
         project.getConvention().getPlugins().put(CONVENTION_NAME, dbtoolsConvention);
 
         final Configuration configuration = project.getConfigurations().create(DBTOOLS_CONFIGURATION);
-        assignConventionMappings(project);
 
         configureInfo(project, "info");
 
@@ -127,28 +121,6 @@ public class DbtoolsPlugin implements Plugin<Project> {
                 }
             });
         });
-    }
-
-    static void assignConventionMappings(Project project) {
-        PatchConfiguration.assignConventionMappings(project);
-        //SKTOOLS-40: setter parallell dersom -Dparallel=<nr> er angitt
-        final Map<String, String> systemPropertiesArgs = project.getGradle().getStartParameter().getSystemPropertiesArgs();
-        if (systemPropertiesArgs.containsKey("parallel")) {
-            final Action<ConventionTask> setParallel = new Action<ConventionTask>() {
-                @Override
-                public void execute(ConventionTask task) {
-                    task.getConventionMapping().map("parallel", new Callable<Integer>() {
-                        @Override
-                        public Integer call() throws Exception {
-                            return Integer.valueOf(systemPropertiesArgs.get("parallel"));
-                        }
-                    });
-                }
-            };
-
-            project.getTasks().withType(OracleExportTask.class, setParallel);
-            project.getTasks().withType(OracleImportTask.class, setParallel);
-        }
     }
 
     void assignConventionalValues(Project project) {
