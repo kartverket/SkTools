@@ -8,7 +8,6 @@ include ':build-utils:wsdocgen'
 
 include ':gradle-plugins'
 include ':gradle-plugins:dbtools-plugin'
-include ':gradle-plugins:weblogic-plugin'
 include ':gradle-plugins:wsdl-customizer-plugin'
 include ':gradle-plugins:wsdlgen-plugin'
 include ':gradle-plugins:wsdocgen-plugin'

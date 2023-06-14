@@ -28,8 +28,6 @@ Gradle 6.0 og nyere.
 
 Java 8.
 
-Weblogic 12.1.3.x og nyere.
-
 
 
 Se [jenkinsfile for detaljert oversikt over testede versjoner](Jenkinsfile)
