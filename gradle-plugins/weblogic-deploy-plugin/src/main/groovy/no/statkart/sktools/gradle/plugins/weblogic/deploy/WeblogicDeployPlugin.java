@@ -15,6 +15,7 @@ public class WeblogicDeployPlugin implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
+        project.getLogger().warn("WARNING: WeblogicDeployPlugin is deprecated and is scheduled for removal in sktools 7.0!");
 
         WeblogicDeployConvention convention = new WeblogicDeployConvention(project);
         project.getConvention().getPlugins().put(WEBLOGIC_DEPLOY_CONVENTION_NAME, convention);
