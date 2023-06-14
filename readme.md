@@ -7,7 +7,6 @@ Fortrinnsvis er disse skrevet for Gradle, men Java baserte versjoner finnes ogs√
 Gradle plugins
 --------------
 * [sktools.dbtools](gradle-plugins/dbtools-plugin/readme.md)
-* [sktools.filter-resources](gradle-plugins/filter-resources-plugin/readme.md)
 * [sktools.properties](gradle-plugins/properties-plugin/readme.md)
 * [sktools.provided](gradle-plugins/provided-plugin/readme.md)
 * [sktools.weblogic-deploy](gradle-plugins/weblogic-deploy-plugin/readme.md)
