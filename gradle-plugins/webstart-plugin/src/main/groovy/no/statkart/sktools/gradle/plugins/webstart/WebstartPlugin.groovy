@@ -42,6 +42,8 @@ class WebstartPlugin implements Plugin<Project> {
     void apply(Project project) {
         project.getPluginManager().apply(WarPlugin)
 
+        project.getLogger().warn("WARNING: WebstartPlugin is deprecated and is scheduled for removal in sktools 7.0!")
+
         WebstartConvention convention = new WebstartConvention(project)
         project.convention.plugins.put(WEBSTART_CONVENTION_NAME, convention)
 
