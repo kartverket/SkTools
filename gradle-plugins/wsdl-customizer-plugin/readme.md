@@ -79,30 +79,3 @@ Configuration
             // Angir namespaces som ikke skal med (av de som er included)
         )
     }
-
-
-
-### Using weblogic-wswar
-Når man bruker denne i samme modul som sktools-weblogic-wswar-plugin,
-så trenger man ikke bruke generatedSchemas-konfigurasjonen.
-Merk at man i dette eksempelet må ha satt opp `example-v1-wsschema`
-til å publisere et zip-artefakt med skjemafilene i en schemas-konfigurasjon.
-
-    apply plugin: 'sktools-weblogic-wswar-plugin'
-    apply plugin: 'sktools-wsdl-customizer-plugin'
-
-    dependencies {
-        originalSchemas project(path: ':example-v1-wsschema', configuration: 'schemas')
-    }
-
-    customizeWsdls {
-        dependsOn genWeblogic
-        generatedWsdlAndSchemaFiles files(tasks.genWeblogic.destinationDir).asFileTree.matching {
-            include '**/*.wsdl', '**/*.xsd'
-            exclude '**/TestdataServiceWS*'
-        }
-        includeNamespaces(
-                'http://example.com/wsapi/v1/exception',
-                ...
-        )
-    }
