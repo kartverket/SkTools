@@ -1,19 +1,18 @@
 package no.statkart.sktools.gradle.plugins.weblogic.wsclient
 
-import org.gradle.api.Project
+import no.statkart.sktools.gradle.plugins.weblogic.WeblogicBasePlugin
 import org.gradle.api.Plugin
+import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.FileCollection
-import org.gradle.api.plugins.JavaPluginConvention
-import no.statkart.sktools.gradle.plugins.weblogic.WeblogicBasePlugin
-import org.gradle.api.tasks.SourceSet
-import org.gradle.api.Task
+import org.gradle.api.internal.ConventionMapping
+import org.gradle.api.plugins.BasePlugin
 import org.gradle.api.plugins.JavaBasePlugin
+import org.gradle.api.plugins.JavaPluginConvention
+import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.Sync
 import org.gradle.api.tasks.compile.AbstractCompile
-
-import org.gradle.api.plugins.BasePlugin
-import org.gradle.api.internal.ConventionMapping
 import org.gradle.util.GUtil
 
 import java.util.concurrent.Callable
@@ -36,7 +35,7 @@ class WeblogicWsClientPlugin implements Plugin<Project> {
         project.getPluginManager().apply(JavaBasePlugin.class)
         project.getPluginManager().apply(WeblogicBasePlugin.class)
 
-        project.getLogger().warn("WARNING: WeblogicWsClientPlugin is deprecated and is scheduled for removal!")
+        project.getLogger().warn("WARNING: WeblogicWsClientPlugin is deprecated and is scheduled for removal in sktools 7.0!");
 
         // SKTOOLS-17: weblogic 10.3.5 eller nyerer avhenger av tools.jar på classpath for wsclient
         project.getDependencies().add(WeblogicBasePlugin.WEBLOGIC_PROVIDED_CONFIGURATION_NAME, WeblogicBasePlugin.toolsJar(project))
