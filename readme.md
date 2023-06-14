@@ -10,7 +10,6 @@ Gradle plugins
 * [sktools.filter-resources](gradle-plugins/filter-resources-plugin/readme.md)
 * [sktools.properties](gradle-plugins/properties-plugin/readme.md)
 * [sktools.weblogic-deploy](gradle-plugins/weblogic-deploy-plugin/readme.md)
-* [sktools.weblogic-wsclient](gradle-plugins/weblogic-wsclient-plugin/readme.md)
 * [sktools.weblogic-wswar](gradle-plugins/weblogic-wswar-plugin/readme.md)
 * [sktools.wsdl-customizer](gradle-plugins/wsdl-customizer-plugin/readme.md)
 * [sktools.wsdlgen](gradle-plugins/wsdlgen-plugin/readme.md)
