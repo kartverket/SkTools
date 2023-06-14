@@ -3,22 +3,20 @@ plugins {
     id 'maven-publish'
 }
 
+java {
+    withSourcesJar()
+}
+
 dependencies {
     implementation group: 'com.sun.xml.ws', name: 'jaxws-tools', version: '2.3.5'
     implementation group: 'io.github.classgraph', name: 'classgraph', version: '4.8.114'
     implementation group: 'commons-cli', name: 'commons-cli', version: '1.4'
 }
 
-task sourcesJar(type: Jar) {
-    from sourceSets.main.allJava
-    classifier 'sources'
-}
-
 publishing {
     publications {
         mavenJava(MavenPublication) {
             from components.java
-            artifact sourcesJar
         }
     }
 }
