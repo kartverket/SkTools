@@ -19,7 +19,6 @@ include ':gradle-plugins:wsimport-plugin'
 include ':gradle-plugins:xjc-plugin'
 
 include ':gradle-plugins:properties-plugin'
-include ':gradle-plugins:filter-resources-plugin'
 
 
 
