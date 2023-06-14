@@ -13,7 +13,6 @@ Gradle plugins
 * [sktools.weblogic-deploy](gradle-plugins/weblogic-deploy-plugin/readme.md)
 * [sktools.weblogic-wsclient](gradle-plugins/weblogic-wsclient-plugin/readme.md)
 * [sktools.weblogic-wswar](gradle-plugins/weblogic-wswar-plugin/readme.md)
-* [sktools.webstart](gradle-plugins/webstart-plugin/readme.md)
 * [sktools.wsdl-customizer](gradle-plugins/wsdl-customizer-plugin/readme.md)
 * [sktools.wsdlgen](gradle-plugins/wsdlgen-plugin/readme.md)
 * [sktools.wsdoc](gradle-plugins/wsdocgen-plugin/readme.md)
