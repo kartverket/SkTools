@@ -19,7 +19,7 @@ Installation
 Build script snippet for new plugin DSL syntax:
 
     plugins {
-        id 'sktools.properties' version '6.0'
+        id 'sktools.properties' version '7.0'
     }
 
 Build script snippet for use in all versions:
@@ -29,9 +29,9 @@ Build script snippet for use in all versions:
             maven { url 'https://nexus.statkart.no/repository/public/' }
         }
         dependencies {
-            classpath 'no.statkart.sktools.gradle:properties-plugin:6.0'
+            classpath 'no.statkart.sktools.gradle:properties-plugin:7.0'
             // or
-            classpath 'no.statkart.sktools.gradle:gradle-plugins:6.0'
+            classpath 'no.statkart.sktools.gradle:gradle-plugins:7.0'
         }
 
     }

@@ -5,11 +5,11 @@ plugins {
 
 group = 'no.statkart.sktools.gradle'
 
-
-
-dependencies {
-    //'samlepom' av samtlige plugins [SKTOOLS-13]
-    api project.childProjects.values()
+afterEvaluate { //depends on children...
+    dependencies {
+        //'samlepom' av samtlige plugins [SKTOOLS-13]
+        api project.childProjects.values()
+    }
 }
 
 

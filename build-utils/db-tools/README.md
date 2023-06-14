@@ -3,7 +3,7 @@ Verkøy for patching og oppsett av database.
 Verktøyet benytter JDBC for kommunikasjon mot database og krever driver vedlagt på java classpath.
 
 # Artifakt
-Artefaktet har maven koordinat `"no.statkart.sktools:db-tools:6.0"`
+Artefaktet har maven koordinat `"no.statkart.sktools:db-tools:7.0"`
 
 # Changelog
 ## Unreleased Changes
