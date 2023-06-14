@@ -33,6 +33,8 @@ public class FilterResourcesPlugin implements Plugin<Project> {
     public void apply(Project project) {
         project.getPluginManager().apply(JavaBasePlugin.class);
 
+        project.getLogger().warn("WARNING: FilterResourcesPlugin is deprecated and is scheduled for removal in sktools 7.0!");
+
         final FilterResourcesConvention filterPropertiesConvention = new FilterResourcesConvention(project);
         project.getConvention().getPlugins().put(CONVENTION_NAME, filterPropertiesConvention);
 
