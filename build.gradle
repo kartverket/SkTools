@@ -58,34 +58,6 @@ subprojects { Project project ->
     }
 
 
-    def filterTestGroup = { Test test = test, String group, String value ->
-        test.with {
-            if (testFramework.class.simpleName == 'TestNGTestFramework') {
-                if (value == 'INCLUDE') {
-                    testFramework.options.includeGroups group
-                    test.doFirst { logger.quiet "${test.name} configuration: including group '${group}'" }
-                } else if (value == 'EXCLUDE') {
-                    testFramework.options.excludeGroups group
-                    test.doFirst { logger.quiet "${test.name} configuration: excluding group '${group}'" }
-                } else if (value == 'EXCLUDE_WHEN_NO_INCLUDES') {
-                    project.afterEvaluate {
-                        if (testFramework.options.includeGroups.isEmpty()) {
-                            testFramework.options.excludeGroups group
-                            test.doFirst { logger.quiet "${test.name} configuration: excluding group '${group}'" }
-                        } else {
-//                            logMessageWhenTask test "${test.name} configuration: ignoring group '${group}'"
-                        }
-                    }
-                } else {
-                    assert value == 'IGNORED' //feil ved ikke gyldig verdi for filtrering av tester
-                }
-            } else {
-                test.doFirst { logger.warn "${test.name} configuration: unable to configure groups('${group}') for ${testFramework.class.simpleName}" }
-            }
-        }
-    }
-
-
     project.plugins.withType(JavaPlugin) {
 
         sourceCompatibility = '1.8'
@@ -132,38 +104,39 @@ subprojects { Project project ->
             }
         }
 
-    }
 
-    /**
-     * Testing via TestNG grupper. Se bruk av @Test(groups = "") i koden.
-     */
-    project.tasks.withType(Test) { Test test -> //felles for alle test-tasks
+        /**
+         * Testing via TestNG grupper. Se bruk av @Test(groups = "") i koden.
+         */
+        project.tasks.withType(Test).configureEach { Test test -> //felles for alle test-tasks
+            useTestNG()
 
-        useTestNG() {  //benytter kun TestNG over alt
-            listeners << 'org.testng.reporters.XMLReporter' // For Jenkins, siden Gradle 1.4+ ikke tar med default listeners som standard lenger
-//            listeners << 'org.uncommons.reportng.HTMLReporter' // Gradles innebygde rapport viser ikke skipped
-        }
+            systemProperty 'java.io.tmpdir', System.getProperty('java.io.tmpdir')
 
-        systemProperty 'java.io.tmpdir', System.getProperty('java.io.tmpdir')
-
-        jvmArgs '-Xmx512m'
 //            testLogging.showStandardStreams = true
 
-        filterTestGroup(test, 'broken', 'EXCLUDE')
-        inputs.property 'excludedGroups', testFramework.options.includeGroups //trigger re-kjøring av test ved endring av grupper
-        inputs.property 'includedGroups', testFramework.options.excludeGroups //trigger re-kjøring av test ved endring av grupper
+            options.excludeGroups 'broken', 'manual'
+            doFirst {
+                if (testFramework.class.simpleName == 'TestNGTestFramework') {
+                    testFramework.options.with {
+                        if (includeGroups) logger.quiet "${test.path}: including test groups ${includeGroups} ..."
+                        if (excludeGroups) logger.quiet "${test.path}: excluding test groups ${excludeGroups} ..."
+                    }
+                }
+            }
 
-        if (rootProject.hasProperty('test.remote.debug')) {
-            jvmArgs '-Xdebug'
-            jvmArgs '-Xnoagent'
-            jvmArgs '-Xrunjdwp:transport=dt_socket,address=8787,server=y,suspend=y'
-        }
+            if (rootProject.hasProperty('test.remote.debug')) {
+                jvmArgs '-Xdebug'
+                jvmArgs '-Xnoagent'
+                jvmArgs '-Xrunjdwp:transport=dt_socket,address=*:8787,server=y,suspend=y'
+            }
 
-        //listening to test execution events
-        afterTest { descriptor, result ->
-            logger.lifecycle((result.toString() == 'SUCCESS' ? ' Successfully tested' : 'Failed testing') + " : ${descriptor.className}.${descriptor.name}")
-            if (result.resultType.name() == 'FAILURE') {
-                logger.error("${result.exception}")
+            //listening to test execution events
+            afterTest { descriptor, result ->
+                logger.lifecycle((result.toString() == 'SUCCESS' ? ' Successfully tested' : 'Failed testing') + " : ${descriptor.className}.${descriptor.name}")
+                if (result.resultType.name() == 'FAILURE') {
+                    logger.error("${result.exception}")
+                }
             }
         }
     }

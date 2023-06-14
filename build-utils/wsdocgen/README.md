@@ -3,7 +3,7 @@ Verkøy som genererer dokumentasjon av JAX-WS implementerte webservicer.
 Verktøyet er implementert som en plugin til `javac` - se Pluggable Annotation Processing (JSR 269).
 
 # Artifakt
-Artefaktet har maven koordinat `"no.statkart.sktools:wsdocgen:6.0"`
+Artefaktet har maven koordinat `"no.statkart.sktools:wsdocgen:7.0"`
 
 # Changelog
 ## Unreleased Changes

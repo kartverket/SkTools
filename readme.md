@@ -24,7 +24,7 @@ Java verktøy
 
 Baseline
 --------
-Gradle 6.0 og nyere.
+Gradle 7.0 og nyere.
 
 Java 8.
 
@@ -37,7 +37,7 @@ Se [jenkinsfile for detaljert oversikt over testede versjoner](Jenkinsfile)
 
 UTF-8 for all kildekode
 
-JDK 11+ / JDK 1.8
+JDK 17+ / JDK 8
 
 
 
@@ -46,7 +46,7 @@ JDK 11+ / JDK 1.8
 Opprett gradle.properties med innhold, feks:
 ```
 !unikt prosjektnavn for vindu i IntelliJ
-project_name=sktools-6.x
+project_name=sktools-7.x
 ```
 
 ## Releasetesting
