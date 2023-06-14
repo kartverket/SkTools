@@ -2,6 +2,10 @@ apply plugin: 'java'
 apply plugin: 'groovy'
 apply plugin: 'maven-publish'
 
+java {
+    withSourcesJar()
+}
+
 dependencies {
 
     compileOnly 'com.sun.xml.ws:jaxws-rt:2.3.5'
@@ -39,16 +43,10 @@ dependencies {
 }
 
 
-task sourceJar(type: Jar) {
-    from sourceSets.main.allJava
-    classifier "sources"
-}
-
 publishing {
     publications {
         mavenJava(MavenPublication) {
             from components.java
-            artifact sourceJar
         }
     }
 }

@@ -6,6 +6,10 @@ plugins {
 
 group = 'no.statkart.sktools.gradle'
 
+java {
+    withSourcesJar()
+}
+
 gradlePlugin {
     plugins {
         properties {
@@ -17,17 +21,4 @@ gradlePlugin {
 
 dependencies {
     testImplementation project(':build-utils:test-utils')
-}
-
-
-
-task sourceJar(type: Jar) {
-    from sourceSets.main.allSource
-    classifier 'sources'
-}
-
-publishing {
-    publications.all {
-        if (it.name == 'pluginMaven') artifact sourceJar
-    }
 }

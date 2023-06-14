@@ -6,6 +6,10 @@ plugins {
 
 group = 'no.statkart.sktools.gradle'
 
+java {
+    withSourcesJar()
+}
+
 gradlePlugin {
     plugins {
         wsdoc {
@@ -54,15 +58,3 @@ task createPluginProperties() {
     }
 }
 sourceSets.main.resources.srcDir createPluginProperties
-
-
-task sourceJar(type: Jar) {
-    from sourceSets.main.allSource
-    classifier 'sources'
-}
-
-publishing {
-    publications.all {
-        if (it.name == 'pluginMaven') artifact sourceJar
-    }
-}
