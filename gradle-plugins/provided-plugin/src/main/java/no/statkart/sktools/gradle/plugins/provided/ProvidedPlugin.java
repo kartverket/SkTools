@@ -19,6 +19,8 @@ public class ProvidedPlugin implements Plugin<Project> {
     public void apply(final Project project) {
         project.getPluginManager().apply(JavaPlugin.class);
 
+        project.getLogger().warn("WARNING: ProvidedPlugin is deprecated and is scheduled for removal in sktools 7.0!");
+
         final Configuration providedConfiguration = project.getConfigurations().create(PROVIDED_CONFIGURATION_NAME);
         providedConfiguration.setVisible(true);
         providedConfiguration.setTransitive(true);
