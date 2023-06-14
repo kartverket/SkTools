@@ -2,6 +2,10 @@ apply plugin: 'java'
 apply plugin: 'groovy'
 apply plugin: 'maven-publish'
 
+java {
+    withSourcesJar()
+}
+
 dependencies {
     implementation project(':build-utils:sql-parser')
 
@@ -13,17 +17,10 @@ dependencies {
     testImplementation localGroovy()
 }
 
-
-task sourceJar(type: Jar) {
-    from sourceSets.main.allJava
-    classifier 'sources'
-}
-
 publishing {
     publications {
         mavenJava(MavenPublication) {
             from components.java
-            artifact sourceJar
         }
     }
 }
