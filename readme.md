@@ -8,7 +8,6 @@ Gradle plugins
 --------------
 * [sktools.dbtools](gradle-plugins/dbtools-plugin/readme.md)
 * [sktools.properties](gradle-plugins/properties-plugin/readme.md)
-* [sktools.weblogic-wswar](gradle-plugins/weblogic-wswar-plugin/readme.md)
 * [sktools.wsdl-customizer](gradle-plugins/wsdl-customizer-plugin/readme.md)
 * [sktools.wsdlgen](gradle-plugins/wsdlgen-plugin/readme.md)
 * [sktools.wsdoc](gradle-plugins/wsdocgen-plugin/readme.md)
