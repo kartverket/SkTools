@@ -16,7 +16,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import javax.jws.WebService;
 import javax.xml.transform.Result;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.ws.Holder;
@@ -70,7 +69,7 @@ public class SKGenWSDL {
             .enableAnnotationInfo()
             .enableExternalClasses()
             .scan()) {
-            for (ClassInfo classInfo : scanResult.getClassesWithAnnotation(WebService.class.getName())) {
+            for (ClassInfo classInfo : scanResult.getClassesWithAnnotation("javax.jws.WebService")) { //jws-api
                 if (classInfo.isStandardClass()) {
                     Class<?> wsClass = classInfo.loadClass();
                     genWSDL(wsClass, destination, databindingFactory);
