@@ -1,6 +1,9 @@
 package no.statkart.sktools.utils.wsdocgen.processor.util;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 

@@ -8,7 +8,7 @@ java {
 
 dependencies {
 
-    compileOnly 'com.sun.xml.ws:jaxws-rt:2.3.5'
+    compileOnly 'com.sun.xml.ws:jaxws-rt:2.3.6'
     implementation 'jakarta.xml.ws:jakarta.xml.ws-api:2.3.3'
 
     //Saxon for xslt 2.0
