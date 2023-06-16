@@ -6,8 +6,8 @@ import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.plugins.JavaPlugin;
-import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.plugins.ide.idea.IdeaPlugin;
 
 import java.io.File;
@@ -42,7 +42,7 @@ public class WsImportPlugin implements Plugin<Project> {
 
         final File genSrcDir = new File(project.getBuildDir(), "wsimport");
 
-        SourceSet mainSourceSet = project.getConvention().getPlugin(JavaPluginConvention.class).getSourceSets().getByName("main");
+        SourceSet mainSourceSet = project.getExtensions().getByType(SourceSetContainer.class).getByName("main");
 
         Task resourcesTask = project.getTasks().getByPath(mainSourceSet.getProcessResourcesTaskName());
         WsImportTask wsImportTask = project.getTasks().create("wsimport", WsImportTask.class);

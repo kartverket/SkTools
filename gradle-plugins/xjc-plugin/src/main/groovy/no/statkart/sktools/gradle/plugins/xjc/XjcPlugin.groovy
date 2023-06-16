@@ -1,6 +1,5 @@
 package no.statkart.sktools.gradle.plugins.xjc
 
-
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.NamedDomainObjectFactory
@@ -9,8 +8,8 @@ import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.DependencySet
 import org.gradle.api.plugins.JavaPlugin
-import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.SourceSet
+import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.util.GUtil
 
@@ -78,9 +77,7 @@ class XjcPlugin implements Plugin<Project> {
     private void configureSourceSets(final Project project, final Configuration configuration) {
 
         //for hvert source sett som finnes/blir lagt til
-        final JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class)
-
-        javaConvention.getSourceSets().all(new Action<SourceSet>() {
+        project.getExtensions().getByType(SourceSetContainer.class).configureEach(new Action<SourceSet>() {
             public void execute(final SourceSet sourceSet) {
                 final NamedDomainObjectContainer<XjcConfig> xjcSchemas = project.container(XjcConfig.class, new NamedDomainObjectFactory<XjcConfig>() {
                     @Override

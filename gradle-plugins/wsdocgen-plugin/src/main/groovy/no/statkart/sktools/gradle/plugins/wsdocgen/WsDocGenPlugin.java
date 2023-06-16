@@ -10,9 +10,9 @@ import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.initialization.dsl.ScriptHandler;
 import org.gradle.api.plugins.JavaBasePlugin;
-import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.bundling.Zip;
 import org.gradle.util.Configurable;
@@ -70,7 +70,7 @@ public class WsDocGenPlugin implements Plugin<Project> {
     private void configureSourceSetDefaults(final Project project) {
 
         //for hvert source sett som finnes/blir lagt til
-        project.getConvention().getPlugin(JavaPluginConvention.class).getSourceSets().all(sourceSet -> {
+        project.getExtensions().getByType(SourceSetContainer.class).configureEach(sourceSet -> {
             //hekter inn utvidelser på source settet
             sourceSet.getExtensions().add(CONVENTION_NAME, new WsDocExtension(project, sourceSet));
         });
