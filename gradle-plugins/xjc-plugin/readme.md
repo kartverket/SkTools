@@ -30,6 +30,9 @@ Changelog
 ------------
 ## Unreleased Changes
 
+## 6.0 Release Notes
+* [SKTOOLS-246] Oppdatert standard jaxb-xjc versjon til 2.3.8
+
 ## 5.7 Release Notes
 * [SKTOOLS-236] Oppdatert jaxb-xjc versjon til 2.3.5
 * [SKTOOLS-236] Oppdatert JAX-WS fjerner "Illegal reflective access" i JDK9++
@@ -70,7 +73,7 @@ Configuration
     }
 
     dependencies {
-        jaxb 'org.glassfish.jaxb:jaxb-xjc:2.3.5' //default
-        compileOnly 'org.glassfish.jaxb:jaxb-runtime:2.3.5' //default
+        jaxb 'org.glassfish.jaxb:jaxb-xjc:2.3.8' //default
+        compileOnly 'org.glassfish.jaxb:jaxb-runtime:2.3.8'
     }
 
