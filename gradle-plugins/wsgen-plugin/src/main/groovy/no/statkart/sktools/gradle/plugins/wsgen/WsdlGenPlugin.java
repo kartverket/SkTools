@@ -4,9 +4,9 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.plugins.JavaPlugin;
-import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.plugins.WarPlugin;
 import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.tasks.SourceSetContainer;
 
 import java.io.File;
 
@@ -35,8 +35,7 @@ public class WsdlGenPlugin implements Plugin<Project> {
         project.getConfigurations().getByName(JavaPlugin.COMPILE_ONLY_CONFIGURATION_NAME)
             .defaultDependencies(dependencies -> dependencies.add(project.getDependencies().create("com.sun.xml.ws:jaxws-rt:2.3.6")));
 
-        JavaPluginConvention javaConventions = (JavaPluginConvention) project.getConvention().getPlugins().get("java");
-        SourceSet sourceSet = javaConventions.getSourceSets().getByName("main");
+        SourceSet sourceSet = project.getExtensions().getByType(SourceSetContainer.class).getByName("main");
 
         WsdlGenTask wsdlGenTask = project.getTasks().create(sourceSet.getTaskName("gen", "Wsdls"), WsdlGenTask.class);
         wsdlGenTask.source(sourceSet.getOutput());
