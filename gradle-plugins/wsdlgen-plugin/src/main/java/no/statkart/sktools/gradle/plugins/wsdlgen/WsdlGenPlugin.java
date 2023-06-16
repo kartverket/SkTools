@@ -4,7 +4,6 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.plugins.JavaPlugin;
-import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 
@@ -16,9 +15,8 @@ public class WsdlGenPlugin implements Plugin<Project> {
     @Override
     public void apply(Project project) {
         project.getPlugins().apply(JavaPlugin.class);
-        JavaPluginConvention javaPluginConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
-        SourceSetContainer sourceSets = javaPluginConvention.getSourceSets();
-        SourceSet mainSourceSet = sourceSets.getByName("main");
+
+        SourceSet mainSourceSet = project.getExtensions().getByType(SourceSetContainer.class).getByName("main");
 
         FileCollection wsClasspath = mainSourceSet.getRuntimeClasspath().plus(
             mainSourceSet.getCompileClasspath() // I tilfelle JAX-WS API er compileOnly
