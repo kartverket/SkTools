@@ -1,11 +1,11 @@
 package no.statkart.sktools.utils.wsdocgen.processor.xml;
 
+import no.statkart.sktools.utils.wsdocgen.processor.util.JavaDocUtils;
 import org.w3c.dom.Document;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
@@ -20,8 +20,6 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-
-import no.statkart.sktools.utils.wsdocgen.processor.util.*;
 
 import static javax.lang.model.type.TypeKind.ERROR;
 import static javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI;
