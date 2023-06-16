@@ -1,6 +1,5 @@
 package no.statkart.sktools.gradle.plugins.wsdocgen
 
-
 import no.statkart.sktools.gradle.testutils.TestKitBase
 import org.gradle.api.Project
 import org.gradle.testkit.runner.BuildResult
@@ -15,7 +14,10 @@ import static no.statkart.sktools.gradle.testutils.filewriter.WsDocgenTestutilFi
 import static no.statkart.sktools.gradle.testutils.filewriter.WsDocgenTestutilFilewriter.writeSimpleDemoServiceWSBean
 import static org.assertj.core.api.Assertions.assertThat
 import static org.assertj.core.api.Assertions.contentOf
-import static org.testng.Assert.*
+import static org.testng.Assert.assertEquals
+import static org.testng.Assert.assertNotNull
+import static org.testng.Assert.assertNull
+import static org.testng.Assert.assertTrue
 
 /**
  * Test av {@link WsDocGenPlugin}
@@ -91,8 +93,8 @@ class WsDocGenPluginTest extends TestKitBase {
             }
 
             dependencies {
-                compileOnly 'com.sun.xml.ws:jaxws-rt:2.3.5'
-                otherCompileOnly 'com.sun.xml.ws:jaxws-rt:2.3.5'
+                compileOnly 'com.sun.xml.ws:jaxws-rt:2.3.6'
+                otherCompileOnly 'com.sun.xml.ws:jaxws-rt:2.3.6'
             }
 
         """)
@@ -216,7 +218,7 @@ class WsDocGenPluginTest extends TestKitBase {
             }
 
             dependencies {
-                compileOnly 'com.sun.xml.ws:jaxws-rt:2.3.5'
+                compileOnly 'com.sun.xml.ws:jaxws-rt:2.3.6'
             }
         """)
 
@@ -260,7 +262,7 @@ class WsDocGenPluginTest extends TestKitBase {
             }
 
             dependencies {
-                compileOnly 'com.sun.xml.ws:jaxws-rt:2.3.5'
+                compileOnly 'com.sun.xml.ws:jaxws-rt:2.3.6'
             }
         """)
 
@@ -295,7 +297,7 @@ class WsDocGenPluginTest extends TestKitBase {
                 maven { url = '${testProperties.MAVEN_REPO}' }
             }
             dependencies {
-                compileOnly 'com.sun.xml.ws:jaxws-rt:2.3.5'
+                compileOnly 'com.sun.xml.ws:jaxws-rt:2.3.6'
             }
         """)
 
