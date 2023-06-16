@@ -35,9 +35,6 @@ project.ext.libraries = [
 
         saxon : 'net.sf.saxon:Saxon-HE:12.2', //xslt 2.0
 
-        jaxb_xjc : 'org.glassfish.jaxb:jaxb-xjc:2.3.5',
-        jaxb_rt : 'org.glassfish.jaxb:jaxb-runtime:2.3.5',
-
         // Testing
         assertj: 'org.assertj:assertj-core:3.24.2',
         testng: 'org.testng:testng:7.5.1',
