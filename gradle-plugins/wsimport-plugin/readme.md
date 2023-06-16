@@ -31,6 +31,10 @@ Changelog
 ------------
 ## Unreleased Changes
 
+## 6.0 Release Notes
+* [SKTOOLS-246] Bumper standard jaxws versjon til `2.3.6`
+
+
 ## 1.4.0 Release Notes
 * [SKTOOLS-158, SKTOOLS-168] Etablert plugin
 
@@ -62,7 +66,8 @@ Configuration
 
     dependencies {
         wsdls project(path: ':wswar', configuration: 'wsdls')
-        jaxws 'com.sun.xml.ws:jaxws-tools:2.3.5' //default
+        jaxws 'com.sun.xml.ws:jaxws-tools:2.3.6' //default
+ *      jaxws 'com.sun.xml.ws:wscompile:2.3.6' //old coordinat
     }
 
     // https://discuss.gradle.org/t/right-way-to-copy-contents-from-dependency-archives/7449/13
