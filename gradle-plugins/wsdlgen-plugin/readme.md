@@ -14,6 +14,15 @@ tasks.jar {
 }
 ```
 
+Changelog
+------------
+## Unreleased Changes
+
+## 7.0 Release Notes
+* [SKTOOLS-246] Bumper standard jaxws versjon til `2.3.6`
+
+
+
 ## Standardverdier / Tilpassningsmuligheter
 ```groovy
 tasks.wsdlGen {
