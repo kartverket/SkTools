@@ -1,6 +1,5 @@
 package no.statkart.sktools.utils.wsdlgen;
 
-import com.oracle.webservices.api.databinding.WSDLResolver;
 import com.sun.xml.ws.api.BindingID;
 import com.sun.xml.ws.api.databinding.DatabindingConfig;
 import com.sun.xml.ws.api.databinding.DatabindingFactory;
@@ -17,14 +16,10 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import javax.xml.transform.Result;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.ws.Holder;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Objects;
 
 public class SKGenWSDL {
@@ -72,13 +67,29 @@ public class SKGenWSDL {
             for (ClassInfo classInfo : scanResult.getClassesWithAnnotation("javax.jws.WebService")) { //jws-api
                 if (classInfo.isStandardClass()) {
                     Class<?> wsClass = classInfo.loadClass();
-                    genWSDL(wsClass, destination, databindingFactory);
+                    WSDLResolverAdapter wsdlResolverAdapter = new WSDLResolverAdapter(destination) {
+                        public Result getSchemaOutput(String namespace, javax.xml.ws.Holder<String> filename) {
+                            return getSchemaOutput(namespace, filename.value);
+                        }
+
+                        public Result getAbstractWSDL(javax.xml.ws.Holder<String> filename) {
+                            return getAbstractWSDL(filename.value);
+                        }
+                    };
+                    genWSDL(wsClass, wsdlResolverAdapter, databindingFactory);
+                }
+            }
+            for (ClassInfo classInfo : scanResult.getClassesWithAnnotation("jakarta.jws.WebService")) { //jws-api
+                if (classInfo.isStandardClass()) {
+                    Class<?> wsClass = classInfo.loadClass();
+                    WSDLResolverAdapter wsdlResolverAdapter = new WSDLResolverAdapter(destination);
+                    genWSDL(wsClass, wsdlResolverAdapter, databindingFactory);
                 }
             }
         }
     }
 
-    private static void genWSDL(Class<?> endpointClass, Path destinationDirectory, DatabindingFactory databindingFactory) throws IOException {
+    private static void genWSDL(Class<?> endpointClass, WSDLResolverAdapter wsdlResolver, DatabindingFactory databindingFactory) throws IOException {
         DatabindingConfig config = new DatabindingConfig();
         config.setClassLoader(endpointClass.getClassLoader());
         config.setEndpointClass(endpointClass);
@@ -86,56 +97,10 @@ public class SKGenWSDL {
         config.getMappingInfo().setBindingID(BindingID.parse(endpointClass));
         DatabindingImpl runtime = (DatabindingImpl) databindingFactory.createRuntime(config);
 
-        ArrayList<OutputStream> streams = new ArrayList<>();
         WSDLGenInfo wsdlGenInfo = new WSDLGenInfo();
-        wsdlGenInfo.setWsdlResolver(new WSDLResolver() {
-            @Override
-            public Result getWSDL(String suggestedFilename) {
-                try {
-                    Path path = destinationDirectory.resolve(suggestedFilename);
-                    OutputStream outputStream = Files.newOutputStream(path);
-                    streams.add(outputStream);
-                    StreamResult result = new StreamResult(outputStream);
-                    result.setSystemId(path.toFile());
-                    return result;
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    return null;
-                }
-            }
-
-            @Override
-            public Result getAbstractWSDL(Holder<String> filename) {
-                try {
-                    Path path = destinationDirectory.resolve(filename.value);
-                    OutputStream outputStream = Files.newOutputStream(path);
-                    streams.add(outputStream);
-                    StreamResult result = new StreamResult(outputStream);
-                    result.setSystemId(path.toFile());
-                    return result;
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    return null;
-                }
-            }
-
-            @Override
-            public Result getSchemaOutput(String namespace, Holder<String> filename) {
-                try {
-                    Path path = destinationDirectory.resolve(filename.value);
-                    OutputStream outputStream = Files.newOutputStream(path);
-                    streams.add(outputStream);
-                    StreamResult result = new StreamResult(outputStream);
-                    result.setSystemId(path.toFile());
-                    return result;
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    return null;
-                }
-            }
-        });
+        wsdlGenInfo.setWsdlResolver(wsdlResolver);
         runtime.generateWSDL(wsdlGenInfo);
-        for (OutputStream stream : streams) {
+        for (OutputStream stream : (wsdlResolver.streams)) {
             stream.close();
         }
     }
