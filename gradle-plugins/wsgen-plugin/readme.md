@@ -31,6 +31,9 @@ Changelog
 ------------
 ## Unreleased Changes
 
+## 7.0 Release Notes
+* [SKTOOLS-246] Bumper standard jaxws versjon til `2.3.6`
+
 ## 5.3 Release Notes
 * [SKTOOLS-210] java.lang.ClassNotFoundException: com.sun.tools.ws.WsGen
 * Gradle 6 compatibility
@@ -63,8 +66,8 @@ ved en nyere versjon av `jaxws-tools`.
 Configuration
 ------------
     dependencies {
-        jaxws 'com.sun.xml.ws:jaxws-tools:2.3.5' //default
-        jaxws 'com.sun.xml.ws:wscompile:2.3.5' //old (not recommended)
+        jaxws 'com.sun.xml.ws:jaxws-tools:2.3.6' //default
+        jaxws 'com.sun.xml.ws:wscompile:2.3.6' //old (not recommended)
     }
 
     war {
