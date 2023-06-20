@@ -1,8 +1,8 @@
 package no.statkart.sktools.gradle.plugins.wsdlgen;
 
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
-import org.gradle.api.file.FileCollection;
 import org.gradle.api.initialization.dsl.ScriptHandler;
 import org.gradle.util.GUtil;
 
@@ -27,20 +27,23 @@ class DependencyUtil {
     /**
      * Gir deg dependencies avhengig av om det kjøres som test eller ikke.
      */
-    static FileCollection getWsdlGenClasspath(Project project) {
-        Properties testProperties = injectedTestProperties();
-        if (testProperties == null) {
-            final ScriptHandler buildscript = project.getBuildscript().getRepositories().isEmpty() ? project.getRootProject().getBuildscript() : project.getBuildscript();
-            return buildscript.getConfigurations().detachedConfiguration(wsdlgenDependency(project));
-        }
-
-        String classpath = testProperties.getProperty("sktools_wsdlgen_classpath");
-        // En trenger classpath for wsdlgen. Disse ligger i egen modul.
-        return project.files((Object[]) classpath.split(File.pathSeparator)); //NB: for GradleRunner i debug mode
+    static Configuration getWsdlGenClasspath(Project project, boolean jakarta) {
+        final ScriptHandler buildscript = project.getBuildscript().getRepositories().isEmpty() ? project.getRootProject().getBuildscript() : project.getBuildscript();
+        return buildscript.getConfigurations().detachedConfiguration(
+            project.getDependencies().enforcedPlatform(pluginProperties.getProperty(
+                jakarta ? "sktools_wsdlgen_jakarta_platform" : "sktools_wsdlgen_javax_platform")),
+            project.getDependencies().create("com.sun.xml.ws:jaxws-rt"), //provided
+            wsdlgenDependency(project));
     }
 
     private static Dependency wsdlgenDependency(Project project) {
-        Object dependencyNotation = Objects.requireNonNull(pluginProperties.getProperty("sktools_wsdlgen"), "Skal settes av byggesystem");
+        final Properties testProperties = injectedTestProperties();
+        final Object dependencyNotation;
+        if (testProperties == null) {
+            dependencyNotation = Objects.requireNonNull(pluginProperties.getProperty("sktools_wsdlgen"), "Skal settes av byggesystem");
+        } else {
+            dependencyNotation = project.files((Object[]) testProperties.getProperty("sktools_wsdlgen_classpath").split(File.pathSeparator)); //NB: for GradleRunner i debug mode
+        }
         return project.getDependencies().create(dependencyNotation);
     }
 

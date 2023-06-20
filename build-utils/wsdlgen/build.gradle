@@ -11,10 +11,12 @@ dependencies {
     compileOnly 'jakarta.xml.ws:jakarta.xml.ws-api:3.0.1' //Jakarta EE 9+
     compileOnly 'javax.xml.ws:jaxws-api:2.3.1' //deprecated Java EE8
 
-    //'com.sun.xml.ws:jaxws-ri-bom:2.3.6'
+    compileOnly platform(libraries.wsdlgen_jakarta_platform) //
+    compileOnly 'com.sun.xml.ws:jaxws-rt' //provided
 
-    implementation 'com.sun.xml.ws:jaxws-rt:3.0.2' // jakarta/EE9+
-    implementation 'com.sun.xml.ws:jaxws-rt:2.3.6' // javax/EE8
+    testRuntimeOnly platform(libraries.wsdlgen_jakarta_platform) //sktools 7.x with jakarta as default
+    testRuntimeOnly 'com.sun.xml.ws:jaxws-rt' //provided
+
     implementation 'io.github.classgraph:classgraph:4.8.160'
     implementation 'commons-cli:commons-cli:1.5.0'
 }
