@@ -7,8 +7,6 @@ import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 
-import java.io.File;
-
 public class WsdlGenPlugin implements Plugin<Project> {
     public static final String WSDLGEN_TASK_NAME = "wsdlGen";
 
@@ -22,10 +20,7 @@ public class WsdlGenPlugin implements Plugin<Project> {
             mainSourceSet.getCompileClasspath() // I tilfelle JAX-WS API er compileOnly
         );
 
-        File outputDir = new File(project.getBuildDir(), WSDLGEN_TASK_NAME);
-
         WsdlGenTask wsdlGenTask = project.getTasks().create(WSDLGEN_TASK_NAME, WsdlGenTask.class);
         wsdlGenTask.getCompileClasspath().setFrom(wsClasspath);
-        wsdlGenTask.getDestinationDirectory().set(outputDir);
     }
 }
