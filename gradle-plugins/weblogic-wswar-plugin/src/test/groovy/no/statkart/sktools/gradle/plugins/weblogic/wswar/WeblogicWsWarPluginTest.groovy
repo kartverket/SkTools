@@ -1,6 +1,5 @@
 package no.statkart.sktools.gradle.plugins.weblogic.wswar
 
-
 import no.statkart.sktools.gradle.testutils.TestKitBase
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
@@ -14,9 +13,7 @@ import org.testng.annotations.Test
 import java.util.zip.ZipFile
 
 import static java.util.Collections.list
-import static no.statkart.sktools.gradle.plugins.weblogic.wswar.WeblogicTestUtil.writeDemoServiceWSBean
-import static no.statkart.sktools.gradle.plugins.weblogic.wswar.WeblogicTestUtil.writeExceptionService01
-import static no.statkart.sktools.gradle.plugins.weblogic.wswar.WeblogicTestUtil.writeExceptionService01Exceptions
+import static no.statkart.sktools.gradle.plugins.weblogic.wswar.WeblogicTestUtil.*
 import static org.assertj.core.api.Assertions.assertThat
 
 /**
@@ -113,7 +110,8 @@ class WeblogicWsWarPluginTest extends TestKitBase {
             }
 
             repositories {
-                maven { url = '${testProperties.MAVEN_REPO}' }
+                maven { url = 'https://nexus.statkart.no/repository/public/' }
+                mavenCentral()
             }
 
             dependencies {
@@ -146,7 +144,8 @@ class WeblogicWsWarPluginTest extends TestKitBase {
             }
 
         repositories {
-            maven { url = '${testProperties.MAVEN_REPO}' }
+            maven { url = 'https://nexus.statkart.no/repository/public/' }
+            mavenCentral()
         }
 
         dependencies {
@@ -336,7 +335,8 @@ class WeblogicWsWarPluginTest extends TestKitBase {
             }
 
             repositories {
-                maven { url = '${testProperties.MAVEN_REPO}' }
+                maven { url = 'https://nexus.statkart.no/repository/public/' }
+                mavenCentral()
             }
 
             dependencies {

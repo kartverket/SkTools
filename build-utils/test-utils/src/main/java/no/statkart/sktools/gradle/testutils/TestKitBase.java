@@ -23,7 +23,6 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
 import java.util.jar.Attributes;
@@ -60,7 +59,8 @@ public abstract class TestKitBase {
      * @return ProjectBuilder koblet til {@link #projectDir}
      */
     public ProjectBuilder projectBuilder() {
-        return ProjectBuilder.builder().withProjectDir(projectDir);
+        return ProjectBuilder.builder()
+            .withProjectDir(projectDir);
     }
 
     public File file(String relativePath) {
@@ -76,6 +76,10 @@ public abstract class TestKitBase {
         projectPath = Files.createTempDirectory("sktoolsTest");
         projectPath = jenkinsWorkaroundForTempSetting(projectPath);
         projectDir = projectPath.toFile();
+
+        //plukker opp evt proxy settings i ~/.gradle/gradle.properties
+        File gradleUserHome = new File(System.getenv().getOrDefault("GRADLE_USER_HOME", System.getProperty("user.home") + "/.gradle"));
+        Files.copy(gradleUserHome.toPath().resolve("gradle.properties"), toPath("gradle.properties"));
     }
 
     /**
@@ -178,18 +182,6 @@ public abstract class TestKitBase {
                 return FileVisitResult.CONTINUE;
             }
         });
-    }
-
-    public static final Map<Object, Object> testProperties;
-    static {
-        Properties properties = new Properties();
-        try {
-            properties.load(TestKitBase.class.getResourceAsStream("/no/statkart/sktools/test.properties"));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        testProperties = Collections.unmodifiableMap(properties);
     }
 
 }

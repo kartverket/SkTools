@@ -107,22 +107,12 @@ buildscript {
     assert version != Project.DEFAULT_VERSION // set via env variables
 
     // Variables to grab from environment + defaults
-    ['MAVEN_REPO'].each { val ->
-        if (!rootProject.ext.has(val) && System.getenv(val) != null) {
-            rootProject.ext.set(val, System.getenv(val))
-        }
-    }
     ext.ORA_DEBUG = Boolean.valueOf("${rootProject.properties.get('ORA_DEBUG', System.getenv('ORA_DEBUG')) ?: 'false'}")
-    ext.MAVEN_REPO = rootProject.properties.get('MAVEN_REPO', System.getenv('MAVEN_REPO'))
-    if (ext.MAVEN_REPO == null) {
-        ext.MAVEN_REPO = 'https://nexus.statkart.no/repository/public/'
-        logger.warn "warning: MAVEN_REPO not defined. Defaulting to ${MAVEN_REPO}"
-    }
 
     repositories {
         //bruker kun lokale filer her da dette er et demo prosjekt...
         mavenLocal()
-        maven { name = 'public'; url = MAVEN_REPO }
+        mavenCentral()
     }
 
     dependencies {
@@ -136,6 +126,6 @@ allprojects {
 
     repositories {
         mavenLocal()
-        maven { name = 'public'; url = "${rootProject.MAVEN_REPO}" }
+        mavenCentral()
     }
 }
