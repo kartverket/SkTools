@@ -31,7 +31,7 @@ class WsdlGenPluginTest extends TestKitBase {
             }
 
             repositories {
-                maven { url = '${testProperties.MAVEN_REPO}' }
+                mavenCentral()
             }
 
             dependencies {

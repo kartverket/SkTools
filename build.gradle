@@ -51,7 +51,7 @@ subprojects { Project project ->
 
     repositories {
         mavenLocal()
-        maven { name = 'public'; url = "${rootProject.MAVEN_REPO}" }
+        mavenCentral()
     }
 
 
@@ -182,9 +182,6 @@ subprojects { Project project ->
             'Specification-Version' : (gradle.startParameter.projectProperties.get('sktools_versjon') ?: sktools_versjon).replace('-SNAPSHOT', ''),
 
             //misc build info
-            'Build-By'              : System.getProperty('user.name'),
-            'Build-Machine'         : java.net.InetAddress.localHost.hostName,
-            'Build-Repo'            : MAVEN_REPO,
             'Build-Gradle'          : gradle.gradleVersion,
 
             'Implementation-Title'  : "${project.name} bygget for ${(project.version == null || project.version.contains('-SNAPSHOT')) ? 'TEST' : 'Produksjon'}",
