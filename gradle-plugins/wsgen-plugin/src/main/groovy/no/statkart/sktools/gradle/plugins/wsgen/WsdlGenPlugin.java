@@ -8,8 +8,6 @@ import org.gradle.api.plugins.WarPlugin;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 
-import java.io.File;
-
 /**
  * Konfigurasjon:
  *
@@ -41,6 +39,5 @@ public class WsdlGenPlugin implements Plugin<Project> {
         wsdlGenTask.source(sourceSet.getOutput());
         wsdlGenTask.setClasspath(project.files(sourceSet.getCompileClasspath(), sourceSet.getOutput().getClassesDirs()));
         wsdlGenTask.setJaxwsClasspath(jaxwsConfiguration);
-        wsdlGenTask.setDestinationDir(new File(project.getBuildDir(), wsdlGenTask.getName()));
     }
 }
