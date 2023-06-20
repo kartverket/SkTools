@@ -12,9 +12,10 @@ import org.gradle.api.tasks.TaskAction;
 
 import java.io.File;
 
-@SuppressWarnings("UnstableApiUsage")
 public class WsdlGenTask extends DefaultTask {
-    private final DirectoryProperty destinationDirectory = this.getProject().getObjects().directoryProperty();
+    private final DirectoryProperty destinationDirectory = getProject().getObjects().directoryProperty()
+        .convention(getProject().getLayout().getBuildDirectory().dir(getName()));
+
     private final ConfigurableFileCollection compileClasspath = this.getProject().files();
 
     @CompileClasspath
