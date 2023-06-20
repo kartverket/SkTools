@@ -1,6 +1,5 @@
 package no.statkart.sktools.gradle.plugins.weblogic.wswar
 
-
 import no.statkart.sktools.gradle.testutils.TestKitBase
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
@@ -113,7 +112,8 @@ class WeblogicWsWarPluginTest extends TestKitBase {
             }
 
             repositories {
-                maven { url = '${testProperties.MAVEN_REPO}' }
+                maven { url = 'https://nexus.statkart.no/repository/public/' }
+                mavenCentral()
             }
 
             dependencies {
@@ -146,7 +146,8 @@ class WeblogicWsWarPluginTest extends TestKitBase {
             }
 
         repositories {
-            maven { url = '${testProperties.MAVEN_REPO}' }
+            maven { url = 'https://nexus.statkart.no/repository/public/' }
+            mavenCentral()
         }
 
         dependencies {
@@ -336,7 +337,8 @@ class WeblogicWsWarPluginTest extends TestKitBase {
             }
 
             repositories {
-                maven { url = '${testProperties.MAVEN_REPO}' }
+                maven { url = 'https://nexus.statkart.no/repository/public/' }
+                mavenCentral()
             }
 
             dependencies {
@@ -371,11 +373,11 @@ class WeblogicWsWarPluginTest extends TestKitBase {
                     'WEB-INF/classes/WebConfig.class',
                     'WEB-INF/classes/exceptiondemo01/ExceptionService1WSBean.class',
                 )
-            .doesNotContain(
-                'WEB-INF/web.xml', // legges inn eksplisitt når ønskeligt
-                'WEB-INF/classes/exceptiondemo01/exception/ServiceException.class', //ligger i jar fil (evt i internt domene)
-                'WEB-INF/classes/exceptiondemo01/exception/ServiceFaultInfo.class', //ligger i jar fil (evt i internt domene)
-            )
+                .doesNotContain(
+                    'WEB-INF/web.xml', // legges inn eksplisitt når ønskeligt
+                    'WEB-INF/classes/exceptiondemo01/exception/ServiceException.class', //ligger i jar fil (evt i internt domene)
+                    'WEB-INF/classes/exceptiondemo01/exception/ServiceFaultInfo.class', //ligger i jar fil (evt i internt domene)
+                )
         } finally {
             zip.close()
         }
