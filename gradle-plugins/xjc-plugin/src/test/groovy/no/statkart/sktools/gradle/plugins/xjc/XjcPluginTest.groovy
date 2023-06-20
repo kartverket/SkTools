@@ -1,6 +1,5 @@
 package no.statkart.sktools.gradle.plugins.xjc
 
-
 import no.statkart.sktools.gradle.testutils.TestKitBase
 import org.gradle.api.Project
 import org.gradle.api.tasks.SourceSet
@@ -9,7 +8,9 @@ import org.gradle.testkit.runner.TaskOutcome
 import org.testng.annotations.Test
 
 import static no.statkart.sktools.gradle.testutils.filewriter.XjcTestutilFilewriter.writeSimpleSchema
-import static org.assertj.core.api.Assertions.*
+import static org.assertj.core.api.Assertions.assertThat
+import static org.assertj.core.api.Assertions.contentOf
+import static org.assertj.core.api.Assertions.tuple
 
 /**
  * Test av {@link XjcPlugin}
@@ -47,7 +48,7 @@ class XjcPluginTest extends TestKitBase {
             }
 
             repositories {
-                maven { url = '${testProperties.MAVEN_REPO}' }
+                mavenCentral()
             }
 
             sourceSets {
@@ -82,7 +83,7 @@ class XjcPluginTest extends TestKitBase {
             }
 
             repositories {
-                maven { url = '${testProperties.MAVEN_REPO}' }
+                mavenCentral()
             }
 
             sourceSets {
