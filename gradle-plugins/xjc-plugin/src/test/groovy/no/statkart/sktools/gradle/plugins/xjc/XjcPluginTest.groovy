@@ -1,6 +1,5 @@
 package no.statkart.sktools.gradle.plugins.xjc
 
-
 import no.statkart.sktools.gradle.testutils.TestKitBase
 import org.gradle.api.Project
 import org.gradle.api.tasks.SourceSet
@@ -48,7 +47,7 @@ class XjcPluginTest extends TestKitBase {
             }
 
             repositories {
-                maven { url = '${testProperties.MAVEN_REPO}' }
+                mavenCentral()
             }
 
             sourceSets {
@@ -85,7 +84,7 @@ class XjcPluginTest extends TestKitBase {
             }
 
             repositories {
-                maven { url = '${testProperties.MAVEN_REPO}' }
+                mavenCentral()
             }
 
             sourceSets {
@@ -124,7 +123,7 @@ class XjcPluginTest extends TestKitBase {
             }
 
             repositories {
-                maven { url = '${testProperties.MAVEN_REPO}' }
+                mavenCentral()
             }
 
             sourceSets {

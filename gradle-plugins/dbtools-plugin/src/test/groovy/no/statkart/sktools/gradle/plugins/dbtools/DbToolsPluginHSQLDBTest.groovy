@@ -1,6 +1,7 @@
 package no.statkart.sktools.gradle.plugins.dbtools
 
 import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsConvention
+import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsPlugin
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.SQLTask
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.ThrowableAssert
@@ -21,6 +22,17 @@ import static no.statkart.sktools.gradle.plugins.dbtools.testutils.PatchTestutil
  * Testene sjekker her at faktiske sql-setninger blir kjørt mot databasen som forventet.
  */
 class DbToolsPluginHSQLDBTest extends HSQLDBTest {
+    public static final Map<Object, Object> testProperties;
+    static {
+        Properties properties = new Properties();
+        try {
+            properties.load(DbtoolsPlugin.class.getResourceAsStream("/DbtoolsPluginTest.properties"));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        testProperties = Collections.unmodifiableMap(properties);
+    }
 
 
 
@@ -371,7 +383,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
             }
 
             repositories {
-                maven { url = '${testProperties.MAVEN_REPO}' }
+                mavenCentral()
             }
 
             configureDatabasePlugin {

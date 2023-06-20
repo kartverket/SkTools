@@ -64,7 +64,7 @@ class WsDocGenPluginTest extends TestKitBase {
             }
 
             repositories {
-                maven { url = '${testProperties.MAVEN_REPO}' }
+                mavenCentral()
             }
 
             dependencies {
@@ -203,7 +203,7 @@ class WsDocGenPluginTest extends TestKitBase {
             }
 
             repositories {
-                maven { url = '${testProperties.MAVEN_REPO}' }
+                mavenCentral()
             }
 
             dependencies {
@@ -247,7 +247,7 @@ class WsDocGenPluginTest extends TestKitBase {
             }
 
             repositories {
-                maven { url = '${testProperties.MAVEN_REPO}' }
+                mavenCentral()
             }
 
             dependencies {
@@ -283,7 +283,7 @@ class WsDocGenPluginTest extends TestKitBase {
             }
 
             repositories {
-                maven { url = '${testProperties.MAVEN_REPO}' }
+                mavenCentral()
             }
             dependencies {
                 compileOnly 'com.sun.xml.ws:jaxws-rt:2.3.5'
