@@ -43,6 +43,7 @@ task testProperties {
     doLast {
         def properties = [
             sktools_dbtools_classpath: project(':build-utils:db-tools').sourceSets.main.runtimeClasspath.asPath,
+            libraries_hsqldb : libraries.hsqldb,
         ]
         outputDir.mkdirs()
         org.gradle.util.GUtil.saveProperties(properties as Properties, file("$outputDir/DbtoolsPluginTest.properties"))
@@ -50,7 +51,7 @@ task testProperties {
 }
 pluginUnderTestMetadata.pluginClasspath.from files(testProperties)
 pluginUnderTestMetadata.pluginClasspath.from sourceSets.main.output
-
+sourceSets.main.resources.srcDir testProperties
 
 task createPluginProperties() {
     outputs.dir pluginPropertiesDir
