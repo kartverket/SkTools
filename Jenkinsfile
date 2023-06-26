@@ -20,12 +20,12 @@ pipeline {
     stages {
         stage('Prepare') {
             steps {
-                sh "gradle clean --refresh-dependencies ${gradleOptions(this)}"
+                sh "gradle clean --refresh-dependencies ${gradleOptions(this)} --warning-mode=fail"
             }
         }
         stage('Build') {
             steps {
-                sh "gradle assemble ${gradleOptions(this)}"
+                sh "gradle assemble ${gradleOptions(this)} --warning-mode=fail"
             }
         }
 
@@ -43,7 +43,7 @@ pipeline {
                     steps {
                         sh "gradle --version"
                         catchError(stageResult: 'UNSTABLE') {
-                            sh "gradle test ${gradleOptions(this)} --continue"
+                            sh "gradle test ${gradleOptions(this)} --continue --warning-mode=fail"
                         }
                     }
                     post {
@@ -82,7 +82,7 @@ pipeline {
                     //for publisering til sentralt maven repo bindes opp via jenkins credential (secret text)
                     string(variable: 'MAVEN_PUBLISH', credentialsId: 'MAVEN_DEPLOY_RELEASE_CANDIDATE'),
                 ]) {
-                    sh "gradle publish ${gradleOptions(this)} --init-script config/gradle/scripts/mavenPublish.gradle"
+                    sh "gradle publish ${gradleOptions(this)} --init-script config/gradle/scripts/mavenPublish.gradle --warning-mode=fail"
                 }
             }
         }
@@ -96,7 +96,7 @@ pipeline {
                     //for publisering til sentralt maven repo bindes opp via jenkins credential (secret text)
                     string(variable: 'MAVEN_PUBLISH', credentialsId: TAG_NAME.contains('-') ? 'MAVEN_DEPLOY_RELEASE_CANDIDATE': 'MAVEN_DEPLOY_RELEASES'),
                 ]) {
-                    sh "gradle publish -Psktools_versjon=${TAG_NAME} --init-script config/gradle/scripts/mavenPublish.gradle"
+                    sh "gradle publish -Psktools_versjon=${TAG_NAME} --init-script config/gradle/scripts/mavenPublish.gradle --warning-mode=fail"
                 }
             }
         }
