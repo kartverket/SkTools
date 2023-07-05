@@ -37,8 +37,6 @@ project.ext.libraries = [
         slf4j_api: "org.slf4j:slf4j-api:${libVersion('slf4j', '1.7.36')}",
         slf4j_simple: "org.slf4j:slf4j-simple:${libVersion('slf4j', '1.7.36')}",
 
-        saxon : 'net.sf.saxon:Saxon-HE:12.2', //xslt 2.0
-
         // Testing
         assertj: 'org.assertj:assertj-core:3.24.2',
         testng: 'org.testng:testng:7.5.1',

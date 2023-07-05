@@ -13,7 +13,7 @@ dependencies {
 
     //Saxon for xslt 2.0
     //Saxon HE is the open source version
-    runtimeOnly libraries.saxon
+    runtimeOnly 'net.sf.saxon:Saxon-HE:12.3'
 
     //testing...
     testImplementation gradleTestKit()
