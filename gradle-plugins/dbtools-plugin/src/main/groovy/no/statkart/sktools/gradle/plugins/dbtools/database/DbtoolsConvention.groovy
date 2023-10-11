@@ -1,14 +1,13 @@
 package no.statkart.sktools.gradle.plugins.dbtools.database
 
-import org.gradle.api.Project
-import no.statkart.sktools.gradle.plugins.dbtools.database.oracle.OracleTasksConvention
-
 import no.statkart.sktools.gradle.plugins.dbtools.database.hsqldb.HsqldbTasksConvention
-import org.gradle.api.GradleException
+import no.statkart.sktools.gradle.plugins.dbtools.database.oracle.OracleTasksConvention
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractDatabaseConvention
-import org.gradle.api.artifacts.Dependency
-import org.gradle.api.Task
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.SequenceTask
+import org.gradle.api.GradleException
+import org.gradle.api.Project
+import org.gradle.api.Task
+import org.gradle.api.artifacts.Dependency
 import org.gradle.util.ConfigureUtil
 
 /**
@@ -25,7 +24,7 @@ import org.gradle.util.ConfigureUtil
 
 configureDatabasePlugin {
 
-    useDrivers 'com.oracle.jdbc:ojdbc8_g:12.2.0.1@jar'
+    useDrivers 'com.oracle.database.jdbc:ojdbc8g:12.2.0.1@jar'
 
     toolset(type:'oracle', name:'Db', prefix:'') {
 
