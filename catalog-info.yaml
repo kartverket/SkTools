@@ -1,0 +1,37 @@
+# nonk8s
+apiVersion: "backstage.io/v1alpha1"
+kind: "Component"
+metadata:
+  name: "SkTools"
+  tags:
+  - "internal"
+spec:
+  type: "ops"
+  lifecycle: "production"
+  owner: "Heimdall"
+---
+apiVersion: "backstage.io/v1alpha1"
+kind: "Group"
+metadata:
+  name: "security_champion_SkTools"
+  title: "Security Champion SkTools"
+spec:
+  type: "security_champion"
+  parent: "eiendom_security_champions"
+  members:
+  - "lislei"
+  children:
+  - "resource:SkTools"
+---
+apiVersion: "backstage.io/v1alpha1"
+kind: "Resource"
+metadata:
+  name: "SkTools"
+  links:
+  - url: "https://github.com/kartverket/SkTools"
+    title: "SkTools på GitHub"
+spec:
+  type: "repo"
+  owner: "security_champion_SkTools"
+  dependencyOf:
+  - "component:SkTools"
