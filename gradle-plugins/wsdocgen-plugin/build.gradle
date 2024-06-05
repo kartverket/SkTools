@@ -19,7 +19,7 @@ gradlePlugin {
     }
 }
 
-def pluginPropertiesDir = "$buildDir/plugin-properties"
+def pluginPropertiesDir = project.layout.buildDirectory.dir("plugin-properties").get()
 def pluginProperties = [
     sktools_wsdocgen : "no.statkart.sktools:wsdocgen:${version}" as String,
 ] as Properties
@@ -41,7 +41,12 @@ task testProperties {
             sktools_wsdocgen_classpath: project(':build-utils:wsdocgen').sourceSets.main.runtimeClasspath.asPath,
         ]
         outputDir.mkdirs()
-        org.gradle.util.GUtil.saveProperties(properties as Properties, file("$outputDir/WsDocGenPluginTest.properties"))
+        file("$outputDir/WsDocGenPluginTest.properties").withOutputStream { outputStream ->
+            properties.each { key, value ->
+                outputStream.write("${key}=${value}\n".getBytes())
+            }
+        }
+        logger.info "Created test properties file: ${outputDir}/WsDocGenPluginTest.properties"
     }
 }
 pluginUnderTestMetadata.pluginClasspath.from files(testProperties)
@@ -53,7 +58,10 @@ task createPluginProperties() {
     doLast {
         def file = project.file("$pluginPropertiesDir/no/statkart/sktools/wsdocgen-gradle-plugin.properties")
         file.parentFile.mkdirs()
-        org.gradle.util.GUtil.saveProperties(pluginProperties, file)
+        new Properties().with {
+            putAll(pluginProperties)
+            store(file.newWriter(), 'Plugin Information')
+        }
         logger.info "Created plugin info file: ${file.getAbsolutePath()}"
     }
 }

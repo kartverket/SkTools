@@ -4,8 +4,8 @@ import org.gradle.api.Project;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.initialization.dsl.ScriptHandler;
-import org.gradle.util.GUtil;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,9 +47,19 @@ class DependencyUtil {
     /**
      * Test properties når man kjører tester, ellers null.
      */
+    @Nullable
     private static Properties injectedTestProperties() {
-        InputStream stream = DependencyUtil.class.getResourceAsStream("/WsdlGenPluginTest.properties");
-        //dersom denne finnes på classpath kjører man tester
-        return stream == null ? null : GUtil.loadProperties(stream);
+        Properties properties = new Properties();
+        try (InputStream stream = DependencyUtil.class.getResourceAsStream("/WsdlGenPluginTest.properties")) {
+            if (stream != null) {
+                properties.load(stream);
+            } else {
+                return null;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+        return properties;
     }
 }

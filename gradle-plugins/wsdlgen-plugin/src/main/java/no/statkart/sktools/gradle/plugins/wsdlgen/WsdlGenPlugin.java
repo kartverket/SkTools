@@ -22,7 +22,7 @@ public class WsdlGenPlugin implements Plugin<Project> {
             mainSourceSet.getCompileClasspath() // I tilfelle JAX-WS API er compileOnly
         );
 
-        File outputDir = new File(project.getBuildDir(), WSDLGEN_TASK_NAME);
+        File outputDir = project.getLayout().getBuildDirectory().dir(WSDLGEN_TASK_NAME).get().getAsFile();
 
         WsdlGenTask wsdlGenTask = project.getTasks().create(WSDLGEN_TASK_NAME, WsdlGenTask.class);
         wsdlGenTask.getCompileClasspath().setFrom(wsClasspath);

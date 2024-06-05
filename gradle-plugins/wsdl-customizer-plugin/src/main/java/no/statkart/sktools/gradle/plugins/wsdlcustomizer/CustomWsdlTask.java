@@ -74,7 +74,7 @@ public class CustomWsdlTask extends DefaultTask {
     /**
      * Hvor output skal plasseres
      */
-    private File destinationDir;
+    private File destinationDirectory;
 
     @InputFiles
     public FileCollection getOriginalSchemaFiles() {
@@ -98,12 +98,12 @@ public class CustomWsdlTask extends DefaultTask {
     }
 
     @OutputDirectory
-    public File getDestinationDir() {
-        return destinationDir;
+    public File getDestinationDirectory() {
+        return destinationDirectory;
     }
 
-    public void setDestinationDir(File destinationDir) {
-        this.destinationDir = destinationDir;
+    public void setDestinationDirectory(File destinationDirectory) {
+        this.destinationDirectory = destinationDirectory;
     }
 
     @Input
@@ -157,9 +157,9 @@ public class CustomWsdlTask extends DefaultTask {
             throw new GradleException("Error creating XML transformer", e);
         }
 
-        getProject().delete(destinationDir);
+        getProject().delete(destinationDirectory);
         //noinspection ResultOfMethodCallIgnored
-        destinationDir.mkdirs();
+        destinationDirectory.mkdirs();
 
         final CopySpec copySpec = getProject().copySpec();
 
@@ -199,13 +199,13 @@ public class CustomWsdlTask extends DefaultTask {
             @Override
             public void execute(CopySpec spec) {
                 spec.with(copySpec);
-                spec.into(destinationDir);
+                spec.into(destinationDirectory);
             }
         });
     }
 
     private void processWsdl(DocumentBuilder documentBuilder, Transformer transformer, File wsdl, Map<String, String> namespaceSchemaFileMap, HashMap<String, Collection<File>> generatedSchemaFileMap, CopySpec copySpec) {
-        File destinationFile = new File(destinationDir, wsdl.getName());
+        File destinationFile = new File(destinationDirectory, wsdl.getName());
 
         try {
             Document document = documentBuilder.parse(wsdl);
@@ -261,7 +261,7 @@ public class CustomWsdlTask extends DefaultTask {
     private void processServiceSchema(DocumentBuilder documentBuilder, Transformer transformer, Map<String, String> namespaceSchemaFileMap, Collection<File> serviceSchemas) {
 
         for (File serviceSchema : serviceSchemas) {
-            File destinationFile = new File(destinationDir, serviceSchema.getName());
+            File destinationFile = new File(destinationDirectory, serviceSchema.getName());
 
             try {
                 Document document = documentBuilder.parse(serviceSchema);
@@ -341,11 +341,7 @@ public class CustomWsdlTask extends DefaultTask {
             try {
                 Document document = documentBuilder.parse(schemaFile);
                 String targetNamespace = xPathExpression.evaluate(document);
-                Collection<File> files = namespaceSchemaFileMap.get(targetNamespace);
-                if(files == null) {
-                    files = new HashSet<>();
-                    namespaceSchemaFileMap.put(targetNamespace, files);
-                }
+                Collection<File> files = namespaceSchemaFileMap.computeIfAbsent(targetNamespace, k -> new HashSet<>());
                 files.add(schemaFile);
             } catch (SAXException | XPathExpressionException | IOException e) {
                 throw new GradleException("Error parsing " + schemaFile, e);
@@ -375,7 +371,7 @@ public class CustomWsdlTask extends DefaultTask {
         }
 
         @Override
-        public Iterator getPrefixes(String namespaceURI) {
+        public Iterator<String> getPrefixes(String namespaceURI) {
             return Collections.singletonList(getPrefix(namespaceURI)).iterator();
         }
     }

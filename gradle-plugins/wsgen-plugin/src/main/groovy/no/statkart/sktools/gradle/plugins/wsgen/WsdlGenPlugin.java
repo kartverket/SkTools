@@ -41,6 +41,6 @@ public class WsdlGenPlugin implements Plugin<Project> {
         wsdlGenTask.source(sourceSet.getOutput());
         wsdlGenTask.setClasspath(project.files(sourceSet.getCompileClasspath(), sourceSet.getOutput().getClassesDirs()));
         wsdlGenTask.setJaxwsClasspath(jaxwsConfiguration);
-        wsdlGenTask.setDestinationDir(new File(project.getBuildDir(), wsdlGenTask.getName()));
+        wsdlGenTask.setDestinationDirectory(new File(project.getLayout().getBuildDirectory().get().getAsFile(), wsdlGenTask.getName()));
     }
 }

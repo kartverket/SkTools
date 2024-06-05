@@ -32,7 +32,7 @@ abstract class DatabasePatchTask extends AbstractSQLTask {
 
 
     protected JavaExecSpec configureDefaultSpec(JavaExecSpec spec) {
-        spec.setMain("no.statkart.sktools.utils.databasepatcher.DatabasePatcher")
+        spec.getMainClass().set("no.statkart.sktools.utils.databasepatcher.DatabasePatcher")
 
         spec.args('-component', component.get())
 

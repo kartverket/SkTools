@@ -5,7 +5,6 @@ import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.provider.Provider
-import org.gradle.util.ConfigureUtil
 import org.gradle.util.GUtil
 
 /**
@@ -156,7 +155,9 @@ abstract class AbstractDatabaseConvention {
         patch.unSetIndexesInSyncWithPatchTaskName = 'UnSetIndexInSyncWithPatch';
         patch.assertPatchVersionTaskName = 'AssertPatchVersion';
 
-        ConfigureUtil.configure(closure, patch);
+        closure.setDelegate(patch);
+        closure.setResolveStrategy(Closure.DELEGATE_FIRST);
+        closure.call();
 
         patch.addDefaultTasks();
 
@@ -192,8 +193,16 @@ abstract class AbstractDatabaseConvention {
         if (params.containsKey('sqlFile')) {
             params['sqlFile'] = project.file(params['sqlFile'])
         }
-        ConfigureUtil.configureByMap(params, task)
-        ConfigureUtil.configure(closure, task);
+        if (params != null) {
+            params.each { key, value ->
+                task.setProperty(key, value);
+            }
+        }
+        if (closure != null) {
+            closure.setDelegate(task);
+            closure.setResolveStrategy(Closure.DELEGATE_FIRST);
+            closure.call();
+        }
 
         getTasks().addTask(name, task)
         return task;

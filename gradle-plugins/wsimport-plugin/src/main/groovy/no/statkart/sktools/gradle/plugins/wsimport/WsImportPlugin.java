@@ -39,6 +39,7 @@ public class WsImportPlugin implements Plugin<Project> {
 
 
         final File genSrcDir = new File(project.getBuildDir(), "wsimport");
+      //  final File genSrcDir = project.getLayout().getBuildDirectory().dir("wsimport").get().getAsFile();
 
         SourceSet mainSourceSet = project.getExtensions().getByType(SourceSetContainer.class).getByName("main");
 

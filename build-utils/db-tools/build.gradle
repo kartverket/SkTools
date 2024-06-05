@@ -1,6 +1,8 @@
-apply plugin: 'java'
-apply plugin: 'groovy'
-apply plugin: 'maven-publish'
+plugins {
+    id 'java'
+    id 'groovy'
+    id 'maven-publish'
+}
 
 java {
     withSourcesJar()
@@ -9,7 +11,7 @@ java {
 dependencies {
     implementation project(':build-utils:sql-parser')
 
-    compileOnly gradleApi()
+    implementation gradleApi()
     implementation libraries.slf4j_api
     runtimeOnly libraries.slf4j_simple
 

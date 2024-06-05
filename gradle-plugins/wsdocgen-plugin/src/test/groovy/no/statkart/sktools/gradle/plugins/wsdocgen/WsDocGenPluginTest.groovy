@@ -4,10 +4,10 @@ import no.statkart.sktools.gradle.testutils.TestKitBase
 import org.gradle.api.Project
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
-import org.gradle.util.GFileUtils
 import org.testng.annotations.Test
 
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 
 import static no.statkart.sktools.gradle.testutils.filewriter.WsDocgenTestutilFilewriter.writeInterfaceServiceWSBean
@@ -30,9 +30,12 @@ import static org.testng.Assert.assertTrue
  */
 class WsDocGenPluginTest extends TestKitBase {
 
-    static void writeServiceLayout(File file) {
-        GFileUtils.parentMkdirs(file)
-        Files.copy(WsDocGenPluginTest.class.getResourceAsStream('/DefaultTransform.xsl'), file.toPath(), StandardCopyOption.REPLACE_EXISTING)
+    static void writeServiceLayout(File file) throws IOException {
+        Path parentDir = file.toPath().getParent();
+        if (parentDir != null) {
+            Files.createDirectories(parentDir);
+        }
+        Files.copy(WsDocGenPluginTest.class.getResourceAsStream("/DefaultTransform.xsl"), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
     }
 
     /**
@@ -63,11 +66,10 @@ class WsDocGenPluginTest extends TestKitBase {
                         group { targetPath 'gen/doc2' }
                     }
                 }
-
             }
         }
-        assertEquals project.sourceSets.main.wsdoc.group.targetPath.get(), project.file('gen/doc')
-        assertEquals project.sourceSets.other.wsdoc.group.targetPath.get(), project.file('gen/doc2')
+        assertEquals(project.sourceSets.main.wsdoc.group.targetPath.get().toString().trim(), project.file('gen/doc').toString().trim());
+        assertEquals(project.sourceSets.other.wsdoc.group.targetPath.get().toString().trim(), project.file('gen/doc2').toString().trim());
     }
 
 
@@ -159,14 +161,17 @@ class WsDocGenPluginTest extends TestKitBase {
 
             sourceSets {
                 main.wsdoc {}
-                other
+                other {}
             }
         }
 
-        assertNotNull project.sourceSets.main.wsdoc.group
-        assertNull project.sourceSets.other.wsdoc.group
+        assertNotNull(project.sourceSets.main.wsdoc.group)
+        assertNull(project.sourceSets.other.wsdoc.group)
 
-        assertEquals project.sourceSets.main.wsdoc.group.targetPath.get(), project.file('build/main/wsdoc')
+        String expectedPath = project.file('build/main/wsdoc').toString()
+        String actualPath = project.sourceSets.main.wsdoc.group.targetPath.get().toString()
+
+        assertEquals(expectedPath, actualPath)
     }
 
 
@@ -188,12 +193,12 @@ class WsDocGenPluginTest extends TestKitBase {
         }
 
         //test override
-        assertEquals project.sourceSets.other.wsdoc.group.targetPath.get(), project.file('gen/doc')
-        assertEquals project.tasks.genOtherWsdoc.destinationDir, project.file('gen/doc')
+        assertEquals(project.sourceSets.other.wsdoc.group.targetPath.get().toString(), project.file('gen/doc').toString());
+        assertEquals(project.tasks.genOtherWsdoc.destinationDir.toString(), project.file('gen/doc').toString());
 
-        //test multiple groups
-        assertEquals project.sourceSets.multi.wsdoc.group.targetPath.get(), project.file('gen/doc2')
-        assertEquals project.tasks.genMultiWsdoc.destinationDir, project.file('gen/doc2')
+        // test multiple groups
+        assertEquals(project.sourceSets.multi.wsdoc.group.targetPath.get().toString(), project.file('gen/doc2').toString());
+        assertEquals(project.tasks.genMultiWsdoc.destinationDir.toString(), project.file('gen/doc2').toString());
     }
 
 

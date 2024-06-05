@@ -15,12 +15,12 @@ class WsdlGenTask extends SourceTask {
     FileCollection jaxwsClasspath
 
     @OutputDirectory
-    File destinationDir
+    File destinationDirectory
 
     @TaskAction
     protected void genWsdl() {
-        getProject().delete(getDestinationDir())
-        getProject().mkdir(getDestinationDir())
+        getProject().delete(getDestinationDirectory())
+        getProject().mkdir(getDestinationDirectory())
 
         def wsBeans = getSource().matching { include '**/*WSBean.class' }
         def cp = getClasspath().asPath
@@ -40,7 +40,7 @@ class WsdlGenTask extends SourceTask {
                     args '-classpath', cp
                     args '-Xnocompile'
                     args '-wsdl'
-                    args '-r', getDestinationDir()
+                    args '-r', getDestinationDirectory()
                     args classname
                 }
             }

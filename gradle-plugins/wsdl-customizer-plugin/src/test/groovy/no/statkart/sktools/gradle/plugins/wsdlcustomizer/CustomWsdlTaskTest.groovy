@@ -31,7 +31,7 @@ class CustomWsdlTaskTest {
         File generatedDir = new File(generatedUrl.toURI())
 
         CustomWsdlTask customWsdl = project.task('customWsdl', type: CustomWsdlTask) {
-            destinationDir = destDir
+            destinationDirectory = destDir
 
             originalSchemaFiles project.fileTree(handmadeDir)
             generatedWsdlAndSchemaFiles project.fileTree(generatedDir)

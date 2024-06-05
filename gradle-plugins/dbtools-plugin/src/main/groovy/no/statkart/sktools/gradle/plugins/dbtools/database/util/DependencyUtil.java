@@ -7,6 +7,7 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.initialization.dsl.ScriptHandler;
 import org.gradle.util.GUtil;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,6 +49,7 @@ public class DependencyUtil {
     /**
      * Test properties når man kjører tester, ellers null.
      */
+    @Nullable
     static Properties injectedTestProperties() {
         InputStream stream = DbtoolsPlugin.class.getResourceAsStream("/DbtoolsPluginTest.properties");
         //dersom denne finnes på classpath kjører man tester
