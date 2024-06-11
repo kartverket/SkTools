@@ -1,7 +1,8 @@
-apply plugin: 'java'
-apply plugin: 'groovy'
-apply plugin: 'maven-publish'
-
+plugins {
+    id 'java'
+    id 'groovy'
+    id 'maven-publish'
+}
 java {
     withSourcesJar()
 }

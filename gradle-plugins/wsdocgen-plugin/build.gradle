@@ -1,3 +1,5 @@
+
+
 plugins {
     id 'groovy'
     id 'maven-publish'
@@ -41,7 +43,7 @@ task testProperties {
             sktools_wsdocgen_classpath: project(':build-utils:wsdocgen').sourceSets.main.runtimeClasspath.asPath,
         ]
         outputDir.mkdirs()
-        org.gradle.util.GUtil.saveProperties(properties as Properties, file("$outputDir/WsDocGenPluginTest.properties"))
+        org.gradle.util.internal.GUtil.saveProperties(properties as Properties, file("$outputDir/WsDocGenPluginTest.properties"))
     }
 }
 pluginUnderTestMetadata.pluginClasspath.from files(testProperties)
@@ -53,7 +55,7 @@ task createPluginProperties() {
     doLast {
         def file = project.file("$pluginPropertiesDir/no/statkart/sktools/wsdocgen-gradle-plugin.properties")
         file.parentFile.mkdirs()
-        org.gradle.util.GUtil.saveProperties(pluginProperties, file)
+        GUtil.saveProperties(pluginProperties, file)
         logger.info "Created plugin info file: ${file.getAbsolutePath()}"
     }
 }

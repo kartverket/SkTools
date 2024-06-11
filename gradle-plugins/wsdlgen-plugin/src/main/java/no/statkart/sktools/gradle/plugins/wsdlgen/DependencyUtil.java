@@ -4,7 +4,6 @@ import org.gradle.api.Project;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.initialization.dsl.ScriptHandler;
-import org.gradle.util.GUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,6 +49,6 @@ class DependencyUtil {
     private static Properties injectedTestProperties() {
         InputStream stream = DependencyUtil.class.getResourceAsStream("/WsdlGenPluginTest.properties");
         //dersom denne finnes på classpath kjører man tester
-        return stream == null ? null : GUtil.loadProperties(stream);
+        return stream == null ? null : org.gradle.util.internal.GUtil.loadProperties(stream);
     }
 }

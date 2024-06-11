@@ -3,7 +3,7 @@ package no.statkart.sktools.gradle.plugins.wsdocgen
 import org.gradle.api.Project
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.SourceSet
-import org.gradle.util.ConfigureUtil
+import org.gradle.util.internal.ConfigureUtil
 
 /**
  * Dokumentasjon av en logisk samling webservices.

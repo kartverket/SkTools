@@ -8,7 +8,7 @@ allprojects {
     project.version = sktools_versjon
 
     // build katalog avledes av Gradle versjon - brukes bla ved parallelle bygg
-    buildDir = 'buildGradle' + GradleVersion.current().baseVersion.version
+    layout.buildDirectory = 'buildGradle' + GradleVersion.current().baseVersion.version
 
     tasks.withType(AbstractPublishToMaven).configureEach {
         doFirst {
@@ -44,10 +44,11 @@ project.ext.libraries = [
 
 
 
-subprojects { Project project ->
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'maven-publish'
     apply plugin: 'project-report'
     apply plugin: 'base'
-
 
     repositories {
         mavenLocal()
@@ -55,10 +56,10 @@ subprojects { Project project ->
     }
 
 
-    project.plugins.withType(JavaPlugin) {
+    tasks.withType(JavaCompile) {
 
-        sourceCompatibility = '1.8'
-        targetCompatibility = '1.8'
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
 
         // appropriately inject common dependencies into each sub-project
         dependencies {
@@ -67,11 +68,16 @@ subprojects { Project project ->
         }
 
 
-        project.ext.set('filterProperties', [:])
+        project.ext.filterProperties = [:]
 
-        project.afterEvaluate {
-            if (project.ext.filterProperties.isEmpty())
-            project.properties.entrySet().collectEntries(project.ext.filterProperties) {(it.value instanceof String) ? new MapEntry(it.key, it.value) : [:]}
+        afterEvaluate {
+            if (project.ext.filterProperties.isEmpty()) {
+                project.properties.each { key, value ->
+                    if (value instanceof String) {
+                        project.ext.filterProperties[key] = value
+                    }
+                }
+            }
         }
 
 
@@ -82,22 +88,22 @@ subprojects { Project project ->
             def scopeName = scope.replaceFirst(".") {it[0].toUpperCase()}
 
             if (unfilteredPropertiesDir.isDirectory()) {
-                def filterTask = task("filter${scopeName}Resources") {
+                def filterTask = tasks("filter${scopeName}Resources") {
                     inputs.dir(unfilteredPropertiesDir)
 
-                    inputs.properties(project.filterProperties)
+                    inputs.properties(project.ext.filterProperties)
                     outputs.dir(filteredResourcesDir)
                     doLast {
                         delete(filteredResourcesDir);
                         copy {
                             into(filteredResourcesDir)
                             from(unfilteredPropertiesDir)
-                            filter(org.apache.tools.ant.filters.ReplaceTokens, tokens: project.filterProperties)
+                            filter(org.apache.tools.ant.filters.ReplaceTokens, tokens: project.ext.filterProperties)
                         }
-                        ant.touch() { fileset(dir: filteredResourcesDir)}
+                        ant.touch() { fileset(dir: filteredResourcesDir) }
                     }
                 }
-                project.sourceSets."$scope".resources.srcDir filterTask
+                sourceSets."$scope".resources.srcDir filterTask
             }
         }
 
