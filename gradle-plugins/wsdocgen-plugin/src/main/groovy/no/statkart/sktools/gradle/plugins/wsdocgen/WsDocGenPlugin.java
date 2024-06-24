@@ -186,11 +186,20 @@ public class WsDocGenPlugin implements Plugin<Project> {
     /**
      * Test properties når man kjører tester, ellers null.
      */
+
     @Nullable
     static Properties injectedTestProperties() {
-        InputStream stream = WsDocGenPlugin.class.getResourceAsStream("/WsDocGenPluginTest.properties");
-        //dersom denne finnes på classpath kjører man tester
-        return stream == null ? null : GUtil.loadProperties(stream);
+        try (InputStream stream = WsDocGenPlugin.class.getResourceAsStream("/WsDocGenPluginTest.properties")) {
+            if (stream == null) {
+                return null;
+            }
+            Properties properties = new Properties();
+            properties.load(stream);
+            return properties;
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load test properties", e);
+        }
     }
-
 }
+
+
