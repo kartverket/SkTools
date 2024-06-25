@@ -25,7 +25,7 @@ dependencies {
 
 // Write the plugin's classpath to a file to share with the tests
 task processorClasspathManifest {
-    def outputDir = file("$buildDir/$name")
+    def outputDir = layout.buildDirectory.dir("${name}").get().asFile
 
     inputs.files(sourceSets.main.runtimeClasspath)
         .withPropertyName("runtimeClasspath")

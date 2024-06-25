@@ -38,8 +38,7 @@ public class WsImportPlugin implements Plugin<Project> {
             .defaultDependencies(dependencies -> dependencies.add(project.getDependencies().create("com.sun.xml.ws:jaxws-rt:2.3.6")));
 
 
-        final File genSrcDir = new File(project.getBuildDir(), "wsimport");
-      //  final File genSrcDir = project.getLayout().getBuildDirectory().dir("wsimport").get().getAsFile();
+      final File genSrcDir = project.getLayout().getBuildDirectory().dir("wsimport").get().getAsFile();
 
         SourceSet mainSourceSet = project.getExtensions().getByType(SourceSetContainer.class).getByName("main");
 

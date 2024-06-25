@@ -74,7 +74,7 @@ public class CustomWsdlTask extends DefaultTask {
     /**
      * Hvor output skal plasseres
      */
-    private File destinationDirectory;
+    private File destinationDir;
 
     @InputFiles
     public FileCollection getOriginalSchemaFiles() {
@@ -99,11 +99,11 @@ public class CustomWsdlTask extends DefaultTask {
 
     @OutputDirectory
     public File getDestinationDirectory() {
-        return destinationDirectory;
+        return destinationDir;
     }
 
-    public void setDestinationDirectory(File destinationDirectory) {
-        this.destinationDirectory = destinationDirectory;
+    public void setDestinationDir(File destinationDir) {
+        this.destinationDir = destinationDir;
     }
 
     @Input
@@ -157,9 +157,9 @@ public class CustomWsdlTask extends DefaultTask {
             throw new GradleException("Error creating XML transformer", e);
         }
 
-        getProject().delete(destinationDirectory);
+        getProject().delete(destinationDir);
         //noinspection ResultOfMethodCallIgnored
-        destinationDirectory.mkdirs();
+        destinationDir.mkdirs();
 
         final CopySpec copySpec = getProject().copySpec();
 
@@ -199,13 +199,13 @@ public class CustomWsdlTask extends DefaultTask {
             @Override
             public void execute(CopySpec spec) {
                 spec.with(copySpec);
-                spec.into(destinationDirectory);
+                spec.into(destinationDir);
             }
         });
     }
 
     private void processWsdl(DocumentBuilder documentBuilder, Transformer transformer, File wsdl, Map<String, String> namespaceSchemaFileMap, HashMap<String, Collection<File>> generatedSchemaFileMap, CopySpec copySpec) {
-        File destinationFile = new File(destinationDirectory, wsdl.getName());
+        File destinationFile = new File(destinationDir, wsdl.getName());
 
         try {
             Document document = documentBuilder.parse(wsdl);
@@ -261,7 +261,7 @@ public class CustomWsdlTask extends DefaultTask {
     private void processServiceSchema(DocumentBuilder documentBuilder, Transformer transformer, Map<String, String> namespaceSchemaFileMap, Collection<File> serviceSchemas) {
 
         for (File serviceSchema : serviceSchemas) {
-            File destinationFile = new File(destinationDirectory, serviceSchema.getName());
+            File destinationFile = new File(destinationDir, serviceSchema.getName());
 
             try {
                 Document document = documentBuilder.parse(serviceSchema);

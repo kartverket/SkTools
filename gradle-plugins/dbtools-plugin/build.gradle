@@ -35,7 +35,7 @@ dependencies {
 
 // inject av verktøy i testkjøring
 task testProperties {
-    def outputDir = file("$buildDir/$name")
+    def outputDir = layout.buildDirectory.dir("${name}").get().asFile
 
     inputs.files project(':build-utils:db-tools').sourceSets.main.runtimeClasspath
     outputs.dir outputDir

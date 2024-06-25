@@ -30,8 +30,8 @@ def libVersion(String name, String defaultValue) {
 project.ext.libraries = [
 
         // Logging
-        slf4j_api: "org.slf4j:slf4j-api:${libVersion('slf4j', '1.7.36')}",
-        slf4j_simple: "org.slf4j:slf4j-simple:${libVersion('slf4j', '1.7.36')}",
+        slf4j_api: "org.slf4j:slf4j-api:${libVersion('slf4j', '2.0.13')}",
+        slf4j_simple: "org.slf4j:slf4j-simple:${libVersion('slf4j', '2.0.13')}",
 
         saxon : 'net.sf.saxon:Saxon-HE:12.2', //xslt 2.0
 
@@ -170,4 +170,3 @@ subprojects {
         ])
     }
 }
-

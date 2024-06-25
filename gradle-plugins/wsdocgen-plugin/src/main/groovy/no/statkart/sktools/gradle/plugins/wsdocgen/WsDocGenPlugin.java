@@ -16,7 +16,7 @@ import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.bundling.Zip;
 import org.gradle.util.Configurable;
-import org.gradle.util.GUtil;
+import org.gradle.util.internal.GUtil;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -189,17 +189,18 @@ public class WsDocGenPlugin implements Plugin<Project> {
 
     @Nullable
     static Properties injectedTestProperties() {
-        try (InputStream stream = WsDocGenPlugin.class.getResourceAsStream("/WsDocGenPluginTest.properties")) {
+        InputStream stream = WsDocGenPlugin.class.getResourceAsStream("/WsDocGenPluginTest.properties");
             if (stream == null) {
                 return null;
             }
             Properties properties = new Properties();
+        try {
             properties.load(stream);
-            return properties;
         } catch (IOException e) {
-            throw new RuntimeException("Failed to load test properties", e);
+            throw new RuntimeException(e);
         }
-    }
+        return properties;
+        }
 }
 
 
