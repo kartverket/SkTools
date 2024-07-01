@@ -1,9 +1,10 @@
 package no.statkart.sktools.gradle.plugins.wsdocgen
 
 import org.gradle.api.Project
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.SourceSet
-import org.gradle.util.ConfigureUtil
+import org.gradle.util.internal.ConfigureUtil
 
 /**
  * Dokumentasjon av en logisk samling webservices.
@@ -23,7 +24,7 @@ class WsDocGroup {
     /**
      * Hvilket dir det skal legges til
      */
-    final Property<File> targetPath
+    final DirectoryProperty targetPath
 
     final Property<String> lookupPath
 
@@ -37,7 +38,7 @@ class WsDocGroup {
         this.name = name
         this.project = project
         this.sourceSet = sourceSet
-        this.targetPath = project.getObjects().property(File)
+        this.targetPath = project.getObjects().directoryProperty()
         this.lookupPath = project.getObjects().property(String)
         this.encoding = project.getObjects().property(String)
         this.serviceXsltPath = project.getObjects().property(File)

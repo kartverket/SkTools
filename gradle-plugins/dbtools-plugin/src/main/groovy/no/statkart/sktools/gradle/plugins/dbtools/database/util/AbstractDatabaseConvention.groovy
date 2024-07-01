@@ -5,8 +5,8 @@ import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.provider.Provider
-import org.gradle.util.ConfigureUtil
-import org.gradle.util.GUtil
+import org.gradle.util.internal.ConfigureUtil
+import org.gradle.util.internal.GUtil
 
 /**
  * Felles funksjonalitet for toolsets

@@ -5,7 +5,6 @@ import groovy.lang.GroovyObject;
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractDatabaseConvention;
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractSQLTask;
 import org.codehaus.groovy.runtime.MethodClosure;
-import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -17,6 +16,7 @@ import org.gradle.api.plugins.BasePlugin;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.language.base.plugins.LifecycleBasePlugin;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -58,28 +58,25 @@ public class DbtoolsPlugin implements Plugin<Project> {
 
     public DbtoolsConvention dbtoolsConvention;
 
-
+    @Override
     public void apply(final Project project) {
         project.getPluginManager().apply(BasePlugin.class);
 
         dbtoolsConvention = new DbtoolsConvention(project);
-        project.getConvention().getPlugins().put(CONVENTION_NAME, dbtoolsConvention);
+
+        // Register the extension
+        project.getExtensions().create(CONVENTION_NAME, DbtoolsConvention.class, project);
 
         final Configuration configuration = project.getConfigurations().create(DBTOOLS_CONFIGURATION);
 
         configureInfo(project, "info");
 
         TaskProvider<Task> checkSQLTasks = configureTest(project, "checkSQLTasks");
-        project.getTasks().named(CHECK_TASK_NAME).configure(checkTask -> {
-            checkTask.dependsOn(checkSQLTasks);
-        });
+        project.getTasks().named(CHECK_TASK_NAME).configure(checkTask ->
+            checkTask.dependsOn(checkSQLTasks)
+        );
 
-        project.afterEvaluate(new Action<Project>() {
-            @Override
-            public void execute(Project project) {
-                assignConventionalValues(project);
-            }
-        });
+        project.afterEvaluate(this::assignConventionalValues);
         loadDrivers(configuration, project);
     }
 
@@ -94,6 +91,7 @@ public class DbtoolsPlugin implements Plugin<Project> {
                 final Logger logger = task.getLogger();
                 logger.quiet("Dbtools configuration for {}", project.getPath());
 
+                DbtoolsConvention dbtoolsConvention = project.getExtensions().getByType(DbtoolsConvention.class);
                 for (Map.Entry<String, ? extends AbstractDatabaseConvention> entry : dbtoolsConvention.dbToolSets.entrySet()) {
                     logger.quiet("\n\nInfo for toolset {}.dbToolSets['{}'] (prefix: '{}')", CONVENTION_NAME, entry.getKey(), entry.getValue());
                 }
@@ -115,7 +113,7 @@ public class DbtoolsPlugin implements Plugin<Project> {
                 for (AbstractSQLTask task : project.getTasks().withType(AbstractSQLTask.class)) {
                     try {
                         task.validate(); //SKTOOLS-81
-                    } catch (Throwable t) {
+                    } catch (Exception t) {
                         task.getLogger().error("Error when validating task {}", task.getPath());
                     }
                 }
@@ -124,6 +122,7 @@ public class DbtoolsPlugin implements Plugin<Project> {
     }
 
     void assignConventionalValues(Project project) {
+        DbtoolsConvention dbtoolsConvention = project.getExtensions().getByType(DbtoolsConvention.class);
         for (AbstractDatabaseConvention databaseConvention : dbtoolsConvention.dbToolSets.values()) {
             // Setter default properties
             if (databaseConvention.getProperties() == null) {
@@ -148,7 +147,7 @@ public class DbtoolsPlugin implements Plugin<Project> {
             final MethodClosure addURLClosure = new MethodClosure(groovyClassloader, "addURL");
 
             @Override
-            public void graphPopulated(TaskExecutionGraph taskExecutionGraph) {
+            public void graphPopulated(@NotNull TaskExecutionGraph taskExecutionGraph) {
                 for (File file : configuration.getFiles()) {
                     //For å kunne benytte jdbc funksjonalitet, må jdbc klasser være lastet inn i classloader til groovy.
                     try {
@@ -160,6 +159,4 @@ public class DbtoolsPlugin implements Plugin<Project> {
             }
         });
     }
-
-
 }

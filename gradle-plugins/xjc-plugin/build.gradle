@@ -19,7 +19,7 @@ gradlePlugin {
     }
 }
 
-def pluginPropertiesDir = "$buildDir/plugin-properties"
+def pluginPropertiesDir = layout.buildDirectory.dir("plugin-properties").get()
 def pluginProperties = [
         default_xjc_implementation : 'org.glassfish.jaxb:jaxb-xjc:2.3.8',
         default_jaxb_ri_implementation : 'org.glassfish.jaxb:jaxb-runtime:2.3.8',
@@ -38,7 +38,14 @@ task createPluginProperties() {
     doLast {
         def file = project.file("$pluginPropertiesDir/no/statkart/sktools/xjc-gradle-plugin.properties")
         file.parentFile.mkdirs()
-        org.gradle.util.GUtil.saveProperties(pluginProperties, file)
+        def properties = new Properties()
+        pluginProperties.each { key, value ->
+            properties.setProperty(key, value.toString())
+        }
+
+        file.withOutputStream { outputStream ->
+            properties.store(outputStream, null)
+        }
         logger.info "Created plugin info file: ${file.getAbsolutePath()}"
     }
 }

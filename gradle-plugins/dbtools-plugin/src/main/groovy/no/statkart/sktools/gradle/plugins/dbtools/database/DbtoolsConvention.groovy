@@ -8,7 +8,6 @@ import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.Dependency
-import org.gradle.util.ConfigureUtil
 
 /**
  * Pluginen kan konfigureres til å håndtere flere ulike databaser og flere instanser av denne.
@@ -41,12 +40,11 @@ configureDatabasePlugin {
  */
 public class DbtoolsConvention {
     protected final transient Project project;
+    protected final List<Dependency> jdbcDependencies = new ArrayList<>(4);
+    public final Map<String, AbstractDatabaseConvention> dbToolSets = new HashMap<>();
 
-    protected final List<Dependency> jdbcDependencies = new ArrayList<Dependency>(4);
-    public final Map<String, ? extends AbstractDatabaseConvention> dbToolSets = new HashMap<String, AbstractDatabaseConvention>()
-
-    DbtoolsConvention(Project project) {
-        this.project = project
+    public DbtoolsConvention(Project project) {
+        this.project = project;
     }
 
     /**
@@ -60,11 +58,9 @@ public class DbtoolsConvention {
      */
     void configureDatabasePlugin(Closure closure) {
         closure.setResolveStrategy(Closure.DELEGATE_FIRST);
-        closure.delegate = this
-        closure()
-
+        closure.setDelegate(this);
+        closure.call();
     }
-
 
     /**
      * Følgende toolset er tilgjengelige:
@@ -109,77 +105,80 @@ configureDatabasePlugin {
      * @param closure konfigurasjon av toolset
      * @return
      */
-    protected def toolset(Map<String, ?> params, Closure closure) {
+    protected Object toolset(Map<String, ?> params, Closure closure) {
+        String type = (String) params.get("type");
+        String name = (String) params.get("name");
+        String prefix = (String) params.getOrDefault("prefix", name);
 
-        String type = params.get('type')
-        String name = params.get('name')
-        String prefix = params.get('prefix', name)
+        project.getLogger().info("Adding {} toolset with name '{}' (prefix={})...", type, name, prefix);
 
-        project.logger.info('Adding {} toolset with name \'{}\' (prefix={})...', type, name, prefix)
-
-        def toolset;
-        if ('oracle'.equalsIgnoreCase(type)) {
-            toolset = addOracleToolset(prefix, name, closure)
-        } else if ('hsqldb'.equalsIgnoreCase(type)) {
-            toolset = addHsqldbToolset(prefix, name, closure)
+        AbstractDatabaseConvention toolset;
+        if ("oracle".equalsIgnoreCase(type)) {
+            toolset = addOracleToolset(prefix, name, closure);
+        } else if ("hsqldb".equalsIgnoreCase(type)) {
+            toolset = addHsqldbToolset(prefix, name, closure);
         } else {
-            throw new GradleException("Ukjent verktøyset/database")
+            throw new GradleException("Unknown toolset/database");
         }
         return toolset;
-
     }
 
 
     /**
      *  For å kunne benytte jdbc funksjonalitet, må jdbc klasser registreres i classloader til groovy.
      */
-    protected void useDrivers(Object dependencyNotation) {
-        [dependencyNotation].flatten().each {
-            Dependency dependency = project.dependencies.create(it)
-
-            project.dependencies.add(DbtoolsPlugin.DBTOOLS_CONFIGURATION, dependency)
-            jdbcDependencies.add(dependency)
-        }
+    public void useDrivers(Object dependencyNotation) {
+        project.getDependencies().add("dbtools", project.getDependencies().create(dependencyNotation));
+        jdbcDependencies.add(project.getDependencies().create(dependencyNotation));
     }
 
-    private def addOracleToolset(String prefix, String name, Closure closure) {
-        OracleTasksConvention convention = dbToolSets.get(name)
-
+    private AbstractDatabaseConvention addOracleToolset(String prefix, String name, Closure closure) {
+        OracleTasksConvention convention = (OracleTasksConvention) dbToolSets.get(name);
         if (convention == null) {
-            project.logger.info('Applying Oracle convention with name \'{}\' ...', name)
-            convention = new OracleTasksConvention(this, prefix, name)
-            dbToolSets.put(name, convention)
-
+            project.getLogger().info("Applying Oracle convention with name '{}' ...", name);
+            convention = new OracleTasksConvention(this, prefix, name);
+            dbToolSets.put(name, convention);
         }
-
-        convention.config(closure)
-
-        return convention
+        convention.config(closure);
+        return convention;
     }
 
-    private def addHsqldbToolset(String prefix, String name, Closure closure) {
-        HsqldbTasksConvention convention = dbToolSets.get(prefix)
-
+    private AbstractDatabaseConvention addHsqldbToolset(String prefix, String name, Closure closure) {
+        HsqldbTasksConvention convention = (HsqldbTasksConvention) dbToolSets.get(prefix);
         if (convention == null) {
-            project.logger.info('Applying HSQLDB convention with name \'{}\' ...', name)
-            convention = new HsqldbTasksConvention(this, prefix, name)
-            dbToolSets.put(name, convention)
+            project.getLogger().info("Applying HSQLDB convention with name '{}' ...", name);
+            convention = new HsqldbTasksConvention(this, prefix, name);
+            dbToolSets.put(name, convention);
+        }
+        convention.config(closure);
+        return convention;
+    }
 
+    public Task taskSequence(String verb, Closure config) {
+        SequenceTask task = project.getTasks().create(verb, SequenceTask.class);
+        if (config != null) {
+            config.setDelegate(task);
+            config.setResolveStrategy(Closure.DELEGATE_FIRST);
+            config.call();
+        }
+        return task;
+    }
+
+    public Task taskSequence(Map<String, ?> params, String verb, Closure config) {
+        SequenceTask task = project.getTasks().create(verb, SequenceTask.class);
+
+        if (params != null) {
+            params.each { key, value ->
+                task.setProperty(key, value);
+            }
         }
 
-        convention.config(closure)
+        if (config != null) {
+            config.setDelegate(task);
+            config.setResolveStrategy(Closure.DELEGATE_FIRST);
+            config.call();
+        }
 
-        return convention
+        return task;
     }
-
-    public Task taskSequence(String verb, Closure config = null) {
-        SequenceTask task = project.tasks.create(verb, SequenceTask.class)
-        return ConfigureUtil.configure(config, task);
-    }
-    public Task taskSequence(Map params, String verb, Closure config = null) {
-        SequenceTask task = project.tasks.create(verb, SequenceTask.class)
-        ConfigureUtil.configureByMap(params, task)
-        return ConfigureUtil.configure(config, task);
-    }
-
 }

@@ -10,6 +10,7 @@ import org.gradle.api.Project
 import org.gradle.api.Task
 import org.testng.Assert
 import org.testng.annotations.Test
+import org.gradle.testfixtures.ProjectBuilder;
 
 import java.sql.SQLInvalidAuthorizationSpecException
 import java.sql.SQLSyntaxErrorException
@@ -79,9 +80,10 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
 
 
         final Project project = projectBuilder().build().tap {
-            apply plugin: 'sktools-dbtools-plugin'
+            project.getPluginManager().apply('sktools-dbtools-plugin')
+            DbtoolsConvention dbtoolsConvention = project.getExtensions().findByType(DbtoolsConvention)
 
-             configureDatabasePlugin {
+            dbtoolsConvention.configureDatabasePlugin {
                 toolset( type:'hsqldb', prefix:'Prefix_', name:'hsql' ) {
                     sqlTask('CreateSchema', sqlFile: createShemaFile)
                     sqlTask('CreateSchema2', sqlFile: createShema2File) {
@@ -100,7 +102,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
         }
 
 
-        final DbtoolsConvention convention = project.convention.plugins.db
+        final DbtoolsConvention convention = project.extensions.getByType(DbtoolsConvention)
 
         // STEG 3 - credentials ihht konfig
         Assert.assertEquals convention.dbToolSets['hsql'].credentials.username, defaultCredentials.username
@@ -142,9 +144,10 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
         Preconditions.checkState(sql.connection.isValid(0), "Invalid connection - see %s", 'getSql()')
 
         final Project project = projectBuilder().build().tap {
-            apply plugin: 'sktools-dbtools-plugin'
+            project.getPluginManager().apply('sktools-dbtools-plugin')
+            DbtoolsConvention dbtoolsConvention = project.getExtensions().findByType(DbtoolsConvention)
 
-            configureDatabasePlugin {
+            dbtoolsConvention.configureDatabasePlugin {
                 toolset( type:'hsqldb', prefix:'Prefix_', name:'hsql' ) {
                     sqlTask('CreateSchema', sqlString: 'ignored')
 
@@ -221,9 +224,10 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
 
         // STEG 2 - konfigurering av plugin
         final Project project = projectBuilder().build().tap {
-            apply plugin: 'sktools-dbtools-plugin'
+            project.getPluginManager().apply('sktools-dbtools-plugin')
+            DbtoolsConvention dbtoolsConvention = project.getExtensions().findByType(DbtoolsConvention)
 
-            configureDatabasePlugin {
+            dbtoolsConvention.configureDatabasePlugin {
                 toolset( type:'hsqldb', prefix:'DB1', name:'hsql' ) {
                     sqlTask('CreateSchema', sqlFile: createShemaFile)
 
@@ -287,9 +291,10 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
     @Test
     void testPatchStandardTaskPrintPatchVersion() {
         final Project project = projectBuilder().build().tap {
-            apply plugin: 'sktools-dbtools-plugin'
+            project.getPluginManager().apply('sktools-dbtools-plugin')
+            DbtoolsConvention dbtoolsConvention = project.getExtensions().findByType(DbtoolsConvention)
 
-            configureDatabasePlugin {
+            dbtoolsConvention.configureDatabasePlugin {
                 toolset(name: 'Prefix', type: 'hsqldb', prefix: 'Prefix') {
 
                     credentials.username = defaultCredentials.username
@@ -316,9 +321,10 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
     @Test
     void testPatchStandardTaskSetIndexInSyncWithPatch() {
         final Project project = projectBuilder().build().tap {
-            apply plugin: 'sktools-dbtools-plugin'
+            project.getPluginManager().apply('sktools-dbtools-plugin')
+            DbtoolsConvention dbtoolsConvention = project.getExtensions().findByType(DbtoolsConvention)
 
-            configureDatabasePlugin {
+            dbtoolsConvention.configureDatabasePlugin {
                 toolset(name: 'Prefix', type: 'hsqldb', prefix: 'Prefix') {
 
                     credentials.username = defaultCredentials.username
@@ -345,9 +351,10 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
     @Test
     void testPatchStandardTaskUnSetIndexInSyncWithPatch() {
         final Project project = projectBuilder().build().tap {
-            apply plugin: 'sktools-dbtools-plugin'
+            project.getPluginManager().apply('sktools-dbtools-plugin')
+            DbtoolsConvention dbtoolsConvention = project.getExtensions().findByType(DbtoolsConvention)
 
-            configureDatabasePlugin {
+            dbtoolsConvention.configureDatabasePlugin {
                 toolset(name: 'Prefix', type: 'hsqldb', prefix: 'Prefix') {
 
                     credentials.username = defaultCredentials.username
@@ -410,13 +417,13 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
     }
 
 
-
     @Test
     void tasknameForPatch() {
         final Project project = projectBuilder().build().tap {
-            apply plugin: 'sktools-dbtools-plugin'
+            project.getPluginManager().apply('sktools-dbtools-plugin')
+            DbtoolsConvention dbtoolsConvention = project.getExtensions().findByType(DbtoolsConvention)
 
-            configureDatabasePlugin {
+            dbtoolsConvention.configureDatabasePlugin {
                 toolset(name: 'Prefix', type: 'hsqldb', prefix: 'Prefix') {
 
                     credentials.username = defaultCredentials.username
@@ -437,9 +444,10 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
     @Test
     void tasknameForNull() {
         final Project project = projectBuilder().build().tap {
-            apply plugin: 'sktools-dbtools-plugin'
+            project.getPluginManager().apply('sktools-dbtools-plugin')
+            DbtoolsConvention dbtoolsConvention = project.getExtensions().findByType(DbtoolsConvention)
 
-            configureDatabasePlugin {
+            dbtoolsConvention.configureDatabasePlugin {
                 toolset(name: 'main', type: 'hsqldb', prefix: '') {
 
                     credentials.username = defaultCredentials.username

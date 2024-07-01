@@ -1,5 +1,6 @@
 package no.statkart.sktools.gradle.plugins.dbtools.database.util
 
+import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsConvention
 import no.statkart.sktools.gradle.testutils.TestKitBase
 import org.gradle.api.Project
 import org.testng.annotations.Test
@@ -48,9 +49,10 @@ insert into TABLE1(ID, TEXT) VALUES (1, '${norskeTegn}');
     @Test
     public void toolsetPropertiesPropagatesToSubstitution() {
         Project project = projectBuilder().build().tap {
-            apply plugin: 'sktools-dbtools-plugin'
+            project.getPluginManager().apply('sktools-dbtools-plugin')
+            DbtoolsConvention dbtoolsConvention = project.getExtensions().findByType(DbtoolsConvention)
 
-            configureDatabasePlugin {
+            dbtoolsConvention.configureDatabasePlugin {
                 toolset(name: 'coolDb', type: 'hsqldb', prefix: 'coolDb') {
                     sqlTask('Foo', description: 'Sql med filtrerte verdier')
                     properties = [
@@ -59,7 +61,7 @@ insert into TABLE1(ID, TEXT) VALUES (1, '${norskeTegn}');
                     ]
                 }
             }
-        }
+
 
         SQLTask sqlTask = project.tasks.getByName('coolDbFoo') as SQLTask
 
@@ -73,4 +75,5 @@ insert into TABLE1(ID, TEXT) VALUES (1, '${norskeTegn}');
             .isEqualTo("foo fighter")
     }
 
+}
 }

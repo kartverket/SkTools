@@ -1,5 +1,6 @@
 package no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch
 
+import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsConvention
 import no.statkart.sktools.gradle.testutils.TestKitBase
 import org.gradle.api.Project
 import org.testng.annotations.Test
@@ -45,9 +46,10 @@ insert into TABLE1(ID, TEXT) VALUES (1, 'ÆæØøÅå');
     @Test
     public void toolsetPropertiesPropagatesToSubstitution() {
         Project project = projectBuilder().build().tap {
-            apply plugin: 'sktools-dbtools-plugin'
+            project.getPluginManager().apply('sktools-dbtools-plugin')
+            DbtoolsConvention dbtoolsConvention = project.getExtensions().findByType(DbtoolsConvention)
 
-            configureDatabasePlugin {
+            dbtoolsConvention.configureDatabasePlugin {
                 toolset(name: 'coolDb', type: 'hsqldb', prefix: '') {
                     patch {
                         patchTask('Foo', description: 'Task med verdier ifra konfigurasjon og convention')

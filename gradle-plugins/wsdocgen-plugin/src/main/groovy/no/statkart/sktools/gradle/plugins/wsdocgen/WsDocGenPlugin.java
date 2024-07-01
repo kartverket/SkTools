@@ -16,8 +16,7 @@ import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.bundling.Zip;
 import org.gradle.util.Configurable;
-import org.gradle.util.ConfigureUtil;
-import org.gradle.util.GUtil;
+import org.gradle.util.internal.GUtil;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -92,8 +91,12 @@ public class WsDocGenPlugin implements Plugin<Project> {
             if (group == null) {
                 attachNewWsDocGroup();
             }
-            return ConfigureUtil.configureSelf(closure, group);
+            closure.setDelegate(group);
+            closure.setResolveStrategy(Closure.DELEGATE_FIRST);
+            closure.call();
+            return group;
         }
+
 
         private void attachNewWsDocGroup() {
             group = new WsDocGroup(project, "group", sourceSet);
@@ -111,10 +114,9 @@ public class WsDocGenPlugin implements Plugin<Project> {
             return group;
         }
 
-        protected Provider<File> defaultTargetPath() {
+        protected Provider<Directory> defaultTargetPath() {
             return project.getLayout().getBuildDirectory()
-                .dir(sourceSet.getName() + "/wsdoc")
-                .map(Directory::getAsFile);
+                .dir(sourceSet.getName() + "/wsdoc");
         }
 
 
@@ -148,7 +150,7 @@ public class WsDocGenPlugin implements Plugin<Project> {
             task.setClasspath(project.files(
                 (Callable<FileCollection>) sourceSet::getCompileClasspath
             ));
-            task.setDestinationDir(group.getTargetPath());
+            task.getDestinationDirectory().set(group.getTargetPath());
             task.getLookupPath().set(group.getLookupPath());
             task.getEncoding().set(group.getEncoding());
             task.getServiceXsltFile().set(group.getServiceXsltPath());

@@ -8,7 +8,7 @@ allprojects {
     project.version = sktools_versjon
 
     // build katalog avledes av Gradle versjon - brukes bla ved parallelle bygg
-    buildDir = 'buildGradle' + GradleVersion.current().baseVersion.version
+    layout.buildDirectory = 'buildGradle' + GradleVersion.current().baseVersion.version
 
     tasks.withType(AbstractPublishToMaven).configureEach {
         doFirst {
@@ -30,8 +30,8 @@ def libVersion(String name, String defaultValue) {
 project.ext.libraries = [
 
         // Logging
-        slf4j_api: "org.slf4j:slf4j-api:${libVersion('slf4j', '1.7.36')}",
-        slf4j_simple: "org.slf4j:slf4j-simple:${libVersion('slf4j', '1.7.36')}",
+        slf4j_api: "org.slf4j:slf4j-api:${libVersion('slf4j', '2.0.13')}",
+        slf4j_simple: "org.slf4j:slf4j-simple:${libVersion('slf4j', '2.0.13')}",
 
         saxon : 'net.sf.saxon:Saxon-HE:12.2', //xslt 2.0
 
@@ -43,8 +43,9 @@ project.ext.libraries = [
 
 
 
-
-subprojects { Project project ->
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'maven-publish'
     apply plugin: 'project-report'
     apply plugin: 'base'
 
@@ -55,10 +56,10 @@ subprojects { Project project ->
     }
 
 
-    project.plugins.withType(JavaPlugin) {
+    tasks.withType(JavaCompile) {
 
-        sourceCompatibility = '1.8'
-        targetCompatibility = '1.8'
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
 
         // appropriately inject common dependencies into each sub-project
         dependencies {

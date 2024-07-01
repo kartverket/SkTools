@@ -4,7 +4,6 @@ import no.statkart.sktools.gradle.testutils.TestKitBase
 import org.gradle.api.Project
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
-import org.gradle.util.GFileUtils
 import org.testng.annotations.Test
 
 import java.nio.file.Files
@@ -31,7 +30,7 @@ import static org.testng.Assert.assertTrue
 class WsDocGenPluginTest extends TestKitBase {
 
     static void writeServiceLayout(File file) {
-        GFileUtils.parentMkdirs(file)
+        file.getParentFile().mkdirs();
         Files.copy(WsDocGenPluginTest.class.getResourceAsStream('/DefaultTransform.xsl'), file.toPath(), StandardCopyOption.REPLACE_EXISTING)
     }
 
@@ -66,8 +65,8 @@ class WsDocGenPluginTest extends TestKitBase {
 
             }
         }
-        assertEquals project.sourceSets.main.wsdoc.group.targetPath.get(), project.file('gen/doc')
-        assertEquals project.sourceSets.other.wsdoc.group.targetPath.get(), project.file('gen/doc2')
+        assertEquals project.sourceSets.main.wsdoc.group.targetPath.asFile.get(), project.file('gen/doc')
+        assertEquals project.sourceSets.other.wsdoc.group.targetPath.asFile.get(), project.file('gen/doc2')
     }
 
 
@@ -166,7 +165,7 @@ class WsDocGenPluginTest extends TestKitBase {
         assertNotNull project.sourceSets.main.wsdoc.group
         assertNull project.sourceSets.other.wsdoc.group
 
-        assertEquals project.sourceSets.main.wsdoc.group.targetPath.get(), project.file('build/main/wsdoc')
+        assertEquals project.sourceSets.main.wsdoc.group.targetPath.asFile.get(), project.file('build/main/wsdoc')
     }
 
 
@@ -188,12 +187,12 @@ class WsDocGenPluginTest extends TestKitBase {
         }
 
         //test override
-        assertEquals project.sourceSets.other.wsdoc.group.targetPath.get(), project.file('gen/doc')
-        assertEquals project.tasks.genOtherWsdoc.destinationDir, project.file('gen/doc')
+        assertEquals project.sourceSets.other.wsdoc.group.targetPath.asFile.get(), project.file('gen/doc')
+        assertEquals project.tasks.genOtherWsdoc.destinationDirectory.asFile.get(), project.file('gen/doc')
 
         //test multiple groups
-        assertEquals project.sourceSets.multi.wsdoc.group.targetPath.get(), project.file('gen/doc2')
-        assertEquals project.tasks.genMultiWsdoc.destinationDir, project.file('gen/doc2')
+        assertEquals project.sourceSets.multi.wsdoc.group.targetPath.asFile.get(), project.file('gen/doc2')
+        assertEquals project.tasks.genMultiWsdoc.destinationDirectory.asFile.get(), project.file('gen/doc2')
     }
 
 

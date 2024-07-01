@@ -8,6 +8,6 @@ package no.statkart.sktools.utils.parsers.sql.model;
  */
 public interface DefaultStatementVisitor<T extends DefaultStatement> extends ExpressionVisitor<T> {
 
-    Object defaultStatementCase(T host, Object param);
+    Object defaultStatementCase(DefaultStatement host, Object param);
 
 }

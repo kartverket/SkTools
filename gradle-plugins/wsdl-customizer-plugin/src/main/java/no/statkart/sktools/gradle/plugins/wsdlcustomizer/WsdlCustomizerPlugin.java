@@ -54,7 +54,9 @@ public class WsdlCustomizerPlugin implements Plugin<Project> {
 
     private static Copy configureSchemaExtractionTask(final Project project, final Configuration originalSchemas) {
         Copy extractSchemas = project.getTasks().create("extractSchemas", Copy.class);
-        extractSchemas.setDestinationDir(new File(project.getBuildDir(), extractSchemas.getName()));
+        extractSchemas.setDestinationDir(new File(project.getLayout().getBuildDirectory().get().getAsFile(), extractSchemas.getName()));
+
+        //extractSchemas.setDestinationDir(new File(project.getBuildDir(), extractSchemas.getName()));
         extractSchemas.dependsOn(originalSchemas);
         extractSchemas.from(new Callable<Collection<FileCollection>>() {
             @Override
@@ -78,7 +80,9 @@ public class WsdlCustomizerPlugin implements Plugin<Project> {
         wsdlAndXsdPattern.include("**/*.wsdl", "**/*.xsd");
 
         Copy extractWsdls = project.getTasks().create("extractWsdls", Copy.class);
-        extractWsdls.setDestinationDir(new File(project.getBuildDir(), extractWsdls.getName()));
+        extractWsdls.setDestinationDir(new File(project.getLayout().getBuildDirectory().get().getAsFile(), extractWsdls.getName()));
+
+        //extractWsdls.setDestinationDir(new File(project.getBuildDir(), extractWsdls.getName()));
         extractWsdls.dependsOn(generatedSchemas);
         extractWsdls.from(new Callable<Collection<FileCollection>>() {
             @Override
@@ -99,7 +103,9 @@ public class WsdlCustomizerPlugin implements Plugin<Project> {
 
     private static CustomWsdlTask configureWsdlCustomizerTask(Project project, Task schemaTask, Task wsdlTask) {
         CustomWsdlTask customWsdlTask = project.getTasks().create("customizeWsdls", CustomWsdlTask.class);
-        customWsdlTask.setDestinationDir(new File(project.getBuildDir(), customWsdlTask.getName()));
+        customWsdlTask.setDestinationDir(new File(project.getLayout().getBuildDirectory().get().getAsFile(), customWsdlTask.getName()));
+
+//        customWsdlTask.setDestinationDir(new File(project.getBuildDir(), customWsdlTask.getName()));
         customWsdlTask.originalSchemaFiles(schemaTask);
         customWsdlTask.generatedWsdlAndSchemaFiles(wsdlTask);
         return customWsdlTask;

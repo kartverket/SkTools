@@ -1,6 +1,7 @@
-apply plugin: 'java'
-apply plugin: 'maven-publish'
-
+plugins {
+    id 'java'
+    id 'maven-publish'
+}
 dependencies {
 
     testImplementation project(':build-utils:test-utils')

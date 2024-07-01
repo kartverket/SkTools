@@ -7,11 +7,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
+import static org.gradle.util.internal.GFileUtils.parentMkdirs;
+
 public class PatchTestutil {
     private final static String SimplePatch_sql = "/simple_patch.sql";
 
     public static File createSimplePatchFile(File destinationFile) throws IOException {
-        GFileUtils.parentMkdirs(destinationFile);
+        parentMkdirs(destinationFile);
         Files.copy(PatchTestutil.class.getResourceAsStream(SimplePatch_sql), destinationFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
         return destinationFile;
     }

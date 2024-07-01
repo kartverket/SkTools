@@ -1,6 +1,6 @@
 package no.statkart.sktools.gradle.plugins.wsdlcustomizer;
 
-import org.gradle.api.Action;
+
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.file.CopySpec;
@@ -140,7 +140,7 @@ public class CustomWsdlTask extends DefaultTask {
     }
 
     @TaskAction
-    public void generate() throws IOException {
+    public void generate() {
         DocumentBuilder documentBuilder;
         try {
             DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
@@ -195,12 +195,9 @@ public class CustomWsdlTask extends DefaultTask {
             processWsdl(documentBuilder, transformer, wsdl, namespaceSchemaFileMap, generatedSchemaFileMap, copySpec);
         }
 
-        getProject().copy(new Action<CopySpec>() {
-            @Override
-            public void execute(CopySpec spec) {
-                spec.with(copySpec);
-                spec.into(destinationDir);
-            }
+        getProject().copy(spec -> {
+            spec.with(copySpec);
+            spec.into(destinationDir);
         });
     }
 
@@ -341,11 +338,7 @@ public class CustomWsdlTask extends DefaultTask {
             try {
                 Document document = documentBuilder.parse(schemaFile);
                 String targetNamespace = xPathExpression.evaluate(document);
-                Collection<File> files = namespaceSchemaFileMap.get(targetNamespace);
-                if(files == null) {
-                    files = new HashSet<>();
-                    namespaceSchemaFileMap.put(targetNamespace, files);
-                }
+                Collection<File> files = namespaceSchemaFileMap.computeIfAbsent(targetNamespace, k -> new HashSet<>());
                 files.add(schemaFile);
             } catch (SAXException | XPathExpressionException | IOException e) {
                 throw new GradleException("Error parsing " + schemaFile, e);
@@ -375,7 +368,7 @@ public class CustomWsdlTask extends DefaultTask {
         }
 
         @Override
-        public Iterator getPrefixes(String namespaceURI) {
+        public Iterator<String>  getPrefixes(String namespaceURI) {
             return Collections.singletonList(getPrefix(namespaceURI)).iterator();
         }
     }

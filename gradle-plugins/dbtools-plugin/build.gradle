@@ -1,3 +1,5 @@
+import org.gradle.util.internal.GUtil
+
 plugins {
     id 'groovy'
     id 'maven-publish'
@@ -19,7 +21,7 @@ gradlePlugin {
     }
 }
 
-def pluginPropertiesDir = "$buildDir/plugin-properties"
+def pluginPropertiesDir = layout.buildDirectory.dir("plugin-properties").get()
 def pluginProperties = [
     sktools_dbtools : "no.statkart.sktools:db-tools:${version}" as String,
 ] as Properties
@@ -35,8 +37,7 @@ dependencies {
 
 // inject av verktøy i testkjøring
 task testProperties {
-    def outputDir = file("$buildDir/$name")
-
+    def outputDir = layout.buildDirectory.dir("${name}").get().asFile
     inputs.files project(':build-utils:db-tools').sourceSets.main.runtimeClasspath
     outputs.dir outputDir
 
@@ -46,12 +47,19 @@ task testProperties {
             libraries_hsqldb : libraries.hsqldb,
         ]
         outputDir.mkdirs()
-        org.gradle.util.GUtil.saveProperties(properties as Properties, file("$outputDir/DbtoolsPluginTest.properties"))
+        GUtil.saveProperties(properties as Properties, file("$outputDir/DbtoolsPluginTest.properties"))
     }
 }
+
 pluginUnderTestMetadata.pluginClasspath.from files(testProperties)
 pluginUnderTestMetadata.pluginClasspath.from sourceSets.main.output
-sourceSets.main.resources.srcDir testProperties
+sourceSets {
+    main {
+        resources {
+            srcDir testProperties
+        }
+    }
+}
 
 task createPluginProperties() {
     outputs.dir pluginPropertiesDir
@@ -59,7 +67,7 @@ task createPluginProperties() {
     doLast {
         def file = project.file("$pluginPropertiesDir/no/statkart/sktools/dbtools-gradle-plugin.properties")
         file.parentFile.mkdirs()
-        org.gradle.util.GUtil.saveProperties(pluginProperties, file)
+        GUtil.saveProperties(pluginProperties, file as File)
         logger.info "Created plugin info file: ${file.getAbsolutePath()}"
     }
 }

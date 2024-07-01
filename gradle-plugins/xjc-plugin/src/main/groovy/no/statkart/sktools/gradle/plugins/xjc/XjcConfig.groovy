@@ -8,7 +8,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.SourceSet
-import org.gradle.util.ConfigureUtil
+import org.gradle.util.internal.ConfigureUtil
 
 import java.nio.file.Paths
 
@@ -50,10 +50,12 @@ class XjcConfig {
     }
 
     Provider<File> defaultOutputPath(SourceSet sourceSet) {
-        def callable = { project.file(Paths.get(project.getBuildDir() as String, "xjc", sourceSet.getName(), name)) }
+        def buildDir = project.layout.buildDirectory.get().asFile
+        def callable = {
+            project.file(Paths.get(buildDir as String, "xjc", sourceSet.name, name))
+        }
         return project.provider(callable)
     }
-
 
     XjcConfig configure(Closure closure) {
         return ConfigureUtil.configure(closure, this);

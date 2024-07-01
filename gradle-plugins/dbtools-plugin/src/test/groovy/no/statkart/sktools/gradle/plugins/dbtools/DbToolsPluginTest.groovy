@@ -9,6 +9,7 @@ import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.Sync
 import no.statkart.sktools.gradle.testutils.TestKitBase
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.testfixtures.ProjectBuilder
 import org.testng.Assert
 import org.testng.annotations.Test
 
@@ -30,7 +31,7 @@ class DbToolsPluginTest extends TestKitBase {
             apply plugin: 'sktools-dbtools-plugin'
         };
 
-        Assert.assertTrue(project.convention.plugins.db instanceof DbtoolsConvention)
+        Assert.assertTrue(project.extensions.getByType(DbtoolsConvention) instanceof DbtoolsConvention)
     }
 
     /**
@@ -60,9 +61,9 @@ class DbToolsPluginTest extends TestKitBase {
         };
 
         createEmptyFile('src/hsql/PleaseAuthenticateMe.sql')
-
+        DbtoolsConvention dbtoolsConvention = project.getExtensions().findByType(DbtoolsConvention)
         project.tap {
-            configureDatabasePlugin {
+            dbtoolsConvention.configureDatabasePlugin {
                 toolset(name: 'coolDb', type: 'hsqldb', prefix: 'coolDb') {
                     url = "jdbc:hsqldb:mem:${this.class.simpleName}TestApplyCredentials"
                     driver = 'org.hsqldb.jdbcDriver'
@@ -77,7 +78,7 @@ class DbToolsPluginTest extends TestKitBase {
         }
 
         Assert.assertNotNull(project.tasks.findByName('coolDbPleaseAuthenticateMe'), "Forventet at task er lagt til")
-        final DbtoolsConvention convention = project.convention.plugins.db
+        final DbtoolsConvention convention = project.extensions.getByType(DbtoolsConvention)
 
         //tester defaults - username og password blir lest ifra prosjekt properties
         Assert.assertEquals(convention.dbToolSets.coolDb.credentials.username, 'brukernavn')
@@ -87,7 +88,7 @@ class DbToolsPluginTest extends TestKitBase {
 
         //setter credentials på toolsetet
         project.tap {
-            configureDatabasePlugin {
+            dbtoolsConvention.configureDatabasePlugin {
                 toolset(type: 'hsqldb', name: 'coolDb') {
                     credentials.username = 'brukernavn2'
                     credentials.password = 'passord2'
@@ -140,9 +141,12 @@ class DbToolsPluginTest extends TestKitBase {
      */
     @Test
     void configurationInUnresolvedState() {
-        final Project project = projectBuilder().build().tap {
-            apply plugin: 'sktools-dbtools-plugin'
-        };
+        final Project project = ProjectBuilder.builder().build();
+        project.pluginManager.apply('sktools-dbtools-plugin');
+
+            // Mocking dbtoolsConvention or accessing the plugin as needed
+            DbtoolsConvention dbtoolsConvention = project.getExtensions().findByType(DbtoolsConvention)
+            dbtoolsConvention.useDrivers 'test:testfile:2.3.3@jar'
 
         createEmptyFile('src/hsql/PleaseAuthenticateMe.sql')
         createEmptyFile('lib/testfile-2.3.3.jar')
@@ -153,7 +157,8 @@ class DbToolsPluginTest extends TestKitBase {
             repositories {
                 flatDir dirs: "${project.rootProject.projectDir}/lib"
             }
-            configureDatabasePlugin {
+
+            dbtoolsConvention.configureDatabasePlugin {
                 useDrivers 'test:testfile:2.3.3@jar'
 
                 toolset(name: 'coolDb', type: 'hsqldb', prefix: 'coolDb') {
@@ -174,9 +179,10 @@ class DbToolsPluginTest extends TestKitBase {
     @Test
     void testOracleImportTask() {
         final Project project = projectBuilder().build().tap {
-            apply plugin: 'sktools-dbtools-plugin'
+            project.getPluginManager().apply('sktools-dbtools-plugin')
+            DbtoolsConvention dbtoolsConvention = project.getExtensions().findByType(DbtoolsConvention)
 
-            configureDatabasePlugin {
+            dbtoolsConvention.configureDatabasePlugin {
                 toolset(name: 'db1', type: 'oracle') {
                     properties = [  //deklarering via felles properties for toolset
                                     username: 'brukernavn',
@@ -211,9 +217,10 @@ class DbToolsPluginTest extends TestKitBase {
     @Test
     void testOracleExportTask() {
         final Project project = projectBuilder().build().tap {
-            apply plugin: 'sktools-dbtools-plugin'
+            project.getPluginManager().apply('sktools-dbtools-plugin')
+            DbtoolsConvention dbtoolsConvention = project.getExtensions().findByType(DbtoolsConvention)
 
-            configureDatabasePlugin {
+            dbtoolsConvention.configureDatabasePlugin {
                 toolset(name: 'db1', type: 'oracle') {
                     properties = [  //deklarering via felles properties for toolset
                                     username: 'brukernavn',
@@ -248,9 +255,10 @@ class DbToolsPluginTest extends TestKitBase {
     @Test
     void testPatchTask() {
         final Project project = projectBuilder().build().tap {
-            apply plugin: 'sktools-dbtools-plugin'
+            project.getPluginManager().apply('sktools-dbtools-plugin')
+            DbtoolsConvention dbtoolsConvention = project.getExtensions().findByType(DbtoolsConvention)
 
-            configureDatabasePlugin {
+            dbtoolsConvention.configureDatabasePlugin {
                 toolset(name: 'db1', type: 'oracle') {
                     properties = [  //deklarering via felles properties for toolset
                                     username: 'brukernavn',
@@ -264,7 +272,7 @@ class DbToolsPluginTest extends TestKitBase {
             }
         }
 
-        final DbtoolsConvention convention = project.convention.plugins.db
+        final DbtoolsConvention convention = project.extensions.getByType(DbtoolsConvention)
         Assert.assertNotNull(convention.dbToolSets.db1, "Forventet toolset objekt")
         Assert.assertNotNull(convention.dbToolSets.db1.patch['null'], "Forventet patch objekt")
         Assert.assertNotNull(convention.dbToolSets.db1.patch['null'].tasks['TestSchema'], "Forventet patch task")
@@ -302,9 +310,10 @@ class DbToolsPluginTest extends TestKitBase {
     @Test
     void testPatchTaskSchema() {
         final Project project = projectBuilder().build().tap {
-            apply plugin: 'sktools-dbtools-plugin'
+            project.getPluginManager().apply('sktools-dbtools-plugin')
+            DbtoolsConvention dbtoolsConvention = project.getExtensions().findByType(DbtoolsConvention)
 
-            configureDatabasePlugin {
+            dbtoolsConvention.configureDatabasePlugin {
                 toolset(name: 'db1', type: 'oracle') {
                     properties = [  //deklarering via felles properties for toolset
                                     username: 'brukernavn',
@@ -319,7 +328,7 @@ class DbToolsPluginTest extends TestKitBase {
             }
         }
 
-        final DbtoolsConvention convention = project.convention.plugins.db
+        final DbtoolsConvention convention = project.extensions.getByType(DbtoolsConvention)
         Assert.assertNotNull(convention.dbToolSets.db1, "Forventet toolset objekt")
         Assert.assertNotNull(convention.dbToolSets.db1.patch['null'], "Forventet patch objekt")
         Assert.assertNotNull(convention.dbToolSets.db1.patch['null'].tasks['TestSchema'], "Forventet patch task")
@@ -346,9 +355,11 @@ class DbToolsPluginTest extends TestKitBase {
     @Test
     void testSyncPatchTask() {
         final Project project = projectBuilder().build().tap {
-            apply plugin: 'sktools-dbtools-plugin'
 
-            configureDatabasePlugin {
+            project.getPluginManager().apply('sktools-dbtools-plugin')
+            DbtoolsConvention dbtoolsConvention = project.getExtensions().findByType(DbtoolsConvention)
+
+            dbtoolsConvention.configureDatabasePlugin {
                 toolset(name: 'db1', type: 'oracle') {
                     properties = [  //deklarering via felles properties for toolset
                                     username: 'brukernavn',
@@ -365,7 +376,7 @@ class DbToolsPluginTest extends TestKitBase {
             }
         }
 
-        final DbtoolsConvention convention = project.convention.plugins.db
+        final DbtoolsConvention convention = project.extensions.getByType(DbtoolsConvention)
         Assert.assertNotNull(convention.dbToolSets.db1, "Forventet toolset objekt")
         Assert.assertNotNull(convention.dbToolSets.db1.patch['null'], "Forventet patch objekt")
         Assert.assertNotNull(convention.dbToolSets.db1.patch['null'].tasks['TestSchema'], "Forventet patch task")
@@ -402,9 +413,10 @@ class DbToolsPluginTest extends TestKitBase {
     @Test
     void testDefineLatestPatchVersionTask() {
         final Project project = projectBuilder().build().tap {
-            apply plugin: 'sktools-dbtools-plugin'
+            project.getPluginManager().apply('sktools-dbtools-plugin')
+            DbtoolsConvention dbtoolsConvention = project.getExtensions().findByType(DbtoolsConvention)
 
-            configureDatabasePlugin {
+            dbtoolsConvention.configureDatabasePlugin {
                 toolset(name: 'db1', type: 'oracle') {
                     patch {
                         defineLatestPatchVersionTask('AssignLatestPatchlevel', sqlFile: "foo.sql", description: 'Task med verdier ifra konfigurasjon og convention')
@@ -413,7 +425,7 @@ class DbToolsPluginTest extends TestKitBase {
             }
         }
 
-        final DbtoolsConvention convention = project.convention.plugins.db
+        final DbtoolsConvention convention = project.extensions.getByType(DbtoolsConvention)
         Assert.assertNotNull(convention.dbToolSets.db1, "Forventet toolset objekt")
         Assert.assertNotNull(convention.dbToolSets.db1.patch['null'], "Forventet patch objekt")
         Assert.assertNotNull(convention.dbToolSets.db1.patch['null'].tasks['AssignLatestPatchlevel'], "Forventet patch task")
@@ -441,9 +453,11 @@ class DbToolsPluginTest extends TestKitBase {
     @Test
     void testInfoTask() {
         final Project project = projectBuilder().build().tap {
-            apply plugin: 'sktools-dbtools-plugin'
 
-            configureDatabasePlugin {
+            project.getPluginManager().apply('sktools-dbtools-plugin')
+            DbtoolsConvention dbtoolsConvention = project.getExtensions().findByType(DbtoolsConvention)
+
+            dbtoolsConvention.configureDatabasePlugin {
                 toolset(name: 'coolDb', type: 'hsqldb', prefix: 'coolDb') {
                     url = "some url"
                     driver = 'org.hsqldb.jdbcDriver'
@@ -463,9 +477,10 @@ class DbToolsPluginTest extends TestKitBase {
     @Test
     void taskSequenceIsExtendedToProject() {
         final Project project = projectBuilder().build().tap {
-            apply plugin: 'sktools-dbtools-plugin'
+            project.getPluginManager().apply('sktools-dbtools-plugin')
+            DbtoolsConvention dbtoolsConvention = project.getExtensions().findByType(DbtoolsConvention)
 
-            taskSequence('nestedTask') {
+            dbtoolsConvention.taskSequence('nestedTask') {
                 dependsOn task('task1')
                 dependsOn task('task2')
             }

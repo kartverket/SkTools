@@ -68,9 +68,10 @@ class TestSKTOOLS_99 extends TestKitBase {
     @Test
     void testTaskSequenceOnDatabaseConvention() {
         final Project project = projectBuilder().build().tap {
-            apply plugin: 'sktools-dbtools-plugin'
+            project.getPluginManager().apply('sktools-dbtools-plugin')
+            DbtoolsConvention dbtoolsConvention = project.getExtensions().findByType(DbtoolsConvention)
 
-            configureDatabasePlugin {
+            dbtoolsConvention.configureDatabasePlugin {
                 toolset(name: 'testToolset', type: 'hsqldb', prefix: 'test') {
 
                     taskSequence('ToolsetTaskB', description: 'Task defined on toolset') {
@@ -111,9 +112,11 @@ class TestSKTOOLS_99 extends TestKitBase {
     @Test
     void testTaskSequenceOnPatchConfiguration() {
         final Project project = projectBuilder().build().tap {
-            apply plugin: 'sktools-dbtools-plugin'
 
-            configureDatabasePlugin {
+            project.getPluginManager().apply('sktools-dbtools-plugin')
+            DbtoolsConvention dbtoolsConvention = project.getExtensions().findByType(DbtoolsConvention)
+
+            dbtoolsConvention.configureDatabasePlugin {
                 toolset(name: 'testToolset', type: 'hsqldb', prefix: 'test') {
 
                     patch {

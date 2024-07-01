@@ -88,7 +88,7 @@ public abstract class TestKitBase {
      */
     private Path jenkinsWorkaroundForTempSetting(Path projectPath) {
         String path = projectPath.toString();
-        path = Character.toUpperCase(path.charAt(0)) + path.substring(1).replaceAll("\\\\", "\\\\\\\\");
+        path = Character.toUpperCase(path.charAt(0)) + path.substring(1).replace("\\\\", "\\\\\\\\");
         return Paths.get(path);
     }
 
@@ -156,7 +156,7 @@ public abstract class TestKitBase {
         }
 
          File destinationFile = file(relativePath);
-        try (JarOutputStream os = new JarOutputStream(new FileOutputStream(destinationFile), manifest)) {
+        try (JarOutputStream os = new JarOutputStream(Files.newOutputStream(destinationFile.toPath()), manifest)) {
             os.flush();
         }
         return destinationFile;
