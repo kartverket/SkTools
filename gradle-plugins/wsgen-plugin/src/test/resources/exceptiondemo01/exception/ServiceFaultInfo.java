@@ -1,8 +1,8 @@
 package exceptiondemo01.exception;
 
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "ServiceFaultInfo", propOrder = {
@@ -10,7 +10,7 @@ import javax.xml.bind.annotation.XmlType;
 })
 public class ServiceFaultInfo {
 
-    @javax.xml.bind.annotation.XmlElement(required = true)
+    @jakarta.xml.bind.annotation.XmlElement(required = true)
     protected String category;
 
     public String getCategory() {
@@ -21,4 +21,3 @@ public class ServiceFaultInfo {
         this.category = value;
     }
 }
-            
