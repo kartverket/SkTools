@@ -39,4 +39,3 @@ public class ServiceException extends Exception {
         this.faultInfo = faultInfo;
     }
 }
-            

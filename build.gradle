@@ -29,11 +29,13 @@ def libVersion(String name, String defaultValue) {
 // use. In that respect it serves a role similar to <dependencyManagement> in Maven
 project.ext.libraries = [
 
+        //wsdlGen
+        wsdlgen_jakarta_platform: 'com.sun.xml.ws:jaxws-ri-bom:3.0.2', // jakarta/EE9+
+        wsdlgen_javax_platform: 'com.sun.xml.ws:jaxws-ri-bom:2.3.6', // javax/EE8
+
         // Logging
         slf4j_api: "org.slf4j:slf4j-api:${libVersion('slf4j', '1.7.36')}",
         slf4j_simple: "org.slf4j:slf4j-simple:${libVersion('slf4j', '1.7.36')}",
-
-        saxon : 'net.sf.saxon:Saxon-HE:12.2', //xslt 2.0
 
         // Testing
         assertj: 'org.assertj:assertj-core:3.24.2',

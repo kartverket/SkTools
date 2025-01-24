@@ -1,17 +1,17 @@
-package exceptiondemo01;
+package exceptiondemo02;
 
-import exceptiondemo01.exception.*;
+import exceptiondemo02.exception.ServiceException;
 
-@javax.jws.WebService(
+@jakarta.jws.WebService(
         name = "ExceptionService1",
         serviceName = "ExceptionService1WS",
-        targetNamespace = "http://test.statkart.no/exceptiondemo01/service/service1")
+        targetNamespace = "http://test.statkart.no/exceptiondemo02/service/service1")
 public class ExceptionService1WSBean {
 
     /**
      * Returnerer PONG
      */
-    @javax.jws.WebMethod
+    @jakarta.jws.WebMethod
     public String ping() throws ServiceException {
         return "PONG";
     }

@@ -29,7 +29,7 @@ Dette er en plugin implementert i for kjøring sammen med `javac`.
 
 Koden genererer html-filer, en for hver service funnet.
 Navnet på genererte filer blir `<servicenavn>.html` hvor servicenavn er navnet definert i verdien til
-`@javax.jws.WebService` annotasjon.
+`@jakarta.jws.WebService` annotasjon.
 
 
 Strukturen til html-filer styres ved å parameterisere en egendefinert xslt transformasjonsfil.

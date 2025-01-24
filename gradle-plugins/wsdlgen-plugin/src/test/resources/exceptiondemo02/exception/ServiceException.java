@@ -1,6 +1,6 @@
-package exceptiondemo01.exception;
+package exceptiondemo02.exception;
 
-@jakarta.xml.ws.WebFault(name = "ServiceException", targetNamespace = "http://test.statkart.no/exceptiondemo01/exception")
+@jakarta.xml.ws.WebFault(name = "ServiceException", targetNamespace = "http://test.statkart.no/exceptiondemo02/exception")
 public class ServiceException extends Exception {
 
     /**

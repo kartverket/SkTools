@@ -99,7 +99,6 @@ public class WsdlCustomizerPlugin implements Plugin<Project> {
 
     private static CustomWsdlTask configureWsdlCustomizerTask(Project project, Task schemaTask, Task wsdlTask) {
         CustomWsdlTask customWsdlTask = project.getTasks().create("customizeWsdls", CustomWsdlTask.class);
-        customWsdlTask.setDestinationDir(new File(project.getBuildDir(), customWsdlTask.getName()));
         customWsdlTask.originalSchemaFiles(schemaTask);
         customWsdlTask.generatedWsdlAndSchemaFiles(wsdlTask);
         return customWsdlTask;

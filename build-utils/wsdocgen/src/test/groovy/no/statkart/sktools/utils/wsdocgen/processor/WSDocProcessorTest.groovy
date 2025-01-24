@@ -104,14 +104,14 @@ class WSDocProcessorTest extends TestKitBase {
 
         //eksempel-kildekode
         File javaFile = writeFileUTF8('src/main/java/TestWSBean.java', """\
-                 @javax.jws.WebService(
+                 @jakarta.jws.WebService(
                      name = "TestService",
                      serviceName = "TestServiceWS",
                      targetNamespace = "http://test.no/unit")
                  public class TestWSBean {
 
                      /** Returnerer PONG **/
-                     @javax.jws.WebMethod
+                     @jakarta.jws.WebMethod
                      public String ping() {
                          return "PONG";
                      }
@@ -169,14 +169,14 @@ class WSDocProcessorTest extends TestKitBase {
 
         // eksempel-kildekode
         File javaFile = writeFileUTF8('src/main/java/TestWSBean.java', """\
-                 @javax.jws.WebService(
+                 @jakarta.jws.WebService(
                      name = "TestService",
                      serviceName = "TestServiceWS",
                      targetNamespace = "http://test.no/unit")
                  public class TestWSBean {
 
                      /** Returnerer PONG **/
-                     @javax.jws.WebMethod
+                     @jakarta.jws.WebMethod
                      public long intToLong(int value) {
                          return 0;
                      }
@@ -240,7 +240,7 @@ class WSDocProcessorTest extends TestKitBase {
                  * @since 1.0 - inception
                  * @author Leif Lislegård
                  **/
-                 @javax.jws.WebService(
+                 @jakarta.jws.WebService(
                          name = "TestService",
                          serviceName = "TestServiceWS",
                          targetNamespace = "http://test.statkart.no/test1")
@@ -359,7 +359,7 @@ class WSDocProcessorTest extends TestKitBase {
                  * @since 1.0 - inception
                  * @author Leif Lislegård
                  **/
-                 @javax.jws.WebService(
+                 @jakarta.jws.WebService(
                          name = "TestService",
                          serviceName = "TestServiceWS",
                          targetNamespace = "http://test.statkart.no/test1")
@@ -518,7 +518,7 @@ class WSDocProcessorTest extends TestKitBase {
                  * @since 1.0 - inception
                  * @author Leif Lislegård
                  **/
-                 @javax.jws.WebService(
+                 @jakarta.jws.WebService(
                          name = "TestService",
                          serviceName = "TestServiceWS",
                          targetNamespace = "http://test.statkart.no/test1")
@@ -637,7 +637,7 @@ class WSDocProcessorTest extends TestKitBase {
                 /**
                  * Ping test service.
                  **/
-                 @javax.jws.WebService(
+                 @jakarta.jws.WebService(
                          name = "TestService1",
                          serviceName = "TestServiceWS",
                          targetNamespace = "http://test.statkart.no/test1")
@@ -656,7 +656,7 @@ class WSDocProcessorTest extends TestKitBase {
                 /**
                  * Inception service.
                  **/
-                 @javax.jws.WebService(
+                 @jakarta.jws.WebService(
                          name = "TestService2",
                          serviceName = "TestServiceWS",
                          targetNamespace = "http://test.statkart.no/test2")
@@ -817,7 +817,7 @@ class WSDocProcessorTest extends TestKitBase {
                  * @since 1.0 - inception
                  * @author Leif Lislegård
                  **/
-                 @javax.jws.WebService(
+                 @jakarta.jws.WebService(
                          name = "TestService",
                          serviceName = "TestServiceWS",
                          targetNamespace = "http://test.statkart.no/test1")
@@ -946,7 +946,7 @@ class WSDocProcessorTest extends TestKitBase {
                 /**
                  * Viser forskjellig angivelse av retur parametere
                  **/
-                 @javax.jws.WebService(
+                 @jakarta.jws.WebService(
                          name = "TestService",
                          serviceName = "TestServiceWS",
                          targetNamespace = "http://test.statkart.no/test1")
@@ -962,13 +962,13 @@ class WSDocProcessorTest extends TestKitBase {
                     }
 
                     /** @return with empty annotation */
-                    @javax.jws.WebResult()
+                    @jakarta.jws.WebResult()
                     public String ping2() {
                       return "";
                     }
 
                     /** @return with annotation */
-                    @javax.jws.WebResult(name = "youPingResult")
+                    @jakarta.jws.WebResult(name = "youPingResult")
                     public String ping3() {
                       return "";
                     }
@@ -1099,7 +1099,7 @@ class WSDocProcessorTest extends TestKitBase {
                  * <p>wrapped text test of {@code GBOK-4872}</p>
                  * @since SKTOOLS-108
                  **/
-                 @javax.jws.WebService(
+                 @jakarta.jws.WebService(
                          name = "TestService",
                          serviceName = "TestServiceWS",
                          targetNamespace = "http://test.statkart.no/test1")
@@ -1291,7 +1291,7 @@ class WSDocProcessorTest extends TestKitBase {
         File javaFile = writeFileUTF8('src/main/java/TestWSBean.java', """\
                 package test1;
 
-                 @javax.jws.WebService(
+                 @jakarta.jws.WebService(
                          name = "TestService",
                          serviceName = "TestServiceWS",
                          targetNamespace = "http://test.statkart.no/test1")
@@ -1431,7 +1431,7 @@ class WSDocProcessorTest extends TestKitBase {
     /**
      * Sjekker at vi får portType fra SEI-interface, serviceName fra
      * implementasjonsklasse og javadoc i generert dokumentasjon ved bruk av
-     * {@linkplain javax.jws.WebService#endpointInterface()}
+     * {@linkplain jakarta.jws.WebService#endpointInterface()}
      */
     @Test
     void testEndpointInterfaceBasicCase() {
@@ -1440,13 +1440,13 @@ class WSDocProcessorTest extends TestKitBase {
 
         File interfaceSource = writeFileUTF8('src/main/java/TestWSI.java', """\
                  /** Interface javadoc */
-                 @javax.jws.WebService(
+                 @jakarta.jws.WebService(
                      name = "TestService",
                      targetNamespace = "http://test.no/unit")
                  public interface TestWSI {
 
                      /** Returnerer PONG **/
-                     @javax.jws.WebMethod
+                     @jakarta.jws.WebMethod
                      public long intToLong(int value) {
                          return 0;
                      }
@@ -1454,7 +1454,7 @@ class WSDocProcessorTest extends TestKitBase {
                 """)
 
         File implSource = writeFileUTF8('src/main/java/TestWSBean.java', """\
-                 @javax.jws.WebService(
+                 @jakarta.jws.WebService(
                      endpointInterface = "TestWSI",
                      serviceName = "TestServiceWS",
                      targetNamespace = "http://test.no/unit")
