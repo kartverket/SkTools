@@ -35,12 +35,13 @@ class WsdlGenPluginTest extends TestKitBase {
             }
 
             dependencies {
-                implementation group: 'jakarta.xml.ws', name: 'jakarta.xml.ws-api', version: '2.3.3'
-                implementation group: 'jakarta.jws', name: 'jakarta.jws-api', version: '1.1.1'
+                implementation platform('com.sun.xml.ws:jaxws-ri-bom:3.0.2') //Jakarta EE9.1
+                implementation 'jakarta.xml.ws:jakarta.xml.ws-api'
+                implementation 'jakarta.jws:jakarta.jws-api'
             }
         """)
 
-        writeExceptiondemo01()
+        writeExceptiondemo()
 
         BuildResult buildResult = testGradleBuild("wsdlGen")
 
@@ -49,7 +50,7 @@ class WsdlGenPluginTest extends TestKitBase {
         assertThat(file('build/wsdlGen/ExceptionService1WS_schema2.xsd')).exists()
     }
 
-    private void writeExceptiondemo01() {
+    private void writeExceptiondemo() {
         def javaSrc = 'src/main/java'
         [
             '/exceptiondemo01/exception/ServiceException.java',
@@ -64,8 +65,12 @@ class WsdlGenPluginTest extends TestKitBase {
         }
 
         writeFileUTF8('src/main/webapp/WEB-INF/web.xml', '''<?xml version='1.0' encoding='UTF-8'?>
-<web-app xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="3.0">
-    <display-name>dummy</display-name>
+<web-app
+    xmlns="https://jakarta.ee/xml/ns/jakartaee"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_5_0.xsd"
+    version="5.0">
+    <display-name>Jakarta EE9</display-name>
 </web-app>
         ''')
     }

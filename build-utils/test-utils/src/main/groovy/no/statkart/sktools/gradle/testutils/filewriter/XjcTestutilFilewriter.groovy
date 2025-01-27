@@ -27,8 +27,8 @@ class XjcTestutilFilewriter {
                         targetNamespace="http://sktools.statkart.no/test"
                         xmlns="http://sktools.statkart.no/test"
                         xmlns:xs="http://www.w3.org/2001/XMLSchema"
-                        xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
-                        jaxb:version="2.1"
+                        xmlns:jaxb="https://jakarta.ee/xml/ns/jaxb"
+                        jaxb:version="3.0"
                         """
             if (!extensionBindingPrefixes.empty) {
                 writer.print('jaxb:extensionBindingPrefixes="' + extensionBindingPrefixes.join(',') + '"')

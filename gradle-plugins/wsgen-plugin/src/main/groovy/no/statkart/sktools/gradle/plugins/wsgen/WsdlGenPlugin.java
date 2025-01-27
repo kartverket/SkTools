@@ -8,8 +8,6 @@ import org.gradle.api.plugins.WarPlugin;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 
-import java.io.File;
-
 /**
  * Konfigurasjon:
  *
@@ -29,11 +27,11 @@ public class WsdlGenPlugin implements Plugin<Project> {
 
         Configuration jaxwsConfiguration = project.getConfigurations().create("jaxws")
             .setDescription("JAX-WS tools")
-            .defaultDependencies(dependencies -> dependencies.add(project.getDependencies().create("com.sun.xml.ws:jaxws-tools:2.3.6")));
+            .defaultDependencies(dependencies -> dependencies.add(project.getDependencies().create("com.sun.xml.ws:jaxws-tools:3.0.2")));
 
         //default verdi for enkelt å komme igang / testing ...
         project.getConfigurations().getByName(JavaPlugin.COMPILE_ONLY_CONFIGURATION_NAME)
-            .defaultDependencies(dependencies -> dependencies.add(project.getDependencies().create("com.sun.xml.ws:jaxws-rt:2.3.6")));
+            .defaultDependencies(dependencies -> dependencies.add(project.getDependencies().create("com.sun.xml.ws:jaxws-rt:3.0.2")));
 
         SourceSet sourceSet = project.getExtensions().getByType(SourceSetContainer.class).getByName("main");
 
@@ -41,6 +39,5 @@ public class WsdlGenPlugin implements Plugin<Project> {
         wsdlGenTask.source(sourceSet.getOutput());
         wsdlGenTask.setClasspath(project.files(sourceSet.getCompileClasspath(), sourceSet.getOutput().getClassesDirs()));
         wsdlGenTask.setJaxwsClasspath(jaxwsConfiguration);
-        wsdlGenTask.setDestinationDir(new File(project.getBuildDir(), wsdlGenTask.getName()));
     }
 }

@@ -4,6 +4,7 @@ import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.file.CopySpec;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
@@ -74,7 +75,8 @@ public class CustomWsdlTask extends DefaultTask {
     /**
      * Hvor output skal plasseres
      */
-    private File destinationDir;
+    private final DirectoryProperty destinationDirectory = getProject().getObjects().directoryProperty()
+        .convention(getProject().getLayout().getBuildDirectory().dir(getName()));
 
     @InputFiles
     public FileCollection getOriginalSchemaFiles() {
@@ -98,12 +100,13 @@ public class CustomWsdlTask extends DefaultTask {
     }
 
     @OutputDirectory
-    public File getDestinationDir() {
-        return destinationDir;
+    public DirectoryProperty getDestinationDirectory() {
+        return destinationDirectory;
     }
 
+    //bakoverkompatibilitet
     public void setDestinationDir(File destinationDir) {
-        this.destinationDir = destinationDir;
+        destinationDirectory.set(destinationDir);
     }
 
     @Input
@@ -157,9 +160,8 @@ public class CustomWsdlTask extends DefaultTask {
             throw new GradleException("Error creating XML transformer", e);
         }
 
-        getProject().delete(destinationDir);
-        //noinspection ResultOfMethodCallIgnored
-        destinationDir.mkdirs();
+        getProject().delete(destinationDirectory);
+        getProject().mkdir(destinationDirectory);
 
         final CopySpec copySpec = getProject().copySpec();
 
@@ -199,13 +201,13 @@ public class CustomWsdlTask extends DefaultTask {
             @Override
             public void execute(CopySpec spec) {
                 spec.with(copySpec);
-                spec.into(destinationDir);
+                spec.into(destinationDirectory);
             }
         });
     }
 
     private void processWsdl(DocumentBuilder documentBuilder, Transformer transformer, File wsdl, Map<String, String> namespaceSchemaFileMap, HashMap<String, Collection<File>> generatedSchemaFileMap, CopySpec copySpec) {
-        File destinationFile = new File(destinationDir, wsdl.getName());
+        File destinationFile = destinationDirectory.file(wsdl.getName()).get().getAsFile();
 
         try {
             Document document = documentBuilder.parse(wsdl);
@@ -261,7 +263,7 @@ public class CustomWsdlTask extends DefaultTask {
     private void processServiceSchema(DocumentBuilder documentBuilder, Transformer transformer, Map<String, String> namespaceSchemaFileMap, Collection<File> serviceSchemas) {
 
         for (File serviceSchema : serviceSchemas) {
-            File destinationFile = new File(destinationDir, serviceSchema.getName());
+            File destinationFile = destinationDirectory.file(serviceSchema.getName()).get().getAsFile();
 
             try {
                 Document document = documentBuilder.parse(serviceSchema);

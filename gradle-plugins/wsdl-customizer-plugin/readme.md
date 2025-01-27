@@ -32,6 +32,9 @@ Changelog
 ------------
 ## Unreleased Changes
 
+## 7.0 Release Notes
+* [SKTOOLS-247] Endret CustomWsdlTask.`destinationDirectory` til provider (het før `destinationDir`)
+
 ## 1.4.0 Release Notes
 * SKTOOLS-171: WSDL-customizer plugin håndterer ikke xsd-filer for flere webservices i samme namespace
 
@@ -65,7 +68,7 @@ Configuration
 
     customizeWsdls {
         dependsOn genWsdls
-        generatedWsdlAndSchemaFiles files(tasks.genWsdls.destinationDir).asFileTree.matching {
+        generatedWsdlAndSchemaFiles files(tasks.genWsdls).asFileTree.matching {
             include '**/*.wsdl', '**/*.xsd'
             exclude '**/*Internal*ServiceWS*'
         }

@@ -1,5 +1,6 @@
 package no.statkart.sktools.gradle.plugins.wsgen
 
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileVisitDetails
 import org.gradle.api.tasks.CompileClasspath
@@ -15,12 +16,13 @@ class WsdlGenTask extends SourceTask {
     FileCollection jaxwsClasspath
 
     @OutputDirectory
-    File destinationDir
+    final DirectoryProperty destinationDirectory = getProject().getObjects().directoryProperty()
+        .convention(getProject().getLayout().getBuildDirectory().dir(getName()));
 
     @TaskAction
     protected void genWsdl() {
-        getProject().delete(getDestinationDir())
-        getProject().mkdir(getDestinationDir())
+        getProject().delete(destinationDirectory)
+        getProject().mkdir(destinationDirectory)
 
         def wsBeans = getSource().matching { include '**/*WSBean.class' }
         def cp = getClasspath().asPath
@@ -40,7 +42,7 @@ class WsdlGenTask extends SourceTask {
                     args '-classpath', cp
                     args '-Xnocompile'
                     args '-wsdl'
-                    args '-r', getDestinationDir()
+                    args '-r', destinationDirectory.get().getAsFile()
                     args classname
                 }
             }

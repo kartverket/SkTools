@@ -1,6 +1,6 @@
 package exceptiondemo01.exception;
 
-@javax.xml.ws.WebFault(name = "ServiceException", targetNamespace = "http://test.statkart.no/exceptiondemo01/exception")
+@jakarta.xml.ws.WebFault(name = "ServiceException", targetNamespace = "http://test.statkart.no/exceptiondemo01/exception")
 public class ServiceException extends Exception {
 
     /**
@@ -39,4 +39,3 @@ public class ServiceException extends Exception {
         this.faultInfo = faultInfo;
     }
 }
-            
