@@ -32,6 +32,9 @@ Changelog
 ## Unreleased Changes
 
 ## 7.0 Release Notes
+* [SKTOOLS-247] Jakarta EE9+ kompatibilitet
+* [SKTOOLS-247] Deprekert EE8
+* [SKTOOLS-247] Endret WsdlGenTask.`destinationDirectory` til provider (het før `destinationDir`)
 * [SKTOOLS-246] Bumper standard jaxws versjon til `2.3.6`
 
 ## 5.3 Release Notes
@@ -75,4 +78,3 @@ Configuration
             from tasks.genWsdls
         }
     }
-

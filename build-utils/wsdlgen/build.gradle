@@ -8,9 +8,16 @@ java {
 }
 
 dependencies {
-    implementation 'com.sun.xml.ws:jaxws-tools:2.3.6'
-    implementation group: 'io.github.classgraph', name: 'classgraph', version: '4.8.114'
-    implementation group: 'commons-cli', name: 'commons-cli', version: '1.4'
+    compileOnly 'jakarta.xml.ws:jakarta.xml.ws-api:3.0.1' //Jakarta EE 9+
+
+    compileOnly platform(libraries.wsdlgen_jakarta_platform) //
+    compileOnly 'com.sun.xml.ws:jaxws-rt' //provided
+
+    testRuntimeOnly platform(libraries.wsdlgen_jakarta_platform) //sktools 7.x with jakarta as default
+    testRuntimeOnly 'com.sun.xml.ws:jaxws-rt' //provided
+
+    implementation 'io.github.classgraph:classgraph:4.8.160'
+    implementation 'commons-cli:commons-cli:1.5.0'
 }
 
 publishing {

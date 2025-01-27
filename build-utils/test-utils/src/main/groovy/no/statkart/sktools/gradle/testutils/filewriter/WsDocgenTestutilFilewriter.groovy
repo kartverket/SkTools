@@ -31,32 +31,32 @@ class WsDocgenTestutilFilewriter {
                      /**
                       * Bla bla bla beskrivelse av service.
                       */
-                     @javax.jws.WebService(
+                     @jakarta.jws.WebService(
                          name = "TestService",
                          serviceName = "TestServiceWS",
                          targetNamespace = "http://test.statkart.no/test1")
                      public class SimpleDemoServiceWSBean {
 
                          /** Returnerer PONG **/
-                         @javax.jws.WebMethod
+                         @jakarta.jws.WebMethod
                          public String ping() {
                              return "PONG";
                          }
 
                          /** Returnerer ikke noe */
-                         @javax.jws.WebMethod
+                         @jakarta.jws.WebMethod
                          public void noPing() {
 
                          }
 
                          /** Returnerer noen bytes **/
-                         @javax.jws.WebMethod
+                         @jakarta.jws.WebMethod
                          public byte[] binary() {
                              return new byte[]{(byte) 1, (byte) 2};
                          }
 
                          /** Eksponeres ikke */
-                         @javax.jws.WebMethod( exclude = true)
+                         @jakarta.jws.WebMethod( exclude = true)
                          public void secret() {
 
                          }
@@ -89,10 +89,10 @@ class WsDocgenTestutilFilewriter {
             Files.write(file.toPath(), ["""\
                     package no.statkart.sktools.interfaceservice.domain;
 
-                    import javax.xml.bind.annotation.XmlAccessType;
-                    import javax.xml.bind.annotation.XmlAccessorType;
-                    import javax.xml.bind.annotation.XmlElement;
-                    import javax.xml.bind.annotation.XmlType;
+                    import jakarta.xml.bind.annotation.XmlAccessType;
+                    import jakarta.xml.bind.annotation.XmlAccessorType;
+                    import jakarta.xml.bind.annotation.XmlElement;
+                    import jakarta.xml.bind.annotation.XmlType;
 
                     /* not documented */
                     @XmlAccessorType(XmlAccessType.FIELD)
@@ -132,14 +132,14 @@ class WsDocgenTestutilFilewriter {
                       */
                      public interface InterfaceServiceInterface {
 
-                         @javax.jws.WebMethod
+                         @jakarta.jws.WebMethod
                          SimpleClass ping(String value);
 
                          /** Returnerer ikke noe */
-                         @javax.jws.WebMethod
+                         @jakarta.jws.WebMethod
                          void interfaceDocumentedMethod();
 
-                         @javax.jws.WebMethod
+                         @jakarta.jws.WebMethod
                          Character stringToChar(String value);
 
                      }
@@ -158,7 +158,7 @@ class WsDocgenTestutilFilewriter {
                     /**
                     * Beskrivelse av service i implementasjon.
                     */
-                    @javax.jws.WebService(
+                    @jakarta.jws.WebService(
                             name = "InterfaceService",
                             serviceName = "InterfaceServiceWS",
                             targetNamespace = "http://sktools.statkart.no/test/service/interfaceservice")
@@ -168,7 +168,7 @@ class WsDocgenTestutilFilewriter {
                         /**
                         * TargetNamespace definert i implementasjonsklassen. Ikke i SimpleClass...
                         **/
-                        @javax.jws.WebResult(targetNamespace = "http://sktools.statkart.no/test/service/interfaceservice/domain")
+                        @jakarta.jws.WebResult(targetNamespace = "http://sktools.statkart.no/test/service/interfaceservice/domain")
                         public SimpleClass ping(String value) {
                             return new SimpleClass(value);
                         }

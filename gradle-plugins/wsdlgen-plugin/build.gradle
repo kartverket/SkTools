@@ -27,6 +27,7 @@ def pluginPropertiesDir = "$buildDir/plugin-properties"
 
 def pluginProperties = [
     sktools_wsdlgen : "no.statkart.sktools:wsdlgen:${version}" as String,
+    sktools_wsdlgen_jakarta_platform: libraries.wsdlgen_jakarta_platform,
 ] as Properties
 
 // inject av verktøy i testkjøring

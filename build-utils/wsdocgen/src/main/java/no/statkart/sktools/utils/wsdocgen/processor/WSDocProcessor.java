@@ -9,7 +9,7 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedOptions;
-import javax.jws.WebService;
+import jakarta.jws.WebService;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -86,7 +86,7 @@ import java.util.Set;
  * @author Leif Lislegård
  * @since 1.3 - ny grunnbok sprint 30
  */
-@SupportedAnnotationTypes(value= {"javax.jws.WebService"})
+@SupportedAnnotationTypes(value= {"jakarta.jws.WebService"})
 @SupportedOptions(value = {
         "xslt",
         "indexXslt",  //SKTOOLS-105

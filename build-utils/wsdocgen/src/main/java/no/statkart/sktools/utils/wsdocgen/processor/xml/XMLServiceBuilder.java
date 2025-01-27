@@ -6,7 +6,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 import javax.annotation.processing.ProcessingEnvironment;
-import javax.jws.WebMethod;
+import jakarta.jws.WebMethod;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
