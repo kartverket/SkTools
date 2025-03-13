@@ -51,7 +51,7 @@ task testProperties {
 }
 pluginUnderTestMetadata.pluginClasspath.from files(testProperties)
 pluginUnderTestMetadata.pluginClasspath.from sourceSets.main.output
-sourceSets.main.resources.srcDir testProperties
+sourceSets.test.resources.srcDir testProperties
 
 task createPluginProperties() {
     outputs.dir pluginPropertiesDir
