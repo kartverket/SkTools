@@ -16,7 +16,6 @@ import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.bundling.Zip;
 import org.gradle.util.Configurable;
-import org.gradle.util.ConfigureUtil;
 import org.gradle.util.GUtil;
 
 import javax.annotation.Nullable;
@@ -92,7 +91,8 @@ public class WsDocGenPlugin implements Plugin<Project> {
             if (group == null) {
                 attachNewWsDocGroup();
             }
-            return ConfigureUtil.configureSelf(closure, group);
+            project.configure(group, closure);
+            return group;
         }
 
         private void attachNewWsDocGroup() {

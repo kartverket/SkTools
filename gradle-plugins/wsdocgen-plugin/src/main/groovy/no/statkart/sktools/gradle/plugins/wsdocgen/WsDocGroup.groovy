@@ -3,7 +3,6 @@ package no.statkart.sktools.gradle.plugins.wsdocgen
 import org.gradle.api.Project
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.SourceSet
-import org.gradle.util.ConfigureUtil
 
 /**
  * Dokumentasjon av en logisk samling webservices.
@@ -102,6 +101,7 @@ class WsDocGroup {
     @Deprecated //kan fjernes i sktools 8
     WsDocGroup group(Closure<?> closure) {
         project.getLogger().warn("Deprecated syntax: wsdoc.group - see SKTOOLS-213 for details");
-        ConfigureUtil.configure(closure, this)
+        project.configure(this, closure)
+        return this
     }
 }
