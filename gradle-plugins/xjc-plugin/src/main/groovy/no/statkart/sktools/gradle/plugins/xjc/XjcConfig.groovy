@@ -8,7 +8,6 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.SourceSet
-import org.gradle.util.ConfigureUtil
 
 import java.nio.file.Paths
 
@@ -56,7 +55,8 @@ class XjcConfig {
 
 
     XjcConfig configure(Closure closure) {
-        return ConfigureUtil.configure(closure, this);
+        project.configure(this, closure)
+        return this;
     }
 
     public FileCollection srcDir(Object srcDir) {
