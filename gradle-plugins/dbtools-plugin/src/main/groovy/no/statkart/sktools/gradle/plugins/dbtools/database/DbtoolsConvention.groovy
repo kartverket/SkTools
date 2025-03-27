@@ -8,7 +8,6 @@ import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.Dependency
-import org.gradle.util.ConfigureUtil
 
 /**
  * Pluginen kan konfigureres til å håndtere flere ulike databaser og flere instanser av denne.
@@ -174,12 +173,16 @@ configureDatabasePlugin {
 
     public Task taskSequence(String verb, Closure config = null) {
         SequenceTask task = project.tasks.create(verb, SequenceTask.class)
-        return ConfigureUtil.configure(config, task);
+        project.configure(task, config)
+        return task
     }
     public Task taskSequence(Map params, String verb, Closure config = null) {
         SequenceTask task = project.tasks.create(verb, SequenceTask.class)
-        ConfigureUtil.configureByMap(params, task)
-        return ConfigureUtil.configure(config, task);
+        for (var e : params.entrySet()) {
+            task.setProperty(e.getKey(), e.getValue())
+        }
+        project.configure(task, config)
+        return task
     }
 
 }
