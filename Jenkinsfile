@@ -6,26 +6,21 @@ pipeline {
         label 'sktools'
     }
 
-    environment {
-        GRADLE_BASELINE = '7.0' //for binærkompatibilitet
 
-        GRADLE_LATEST = '8.1.1' //latest og greatest (kan også være neste major versjon)
-    }
 
     tools {
-        gradle "Gradle $GRADLE_BASELINE" //kompilerer artefakter mot denne API-versjonen
         jdk 'Java 11 Latest' //spesifisert java versjon for bygging av release
     }
 
     stages {
         stage('Prepare') {
             steps {
-                sh "gradle clean --refresh-dependencies ${gradleOptions(this)} --warning-mode=fail"
+                sh "./gradlew clean --refresh-dependencies ${gradleOptions(this)} --warning-mode=fail"
             }
         }
         stage('Build') {
             steps {
-                sh "gradle assemble ${gradleOptions(this)} --warning-mode=fail"
+                sh "./gradlew assemble ${gradleOptions(this)} --warning-mode=fail"
             }
         }
 
@@ -41,9 +36,9 @@ pipeline {
                         jdk 'Java 8 Latest'  //tester med spesifiserte minstekrav
                     }
                     steps {
-                        sh "gradle --version"
+                        sh "./gradlew --version"
                         catchError(stageResult: 'UNSTABLE') {
-                            sh "gradle test ${gradleOptions(this)} --continue --warning-mode=fail"
+                            sh "./gradlew test ${gradleOptions(this)} --continue --warning-mode=fail"
                         }
                     }
                     post {
@@ -57,9 +52,9 @@ pipeline {
                         gradle "Gradle $GRADLE_LATEST"
                     }
                     steps {
-                        sh "gradle --version"
+                        sh "./gradlew --version"
                         catchError(stageResult: 'UNSTABLE') {
-                            sh "gradle test ${gradleOptions(this)} --continue"
+                            sh "./gradlew test ${gradleOptions(this)} --continue"
                         }
                     }
                     post {
@@ -82,7 +77,7 @@ pipeline {
                     //for publisering til sentralt maven repo bindes opp via jenkins credential (secret text)
                     string(variable: 'MAVEN_PUBLISH', credentialsId: 'MAVEN_DEPLOY_RELEASE_CANDIDATE'),
                 ]) {
-                    sh "gradle publish ${gradleOptions(this)} --init-script config/gradle/scripts/mavenPublish.gradle --warning-mode=fail"
+                    sh "./gradlew publish ${gradleOptions(this)} --init-script config/gradle/scripts/mavenPublish.gradle --warning-mode=fail"
                 }
             }
         }
@@ -96,7 +91,7 @@ pipeline {
                     //for publisering til sentralt maven repo bindes opp via jenkins credential (secret text)
                     string(variable: 'MAVEN_PUBLISH', credentialsId: TAG_NAME.contains('-') ? 'MAVEN_DEPLOY_RELEASE_CANDIDATE': 'MAVEN_DEPLOY_RELEASES'),
                 ]) {
-                    sh "gradle publish -Psktools_versjon=${TAG_NAME} --init-script config/gradle/scripts/mavenPublish.gradle --warning-mode=fail"
+                    sh "./gradlew publish -Psktools_versjon=${TAG_NAME} --init-script config/gradle/scripts/mavenPublish.gradle --warning-mode=fail"
                 }
             }
         }
