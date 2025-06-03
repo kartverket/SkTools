@@ -168,8 +168,9 @@ Build : $BUILD_URL <br>
 
 
 static def gradleOptions(script) {
+    def normalizedBranchName = script.BRANCH_NAME.replaceAll('/', '-')
     return [
-            "-Psktools_versjon=${script.BRANCH_NAME}-build${script.BUILD_NUMBER}",
+            "-Psktools_versjon=${normalizedBranchName}-build${script.BUILD_NUMBER}",
             '-Dorg.gradle.daemon=false',
             "-Djava.io.tmpdir=${script.pwd(tmp: true)}", //temp dir settes til samme mappe som jenkins (<workspace name>@tmp)
             '--stacktrace'
