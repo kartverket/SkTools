@@ -39,7 +39,7 @@ project.ext.libraries = [
         // Testing
         assertj: 'org.assertj:assertj-core:3.24.2',
         testng: 'org.testng:testng:7.5.1',
-        hsqldb: 'org.hsqldb:hsqldb:2.7.2:jdk8',
+        hsqldb: 'org.hsqldb:hsqldb:2.7.2',
 ]
 
 
@@ -58,8 +58,8 @@ subprojects { Project project ->
 
     project.plugins.withType(JavaPlugin) {
 
-        sourceCompatibility = '1.8'
-        targetCompatibility = '1.8'
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
 
         // appropriately inject common dependencies into each sub-project
         dependencies {

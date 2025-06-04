@@ -38,7 +38,7 @@ pipeline {
             parallel {
                 stage('Test gradle baseline') {
                     tools {
-                        jdk 'Java 8 Latest'  //tester med spesifiserte minstekrav
+                        jdk 'Java 11 Latest'  //tester med spesifiserte minstekrav
                     }
                     steps {
                         sh "gradle --version"
