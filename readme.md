@@ -26,7 +26,7 @@ Baseline
 --------
 Gradle 7.0 og nyere.
 
-Java 8.
+Java 11.
 
 
 
@@ -37,7 +37,7 @@ Se [jenkinsfile for detaljert oversikt over testede versjoner](Jenkinsfile)
 
 UTF-8 for all kildekode
 
-JDK 17+ / JDK 8
+JDK 17+ / JDK 11
 
 
 
