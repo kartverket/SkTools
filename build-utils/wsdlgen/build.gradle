@@ -16,7 +16,7 @@ dependencies {
     testRuntimeOnly platform(libraries.wsdlgen_jakarta_platform) //sktools 7.x with jakarta as default
     testRuntimeOnly 'com.sun.xml.ws:jaxws-rt' //provided
 
-    implementation 'io.github.classgraph:classgraph:4.8.160'
+    implementation 'io.github.classgraph:classgraph:4.8.179'
     implementation 'commons-cli:commons-cli:1.5.0'
 }
 
