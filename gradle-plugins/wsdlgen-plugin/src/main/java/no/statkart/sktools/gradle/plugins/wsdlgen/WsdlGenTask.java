@@ -64,12 +64,12 @@ public class WsdlGenTask extends DefaultTask {
     @TaskAction
     public void exec() {
         Project project = getProject();
-        project.javaexec(spec -> {
+        project.getProviders().javaexec(spec -> {
             spec.classpath(DependencyUtil.getWsdlGenClasspath(project));
-            spec.setMain("no.statkart.sktools.utils.wsdlgen.SKGenWSDL");
+            spec.getMainClass().set("no.statkart.sktools.utils.wsdlgen.SKGenWSDL");
             spec.args("-d", destinationDirectory.get().getAsFile());
             getLogger().debug("Using WEB_SERVICE_CLASSPATH=\n" + compileClasspath.get().getAsPath());
             spec.environment("WEB_SERVICE_CLASSPATH", compileClasspath.get().getAsPath());
-        });
+        }).getResult().get().assertNormalExitValue();
     }
 }
