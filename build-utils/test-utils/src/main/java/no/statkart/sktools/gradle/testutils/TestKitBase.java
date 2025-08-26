@@ -79,7 +79,10 @@ public abstract class TestKitBase {
 
         //plukker opp evt proxy settings i ~/.gradle/gradle.properties
         File gradleUserHome = new File(System.getenv().getOrDefault("GRADLE_USER_HOME", System.getProperty("user.home") + "/.gradle"));
-        Files.copy(gradleUserHome.toPath().resolve("gradle.properties"), toPath("gradle.properties"));
+        Path gradlePropertiesFile = gradleUserHome.toPath().resolve("gradle.properties");
+        if (Files.exists(gradlePropertiesFile)) {
+            Files.copy(gradlePropertiesFile, toPath("gradle.properties"));
+        }
     }
 
     /**
