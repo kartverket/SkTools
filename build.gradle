@@ -37,7 +37,7 @@ project.ext.libraries = [
         slf4j_simple: "org.slf4j:slf4j-simple:${libVersion('slf4j', '1.7.36')}",
 
         // Testing
-        assertj: 'org.assertj:assertj-core:3.24.2',
+        assertj: 'org.assertj:assertj-core:3.27.6',
         testng: 'org.testng:testng:7.5.1',
         hsqldb: 'org.hsqldb:hsqldb:2.7.2',
 ]
