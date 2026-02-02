@@ -11,7 +11,6 @@ import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.util.GUtil
 
 /**
  * Genererer JAXB java klasser basert på <code>*.xsd</code> filer. <br>
@@ -82,7 +81,7 @@ class XjcPlugin implements Plugin<Project> {
                 final NamedDomainObjectContainer<XjcConfig> xjcSchemas = project.container(XjcConfig.class, new NamedDomainObjectFactory<XjcConfig>() {
                     @Override
                     XjcConfig create(String name) {
-                        String schemaName = sourceSet.getName() + GUtil.toCamelCase(name);
+                        String schemaName = sourceSet.getName() + Utils.toCamelCase(name);
                         return new XjcConfig(schemaName, sourceSet, project);
                     }
                 });

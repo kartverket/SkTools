@@ -14,7 +14,6 @@ import no.statkart.sktools.utils.databasepatcher.exception.ConfigurationExceptio
 import org.gradle.api.Task
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.file.FileCollection
-import org.gradle.util.GUtil
 
 import static no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractDatabaseConvention.capitalize
 
@@ -66,10 +65,10 @@ class PatchConfiguration {
 
 
     String getTaskName(String verb, String target = '') {
-        if ('null'.equals(name) || name == null) {
-            return GUtil.toCamelCase(verb) + capitalize(target);
+        if ('null' == name || name == null) {
+            return Utils.toCamelCase(verb) + capitalize(target);
         } else {
-            return GUtil.toCamelCase(verb + ' ' + name) + capitalize(target);
+            return Utils.toCamelCase(verb + ' ' + name) + capitalize(target);
         }
     }
 
