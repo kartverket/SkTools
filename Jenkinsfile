@@ -14,7 +14,7 @@ pipeline {
 
     tools {
         gradle "Gradle $GRADLE_BASELINE" //kompilerer artefakter mot denne API-versjonen
-        jdk 'Java 11 Latest' //spesifisert java versjon for bygging av release
+        jdk 'Java 17 Latest' //spesifisert java versjon for bygging av release
     }
 
     stages {
@@ -38,7 +38,7 @@ pipeline {
             parallel {
                 stage('Test gradle baseline') {
                     tools {
-                        jdk 'Java 11 Latest'  //tester med spesifiserte minstekrav
+                        jdk 'Java 17 Latest'  //tester med spesifiserte minstekrav
                     }
                     steps {
                         sh "gradle --version"
