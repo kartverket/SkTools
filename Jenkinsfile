@@ -7,9 +7,9 @@ pipeline {
     }
 
     environment {
-        GRADLE_BASELINE = '7.0' //for binærkompatibilitet
+        GRADLE_BASELINE = '8.0' //for binærkompatibilitet
 
-        GRADLE_LATEST = '8.1.1' //latest og greatest (kan også være neste major versjon)
+        GRADLE_LATEST = '9.3.1' //latest og greatest (kan også være neste major versjon)
     }
 
     tools {
