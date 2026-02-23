@@ -16,7 +16,6 @@ import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.bundling.Zip;
 import org.gradle.util.Configurable;
-import org.gradle.util.GUtil;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -141,7 +140,7 @@ public class WsDocGenPlugin implements Plugin<Project> {
 
 
     private static TaskProvider<WsDocCompileTask> createWsDocGenForGroupTask(Project project, SourceSet sourceSet, WsDocGroup group) {
-        final String taskName = "gen" + GUtil.toCamelCase(sourceSet.getName()) + "Wsdoc";
+        final String taskName = "gen" + Utils.toCamelCase(sourceSet.getName()) + "Wsdoc";
         return project.getTasks().register(taskName, WsDocCompileTask.class, task -> {
             //setting conventional properties
             task.setSource(sourceSet.getAllJava());
@@ -189,7 +188,7 @@ public class WsDocGenPlugin implements Plugin<Project> {
     static Properties injectedTestProperties() {
         InputStream stream = WsDocGenPlugin.class.getResourceAsStream("/WsDocGenPluginTest.properties");
         //dersom denne finnes på classpath kjører man tester
-        return stream == null ? null : GUtil.loadProperties(stream);
+        return stream == null ? null : Utils.loadProperties(stream);
     }
 
 }

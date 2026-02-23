@@ -42,7 +42,9 @@ task testProperties {
             sktools_wsdlgen_classpath: project(':build-utils:wsdlgen').sourceSets.main.runtimeClasspath.asPath,
         ]
         outputDir.mkdirs()
-        org.gradle.util.GUtil.saveProperties(properties as Properties, file("$outputDir/WsdlGenPluginTest.properties"))
+        file("$outputDir/WsdlGenPluginTest.properties").withWriter {
+            (properties as Properties).store(it, (String) null)
+        }
     }
 }
 pluginUnderTestMetadata.pluginClasspath.from files(testProperties)
@@ -55,7 +57,9 @@ task createPluginProperties() {
     doLast {
         def file = project.file("$pluginPropertiesDir/no/statkart/sktools/wsdlgen-gradle-plugin.properties")
         file.parentFile.mkdirs()
-        org.gradle.util.GUtil.saveProperties(pluginProperties, file)
+        file.withWriter {
+            pluginProperties.store(it, (String) null)
+        }
         logger.info "Created plugin info file: ${file.getAbsolutePath()}"
     }
 }

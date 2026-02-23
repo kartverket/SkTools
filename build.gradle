@@ -56,10 +56,12 @@ subprojects { Project project ->
     }
 
 
-    project.plugins.withType(JavaPlugin) {
 
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+    project.plugins.withType(JavaPlugin).configureEach {
+        project.getExtensions().configure(JavaPluginExtension.class) { ext ->
+            ext.sourceCompatibility = JavaVersion.VERSION_17
+            ext.targetCompatibility = JavaVersion.VERSION_17
+        }
 
         // appropriately inject common dependencies into each sub-project
         dependencies {
@@ -72,7 +74,7 @@ subprojects { Project project ->
 
         project.afterEvaluate {
             if (project.ext.filterProperties.isEmpty())
-            project.properties.entrySet().collectEntries(project.ext.filterProperties) {(it.value instanceof String) ? new MapEntry(it.key, it.value) : [:]}
+                project.properties.entrySet().collectEntries(project.ext.filterProperties) { (it.value instanceof String) ? new MapEntry(it.key, it.value) : [:] }
         }
 
 
@@ -80,7 +82,7 @@ subprojects { Project project ->
             def unfilteredPropertiesDir = project.file("src/${scope}/resources-filter")
             def filteredResourcesDir = project.file("gen/${scope}/resources")
 
-            def scopeName = scope.replaceFirst(".") {it[0].toUpperCase()}
+            def scopeName = scope.replaceFirst(".") { it[0].toUpperCase() }
 
             if (unfilteredPropertiesDir.isDirectory()) {
                 def filterTask = task("filter${scopeName}Resources") {
@@ -95,7 +97,7 @@ subprojects { Project project ->
                             from(unfilteredPropertiesDir)
                             filter(org.apache.tools.ant.filters.ReplaceTokens, tokens: project.filterProperties)
                         }
-                        ant.touch() { fileset(dir: filteredResourcesDir)}
+                        ant.touch() { fileset(dir: filteredResourcesDir) }
                     }
                 }
                 project.sourceSets."$scope".resources.srcDir filterTask
