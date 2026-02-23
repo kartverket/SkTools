@@ -56,7 +56,6 @@ task createPluginProperties() {
     doLast {
         def file = project.file("$pluginPropertiesDir/no/statkart/sktools/wsdocgen-gradle-plugin.properties")
         file.parentFile.mkdirs()
-        org.gradle.util.GUtil.saveProperties(pluginProperties, file)
         file.withWriter {
             pluginProperties.store(it, (String) null)
         }
