@@ -5,7 +5,6 @@ import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.provider.Provider
-import org.gradle.util.GUtil
 
 /**
  * Felles funksjonalitet for toolsets
@@ -113,9 +112,9 @@ abstract class AbstractDatabaseConvention {
         if (target == null) {
             return null;
         }
-        //kan ikke bruke GUtil.toLowerCamelCase(prefix + ' ' + target) da target kan inneholde "." og andre spesialtegn (ikke anbefalt, men støttet)
+        //PS: target kan inneholde "." og andre spesialtegn (ikke anbefalt, men støttet)
         if (prefix != null && !prefix.isEmpty()) {
-            return GUtil.toLowerCamelCase(prefix) + capitalize(target);
+            return prefix.uncapitalize() + capitalize(target);
         } else {
             return uncapitalize(target);
         }
