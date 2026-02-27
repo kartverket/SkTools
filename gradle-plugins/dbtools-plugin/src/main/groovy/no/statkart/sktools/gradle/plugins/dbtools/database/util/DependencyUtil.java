@@ -5,7 +5,6 @@ import org.gradle.api.Project;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.initialization.dsl.ScriptHandler;
-import org.gradle.util.GUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -49,11 +48,16 @@ public class DependencyUtil {
      * Test properties når man kjører tester, ellers null.
      */
     static Properties injectedTestProperties() {
-        InputStream stream = DbtoolsPlugin.class.getResourceAsStream("/DbtoolsPluginTest.properties");
-        //dersom denne finnes på classpath kjører man tester
-        return stream == null ? null : GUtil.loadProperties(stream);
+        try (InputStream stream = DbtoolsPlugin.class.getResourceAsStream("/DbtoolsPluginTest.properties")) {
+            if (stream != null) { //dersom denne finnes på classpath kjører man tester
+                final Properties properties = new Properties();
+                properties.load(stream);
+                return properties;
+            }
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
+        }
+        return null;
     }
-
-
 
 }
