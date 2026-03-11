@@ -109,7 +109,6 @@ jobs:
             - build
             - test
             - calculate-version
-        if: github.ref_name == 'trunk'
 
         permissions:
             contents: read
