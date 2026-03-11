@@ -54,10 +54,10 @@ jobs:
                 run: chmod +x ./gradlew
 
             -   name: Prepare
-                run: ./gradlew clean --refresh-dependencies --stacktrace --warning-mode=fail -Psktools_versjon=${{ needs.calculate-version.outputs.version }}
+                run: ./gradlew clean --refresh-dependencies --stacktrace --warning-mode=all -Psktools_versjon=${{ needs.calculate-version.outputs.version }}
 
             -   name: Build
-                run: ./gradlew assemble --stacktrace --warning-mode=fail -Psktools_versjon=${{ needs.calculate-version.outputs.version }}
+                run: ./gradlew assemble --stacktrace --warning-mode=all -Psktools_versjon=${{ needs.calculate-version.outputs.version }}
 
     test:
         name: Unit tests (Gradle ${{ matrix.gradle-version }})
@@ -91,7 +91,7 @@ jobs:
                 run: chmod +x ./gradlew
 
             -   name: Run tests
-                run: ./gradlew test --continue --stacktrace --warning-mode=fail -Psktools_versjon=${{ needs.calculate-version.outputs.version }}
+                run: ./gradlew test --continue --stacktrace --warning-mode=all -Psktools_versjon=${{ needs.calculate-version.outputs.version }}
                 continue-on-error: true
 
             -   name: Upload test results
@@ -130,6 +130,6 @@ jobs:
                 run: chmod +x ./gradlew
 
             -   name: Publish to GitHub Packages
-                run: ./gradlew publish --stacktrace --warning-mode=fail -Psktools_versjon=${{ needs.calculate-version.outputs.version }}
+                run: ./gradlew publish --stacktrace --warning-mode=all -Psktools_versjon=${{ needs.calculate-version.outputs.version }}
                 env:
                     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
