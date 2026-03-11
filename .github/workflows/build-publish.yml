@@ -128,7 +128,10 @@ jobs:
             -   name: Grant execute permission to Gradlew
                 run: chmod +x ./gradlew
 
+            -   name: List tasks
+                run: ./gradlew tasks --all | grep -i publish
+
             -   name: Publish to GitHub Packages
-                run: ./gradlew :publishAllPublicationsToGitHubPackagesRepository --stacktrace --warning-mode=all -Psktools_versjon=${{ needs.calculate-version.outputs.version }}
+                run: ./gradlew publish --stacktrace --warning-mode=all -Psktools_versjon=${{ needs.calculate-version.outputs.version }}
                 env:
                     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
