@@ -58,8 +58,8 @@ subprojects { Project project ->
 
     project.plugins.withType(JavaPlugin) {
 
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
 
         // appropriately inject common dependencies into each sub-project
         dependencies {
