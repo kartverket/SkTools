@@ -129,6 +129,6 @@ jobs:
                 run: chmod +x ./gradlew
 
             -   name: Publish to GitHub Packages
-                run: ./gradlew publish --stacktrace --warning-mode=all -Psktools_versjon=${{ needs.calculate-version.outputs.version }}
+                run: ./gradlew :publishAllPublicationsToGitHubPackagesRepository --stacktrace --warning-mode=all -Psktools_versjon=${{ needs.calculate-version.outputs.version }}
                 env:
                     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
