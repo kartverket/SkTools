@@ -10,14 +10,22 @@ java {
     withSourcesJar()
 }
 
-gradlePlugin {
-    plugins {
-        xjc {
-            id = 'sktools.xjc'
-            implementationClass = 'no.statkart.sktools.gradle.plugins.xjc.XjcPlugin'
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
         }
     }
 }
+
+//gradlePlugin {
+//    plugins {
+//        xjc {
+//            id = 'sktools.xjc'
+//            implementationClass = 'no.statkart.sktools.gradle.plugins.xjc.XjcPlugin'
+//        }
+//    }
+//}
 
 def pluginPropertiesDir = "$buildDir/plugin-properties"
 def pluginProperties = [

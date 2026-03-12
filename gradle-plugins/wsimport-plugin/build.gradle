@@ -10,14 +10,23 @@ java {
     withSourcesJar()
 }
 
-gradlePlugin {
-    plugins {
-        wsimport {
-            id = 'sktools.wsimport'
-            implementationClass = 'no.statkart.sktools.gradle.plugins.wsimport.WsImportPlugin'
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
         }
     }
 }
+
+
+//gradlePlugin {
+//    plugins {
+//        wsimport {
+//            id = 'sktools.wsimport'
+//            implementationClass = 'no.statkart.sktools.gradle.plugins.wsimport.WsImportPlugin'
+//        }
+//    }
+//}
 
 
 dependencies {

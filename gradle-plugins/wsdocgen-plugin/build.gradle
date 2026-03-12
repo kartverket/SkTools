@@ -10,14 +10,23 @@ java {
     withSourcesJar()
 }
 
-gradlePlugin {
-    plugins {
-        wsdoc {
-            id = 'sktools.wsdoc'
-            implementationClass = 'no.statkart.sktools.gradle.plugins.wsdocgen.WsDocGenPlugin'
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
         }
     }
 }
+
+
+//gradlePlugin {
+//    plugins {
+//        wsdoc {
+//            id = 'sktools.wsdoc'
+//            implementationClass = 'no.statkart.sktools.gradle.plugins.wsdocgen.WsDocGenPlugin'
+//        }
+//    }
+//}
 
 def pluginPropertiesDir = "$buildDir/plugin-properties"
 def pluginProperties = [

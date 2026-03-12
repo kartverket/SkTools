@@ -55,20 +55,20 @@ subprojects { Project project ->
         mavenCentral()
     }
 
-//    project.plugins.withType(MavenPublishPlugin) {
-//        publishing {
-//            repositories {
-//                maven {
-//                    name = "GitHubPackages"
-//                    url = "https://maven.pkg.github.com/kartverket/SkTools"
-//                    credentials {
-//                        username = System.getenv("GITHUB_ACTOR")
-//                        password = System.getenv("GITHUB_TOKEN")
-//                    }
-//                }
-//            }
-//        }
-//    }
+    project.plugins.withType(MavenPublishPlugin) {
+        publishing {
+            repositories {
+                maven {
+                    name = "GitHubPackages"
+                    url = "https://maven.pkg.github.com/kartverket/SkTools"
+                    credentials {
+                        username = System.getenv("GITHUB_ACTOR")
+                        password = System.getenv("GITHUB_TOKEN")
+                    }
+                }
+            }
+        }
+    }
 //    project.plugins.withId('java-gradle-plugin') {
 //        gradlePlugin {
 //            automatedPublishing = false

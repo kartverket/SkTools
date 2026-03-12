@@ -10,14 +10,23 @@ java {
     withSourcesJar()
 }
 
-gradlePlugin {
-    plugins {
-        properties {
-            id = 'sktools.properties'
-            implementationClass = 'no.statkart.sktools.gradle.plugins.properties.PropertiesPlugin'
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
         }
     }
 }
+
+
+//gradlePlugin {
+//    plugins {
+//        properties {
+//            id = 'sktools.properties'
+//            implementationClass = 'no.statkart.sktools.gradle.plugins.properties.PropertiesPlugin'
+//        }
+//    }
+//}
 
 dependencies {
     testImplementation project(':build-utils:test-utils')

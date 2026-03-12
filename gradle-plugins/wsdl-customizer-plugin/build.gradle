@@ -10,14 +10,24 @@ java {
     withSourcesJar()
 }
 
-gradlePlugin {
-    plugins {
-        wsdlCustomizer {
-            id = 'sktools.wsdl-customizer'
-            implementationClass = 'no.statkart.sktools.gradle.plugins.wsdlcustomizer.WsdlCustomizerPlugin'
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
         }
     }
 }
+
+
+//gradlePlugin {
+//    plugins {
+//        wsdlCustomizer {
+//            id = 'sktools.wsdl-customizer'
+//            implementationClass = 'no.statkart.sktools.gradle.plugins.wsdlcustomizer.WsdlCustomizerPlugin'
+//        }
+//    }
+//}
 
 dependencies {
     testImplementation project(':build-utils:test-utils')

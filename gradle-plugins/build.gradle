@@ -1,22 +1,22 @@
-plugins {
-    id 'java-library'
-    id 'maven-publish'
-}
-
-group = 'no.statkart.sktools.gradle'
-
-afterEvaluate { //depends on children...
-    dependencies {
-        //'samlepom' av samtlige plugins [SKTOOLS-13]
-        api project.childProjects.values()
-    }
-}
-
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-        }
-    }
-}
+//plugins {
+//    id 'java-library'
+//    id 'maven-publish'
+//}
+//
+//group = 'no.statkart.sktools.gradle'
+//
+//afterEvaluate { //depends on children...
+//    dependencies {
+//        //'samlepom' av samtlige plugins [SKTOOLS-13]
+//        api project.childProjects.values()
+//    }
+//}
+//
+//
+//publishing {
+//    publications {
+//        mavenJava(MavenPublication) {
+//            from components.java
+//        }
+//    }
+//}

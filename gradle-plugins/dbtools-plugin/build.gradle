@@ -10,14 +10,24 @@ java {
     withSourcesJar()
 }
 
-gradlePlugin {
-    plugins {
-        dbtools {
-            id = 'sktools.dbtools'
-            implementationClass = 'no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsPlugin'
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
         }
     }
 }
+
+
+//gradlePlugin {
+//    plugins {
+//        dbtools {
+//            id = 'sktools.dbtools'
+//            implementationClass = 'no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsPlugin'
+//        }
+//    }
+//}
 
 def pluginPropertiesDir = "$buildDir/plugin-properties"
 def pluginProperties = [

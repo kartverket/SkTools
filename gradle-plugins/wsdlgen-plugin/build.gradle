@@ -10,14 +10,23 @@ java {
     withSourcesJar()
 }
 
-gradlePlugin {
-    plugins {
-        wsdlgen {
-            id = 'sktools.wsdlgen'
-            implementationClass = 'no.statkart.sktools.gradle.plugins.wsdlgen.WsdlGenPlugin'
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
         }
     }
 }
+
+
+//gradlePlugin {
+//    plugins {
+//        wsdlgen {
+//            id = 'sktools.wsdlgen'
+//            implementationClass = 'no.statkart.sktools.gradle.plugins.wsdlgen.WsdlGenPlugin'
+//        }
+//    }
+//}
 
 dependencies {
     testImplementation project(':build-utils:test-utils')
