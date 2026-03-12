@@ -69,12 +69,6 @@ subprojects { Project project ->
             }
         }
     }
-//    project.plugins.withId('java-gradle-plugin') {
-//        gradlePlugin {
-//            automatedPublishing = false
-//        }
-//    }
-
 
     project.plugins.withType(JavaPlugin) {
 
