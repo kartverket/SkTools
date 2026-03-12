@@ -41,13 +41,14 @@ dependencies {
 // inject av verktøy i testkjøring
 tasks.register('testProperties') {
     def outputDir = file("$buildDir/$name")
+    def wsdocGenClasspath = project(':build-utils:wsdocgen').sourceSets.main.runtimeClasspath
 
-    inputs.files project(':build-utils:wsdocgen').sourceSets.main.runtimeClasspath
+    inputs.files wsdocGenClasspath
     outputs.dir outputDir
 
     doLast {
         def properties = [
-            sktools_wsdocgen_classpath: project(':build-utils:wsdocgen').sourceSets.main.runtimeClasspath.asPath,
+            sktools_wsdocgen_classpath: wsdocGenClasspath.asPath,
         ]
         outputDir.mkdirs()
         def props = new Properties()

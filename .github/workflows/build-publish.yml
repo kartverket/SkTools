@@ -90,6 +90,10 @@ jobs:
                 run: ./gradlew test --continue --stacktrace --warning-mode=all -Psktools_versjon=${{ needs.calculate-version.outputs.version }}
                 continue-on-error: true
 
+            -   name: Check test results
+                if: always()
+                run: find . -path '*/build/test-results/*/*.xml' -print
+
             -   name: Publish Test Report
                 if: ${{ always() }}
                 uses: mikepenz/action-junit-report@v5
