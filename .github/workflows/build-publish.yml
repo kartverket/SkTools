@@ -4,6 +4,7 @@ on:
     push:
         branches:
             - 'trunk'
+    pull_request:
     workflow_dispatch:
 
 env:
@@ -96,6 +97,7 @@ jobs:
             - build
             - test
             - calculate-version
+        if: github.ref_name == 'trunk' && github.event_name != 'pull_request'
 
         permissions:
             contents: read
@@ -114,9 +116,6 @@ jobs:
 
             -   name: Grant execute permission to Gradlew
                 run: chmod +x ./gradlew
-
-            -   name: List tasks
-                run: ./gradlew tasks --all | grep -i publish
 
             -   name: Publish to GitHub Packages
                 run: ./gradlew publish --stacktrace --warning-mode=all -Psktools_versjon=${{ needs.calculate-version.outputs.version }}
