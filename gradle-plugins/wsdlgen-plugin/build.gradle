@@ -42,13 +42,14 @@ def pluginProperties = [
 // inject av verktøy i testkjøring
 tasks.register('testProperties') {
     def outputDir = file("$buildDir/$name")
+    def wsdlGenClasspath = project(':build-utils:wsdlgen').sourceSets.main.runtimeClasspath
 
-    inputs.files project(':build-utils:wsdlgen').sourceSets.main.runtimeClasspath
+    inputs.files wsdlGenClasspath
     outputs.dir outputDir
 
     doLast {
         def properties = [
-            sktools_wsdlgen_classpath: project(':build-utils:wsdlgen').sourceSets.main.runtimeClasspath.asPath,
+            sktools_wsdlgen_classpath: wsdlGenClasspath.asPath,
         ]
         outputDir.mkdirs()
         def props = new Properties()

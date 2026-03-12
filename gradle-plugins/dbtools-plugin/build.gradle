@@ -46,13 +46,14 @@ dependencies {
 // inject av verktøy i testkjøring
 tasks.register('testProperties') {
     def outputDir = file("$buildDir/$name")
+    def dbToolsClasspath = project(':build-utils:db-tools').sourceSets.main.runtimeClasspath
 
-    inputs.files project(':build-utils:db-tools').sourceSets.main.runtimeClasspath
+    inputs.files dbToolsClasspath
     outputs.dir outputDir
 
     doLast {
         def properties = [
-            sktools_dbtools_classpath: project(':build-utils:db-tools').sourceSets.main.runtimeClasspath.asPath,
+            sktools_dbtools_classpath: dbToolsClasspath.asPath,
             libraries_hsqldb         : libraries.hsqldb,
         ]
         outputDir.mkdirs()
