@@ -12,21 +12,21 @@ java {
 
 publishing {
     publications {
-        mavenJava(MavenPublication) {
-            from components.java
+        pluginMaven(MavenPublication) {
+            artifactId = 'wsdlgen-plugin'
         }
     }
 }
 
 
-//gradlePlugin {
-//    plugins {
-//        wsdlgen {
-//            id = 'sktools.wsdlgen'
-//            implementationClass = 'no.statkart.sktools.gradle.plugins.wsdlgen.WsdlGenPlugin'
-//        }
-//    }
-//}
+gradlePlugin {
+    plugins {
+        wsdlgen {
+            id = 'sktools.wsdlgen'
+            implementationClass = 'no.statkart.sktools.gradle.plugins.wsdlgen.WsdlGenPlugin'
+        }
+    }
+}
 
 dependencies {
     testImplementation project(':build-utils:test-utils')

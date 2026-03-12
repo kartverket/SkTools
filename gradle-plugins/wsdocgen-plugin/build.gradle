@@ -12,21 +12,21 @@ java {
 
 publishing {
     publications {
-        mavenJava(MavenPublication) {
-            from components.java
+        pluginMaven(MavenPublication) {
+            artifactId = 'wsdocgen-plugin'
         }
     }
 }
 
 
-//gradlePlugin {
-//    plugins {
-//        wsdoc {
-//            id = 'sktools.wsdoc'
-//            implementationClass = 'no.statkart.sktools.gradle.plugins.wsdocgen.WsDocGenPlugin'
-//        }
-//    }
-//}
+gradlePlugin {
+    plugins {
+        wsdoc {
+            id = 'sktools.wsdoc'
+            implementationClass = 'no.statkart.sktools.gradle.plugins.wsdocgen.WsDocGenPlugin'
+        }
+    }
+}
 
 def pluginPropertiesDir = "$buildDir/plugin-properties"
 def pluginProperties = [

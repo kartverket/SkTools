@@ -12,21 +12,21 @@ java {
 
 publishing {
     publications {
-        mavenJava(MavenPublication) {
-            from components.java
+        pluginMaven(MavenPublication) {
+            artifactId = 'wsimport-plugin'
         }
     }
 }
 
 
-//gradlePlugin {
-//    plugins {
-//        wsimport {
-//            id = 'sktools.wsimport'
-//            implementationClass = 'no.statkart.sktools.gradle.plugins.wsimport.WsImportPlugin'
-//        }
-//    }
-//}
+gradlePlugin {
+    plugins {
+        wsimport {
+            id = 'sktools.wsimport'
+            implementationClass = 'no.statkart.sktools.gradle.plugins.wsimport.WsImportPlugin'
+        }
+    }
+}
 
 
 dependencies {

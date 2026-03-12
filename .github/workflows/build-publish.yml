@@ -89,14 +89,14 @@ jobs:
                 run: ./gradlew test --continue --stacktrace --warning-mode=all -Psktools_versjon=${{ needs.calculate-version.outputs.version }}
                 continue-on-error: true
 
-            -   name: Upload test results
-                if: always()
-                uses: actions/upload-artifact@v4
+            -   name: Publish Test Report
+                if: ${{ always() }}
+                uses: mikepenz/action-junit-report@v5
                 with:
-                    name: test-results-gradle
-                    path: '**/build/test-results/test/*.xml'
-                    retention-days: 30
-
+                    report_paths: '**/build/test-results/*/*.xml'
+                    check_name: ${{ matrix.displayName }} report
+                    annotate_only: true
+                    detailed_summary: true
     publish:
         name: Publish to GitHub Packages
         runs-on: ubuntu-latest

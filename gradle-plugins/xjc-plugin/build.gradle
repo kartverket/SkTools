@@ -12,20 +12,20 @@ java {
 
 publishing {
     publications {
-        mavenJava(MavenPublication) {
-            from components.java
+        pluginMaven(MavenPublication) {
+            artifactId = 'xjc-plugin'
         }
     }
 }
 
-//gradlePlugin {
-//    plugins {
-//        xjc {
-//            id = 'sktools.xjc'
-//            implementationClass = 'no.statkart.sktools.gradle.plugins.xjc.XjcPlugin'
-//        }
-//    }
-//}
+gradlePlugin {
+    plugins {
+        xjc {
+            id = 'sktools.xjc'
+            implementationClass = 'no.statkart.sktools.gradle.plugins.xjc.XjcPlugin'
+        }
+    }
+}
 
 def pluginPropertiesDir = "$buildDir/plugin-properties"
 def pluginProperties = [

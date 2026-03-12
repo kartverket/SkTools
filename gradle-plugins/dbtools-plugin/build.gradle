@@ -13,21 +13,21 @@ java {
 
 publishing {
     publications {
-        mavenJava(MavenPublication) {
-            from components.java
+        pluginMaven(MavenPublication) {
+            artifactId = 'dbtools-plugin'
         }
     }
 }
 
 
-//gradlePlugin {
-//    plugins {
-//        dbtools {
-//            id = 'sktools.dbtools'
-//            implementationClass = 'no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsPlugin'
-//        }
-//    }
-//}
+gradlePlugin {
+    plugins {
+        dbtools {
+            id = 'sktools.dbtools'
+            implementationClass = 'no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsPlugin'
+        }
+    }
+}
 
 def pluginPropertiesDir = "$buildDir/plugin-properties"
 def pluginProperties = [

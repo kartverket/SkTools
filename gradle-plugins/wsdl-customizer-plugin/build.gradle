@@ -13,21 +13,21 @@ java {
 
 publishing {
     publications {
-        mavenJava(MavenPublication) {
-            from components.java
+        pluginMaven(MavenPublication) {
+            artifactId = 'wsdl-customizer-plugin'
         }
     }
 }
 
 
-//gradlePlugin {
-//    plugins {
-//        wsdlCustomizer {
-//            id = 'sktools.wsdl-customizer'
-//            implementationClass = 'no.statkart.sktools.gradle.plugins.wsdlcustomizer.WsdlCustomizerPlugin'
-//        }
-//    }
-//}
+gradlePlugin {
+    plugins {
+        wsdlCustomizer {
+            id = 'sktools.wsdl-customizer'
+            implementationClass = 'no.statkart.sktools.gradle.plugins.wsdlcustomizer.WsdlCustomizerPlugin'
+        }
+    }
+}
 
 dependencies {
     testImplementation project(':build-utils:test-utils')

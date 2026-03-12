@@ -12,21 +12,22 @@ java {
 
 publishing {
     publications {
-        mavenJava(MavenPublication) {
-            from components.java
+        pluginMaven(MavenPublication) {
+            artifactId = 'properties-plugin'
         }
     }
 }
 
 
-//gradlePlugin {
-//    plugins {
-//        properties {
-//            id = 'sktools.properties'
-//            implementationClass = 'no.statkart.sktools.gradle.plugins.properties.PropertiesPlugin'
-//        }
-//    }
-//}
+
+gradlePlugin {
+    plugins {
+        properties {
+            id = 'sktools.properties'
+            implementationClass = 'no.statkart.sktools.gradle.plugins.properties.PropertiesPlugin'
+        }
+    }
+}
 
 dependencies {
     testImplementation project(':build-utils:test-utils')
