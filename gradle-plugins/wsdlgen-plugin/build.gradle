@@ -40,7 +40,7 @@ def pluginProperties = [
 ] as Properties
 
 // inject av verktøy i testkjøring
-task testProperties {
+tasks.register('testProperties') {
     def outputDir = file("$buildDir/$name")
 
     inputs.files project(':build-utils:wsdlgen').sourceSets.main.runtimeClasspath
@@ -58,11 +58,11 @@ pluginUnderTestMetadata.pluginClasspath.from files(testProperties)
 pluginUnderTestMetadata.pluginClasspath.from sourceSets.main.output
 
 
-task createPluginProperties() {
+tasks.register('createPluginProperties') {
     outputs.dir pluginPropertiesDir
     inputs.properties pluginProperties
     doLast {
-        def file = project.file("$pluginPropertiesDir/no/statkart/sktools/wsdlgen-gradle-plugin.properties")
+        def file = layout.projectDirectory.file("$pluginPropertiesDir/no/statkart/sktools/wsdlgen-gradle-plugin.properties").asFile
         file.parentFile.mkdirs()
         org.gradle.util.GUtil.saveProperties(pluginProperties, file)
         logger.info "Created plugin info file: ${file.getAbsolutePath()}"

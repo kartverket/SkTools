@@ -40,11 +40,11 @@ dependencies {
 pluginUnderTestMetadata.pluginClasspath.from sourceSets.main.output
 
 
-task createPluginProperties() {
+tasks.register('createPluginProperties') {
     outputs.dir pluginPropertiesDir
     inputs.properties pluginProperties
     doLast {
-        def file = project.file("$pluginPropertiesDir/no/statkart/sktools/xjc-gradle-plugin.properties")
+        def file = layout.projectDirectory.file("$pluginPropertiesDir/no/statkart/sktools/xjc-gradle-plugin.properties").asFile
         file.parentFile.mkdirs()
         org.gradle.util.GUtil.saveProperties(pluginProperties, file)
         logger.info "Created plugin info file: ${file.getAbsolutePath()}"

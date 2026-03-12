@@ -15,17 +15,17 @@ dependencies {
 }
 
 
-task createSampleJar(type: Jar) {
+tasks.register('createSampleJar', Jar) {
     archiveFileName = 'sample.jar.bin'
     from(project.sourceSets.sample.output)
     manifest.attributes([
-        'Specification-Title': "Sample 1",
+        'Specification-Title'   : "Sample 1",
         'Implementation-Version': "0.1",
     ])
 }
 sourceSets.main.output.dir createSampleJar
 
-task createSample2Jar(type: Jar) {
+tasks.register('createSample2Jar', Jar) {
     archiveFileName = 'sample2.jar.bin'
     from(project.sourceSets.sample.output)
     manifest.attributes([
