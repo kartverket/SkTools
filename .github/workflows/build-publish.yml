@@ -8,7 +8,7 @@ on:
     workflow_dispatch:
 
 env:
-    MAJ_VER: 7
+    MAJOR_VERSION: 7
 
 jobs:
     calculate-version:
@@ -22,7 +22,7 @@ jobs:
                 id: version-string
                 shell: bash
                 run: |
-                    version="${{ env.MAJ_VER }}.$(date -u '+%Y.%m.%d-%H.%M')-$(echo "${GITHUB_SHA}" | cut -c1-7)"
+                    version="${{ env.MAJOR_VERSION }}.$(date -u '+%Y.%m.%d-%H.%M')-$(echo "${GITHUB_SHA}" | cut -c1-7)"
                     echo "version=${version}" >> "$GITHUB_OUTPUT"
     build:
         name: Build
