@@ -10,6 +10,15 @@ java {
     withSourcesJar()
 }
 
+publishing {
+    publications {
+        pluginMaven(MavenPublication) {
+            artifactId = 'wsgen-plugin'
+        }
+    }
+}
+
+
 gradlePlugin {
     plugins {
         wsgen {

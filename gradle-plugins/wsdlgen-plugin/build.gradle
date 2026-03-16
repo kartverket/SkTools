@@ -10,6 +10,15 @@ java {
     withSourcesJar()
 }
 
+publishing {
+    publications {
+        pluginMaven(MavenPublication) {
+            artifactId = 'wsdlgen-plugin'
+        }
+    }
+}
+
+
 gradlePlugin {
     plugins {
         wsdlgen {
@@ -31,31 +40,37 @@ def pluginProperties = [
 ] as Properties
 
 // inject av verktøy i testkjøring
-task testProperties {
+tasks.register('testProperties') {
     def outputDir = file("$buildDir/$name")
+    def wsdlGenClasspath = project(':build-utils:wsdlgen').sourceSets.main.runtimeClasspath
 
-    inputs.files project(':build-utils:wsdlgen').sourceSets.main.runtimeClasspath
+    inputs.files wsdlGenClasspath
     outputs.dir outputDir
 
     doLast {
         def properties = [
-            sktools_wsdlgen_classpath: project(':build-utils:wsdlgen').sourceSets.main.runtimeClasspath.asPath,
+            sktools_wsdlgen_classpath: wsdlGenClasspath.asPath,
         ]
         outputDir.mkdirs()
-        org.gradle.util.GUtil.saveProperties(properties as Properties, file("$outputDir/WsdlGenPluginTest.properties"))
+        def props = new Properties()
+        props.putAll(properties)
+        def outputFile = layout.projectDirectory.file("$outputDir/WsdlGenPluginTest.properties").asFile
+        outputFile.withOutputStream { props.store(it, null) }
     }
 }
 pluginUnderTestMetadata.pluginClasspath.from files(testProperties)
 pluginUnderTestMetadata.pluginClasspath.from sourceSets.main.output
 
 
-task createPluginProperties() {
+tasks.register('createPluginProperties') {
     outputs.dir pluginPropertiesDir
     inputs.properties pluginProperties
     doLast {
-        def file = project.file("$pluginPropertiesDir/no/statkart/sktools/wsdlgen-gradle-plugin.properties")
+        def file = layout.projectDirectory.file("$pluginPropertiesDir/no/statkart/sktools/wsdlgen-gradle-plugin.properties").asFile
         file.parentFile.mkdirs()
-        org.gradle.util.GUtil.saveProperties(pluginProperties, file)
+        def props = new Properties()
+        props.putAll(pluginProperties)
+        file.withOutputStream { props.store(it, null) }
         logger.info "Created plugin info file: ${file.getAbsolutePath()}"
     }
 }

@@ -24,13 +24,10 @@ Java verktøy
 
 Baseline
 --------
-Gradle 7.0 og nyere.
+Gradle 8.13 og nyere.
 
-Java 11.
+Java 17.
 
-
-
-Se [jenkinsfile for detaljert oversikt over testede versjoner](Jenkinsfile)
 
 
 ## Utviklingsmiljø
@@ -50,28 +47,27 @@ project_name=sktools-7.x
 ```
 
 ## Releasetesting
-For å teste virkemåten til de ulike plugins finnes er jenkins satt opp til å teste med noen kombinasjoner av følgende:
-* Gradle versjon (runtime)
-* JDK versjon (runtime)
+Testene kjøres automatisk ved PR og push til `trunk`.
 
+## Publisering
+Pakkene ble tidligere publisert til Nexus. Tidligere pakker vil bli migrert til GitHub Packages.
 
-### Jenkins pipeline
-Til prosjektet er det instrumentert _continuous integration and testing_ i Jenkins.
-Jenkins finner du her [http://jenkins.statkart.no:8021/jenkins/job/sktools/](http://jenkins.statkart.no:8021/jenkins/job/sktools/)
-
-Hver jobb automatiserer bygging, testing og publisering av hver versjon.
+Nye pakker publiseres til [GitHub Packages](https://github.com/orgs/kartverket/packages?repo_name=SkTools) via [build-push.yml](.github/workflows/build-publish.yml) workflowen.
+Ved hver push til `trunk` så vil det bygges og publiseres en ny versjon av alle pluginene og verktøyene i dette repoet.
 
 Flyten illustreres slik:
 
 1. Kompilering, enhetstesting
-2. Publisering til felles repo (nexus)
+2. Publisering til GitHub Packages
 
 
 ## Versjonering
-En benytter "trunk based" versjonering. Det vil si at man cherry-picker over endringer mellom levende kodegrener.
-Det beste er at nye features først utvikles på trunk slik at man holder den fremtidige koden ren og uten legacy kode.
+Pakkene har versjonsnummer som er av formatet `[Major version].[Date].[SHA]`
+Alle pakker har samme versjon, og versjonsnummeret oppdateres ved hver publisering.
 
-Publisering av nye versjoner gjøres via jenkins jobb.
+
+[Major version] oppdateres ved breaking changes og kan endres i [build-push.yml](.github/workflows/build-publish.yml) workflowen.
+
 
 Før versjon 5.6 og overgang til git så benyttet "late branching" som strategi for merging av kildekode.
 Disse taggene har da versjon som starter med `sktools-` - f.eks. "sktools-5.5.1" og ble bygget manuelt.

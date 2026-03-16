@@ -10,6 +10,16 @@ java {
     withSourcesJar()
 }
 
+
+publishing {
+    publications {
+        pluginMaven(MavenPublication) {
+            artifactId = 'dbtools-plugin'
+        }
+    }
+}
+
+
 gradlePlugin {
     plugins {
         dbtools {
@@ -34,32 +44,38 @@ dependencies {
 
 
 // inject av verktøy i testkjøring
-task testProperties {
+tasks.register('testProperties') {
     def outputDir = file("$buildDir/$name")
+    def dbToolsClasspath = project(':build-utils:db-tools').sourceSets.main.runtimeClasspath
 
-    inputs.files project(':build-utils:db-tools').sourceSets.main.runtimeClasspath
+    inputs.files dbToolsClasspath
     outputs.dir outputDir
 
     doLast {
         def properties = [
-            sktools_dbtools_classpath: project(':build-utils:db-tools').sourceSets.main.runtimeClasspath.asPath,
-            libraries_hsqldb : libraries.hsqldb,
+            sktools_dbtools_classpath: dbToolsClasspath.asPath,
+            libraries_hsqldb         : libraries.hsqldb,
         ]
         outputDir.mkdirs()
-        org.gradle.util.GUtil.saveProperties(properties as Properties, file("$outputDir/DbtoolsPluginTest.properties"))
+        def props = new Properties()
+        props.putAll(properties)
+        def outputFile = layout.projectDirectory.file("$outputDir/DbtoolsPluginTest.properties").asFile
+        outputFile.withOutputStream { props.store(it, null) }
     }
 }
 pluginUnderTestMetadata.pluginClasspath.from files(testProperties)
 pluginUnderTestMetadata.pluginClasspath.from sourceSets.main.output
 sourceSets.test.resources.srcDir testProperties
 
-task createPluginProperties() {
+tasks.register('createPluginProperties') {
     outputs.dir pluginPropertiesDir
     inputs.properties pluginProperties
     doLast {
-        def file = project.file("$pluginPropertiesDir/no/statkart/sktools/dbtools-gradle-plugin.properties")
+        def file = layout.projectDirectory.file("$pluginPropertiesDir/no/statkart/sktools/dbtools-gradle-plugin.properties").asFile
         file.parentFile.mkdirs()
-        org.gradle.util.GUtil.saveProperties(pluginProperties, file)
+        def props = new Properties()
+        props.putAll(pluginProperties)
+        file.withOutputStream { props.store(it, null) }
         logger.info "Created plugin info file: ${file.getAbsolutePath()}"
     }
 }

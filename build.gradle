@@ -55,11 +55,27 @@ subprojects { Project project ->
         mavenCentral()
     }
 
+    project.plugins.withType(MavenPublishPlugin) {
+        publishing {
+            repositories {
+                maven {
+                    name = "GitHubPackages"
+                    url = "https://maven.pkg.github.com/kartverket/SkTools"
+                    credentials {
+                        username = System.getenv("GITHUB_ACTOR")
+                        password = System.getenv("GITHUB_TOKEN") ?: System.getenv("KV_PACKAGES_PAT") ?: System.getenv("GH_PACKAGES_PAT")
+                    }
+                }
+            }
+        }
+    }
 
     project.plugins.withType(JavaPlugin) {
 
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        java {
+            sourceCompatibility = JavaVersion.VERSION_17
+            targetCompatibility = JavaVersion.VERSION_17
+        }
 
         // appropriately inject common dependencies into each sub-project
         dependencies {

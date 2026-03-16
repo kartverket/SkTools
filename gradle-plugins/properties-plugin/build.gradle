@@ -10,6 +10,16 @@ java {
     withSourcesJar()
 }
 
+publishing {
+    publications {
+        pluginMaven(MavenPublication) {
+            artifactId = 'properties-plugin'
+        }
+    }
+}
+
+
+
 gradlePlugin {
     plugins {
         properties {

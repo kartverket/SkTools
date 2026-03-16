@@ -10,6 +10,15 @@ java {
     withSourcesJar()
 }
 
+publishing {
+    publications {
+        pluginMaven(MavenPublication) {
+            artifactId = 'wsimport-plugin'
+        }
+    }
+}
+
+
 gradlePlugin {
     plugins {
         wsimport {
