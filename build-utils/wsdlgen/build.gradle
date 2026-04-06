@@ -8,7 +8,7 @@ java {
 }
 
 dependencies {
-    compileOnly 'jakarta.xml.ws:jakarta.xml.ws-api:3.0.1' //Jakarta EE 9+
+    compileOnly 'jakarta.xml.ws:jakarta.xml.ws-api:4.0.3' //Jakarta EE 9+
 
     compileOnly platform(libraries.wsdlgen_jakarta_platform) //
     compileOnly 'com.sun.xml.ws:jaxws-rt' //provided
