@@ -16,7 +16,6 @@ import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.bundling.Zip;
 import org.gradle.util.Configurable;
-import org.gradle.util.GUtil;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -139,9 +138,8 @@ public class WsDocGenPlugin implements Plugin<Project> {
         project.getArtifacts().add(Dependency.ARCHIVES_CONFIGURATION, archiveTaskProvider);
     }
 
-
     private static TaskProvider<WsDocCompileTask> createWsDocGenForGroupTask(Project project, SourceSet sourceSet, WsDocGroup group) {
-        final String taskName = "gen" + GUtil.toCamelCase(sourceSet.getName()) + "Wsdoc";
+        final String taskName = "gen" + capitalize(sourceSet.getName()) + "Wsdoc";
         return project.getTasks().register(taskName, WsDocCompileTask.class, task -> {
             //setting conventional properties
             task.setSource(sourceSet.getAllJava());
@@ -154,6 +152,13 @@ public class WsDocGenPlugin implements Plugin<Project> {
             task.getServiceXsltFile().set(group.getServiceXsltPath());
             task.getIndexXsltFile().set(group.getIndexXsltPath());
         });
+    }
+
+    public static String capitalize(String str) {
+        if (str == null || str.isEmpty()) {
+            return str;
+        }
+        return Character.toUpperCase(str.charAt(0)) + str.substring(1);
     }
 
     /**
@@ -187,9 +192,16 @@ public class WsDocGenPlugin implements Plugin<Project> {
      */
     @Nullable
     static Properties injectedTestProperties() {
-        InputStream stream = WsDocGenPlugin.class.getResourceAsStream("/WsDocGenPluginTest.properties");
-        //dersom denne finnes på classpath kjører man tester
-        return stream == null ? null : GUtil.loadProperties(stream);
+        try (InputStream stream = WsDocGenPlugin.class.getResourceAsStream("/WsDocGenPluginTest.properties")) {
+            if (stream != null) { //dersom denne finnes på classpath kjører man tester
+                final Properties properties = new Properties();
+                properties.load(stream);
+                return properties;
+            }
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
+        }
+        return null;
     }
 
 }

@@ -57,10 +57,9 @@ tasks.register('testProperties') {
             libraries_hsqldb         : libraries.hsqldb,
         ]
         outputDir.mkdirs()
-        def props = new Properties()
-        props.putAll(properties)
-        def outputFile = layout.projectDirectory.file("$outputDir/DbtoolsPluginTest.properties").asFile
-        outputFile.withOutputStream { props.store(it, null) }
+        file("$outputDir/DbtoolsPluginTest.properties").withWriter {
+            (properties as Properties).store(it, (String) null)
+        }
     }
 }
 pluginUnderTestMetadata.pluginClasspath.from files(testProperties)
@@ -73,9 +72,9 @@ tasks.register('createPluginProperties') {
     doLast {
         def file = layout.projectDirectory.file("$pluginPropertiesDir/no/statkart/sktools/dbtools-gradle-plugin.properties").asFile
         file.parentFile.mkdirs()
-        def props = new Properties()
-        props.putAll(pluginProperties)
-        file.withOutputStream { props.store(it, null) }
+        file.withWriter {
+            pluginProperties.store(it, (String) null)
+        }
         logger.info "Created plugin info file: ${file.getAbsolutePath()}"
     }
 }

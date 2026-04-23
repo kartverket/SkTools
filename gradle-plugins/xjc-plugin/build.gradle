@@ -46,9 +46,9 @@ tasks.register('createPluginProperties') {
     doLast {
         def file = layout.projectDirectory.file("$pluginPropertiesDir/no/statkart/sktools/xjc-gradle-plugin.properties").asFile
         file.parentFile.mkdirs()
-        def props = new Properties()
-        props.putAll(pluginProperties)
-        file.withOutputStream { props.store(it, null) }
+        file.withWriter {
+            pluginProperties.store(it, (String) null)
+        }
         logger.info "Created plugin info file: ${file.getAbsolutePath()}"
     }
 }
