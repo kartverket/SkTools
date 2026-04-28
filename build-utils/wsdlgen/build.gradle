@@ -17,7 +17,7 @@ dependencies {
     testRuntimeOnly 'com.sun.xml.ws:jaxws-rt' //provided
 
     implementation 'io.github.classgraph:classgraph:4.8.184'
-    implementation 'commons-cli:commons-cli:1.10.0'
+    implementation 'commons-cli:commons-cli:1.11.0'
 }
 
 publishing {
