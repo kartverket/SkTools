@@ -37,6 +37,7 @@ def pluginProperties = [
 dependencies {
     implementation project(':build-utils:db-tools')
     implementation project(':build-utils:sql-parser') //pga SqlExecutor
+    implementation libraries.groovy_sql
 
     testImplementation project(':build-utils:test-utils')
     testImplementation libraries.hsqldb

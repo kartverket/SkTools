@@ -28,7 +28,7 @@ def libVersion(String name, String defaultValue) {
 // build a map of the dependency artifacts to use. Allows centralized definition of the versions of artifacts to
 // use. In that respect it serves a role similar to <dependencyManagement> in Maven
 project.ext.libraries = [
-
+        groovy_sql: "org.apache.groovy:groovy-sql:${GroovySystem.version}",
         //wsdlGen
         wsdlgen_jakarta_platform: 'com.sun.xml.ws:jaxws-ri-bom:3.0.2', // jakarta/EE9+
 
