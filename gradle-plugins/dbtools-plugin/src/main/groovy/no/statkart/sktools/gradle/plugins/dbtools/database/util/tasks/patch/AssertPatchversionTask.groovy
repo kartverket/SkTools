@@ -3,7 +3,6 @@ package no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.JavaExecSpec
 
