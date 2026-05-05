@@ -18,7 +18,7 @@ import java.nio.file.StandardCopyOption
 /**
  * Genererer java-kildekode for JAXWS stubber fra WSDL filer.
  */
-class WsImportTask extends SourceTask {
+abstract class WsImportTask extends SourceTask {
     /**
      * Classpath som inneholder wsimport Ant-task
      */

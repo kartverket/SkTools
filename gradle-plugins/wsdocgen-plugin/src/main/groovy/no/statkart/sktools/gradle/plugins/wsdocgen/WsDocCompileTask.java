@@ -19,7 +19,7 @@ import java.util.List;
  * @author Leif Lislegård
  * @since 2.0
  */
-public class WsDocCompileTask extends JavaCompile {
+public abstract class WsDocCompileTask extends JavaCompile {
     private final Property<String> lookupPath;
     private final Property<String> encoding;
 
@@ -46,10 +46,10 @@ public class WsDocCompileTask extends JavaCompile {
         compileOptions.getCompilerArgs().add("-processor");
         compileOptions.getCompilerArgs().add("no.statkart.sktools.utils.wsdocgen.processor.WSDocProcessor"); //Names of the annotation processors to run. This bypasses the default discovery process.
 
-        compileOptions.setListFiles(getLogger().isDebugEnabled());
-        compileOptions.setVerbose(getLogger().isInfoEnabled());
+        configureDynamicCompileOptions();
 
         compileOptions.getCompilerArgumentProviders().add(lazyCompilerArgs());
+        doFirst(task -> configureDynamicCompileOptions());
     }
 
     @SuppressWarnings("Convert2Lambda")
@@ -90,13 +90,11 @@ public class WsDocCompileTask extends JavaCompile {
         return encoding;
     }
 
-    @Override
-    public CompileOptions getOptions() {
-        final CompileOptions options = super.getOptions();
+    private void configureDynamicCompileOptions() {
+        final CompileOptions options = getOptions();
         options.setListFiles(getLogger().isDebugEnabled());
         options.setVerbose(getLogger().isInfoEnabled());
         options.setEncoding(getEncoding().getOrNull());
-        return options;
     }
 
     @InputFile
