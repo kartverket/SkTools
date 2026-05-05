@@ -63,7 +63,9 @@ public class DbtoolsPlugin implements Plugin<Project> {
         project.getPluginManager().apply(BasePlugin.class);
 
         dbtoolsConvention = new DbtoolsConvention(project);
-        project.getConvention().getPlugins().put(CONVENTION_NAME, dbtoolsConvention);
+        project.getExtensions().add(DbtoolsConvention.class, CONVENTION_NAME, dbtoolsConvention);
+        project.getExtensions().add(DbtoolsConvention.class, "configureDatabasePlugin", dbtoolsConvention);
+        project.getExtensions().getExtraProperties().set("taskSequence", new MethodClosure(dbtoolsConvention, "taskSequence"));
 
         final Configuration configuration = project.getConfigurations().create(DBTOOLS_CONFIGURATION);
 
@@ -116,7 +118,7 @@ public class DbtoolsPlugin implements Plugin<Project> {
                     try {
                         task.validate(); //SKTOOLS-81
                     } catch (Throwable t) {
-                        task.getLogger().error("Error when validating task {}", task.getPath());
+                        task.getLogger().error("Error when validating task {}", ((Task) task).getPath());
                     }
                 }
             });

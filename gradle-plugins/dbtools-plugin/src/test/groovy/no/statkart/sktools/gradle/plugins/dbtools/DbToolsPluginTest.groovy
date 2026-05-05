@@ -1,6 +1,7 @@
 package no.statkart.sktools.gradle.plugins.dbtools
 
 import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsConvention
+import no.statkart.sktools.gradle.plugins.dbtools.database.DbtoolsPlugin
 import no.statkart.sktools.gradle.plugins.dbtools.database.oracle.OracleExportTask
 import no.statkart.sktools.gradle.plugins.dbtools.database.oracle.OracleImportTask
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch.DefineLatestPatchVersionTask
@@ -30,7 +31,7 @@ class DbToolsPluginTest extends TestKitBase {
             apply plugin: 'sktools-dbtools-plugin'
         };
 
-        Assert.assertTrue(project.convention.plugins.db instanceof DbtoolsConvention)
+        Assert.assertTrue(project.extensions.getByName(DbtoolsPlugin.CONVENTION_NAME) instanceof DbtoolsConvention)
     }
 
     /**
@@ -77,7 +78,7 @@ class DbToolsPluginTest extends TestKitBase {
         }
 
         Assert.assertNotNull(project.tasks.findByName('coolDbPleaseAuthenticateMe'), "Forventet at task er lagt til")
-        final DbtoolsConvention convention = project.convention.plugins.db
+        final DbtoolsConvention convention = project.extensions.getByName(DbtoolsPlugin.CONVENTION_NAME) as DbtoolsConvention
 
         //tester defaults - username og password blir lest ifra prosjekt properties
         Assert.assertEquals(convention.dbToolSets.coolDb.credentials.username, 'brukernavn')
@@ -264,7 +265,7 @@ class DbToolsPluginTest extends TestKitBase {
             }
         }
 
-        final DbtoolsConvention convention = project.convention.plugins.db
+        final DbtoolsConvention convention = project.extensions.getByName(DbtoolsPlugin.CONVENTION_NAME) as DbtoolsConvention
         Assert.assertNotNull(convention.dbToolSets.db1, "Forventet toolset objekt")
         Assert.assertNotNull(convention.dbToolSets.db1.patch['null'], "Forventet patch objekt")
         Assert.assertNotNull(convention.dbToolSets.db1.patch['null'].tasks['TestSchema'], "Forventet patch task")
@@ -319,7 +320,7 @@ class DbToolsPluginTest extends TestKitBase {
             }
         }
 
-        final DbtoolsConvention convention = project.convention.plugins.db
+        final DbtoolsConvention convention = project.extensions.getByName(DbtoolsPlugin.CONVENTION_NAME) as DbtoolsConvention
         Assert.assertNotNull(convention.dbToolSets.db1, "Forventet toolset objekt")
         Assert.assertNotNull(convention.dbToolSets.db1.patch['null'], "Forventet patch objekt")
         Assert.assertNotNull(convention.dbToolSets.db1.patch['null'].tasks['TestSchema'], "Forventet patch task")
@@ -365,7 +366,7 @@ class DbToolsPluginTest extends TestKitBase {
             }
         }
 
-        final DbtoolsConvention convention = project.convention.plugins.db
+        final DbtoolsConvention convention = project.extensions.getByName(DbtoolsPlugin.CONVENTION_NAME) as DbtoolsConvention
         Assert.assertNotNull(convention.dbToolSets.db1, "Forventet toolset objekt")
         Assert.assertNotNull(convention.dbToolSets.db1.patch['null'], "Forventet patch objekt")
         Assert.assertNotNull(convention.dbToolSets.db1.patch['null'].tasks['TestSchema'], "Forventet patch task")
@@ -413,7 +414,7 @@ class DbToolsPluginTest extends TestKitBase {
             }
         }
 
-        final DbtoolsConvention convention = project.convention.plugins.db
+        final DbtoolsConvention convention = project.extensions.getByName(DbtoolsPlugin.CONVENTION_NAME) as DbtoolsConvention
         Assert.assertNotNull(convention.dbToolSets.db1, "Forventet toolset objekt")
         Assert.assertNotNull(convention.dbToolSets.db1.patch['null'], "Forventet patch objekt")
         Assert.assertNotNull(convention.dbToolSets.db1.patch['null'].tasks['AssignLatestPatchlevel'], "Forventet patch task")
