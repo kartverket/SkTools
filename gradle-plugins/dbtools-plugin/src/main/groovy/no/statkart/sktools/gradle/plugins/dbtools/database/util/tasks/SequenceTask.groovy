@@ -3,7 +3,6 @@ package no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks
 import no.statkart.sktools.gradle.plugins.dbtools.database.util.SQLTask
 import org.gradle.api.DefaultTask
 import org.gradle.api.Task
-import org.gradle.api.internal.TaskInternal
 import org.gradle.api.specs.Spec
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskDependency
@@ -117,7 +116,7 @@ class SequenceTask extends DefaultTask {
      * OnlyIf vil kun slå ut dersom denne task-sekvensen blir utført
      */
     void propagateOnlyIf(Task task, int depth = 0) {
-        TaskInternal thisTask = this
+        DefaultTask thisTask = this
         TaskDependency taskDependencies = task.getTaskDependencies()
 
         if (task != thisTask && depth > 1 ) {
