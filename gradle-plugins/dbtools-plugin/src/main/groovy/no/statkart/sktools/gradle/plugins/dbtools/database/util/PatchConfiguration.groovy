@@ -215,15 +215,12 @@ class PatchConfiguration {
     private FileCollection findDbToolsDependencies() {
         DependencyUtil.getDatabasePatcherClasspath(databaseConvention.project.rootProject)
     }
-
     private FileCollection findJdbcDependencies() {
-        Dependency[] dependenciesAsArray = dbtoolsConvention.jdbcDependencies.toArray(new Dependency[0])
-//        println "files: " + databaseConvention.project.configurations[DbtoolsPlugin.DBTOOLS_CONFIGURATION].fileCollection(dependenciesAsArray).files
-        databaseConvention.project.configurations[DbtoolsPlugin.DBTOOLS_CONFIGURATION].fileCollection(dependenciesAsArray)
+        databaseConvention.project.configurations.getByName(DbtoolsPlugin.DBTOOLS_CONFIGURATION)
     }
 
     private DbtoolsConvention getDbtoolsConvention() {
-        databaseConvention.project.convention.plugins[DbtoolsPlugin.CONVENTION_NAME]
+        databaseConvention.project.extensions.getByName(DbtoolsPlugin.CONVENTION_NAME) as DbtoolsConvention
     }
 
     PatchTask configurePatchTask(Map params, String name, String verb = 'patch', Class type, Closure closure) {

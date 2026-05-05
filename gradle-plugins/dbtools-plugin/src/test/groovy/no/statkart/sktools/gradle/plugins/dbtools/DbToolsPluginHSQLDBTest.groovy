@@ -100,7 +100,7 @@ class DbToolsPluginHSQLDBTest extends HSQLDBTest {
         }
 
 
-        final DbtoolsConvention convention = project.convention.plugins.db
+        final DbtoolsConvention convention = project.extensions.getByName(DbtoolsPlugin.CONVENTION_NAME) as DbtoolsConvention
 
         // STEG 3 - credentials ihht konfig
         Assert.assertEquals convention.dbToolSets['hsql'].credentials.username, defaultCredentials.username
