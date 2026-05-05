@@ -8,6 +8,8 @@ import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.JavaExecSpec
+import org.gradle.process.ExecOperations
+import javax.inject.Inject
 
 import java.nio.charset.Charset
 import java.nio.file.Files
@@ -33,11 +35,18 @@ class PatchTask extends DatabasePatchTask {
     final Property<Boolean> singlestep = project.getObjects().property(Boolean).convention(
         Boolean.valueOf(project.gradle.startParameter.systemPropertiesArgs.get('singlestep')))
 
+    protected final ExecOperations execOperations
+
+    @Inject
+    PatchTask(ExecOperations execOperations) {
+        this.execOperations = execOperations
+    }
+
     @TaskAction
     def exec() {
         File sqlFile = mappedSqlFile(getSqlFile())
 
-        project.javaexec { JavaExecSpec spec ->
+        execOperations.javaexec { JavaExecSpec spec ->
 
             /** {@link no.statkart.sktools.utils.databasepatcher.DatabasePatcher#main } */
             spec.setArgs(['patch', sqlFile.absolutePath])
