@@ -3,7 +3,6 @@ package no.statkart.sktools.gradle.plugins.properties
 import no.statkart.sktools.gradle.plugins.properties.extension.PropertyUtils
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
-import org.gradle.util.GFileUtils
 import org.testng.Assert
 import org.testng.annotations.Test
 
@@ -29,7 +28,7 @@ class PropertyUtilsTest {
         Project project = ProjectBuilder.builder().build()
         PropertyUtils propertyUtils = new PropertyUtils(project);
 
-        GFileUtils.writeFile("hei=hopp\nhopp=hei\n", project.file('custom.properties'));
+        project.file('custom.properties').setText("hei=hopp\nhopp=hei\n", 'UTF-8')
 
         [['custom.properties'], ['custom.properties', 'noneExistant.properties']].each {
             Map<String, ?> properties = propertyUtils.fromFile(it as String[])

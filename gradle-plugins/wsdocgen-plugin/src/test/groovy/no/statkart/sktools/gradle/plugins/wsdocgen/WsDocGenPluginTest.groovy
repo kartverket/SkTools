@@ -4,7 +4,6 @@ import no.statkart.sktools.gradle.testutils.TestKitBase
 import org.gradle.api.Project
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
-import org.gradle.util.GFileUtils
 import org.testng.annotations.Test
 
 import java.nio.file.Files
@@ -31,7 +30,7 @@ import static org.testng.Assert.assertTrue
 class WsDocGenPluginTest extends TestKitBase {
 
     static void writeServiceLayout(File file) {
-        GFileUtils.parentMkdirs(file)
+        Files.createDirectories(file.toPath().parent)
         Files.copy(WsDocGenPluginTest.class.getResourceAsStream('/DefaultTransform.xsl'), file.toPath(), StandardCopyOption.REPLACE_EXISTING)
     }
 
