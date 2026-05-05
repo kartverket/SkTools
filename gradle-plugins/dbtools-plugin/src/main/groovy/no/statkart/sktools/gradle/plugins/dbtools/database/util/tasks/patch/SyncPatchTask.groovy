@@ -3,7 +3,10 @@ package no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
+import org.gradle.process.ExecOperations
 import org.gradle.process.JavaExecSpec
+
+import javax.inject.Inject
 
 /**
  * SKTOOLS-86 Task for re-patching av schema over JDBC.
@@ -20,7 +23,9 @@ class SyncPatchTask extends PatchTask {
     final ListProperty<String> patchTypes = project.getObjects().listProperty(String)
         .convention(['INDEX', 'TYPE', 'PACKAGE', 'FUNCTION']) //SKTOOLS-86
 
-    SyncPatchTask() {
+    @Inject
+    SyncPatchTask(ExecOperations execOperations) {
+        super(execOperations)
         failOnWarning.set(false)  //SKTOOLS-86
     }
 
@@ -28,7 +33,7 @@ class SyncPatchTask extends PatchTask {
     def exec() {
         File sqlFile = mappedSqlFile()
 
-        project.javaexec { JavaExecSpec spec ->
+        execOperations.javaexec { JavaExecSpec spec ->
 
             /** {@link no.statkart.sktools.utils.databasepatcher.DatabasePatcher#main } */
             spec.setArgs(['syncPatch', sqlFile.absolutePath, '-types', patchTypes.get().join(',')])

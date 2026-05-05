@@ -7,8 +7,11 @@ import org.gradle.api.tasks.CompileClasspath
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.SourceTask
 import org.gradle.api.tasks.TaskAction
+import org.gradle.process.ExecOperations
 
-class WsdlGenTask extends SourceTask {
+import javax.inject.Inject
+
+abstract class WsdlGenTask extends SourceTask {
     @CompileClasspath
     FileCollection classpath
 
@@ -18,6 +21,9 @@ class WsdlGenTask extends SourceTask {
     @OutputDirectory
     final DirectoryProperty destinationDirectory = getProject().getObjects().directoryProperty()
         .convention(getProject().getLayout().getBuildDirectory().dir(getName()));
+
+    @Inject
+    abstract ExecOperations getExecOperations()
 
     @TaskAction
     protected void genWsdl() {
@@ -33,9 +39,9 @@ class WsdlGenTask extends SourceTask {
                 String classname = path.substring(0, path.length() - 6) //removing '.class'
                     .replace('/' as char, '.' as char)
 
-                getProject().javaexec {
+                getExecOperations().javaexec {
                     classpath = getJaxwsClasspath()
-                    main = 'com.sun.tools.ws.WsGen'
+                    mainClass = 'com.sun.tools.ws.WsGen'
                     args '-d', getTemporaryDir()
                     args '-keep'
                     args '-encoding', 'UTF-8'

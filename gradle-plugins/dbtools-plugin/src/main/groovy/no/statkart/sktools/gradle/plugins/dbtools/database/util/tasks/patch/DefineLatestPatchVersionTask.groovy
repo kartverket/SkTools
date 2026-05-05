@@ -1,7 +1,10 @@
 package no.statkart.sktools.gradle.plugins.dbtools.database.util.tasks.patch
 
 import org.gradle.api.tasks.TaskAction
+import org.gradle.process.ExecOperations
 import org.gradle.process.JavaExecSpec
+
+import javax.inject.Inject
 
 /**
  * SKTOOLS-87 - Task for setting av siste eksisterende patchversjon.
@@ -12,11 +15,16 @@ import org.gradle.process.JavaExecSpec
 @SuppressWarnings("UnnecessaryQualifiedReference")
 class DefineLatestPatchVersionTask extends PatchTask {
 
+    @Inject
+    DefineLatestPatchVersionTask(ExecOperations execOperations) {
+        super(execOperations)
+    }
+
 
     @TaskAction
     def exec() {
 
-        project.javaexec { JavaExecSpec spec ->
+        execOperations.javaexec { JavaExecSpec spec ->
 
             /** {@link no.statkart.sktools.utils.databasepatcher.DatabasePatcher#main } */
             spec.setArgs(['setLatestVersionFromPatchfile', sqlFile.absolutePath])
