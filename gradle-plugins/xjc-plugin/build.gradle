@@ -29,8 +29,8 @@ gradlePlugin {
 
 def pluginPropertiesDir = "$buildDir/plugin-properties"
 def pluginProperties = [
-        default_xjc_implementation : 'org.glassfish.jaxb:jaxb-xjc:3.0.2',
-        default_jaxb_ri_implementation : 'org.glassfish.jaxb:jaxb-runtime:3.0.2',
+        default_xjc_implementation : 'org.glassfish.jaxb:jaxb-xjc:4.0.8',
+        default_jaxb_ri_implementation : 'org.glassfish.jaxb:jaxb-runtime:4.0.8',
 ] as Properties
 
 dependencies {
