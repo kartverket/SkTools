@@ -12,6 +12,10 @@ updates:
             interval: "weekly"
             time: '07:00'
             timezone: 'Europe/Oslo'
+        groups:
+            gb_jaxb:
+                patterns:
+                    - "org.glassfish.jaxb:*"
         ignore:
             - dependency-name: "jakarta.*"
               update-types: ["version-update:semver-major", "version-update:semver-minor"]
