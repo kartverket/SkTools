@@ -18,7 +18,7 @@ jobs:
                   oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
                   version: "1.84.0"
                   tags: tag:github-runner
-            - uses: actions/checkout@v6
+            - uses: actions/checkout@v7
             - uses: actions/setup-java@v5
               with:
                   distribution: temurin
