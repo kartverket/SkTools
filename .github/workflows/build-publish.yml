@@ -45,7 +45,7 @@ jobs:
                     architecture: x64
 
             -   name: Validate Gradle wrapper
-                uses: gradle/actions/wrapper-validation@v6
+                uses: gradle/actions/wrapper-validation@v6.2.0
 
             -   name: Grant execute permission to Gradlew
                 run: chmod +x ./gradlew
@@ -74,7 +74,7 @@ jobs:
                     architecture: x64
 
             -   name: Validate Gradle wrapper
-                uses: gradle/actions/wrapper-validation@v6
+                uses: gradle/actions/wrapper-validation@v6.2.0
 
             -   name: Grant execute permission to Gradlew
                 run: chmod +x ./gradlew
