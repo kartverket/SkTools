@@ -217,13 +217,14 @@ class PatchConfiguration {
     }
 
     private FileCollection findJdbcDependencies() {
-        Dependency[] dependenciesAsArray = dbtoolsConvention.jdbcDependencies.toArray(new Dependency[0])
-//        println "files: " + databaseConvention.project.configurations[DbtoolsPlugin.DBTOOLS_CONFIGURATION].fileCollection(dependenciesAsArray).files
-        databaseConvention.project.configurations[DbtoolsPlugin.DBTOOLS_CONFIGURATION].fileCollection(dependenciesAsArray)
+        // Configuration.fileCollection(Dependency...) was removed in Gradle 9. The 'dbTools'
+        // configuration only ever contains the JDBC driver dependencies added via useDrivers(),
+        // so resolving the whole configuration is equivalent to the old dependency-filtered lookup.
+        databaseConvention.project.configurations[DbtoolsPlugin.DBTOOLS_CONFIGURATION]
     }
 
     private DbtoolsConvention getDbtoolsConvention() {
-        databaseConvention.project.convention.plugins[DbtoolsPlugin.CONVENTION_NAME]
+        databaseConvention.project.extensions.getByName(DbtoolsPlugin.CONVENTION_NAME)
     }
 
     PatchTask configurePatchTask(Map params, String name, String verb = 'patch', Class type, Closure closure) {
