@@ -14,7 +14,7 @@ import org.gradle.process.JavaExecSpec
  * @since 1.2
  */
 @SuppressWarnings("UnnecessaryQualifiedReference")
-class AssertPatchversionTask extends DatabasePatchTask {
+abstract class AssertPatchversionTask extends DatabasePatchTask {
     protected static final Logger logger = Logging.getLogger(AssertPatchversionTask.class);
 
 
@@ -28,7 +28,7 @@ class AssertPatchversionTask extends DatabasePatchTask {
     @TaskAction
     def exec() {
 
-        project.javaexec { JavaExecSpec spec ->
+        getExecOperations().javaexec { JavaExecSpec spec ->
 
             /** {@link no.statkart.sktools.utils.databasepatcher.DatabasePatcher#main } */
             spec.setArgs(['assertVersion', getDbVersion()])

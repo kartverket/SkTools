@@ -11,7 +11,7 @@ import org.gradle.process.JavaExecSpec
  * @author Leif Lislegård
  * @since 1.3
  */
-class SyncPatchTask extends PatchTask {
+abstract class SyncPatchTask extends PatchTask {
 
     /**
      * Hvilke patch-typer som skal kjøres inn.
@@ -28,7 +28,7 @@ class SyncPatchTask extends PatchTask {
     def exec() {
         File sqlFile = mappedSqlFile()
 
-        project.javaexec { JavaExecSpec spec ->
+        getExecOperations().javaexec { JavaExecSpec spec ->
 
             /** {@link no.statkart.sktools.utils.databasepatcher.DatabasePatcher#main } */
             spec.setArgs(['syncPatch', sqlFile.absolutePath, '-types', patchTypes.get().join(',')])

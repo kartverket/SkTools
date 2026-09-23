@@ -4,7 +4,10 @@ import no.statkart.sktools.gradle.plugins.dbtools.database.util.AbstractSQLTask
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Internal
+import org.gradle.process.ExecOperations
 import org.gradle.process.JavaExecSpec
+
+import javax.inject.Inject
 
 /**
  * Task for patching av schema over JDBC.
@@ -13,6 +16,9 @@ import org.gradle.process.JavaExecSpec
  * @since 1.2
  */
 abstract class DatabasePatchTask extends AbstractSQLTask {
+
+    @Inject
+    protected abstract ExecOperations getExecOperations()
 
     /**
      * Bestemmer om tasken skal feile ved enkelte feiltyper eller ikke.
@@ -32,7 +38,7 @@ abstract class DatabasePatchTask extends AbstractSQLTask {
 
 
     protected JavaExecSpec configureDefaultSpec(JavaExecSpec spec) {
-        spec.setMain("no.statkart.sktools.utils.databasepatcher.DatabasePatcher")
+        spec.getMainClass().set("no.statkart.sktools.utils.databasepatcher.DatabasePatcher")
 
         spec.args('-component', component.get())
 

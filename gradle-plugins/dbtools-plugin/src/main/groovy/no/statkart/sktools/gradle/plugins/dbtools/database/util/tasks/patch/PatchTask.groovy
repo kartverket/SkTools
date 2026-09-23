@@ -20,7 +20,7 @@ import java.nio.file.Paths
  * @author Leif Lislegård
  * @since 1.2
  */
-class PatchTask extends DatabasePatchTask {
+abstract class PatchTask extends DatabasePatchTask {
     protected static final Logger logger = Logging.getLogger(PatchTask.class);
 
     /**
@@ -37,7 +37,7 @@ class PatchTask extends DatabasePatchTask {
     def exec() {
         File sqlFile = mappedSqlFile(getSqlFile())
 
-        project.javaexec { JavaExecSpec spec ->
+        getExecOperations().javaexec { JavaExecSpec spec ->
 
             /** {@link no.statkart.sktools.utils.databasepatcher.DatabasePatcher#main } */
             spec.setArgs(['patch', sqlFile.absolutePath])
