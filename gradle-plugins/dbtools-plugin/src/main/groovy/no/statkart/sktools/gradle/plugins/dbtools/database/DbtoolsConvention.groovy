@@ -21,7 +21,7 @@ import org.gradle.api.artifacts.Dependency
  * <pre>
  *   <code>
 
-configureDatabasePlugin {
+db.configureDatabasePlugin {
 
     useDrivers 'com.oracle.database.jdbc:ojdbc8g:12.2.0.1@jar'
 
@@ -79,7 +79,7 @@ public class DbtoolsConvention {
      *
      * <pre><code>
 
-configureDatabasePlugin {
+db.configureDatabasePlugin {
      useToolset 'oracle', 'Db', 'mineScript' {
 
         url = "jdbc:oracle:thin:@oraclehost:1521:testbase"

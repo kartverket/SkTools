@@ -32,18 +32,18 @@ class TestSKTOOLS_99 extends TestKitBase {
         final Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-dbtools-plugin'
 
-            taskSequence('ProjectTaskA') {
-                dependsOn taskSequence('ProjectTaskAA') {
+            db.taskSequence('ProjectTaskA') {
+                dependsOn db.taskSequence('ProjectTaskAA') {
                 }
             }
 
-            taskSequence('ProjectTaskB', description: 'Task defined on project') {
-                dependsOn taskSequence('ProjectTaskBB', description: 'Task defined on project') {
+            db.taskSequence('ProjectTaskB', description: 'Task defined on project') {
+                dependsOn db.taskSequence('ProjectTaskBB', description: 'Task defined on project') {
                 }
             }
 
-            taskSequence('ProjectTaskC') {
-                dependsOn taskSequence('ProjectTaskCC')
+            db.taskSequence('ProjectTaskC') {
+                dependsOn db.taskSequence('ProjectTaskCC')
             }
         }
 
@@ -70,7 +70,7 @@ class TestSKTOOLS_99 extends TestKitBase {
         final Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-dbtools-plugin'
 
-            configureDatabasePlugin {
+            db.configureDatabasePlugin {
                 toolset(name: 'testToolset', type: 'hsqldb', prefix: 'test') {
 
                     taskSequence('ToolsetTaskB', description: 'Task defined on toolset') {
@@ -113,7 +113,7 @@ class TestSKTOOLS_99 extends TestKitBase {
         final Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-dbtools-plugin'
 
-            configureDatabasePlugin {
+            db.configureDatabasePlugin {
                 toolset(name: 'testToolset', type: 'hsqldb', prefix: 'test') {
 
                     patch {
