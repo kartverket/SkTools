@@ -1,6 +1,7 @@
 package no.statkart.sktools.gradle.plugins.wsdlcustomizer
 
-import groovy.util.slurpersupport.GPathResult
+import groovy.xml.XmlSlurper
+import groovy.xml.slurpersupport.GPathResult
 import org.gradle.api.Project
 import org.gradle.api.file.FileTree
 import org.gradle.testfixtures.ProjectBuilder

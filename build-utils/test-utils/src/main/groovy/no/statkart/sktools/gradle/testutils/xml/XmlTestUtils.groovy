@@ -1,5 +1,6 @@
 package no.statkart.sktools.gradle.testutils.xml
 
+import groovy.xml.XmlSlurper
 import org.xml.sax.InputSource
 import org.xml.sax.SAXException
 import org.xml.sax.SAXParseException
