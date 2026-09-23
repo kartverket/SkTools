@@ -1,6 +1,7 @@
 package no.statkart.sktools.utils.wsdocgen.processor
 
-import groovy.util.slurpersupport.GPathResult
+import groovy.xml.XmlSlurper
+import groovy.xml.slurpersupport.GPathResult
 import no.statkart.sktools.gradle.testutils.TestKitBase
 import no.statkart.sktools.gradle.testutils.filewriter.WsDocgenTestutilFilewriter
 import no.statkart.sktools.gradle.testutils.xml.XmlTestUtils
