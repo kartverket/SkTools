@@ -146,7 +146,7 @@ public class WsDocGenPlugin implements Plugin<Project> {
             task.setClasspath(project.files(
                 (Callable<FileCollection>) sourceSet::getCompileClasspath
             ));
-            task.setDestinationDir(group.getTargetPath());
+            task.getDestinationDirectory().set(project.getLayout().dir(group.getTargetPath()));
             task.getLookupPath().set(group.getLookupPath());
             task.getEncoding().set(group.getEncoding());
             task.getServiceXsltFile().set(group.getServiceXsltPath());

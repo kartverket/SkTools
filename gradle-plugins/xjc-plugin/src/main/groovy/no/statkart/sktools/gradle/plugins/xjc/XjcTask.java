@@ -23,7 +23,7 @@ import java.io.File;
  * @author Thor Åge Eldby
  * @author Leif Lislegård
  */
-class XjcTask extends SourceTask {
+abstract class XjcTask extends SourceTask {
     private XjcConfig config;
     private final Property<File> outputDirectory;
     private FileCollection classpath;
