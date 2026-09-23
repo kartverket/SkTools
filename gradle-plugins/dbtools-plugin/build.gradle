@@ -37,6 +37,7 @@ def pluginProperties = [
 dependencies {
     implementation project(':build-utils:db-tools')
     implementation project(':build-utils:sql-parser') //pga SqlExecutor
+    implementation "org.apache.groovy:groovy-sql:${GroovySystem.version}" //groovy.sql.Sql - ikke lenger bundlet med Gradle sin Groovy runtime
 
     testImplementation project(':build-utils:test-utils')
     testImplementation libraries.hsqldb
