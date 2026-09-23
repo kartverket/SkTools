@@ -13,7 +13,7 @@ import org.gradle.process.JavaExecSpec
  * @author Leif Lislegård
  * @since 1.2
  */
-class DefinePatchversionTask  extends DatabasePatchTask {
+abstract class DefinePatchversionTask extends DatabasePatchTask {
     protected static final Logger logger = Logging.getLogger(DefinePatchversionTask.class);
 
 
@@ -27,7 +27,7 @@ class DefinePatchversionTask  extends DatabasePatchTask {
     @TaskAction
     def exec() {
 
-        project.javaexec { JavaExecSpec spec ->
+        getExecOperations().javaexec { JavaExecSpec spec ->
 
             /** {@link no.statkart.sktools.utils.databasepatcher.DatabasePatcher#main } */
             spec.setArgs(['defineVersion', getDbVersion()])

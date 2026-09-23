@@ -12,13 +12,13 @@ import org.gradle.process.JavaExecSpec
  * @since 1.2
  */
 @SuppressWarnings("UnnecessaryQualifiedReference")
-class PrintPatchversionTask extends DatabasePatchTask {
+abstract class PrintPatchversionTask extends DatabasePatchTask {
     protected static final Logger logger = Logging.getLogger(PrintPatchversionTask.class);
 
     @TaskAction
     def exec() {
 
-        project.javaexec { JavaExecSpec spec ->
+        getExecOperations().javaexec { JavaExecSpec spec ->
 
             /** {@link no.statkart.sktools.utils.databasepatcher.DatabasePatcher#main } */
             spec.setArgs(['getVersion'])

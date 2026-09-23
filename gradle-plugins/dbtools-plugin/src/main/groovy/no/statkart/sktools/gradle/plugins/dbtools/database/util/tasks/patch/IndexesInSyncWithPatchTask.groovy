@@ -14,7 +14,7 @@ import org.gradle.process.JavaExecSpec
  * @since 1.2
  */
 @SuppressWarnings("UnnecessaryQualifiedReference")
-class IndexesInSyncWithPatchTask extends DatabasePatchTask {
+abstract class IndexesInSyncWithPatchTask extends DatabasePatchTask {
     protected static final Logger logger = Logging.getLogger(IndexesInSyncWithPatchTask.class);
 
     @Internal
@@ -23,7 +23,7 @@ class IndexesInSyncWithPatchTask extends DatabasePatchTask {
     @TaskAction
     def exec() {
 
-        project.javaexec { JavaExecSpec spec ->
+        getExecOperations().javaexec { JavaExecSpec spec ->
 
             /** {@link no.statkart.sktools.utils.databasepatcher.DatabasePatcher#main } */
             spec.setArgs(['setIndexesInSyncWithPatch', indexesUpToDate.get().toString()])

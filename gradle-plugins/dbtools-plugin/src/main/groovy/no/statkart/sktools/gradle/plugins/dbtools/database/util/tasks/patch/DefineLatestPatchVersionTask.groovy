@@ -10,13 +10,13 @@ import org.gradle.process.JavaExecSpec
  * @since 1.3
  */
 @SuppressWarnings("UnnecessaryQualifiedReference")
-class DefineLatestPatchVersionTask extends PatchTask {
+abstract class DefineLatestPatchVersionTask extends PatchTask {
 
 
     @TaskAction
     def exec() {
 
-        project.javaexec { JavaExecSpec spec ->
+        getExecOperations().javaexec { JavaExecSpec spec ->
 
             /** {@link no.statkart.sktools.utils.databasepatcher.DatabasePatcher#main } */
             spec.setArgs(['setLatestVersionFromPatchfile', sqlFile.absolutePath])
