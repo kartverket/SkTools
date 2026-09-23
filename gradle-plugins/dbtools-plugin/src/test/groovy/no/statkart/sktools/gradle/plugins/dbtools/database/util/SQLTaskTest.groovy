@@ -50,7 +50,7 @@ insert into TABLE1(ID, TEXT) VALUES (1, '${norskeTegn}');
         Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-dbtools-plugin'
 
-            configureDatabasePlugin {
+            db.configureDatabasePlugin {
                 toolset(name: 'coolDb', type: 'hsqldb', prefix: 'coolDb') {
                     sqlTask('Foo', description: 'Sql med filtrerte verdier')
                     properties = [

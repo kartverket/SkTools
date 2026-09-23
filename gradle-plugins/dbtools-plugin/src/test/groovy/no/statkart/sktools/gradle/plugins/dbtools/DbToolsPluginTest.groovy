@@ -30,7 +30,7 @@ class DbToolsPluginTest extends TestKitBase {
             apply plugin: 'sktools-dbtools-plugin'
         };
 
-        Assert.assertTrue(project.convention.plugins.db instanceof DbtoolsConvention)
+        Assert.assertTrue(project.extensions.getByName('db') instanceof DbtoolsConvention)
     }
 
     /**
@@ -62,7 +62,7 @@ class DbToolsPluginTest extends TestKitBase {
         createEmptyFile('src/hsql/PleaseAuthenticateMe.sql')
 
         project.tap {
-            configureDatabasePlugin {
+            db.configureDatabasePlugin {
                 toolset(name: 'coolDb', type: 'hsqldb', prefix: 'coolDb') {
                     url = "jdbc:hsqldb:mem:${this.class.simpleName}TestApplyCredentials"
                     driver = 'org.hsqldb.jdbcDriver'
@@ -77,7 +77,7 @@ class DbToolsPluginTest extends TestKitBase {
         }
 
         Assert.assertNotNull(project.tasks.findByName('coolDbPleaseAuthenticateMe'), "Forventet at task er lagt til")
-        final DbtoolsConvention convention = project.convention.plugins.db
+        final DbtoolsConvention convention = project.extensions.getByName('db')
 
         //tester defaults - username og password blir lest ifra prosjekt properties
         Assert.assertEquals(convention.dbToolSets.coolDb.credentials.username, 'brukernavn')
@@ -87,7 +87,7 @@ class DbToolsPluginTest extends TestKitBase {
 
         //setter credentials på toolsetet
         project.tap {
-            configureDatabasePlugin {
+            db.configureDatabasePlugin {
                 toolset(type: 'hsqldb', name: 'coolDb') {
                     credentials.username = 'brukernavn2'
                     credentials.password = 'passord2'
@@ -153,7 +153,7 @@ class DbToolsPluginTest extends TestKitBase {
             repositories {
                 flatDir dirs: "${project.rootProject.projectDir}/lib"
             }
-            configureDatabasePlugin {
+            db.configureDatabasePlugin {
                 useDrivers 'test:testfile:2.3.3@jar'
 
                 toolset(name: 'coolDb', type: 'hsqldb', prefix: 'coolDb') {
@@ -176,7 +176,7 @@ class DbToolsPluginTest extends TestKitBase {
         final Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-dbtools-plugin'
 
-            configureDatabasePlugin {
+            db.configureDatabasePlugin {
                 toolset(name: 'db1', type: 'oracle') {
                     properties = [  //deklarering via felles properties for toolset
                                     username: 'brukernavn',
@@ -213,7 +213,7 @@ class DbToolsPluginTest extends TestKitBase {
         final Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-dbtools-plugin'
 
-            configureDatabasePlugin {
+            db.configureDatabasePlugin {
                 toolset(name: 'db1', type: 'oracle') {
                     properties = [  //deklarering via felles properties for toolset
                                     username: 'brukernavn',
@@ -250,7 +250,7 @@ class DbToolsPluginTest extends TestKitBase {
         final Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-dbtools-plugin'
 
-            configureDatabasePlugin {
+            db.configureDatabasePlugin {
                 toolset(name: 'db1', type: 'oracle') {
                     properties = [  //deklarering via felles properties for toolset
                                     username: 'brukernavn',
@@ -264,7 +264,7 @@ class DbToolsPluginTest extends TestKitBase {
             }
         }
 
-        final DbtoolsConvention convention = project.convention.plugins.db
+        final DbtoolsConvention convention = project.extensions.getByName('db')
         Assert.assertNotNull(convention.dbToolSets.db1, "Forventet toolset objekt")
         Assert.assertNotNull(convention.dbToolSets.db1.patch['null'], "Forventet patch objekt")
         Assert.assertNotNull(convention.dbToolSets.db1.patch['null'].tasks['TestSchema'], "Forventet patch task")
@@ -304,7 +304,7 @@ class DbToolsPluginTest extends TestKitBase {
         final Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-dbtools-plugin'
 
-            configureDatabasePlugin {
+            db.configureDatabasePlugin {
                 toolset(name: 'db1', type: 'oracle') {
                     properties = [  //deklarering via felles properties for toolset
                                     username: 'brukernavn',
@@ -319,7 +319,7 @@ class DbToolsPluginTest extends TestKitBase {
             }
         }
 
-        final DbtoolsConvention convention = project.convention.plugins.db
+        final DbtoolsConvention convention = project.extensions.getByName('db')
         Assert.assertNotNull(convention.dbToolSets.db1, "Forventet toolset objekt")
         Assert.assertNotNull(convention.dbToolSets.db1.patch['null'], "Forventet patch objekt")
         Assert.assertNotNull(convention.dbToolSets.db1.patch['null'].tasks['TestSchema'], "Forventet patch task")
@@ -348,7 +348,7 @@ class DbToolsPluginTest extends TestKitBase {
         final Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-dbtools-plugin'
 
-            configureDatabasePlugin {
+            db.configureDatabasePlugin {
                 toolset(name: 'db1', type: 'oracle') {
                     properties = [  //deklarering via felles properties for toolset
                                     username: 'brukernavn',
@@ -365,7 +365,7 @@ class DbToolsPluginTest extends TestKitBase {
             }
         }
 
-        final DbtoolsConvention convention = project.convention.plugins.db
+        final DbtoolsConvention convention = project.extensions.getByName('db')
         Assert.assertNotNull(convention.dbToolSets.db1, "Forventet toolset objekt")
         Assert.assertNotNull(convention.dbToolSets.db1.patch['null'], "Forventet patch objekt")
         Assert.assertNotNull(convention.dbToolSets.db1.patch['null'].tasks['TestSchema'], "Forventet patch task")
@@ -404,7 +404,7 @@ class DbToolsPluginTest extends TestKitBase {
         final Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-dbtools-plugin'
 
-            configureDatabasePlugin {
+            db.configureDatabasePlugin {
                 toolset(name: 'db1', type: 'oracle') {
                     patch {
                         defineLatestPatchVersionTask('AssignLatestPatchlevel', sqlFile: "foo.sql", description: 'Task med verdier ifra konfigurasjon og convention')
@@ -413,7 +413,7 @@ class DbToolsPluginTest extends TestKitBase {
             }
         }
 
-        final DbtoolsConvention convention = project.convention.plugins.db
+        final DbtoolsConvention convention = project.extensions.getByName('db')
         Assert.assertNotNull(convention.dbToolSets.db1, "Forventet toolset objekt")
         Assert.assertNotNull(convention.dbToolSets.db1.patch['null'], "Forventet patch objekt")
         Assert.assertNotNull(convention.dbToolSets.db1.patch['null'].tasks['AssignLatestPatchlevel'], "Forventet patch task")
@@ -443,7 +443,7 @@ class DbToolsPluginTest extends TestKitBase {
         final Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-dbtools-plugin'
 
-            configureDatabasePlugin {
+            db.configureDatabasePlugin {
                 toolset(name: 'coolDb', type: 'hsqldb', prefix: 'coolDb') {
                     url = "some url"
                     driver = 'org.hsqldb.jdbcDriver'
@@ -457,7 +457,7 @@ class DbToolsPluginTest extends TestKitBase {
 
 
     /**
-     * Verifiserer at taskSequence syntax fungerer på project
+     * Verifiserer at taskSequence syntax fungerer via {@code db} extension
      * @since 1.4
      */
     @Test
@@ -465,7 +465,7 @@ class DbToolsPluginTest extends TestKitBase {
         final Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-dbtools-plugin'
 
-            taskSequence('nestedTask') {
+            db.taskSequence('nestedTask') {
                 dependsOn task('task1')
                 dependsOn task('task2')
             }

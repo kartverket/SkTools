@@ -47,7 +47,7 @@ insert into TABLE1(ID, TEXT) VALUES (1, 'ÆæØøÅå');
         Project project = projectBuilder().build().tap {
             apply plugin: 'sktools-dbtools-plugin'
 
-            configureDatabasePlugin {
+            db.configureDatabasePlugin {
                 toolset(name: 'coolDb', type: 'hsqldb', prefix: '') {
                     patch {
                         patchTask('Foo', description: 'Task med verdier ifra konfigurasjon og convention')

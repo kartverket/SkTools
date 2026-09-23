@@ -24,7 +24,7 @@ Java verktøy
 
 Baseline
 --------
-Gradle 8.13 og nyere.
+Gradle 9.1.0 og nyere. Se [MIGRATION.md](MIGRATION.md) for detaljer om Gradle 9-migreringen, inkludert et DSL-brudd i `sktools.dbtools`.
 
 Java 17.
 

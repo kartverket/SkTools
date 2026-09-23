@@ -38,6 +38,8 @@ Build script snippet for use in all versions:
 Changelog
 ------------
 ## Unreleased Changes
+* Gradle 9-kompatibilitet. **DSL-brudd:** `configureDatabasePlugin { ... }` og topp-nivå `taskSequence(...)`
+  må nå kalles som `db.configureDatabasePlugin { ... }` / `db.taskSequence(...)`. Se [MIGRATION.md](../../MIGRATION.md).
 
 ## 6.0 Release Notes
 * [SKTOOLS-202] Property for sql-tasker er nå implementert med `Property` og `Provider` for konvensjonelle verdier.
@@ -77,7 +79,7 @@ Changelog
 Configuration
 ------------
 
-    configureDatabasePlugin {
+    db.configureDatabasePlugin {
         toolset(name:<toolset>, type:<oracle|hsqldb>, prefix:<prefix>) {
             sqlTask('CreateSchema', sqlFile: 'src/sql/createSchema.sql')
             sqlTask('CreateIndexes', sqlFile: 'src/sql/createIndexes.sql', failOnError:false) //continues execution of sql in case of error
@@ -94,6 +96,10 @@ Configuration
             //....
         }
     }
+
+> **NB:** Fra og med Gradle 9-migreringen (se [MIGRATION.md](../../MIGRATION.md)) må `configureDatabasePlugin` og
+> topp-nivå `taskSequence(...)`-kall prefikses med `db.`, altså `db.configureDatabasePlugin { ... }`.
+> `taskSequence(...)` kalt inni `toolset`/`patch`-blokker påvirkes ikke.
 
 
 Bruk

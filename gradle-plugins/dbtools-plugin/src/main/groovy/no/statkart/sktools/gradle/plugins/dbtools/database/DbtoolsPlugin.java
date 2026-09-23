@@ -35,7 +35,7 @@ import java.util.Map;
  * apply plugin: 'sktools-dbtools-plugin'
  *
  * //see {@link DbtoolsConvention#configureDatabasePlugin(Closure) }
- * configureDatabasePlugin {
+ * db.configureDatabasePlugin {
  *
  * ...
  *
@@ -63,7 +63,7 @@ public class DbtoolsPlugin implements Plugin<Project> {
         project.getPluginManager().apply(BasePlugin.class);
 
         dbtoolsConvention = new DbtoolsConvention(project);
-        project.getConvention().getPlugins().put(CONVENTION_NAME, dbtoolsConvention);
+        project.getExtensions().add(CONVENTION_NAME, dbtoolsConvention);
 
         final Configuration configuration = project.getConfigurations().create(DBTOOLS_CONFIGURATION);
 
