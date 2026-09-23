@@ -19,7 +19,7 @@ import java.util.List;
  * @author Leif Lislegård
  * @since 2.0
  */
-public class WsDocCompileTask extends JavaCompile {
+public abstract class WsDocCompileTask extends JavaCompile {
     private final Property<String> lookupPath;
     private final Property<String> encoding;
 

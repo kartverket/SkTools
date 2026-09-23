@@ -188,11 +188,11 @@ class WsDocGenPluginTest extends TestKitBase {
 
         //test override
         assertEquals project.sourceSets.other.wsdoc.group.targetPath.get(), project.file('gen/doc')
-        assertEquals project.tasks.genOtherWsdoc.destinationDir, project.file('gen/doc')
+        assertEquals project.tasks.genOtherWsdoc.destinationDirectory.get().asFile, project.file('gen/doc')
 
         //test multiple groups
         assertEquals project.sourceSets.multi.wsdoc.group.targetPath.get(), project.file('gen/doc2')
-        assertEquals project.tasks.genMultiWsdoc.destinationDir, project.file('gen/doc2')
+        assertEquals project.tasks.genMultiWsdoc.destinationDirectory.get().asFile, project.file('gen/doc2')
     }
 
 
