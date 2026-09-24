@@ -37,7 +37,7 @@ Build script snippet for use in all versions:
 
 Changelog
 ------------
-## Unreleased Changes
+## 8-xxx Release Notes
 * Gradle 9-kompatibilitet. **DSL-brudd:** `configureDatabasePlugin { ... }` og topp-nivå `taskSequence(...)`
   må nå kalles som `db.configureDatabasePlugin { ... }` / `db.taskSequence(...)`. Se [MIGRATION.md](../../MIGRATION.md).
 
