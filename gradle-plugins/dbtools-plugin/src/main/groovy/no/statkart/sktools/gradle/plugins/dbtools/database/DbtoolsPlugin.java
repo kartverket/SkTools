@@ -144,7 +144,7 @@ public class DbtoolsPlugin implements Plugin<Project> {
         // - resolver configuration etter at prosjektet er initialisert
         project.getGradle().getTaskGraph().addTaskExecutionGraphListener(new TaskExecutionGraphListener() {
             //GroovyCastException: Cannot cast object 'org.gradle.internal.classloader.MutableURLClassLoader
-            final ClassLoader groovyClassloader = GroovyObject.class.getClassLoader();
+            final ClassLoader groovyClassloader = groovy.sql.Sql.class.getClassLoader();
             final MethodClosure addURLClosure = new MethodClosure(groovyClassloader, "addURL");
 
             @Override
