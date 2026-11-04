@@ -16,11 +16,15 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import javax.xml.transform.Result;
 import java.io.IOException;
+import java.io.File;
 import java.io.OutputStream;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class SKGenWSDL {
@@ -29,7 +33,7 @@ public class SKGenWSDL {
      */
     public static final String WEB_SERVICE_CLASSPATH = "WEB_SERVICE_CLASSPATH";
 
-    public static void main(String... args) throws IOException, ParseException {
+    public static void main(String... args) throws IOException, ParseException, ClassNotFoundException {
         Options options = new Options()
             .addOption(
                 Option.builder("cp")
@@ -58,16 +62,17 @@ public class SKGenWSDL {
         Path destination = Paths.get(commandLine.getOptionValue("d"));
 
         DatabindingFactory databindingFactory = DatabindingFactory.newInstance();
+        ClassLoader serviceClassLoader = classLoaderFor(classpath);
 
         try (ScanResult scanResult = new ClassGraph()
-            .overrideClasspath(classpath)
+            .enableClasspathEntries(classpath)
             .enableClassInfo()
             .enableAnnotationInfo()
             .enableExternalClasses()
             .scan()) {
             for (ClassInfo classInfo : scanResult.getClassesWithAnnotation(WebService.class.getName())) {
                 if (classInfo.isStandardClass()) {
-                    Class<?> wsClass = classInfo.loadClass();
+                    Class<?> wsClass = Class.forName(classInfo.getName(), false, serviceClassLoader);
                     WSDLResolverAdapter wsdlResolverAdapter = new WSDLResolverAdapter(destination);
                     genWSDL(wsClass, wsdlResolverAdapter, databindingFactory);
                 }
@@ -89,5 +94,15 @@ public class SKGenWSDL {
         for (OutputStream stream : (wsdlResolver.streams)) {
             stream.close();
         }
+    }
+
+    private static ClassLoader classLoaderFor(String classpath) throws IOException {
+        List<URL> urls = new ArrayList<>();
+        for (String entry : classpath.split(File.pathSeparator)) {
+            if (!entry.isEmpty()) {
+                urls.add(new File(entry).toURI().toURL());
+            }
+        }
+        return new URLClassLoader(urls.toArray(new URL[0]), SKGenWSDL.class.getClassLoader());
     }
 }
