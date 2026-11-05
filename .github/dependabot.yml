@@ -21,3 +21,5 @@ updates:
               update-types: ["version-update:semver-major", "version-update:semver-minor"]
             - dependency-name: "com.sun.xml.ws:*"
               update-types: ["version-update:semver-major", "version-update:semver-minor"]
+            - dependency-name: "io.github.classgraph:*" # Major versjon 6 krever Java 25
+              update-types: ["version-update:semver-major"]
